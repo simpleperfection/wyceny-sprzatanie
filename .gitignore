@@ -1,0 +1,19 @@
+# System
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Edytory
+.vscode/
+.idea/
+*.swp
+
+# Pliki tymczasowe i lokalne
+*.tmp
+*.log
+.env
+.env.*
+node_modules/
+
+# Ustawienia lokalne Claude Code
+.claude/settings.local.json

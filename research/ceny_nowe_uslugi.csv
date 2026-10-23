@@ -1,0 +1,33 @@
+usluga;pozycja;jednostka;min;max;srednia;vat;zrodlo;typ_zrodla;data_cennika;url;uwagi
+mycie_posadzek;mycie maszynowe szorowarką (z chemią);zł/m²;0.60;;;netto;Tanie Doczyszczanie, Lędziny;firma;b.d.;https://www.taniedoczyszczanie.pl/cennik-uslug-sprzatania-maszynowego;kilka rodzajów posadzki od 1,10; min. zlecenie 2000 zł netto; dojazd 1,40 zł/km
+mycie_posadzek;mycie maszynowe, beton;zł/m²;1.80;;;netto;czyszczenie-posadzek.com.pl, Katowice;firma;2022-11-24;https://czyszczenie-posadzek.com.pl/mycie-posadzek-hali-cennik/;płytki z fugami od 4 zł/m²; dojazd gratis do 30 km; cennik stary
+mycie_posadzek;mycie maszynowe, małe zlecenia;zł/m²;10;;;?;Szoruj, Warszawa;firma;b.d.;https://szoruj.pl/cennik/cennik-mycie-posadzek/;min. zlecenie 150 zł; dojazd w Warszawie gratis
+doczyszczanie;doczyszczanie maszynowe szorowarką jednotarczową (np. po remoncie);zł/m²;4.00;;;netto;Tanie Doczyszczanie, Lędziny;firma;b.d.;https://www.taniedoczyszczanie.pl/cennik-uslug-sprzatania-maszynowego;
+doczyszczanie;doczyszczanie maszynowe, beton;zł/m²;4.20;;;netto;czyszczenie-posadzek.com.pl, Katowice;firma;2022-11-24;https://czyszczenie-posadzek.com.pl/mycie-posadzek-hali-cennik/;płytki i fugi od 8 zł/m²
+doczyszczanie;doczyszczanie maszynowe;zł/m²;10;;;?;Szoruj, Warszawa;firma;b.d.;https://szoruj.pl/cennik/cennik-mycie-posadzek/;
+doczyszczanie;doczyszczanie posadzek przemysłowych, jednorazowo;zł/m²;8;15;;brutto;CleanConnect (blog);porównywarka;2026-09-10;https://cleanconnect.pl/blog/stawki-sprzatania-2026-ile-zarabiaja-firmy;widełki autora z wycen
+doczyszczanie;maszynowe doczyszczanie posadzek;zł/m²;16;25;20;?;cenauslug.pl;porównywarka;2026;https://cenauslug.pl/firma-i-biuro/maszynowe-doczyszczanie-posadzek;tylko robocizna; Białystok 16, Warszawa 25
+doczyszczanie;mechaniczne czyszczenie fug;zł/m²;17;25;19;?;cenauslug.pl;porównywarka;2026;https://cenauslug.pl/dom-i-ogrod/mechaniczne-czyszczenie-fug;tylko robocizna; Białystok 17, Mikołów 25
+zabezpieczanie_posadzek;powłoka wosk/akryl/polimer (z materiałem);zł/m²;6;;;netto;Tanie Doczyszczanie, Lędziny;firma;b.d.;https://www.taniedoczyszczanie.pl/cennik-uslug-sprzatania-maszynowego;usuwanie starych powłok 6 zł/m²
+zabezpieczanie_posadzek;polimer z gwarancją;zł/m²;9;10;;netto;czyszczenie-posadzek.com.pl, Katowice;firma;2022-11-24;https://czyszczenie-posadzek.com.pl/mycie-posadzek-hali-cennik/;beton 9, gres 10; doczyszczanie + zabezpieczenie od 15
+mycie_kostki;mycie ciśnieniowe;zł/m²;8;;;?;Szoruj, Warszawa;firma;b.d.;https://szoruj.pl/cennik/cennik-mycie-posadzek/;z chemią 13 zł/m²; plamy po oleju od 20 zł/m²
+mycie_kostki;mycie ciśnieniowe;zł/m²;14;21;17;?;cenauslug.pl;porównywarka;2026-05-19;https://cenauslug.pl/dom-i-ogrod/mycie-cisnieniowe-kostki-brukowej;Białystok 14, Lublin 15, Kielce 17, Starogard Gd. 21; poniżej 50 m² często ryczałt za dojazd
+mycie_kostki;dopłata: plamy olejowe;zł/m²;4;7;;?;cenauslug.pl;porównywarka;2026-05-19;https://cenauslug.pl/dom-i-ogrod/mycie-cisnieniowe-kostki-brukowej;
+mycie_kostki;dopłata: usuwanie mchu z fug i piaskowanie;zł/m²;5;10;;?;cenauslug.pl;porównywarka;2026-05-19;https://cenauslug.pl/dom-i-ogrod/mycie-cisnieniowe-kostki-brukowej;
+mycie_kostki;impregnacja bezbarwna;zł/m²;15;28;;?;cenauslug.pl (przewodnik);porównywarka;2026-08;https://cenauslug.pl/przewodnik/czyszczenie-i-impregnacja-kostki-brukowej;tylko robocizna
+mycie_kostki;impregnacja z efektem mokrej kostki;zł/m²;15;42;;?;cenauslug.pl (przewodnik);porównywarka;2026-08;https://cenauslug.pl/przewodnik/czyszczenie-i-impregnacja-kostki-brukowej;Zamość 15, Żary 42
+mycie_elewacji;mycie karcherem, zabrudzenia atmosferyczne (kamień/beton, do 200 m²);zł/m²;22.30;28.90;24.52;brutto 8%;kb.pl;porównywarka;2026-04-29;https://kb.pl/cenniki/mycie-elewacji-karcherem/;wg cennika z materiałem, wg artykułu kb.pl sama robocizna; zakresy wojewódzkie w kb_wojewodztwa.csv
+mycie_elewacji;zabrudzenia biologiczne (glony, mech, pleśń);zł/m²;34.10;42.80;;brutto;kb.pl;porównywarka;2026-01-07;https://kb.pl/elewacje-i-ocieplenie/elewacje/mycie-elewacji-cennik-w-roznych-miastach-w-polsce/;elewacje mineralne 35,60–49,80
+mycie_elewacji;zabrudzenia chemiczne (sadza, smog, graffiti);zł/m²;32.80;44.90;;brutto;kb.pl;porównywarka;2026-01-07;https://kb.pl/elewacje-i-ocieplenie/elewacje/mycie-elewacji-cennik-w-roznych-miastach-w-polsce/;elewacje mineralne 37,60–50,20
+mycie_elewacji;mycie elewacji (zależnie od wysokości i metody);zł/m²;15;35;;brutto;CleanConnect (blog);porównywarka;2026-09-10;https://cleanconnect.pl/blog/stawki-sprzatania-2026-ile-zarabiaja-firmy;
+sprzatanie_biur;jednorazowo, biuro do 100 m² (do 2 h);zł/usługa;366;418;387.30;brutto 8%;kb.pl;porównywarka;2026-05-20;https://kb.pl/cenniki/sprzatanie-biur/;sama robocizna; zakresy wojewódzkie w kb_wojewodztwa.csv
+sprzatanie_biur;jednorazowo, biuro do 200 m² (do 4 h);zł/usługa;594;678;;brutto 8%;kb.pl;porównywarka;2026-05-20;https://kb.pl/cenniki/sprzatanie-biur/;sama robocizna
+sprzatanie_biur;abonament, serwis 3×/tydz. i częściej;zł/m²/mies.;2.80;4.50;;brutto;CleanConnect (blog);porównywarka;2026-09-10;https://cleanconnect.pl/blog/stawki-sprzatania-2026-ile-zarabiaja-firmy;
+sprzatanie_biur;abonament, serwis 1×/tydz.;zł/m²/mies.;4.50;7.00;;brutto;CleanConnect (blog);porównywarka;2026-09-10;https://cleanconnect.pl/blog/stawki-sprzatania-2026-ile-zarabiaja-firmy;
+sprzatanie_biur;minimum miesięczne;zł/mies.;1200;;;?;Reefa (sieć);firma;2026;https://reefa.pl/cennik/sprzatanie-biur;wg tytułu strony "od 1200 zł/miesiąc"; nie otwierano strony
+sprzatanie_firm;hale magazynowe, zamiatanie i odkurzanie;zł/m²;1.80;3.00;;brutto;CleanConnect (blog);porównywarka;2026-09-10;https://cleanconnect.pl/blog/stawki-sprzatania-2026-ile-zarabiaja-firmy;
+sprzatanie_firm;sprzątanie hali magazynowej, jednorazowo;zł/m²;3;9;7;?;cenauslug.pl;porównywarka;2026;https://cenauslug.pl/firma-i-biuro/sprzatanie-hali-magazynowej/czestochowa;tylko robocizna; Chełm 3, Pruszków 8, Gdynia 9
+sprzatanie_firm;zamiatanie maszynowe / ręczne / odkurzanie;zł/m²;0.40;1.00;;netto;Tanie Doczyszczanie, Lędziny;firma;b.d.;https://www.taniedoczyszczanie.pl/cennik-uslug-sprzatania-maszynowego;maszynowe 0,40; ręczne 0,70; odkurzanie 1,00; zamiatanie + mycie mocnym środkiem od 2000 m² 1,00
+okna;mycie okien z ramami i parapetami;zł/m²;6;12;;brutto;CleanConnect (blog);porównywarka;2026-09-10;https://cleanconnect.pl/blog/stawki-sprzatania-2026-ile-zarabiaja-firmy;
+po_remoncie;sprzątanie po remoncie, jednorazowo;zł/m²;8;15;;brutto;CleanConnect (blog);porównywarka;2026-09-10;https://cleanconnect.pl/blog/stawki-sprzatania-2026-ile-zarabiaja-firmy;
+po_remoncie;stawka godzinowa (1 osoba);zł/h;58.31;79.14;64.30;brutto 8%;kb.pl;porównywarka;2026-04-29;https://kb.pl/cenniki/sprzatanie-po-remoncie/;sama robocizna; zakresy wojewódzkie w kb_wojewodztwa.csv

@@ -1,0 +1,91 @@
+wojewodztwo;firma;miasto;url;cennik;mieszkanie_50m2_zl;po_remoncie_zl_m2;okno_1skrz_zl;kanapa_3os_zl;dywan_zl_m2;stawka_h_zl;vat;uwagi
+podlaskie;Magiczny Błysk;Białystok;https://magicznyblysk.com/;tak;350;8;30;;;;?;ceny "od"; po remoncie od 400 zł/≤50 m²; okno balkonowe od 50
+podlaskie;Sztuka Sprzątania;Białystok;https://sztukasprzatania.pl/;tak;;20;30;150;;;?;ceny "od"; dywan od 100 zł/szt.
+podlaskie;MaxiClean;Białystok;https://maxiclean.bialystok.pl/sprzatanie-bialystok-cennik/;tak;;;;;8;;netto;cennik ~2,5 roku; okna 10 zł/m²
+podlaskie;GK Service;Białystok;https://gkservice.pl/;tak;;;40;;;50;netto;
+podlaskie;Czysty Dom;Białystok;https://e-sprzataniebiur.pl/cennik/;tak;;12.5;30;100;;;?;okna 15-80/szt.; narożnik 120-190; +30% silne zabrudzenia; cennik stary
+podlaskie;Kopciuszek;Białystok;http://www.bialystoksprzatanie.pl/cennik.html;tak;;;;60;;;?;sofa 50-70; cennik stary
+podlaskie;Kwadrat na błysk;Suwałki;https://kwadratnablysk.pl/;nie;;;;;;;;wycena indywidualna; dojazd 1,5-2,5 zł/km
+podlaskie;Czysty Biał;Białystok;https://czystybial.website/mycie-okien-bialystok.html;nie;;;;;;;;"zapytaj o cenę"
+lubelskie;Kwik Czystości;Lublin;https://kwikczystosci.pl/cennik/;tak;370;;;;;70;?;30 m² 250; 51-74 m² 500; 75-98 m² 600; okna 32 zł/m²
+lubelskie;DoMi;Lublin;https://domiclean.pl/sprzatanie-mieszkan-lublin/;tak;265;;30;;;;netto;50-70 m² 325; >110 m² +2,5 zł/m²
+lubelskie;Mika;Lublin;https://mikasprzatanie.pl/cennik.html;tak;75;3.5;15;;;;?;regularne 1-2 zł/m² (odstaje)
+lubelskie;Eco Clean Lublin;Lublin;https://www.ecocleanlublin.pl/cennik;częściowo;;;;;;;netto;tylko wspólnoty od 0,30 zł/m²
+lubelskie;Pranie Tapicerki Lublin;Lublin;https://pranietapicerki-lublin.pl/cennik/;tak;;;;150;27;;?;kanapa 2-os. 120; zakres z 4 pralni: dywan 24-35 zł/m²
+lubelskie;InBlask;Lublin;https://www.inblask.pl/cennik/;tak;;;;175;;;?;kanapa 150-200; narożnik od 200; wykładzina od 15 zł/m²
+mazowieckie;Stefpol Cleaning;Warszawa;https://stefpolcleaning.pl/sprzatanie-domow-i-mieszkan-warszawa-cennik/;tak;250;16;50;;;120;netto;5 zł/m² standard; okno 2-skrz. 80
+mazowieckie;Łowcy Porządku;Warszawa;https://www.lowcyporzadku.pl/cennik;tak;300;10;25;180;18;;?;okno 2-skrz. 30
+mazowieckie;Sprzątanie na 5;Warszawa;https://www.sprzataniena5.pl/sprzatanie-cennik.html;tak;175;;;;;;?;z oknami 225; środki +40 zł
+mazowieckie;CleanOK;Warszawa;https://cleanok.pl/;tak;;14.5;27;;;72.5;?;h 65-80; po remoncie 9-20 zł/m²
+mazowieckie;iPozamiatane;Radom;https://ipozamiatane.radom.pl/sprzatanie-domow-i-mieszkan/;tak;200;7.99;;;;;?;od 3,99 zł/m²; cennik ~2 lata
+mazowieckie;OlympHome;Radom;https://www.olymphome.pl/;tak;230;;;;;;?;gruntowne od 800
+malopolskie;Kraków Sprzątanie;Kraków;https://krakowsprzatanie.pl/cennik/;tak;320;;50;220;18;80;?;h netto; po remoncie 90 zł/h netto
+malopolskie;Fabryka Błysku;Kraków;https://fabryka-blysku.pl/cennik/;tak;180;;30;;;55;?;cena cykliczna co 2 tyg.
+malopolskie;Czyścioszek;Kraków;https://czyscioszek.eu/cennik/sprzatanie-domu-mieszkania-apartamentu/;tak;260;;30;;;;?;po remoncie +50%
+malopolskie;Shine Time;Kraków;https://shinetimekrakow.pl/;tak;260;8;20;170;20;;?;
+malopolskie;Zielony Błysk;Tarnów;https://zielonyblysk.pl/;tak;250;;;;;;brutto;premium 349
+slaskie;AuraClean;Gliwice;https://auraclean.pl/cennik/;tak;450;;40;;;;?;40-100 m²
+slaskie;Cleaning Profservice;Katowice/Gliwice;https://cleaning-profservice.pl/sprzatanie-mieszkan;tak;;;;;;52.5;?;50-55 zł/h
+slaskie;Mrs.Clean;Katowice;https://mrsclean.pl/;tak;210;;;;;;?;cyklicznie 190
+slaskie;BDW;Katowice;https://bdw.net.pl/sprzatanie-po-remoncie/;tak;;16;;;;;netto;800 zł netto/50 m² z oknami
+slaskie;Ligensa & Partner;Śląsk;https://www.ligensa.pl/mycie-okien-szyb;tak;;;;;;;?;tylko okna 3-3,5 zł/m²
+dolnoslaskie;Cleansi;Wrocław;https://cleansi.pl/cennik/;tak;;;25;140;;;?;narożnik 160
+dolnoslaskie;Activas;Wrocław;https://www.activas.pl/sprzatanie-mieszkan-i-domow-wroclaw.html;tak;;;;100;;;?;pakiet 600-800 zł/40 m² (gruntowny)
+dolnoslaskie;Wikami;Wrocław;https://wikami.com.pl/firma-sprzatajaca-cennik/;tak;300;;39;;;;brutto;268 zł do 40 m²
+dolnoslaskie;Błysk-Lux;Wrocław;https://blysk-lux.pl/cennik/;tak;;;40;;;65;brutto;kompleksowe od 25 zł/m² (odstaje); okno 20-60
+dolnoslaskie;Pranie Tapicerek Wrocław;Wrocław;https://pranietapicerek.com/cennik-prania-tapicerki-wroclaw/;tak;;;;150;14;;?;sofa 120-180; dywan 12-17
+dolnoslaskie;Eco-Pure;Wrocław;https://eco-pure.pl/cennik/;tak;;;;240;25;;?;3-os. 200-280
+wielkopolskie;Czysto i Pachnie;Poznań/Owińska;https://czystoipachnie.pl/sprzatanie-cennik/;tak;130;7.5;16;110;5;50;netto;
+wielkopolskie;NamiClean;Poznań;https://namiclean.pl/cennik/;tak;350;;30;;;100;?;po remoncie od 450
+wielkopolskie;Beautiful Space;Poznań;https://beautifulspace.pl/sprzatanie-mieszkan-i-domow/jednorazowa-usluga-sprzatanie/;tak;;15;;;;;netto;750 zł/50 m²
+wielkopolskie;Hofre;Poznań;https://hofre.pl/index.php/firma-sprzatajaca-poznan-cennik/;tak;;11;;;;;?;
+wielkopolskie;Sprawne Sprzątanie;Poznań;https://sprawnesprzatanie.com/sprzatanie-po-remoncie-i-sprzatanie-po-budowie/;tak;;15;;;;;?;12-18 zł/m² do 60 m²
+wielkopolskie;Eko-Błysk;Poznań;https://eko-blysk.pl/uslugi/sprzatanie-po-remoncie/;tak;;16.5;;;;;netto;13-20 zł/m², min. 350
+pomorskie;CleanTime;Trójmiasto;https://cleantimetrojmiasto.pl/cennik/;tak;250;7;40;;;;?;250 zł do 30 m²
+pomorskie;CleaningRoom;Gdańsk;https://cleaningroom.pl/cennik-uslug/;tak;230;9;30;;;;?;230 zł do 45 m²
+pomorskie;Czyści Baba;Gdańsk;https://www.firmasprzatajacagdansk.com.pl/cennik;tak;300;16;25;;;;?;poremontowe 800/50 m²
+pomorskie;GO Cleaning;Trójmiasto;https://gocleaning.pl/;tak;350;;;;;;?;cyklicznie 250
+pomorskie;PERFECT;Trójmiasto;https://www.perfectsprzatanie.com/;tak;400;;70;;;;?;generalne 8 zł/m²
+pomorskie;Dobre Sprzątanie;Gdańsk;https://dobre-sprzatanie-trojmiasto.pl/;tak;;;40;;;;?;
+pomorskie;Timtem;Gdańsk;https://timtem.eu/sprzatanie-domu-mieszkan/;nie;;;;;;;;wycena indywidualna
+zachodniopomorskie;Tanie Sprzątanie;Szczecin;https://tanie-sprzatanie.pl/;tak;79;;20;;;30;?;pakiet podstawowy do 60 m² (odstaje)
+zachodniopomorskie;Czysty Dom;Szczecin;https://czysty-dom.eu/;tak;150;;;;;;?;40-60 m²
+zachodniopomorskie;Czystość Szczecin;Szczecin;https://www.czystosc.szczecin.pl/cennik/;tak;350;10;25;;;;?;350 zł/60 m²; po remoncie 600
+zachodniopomorskie;WindowMaster24;Szczecin;https://windowmaster24.pl/profesjonalne-mycie-okien-cennik/;tak;;;30;;;;?;min. 299 zł
+zachodniopomorskie;Clean Effect;Koszalin;https://cleaneffect.com.pl/;tak;250;8.5;;;;;?;
+zachodniopomorskie;Tip Top Cleaning;Kołobrzeg;https://tiptop-cleaning.pl/cennik-domy-i-mieszkania;tak;350;;30;;;;?;do 60 m²
+zachodniopomorskie;McClean;Kołobrzeg;https://mcckolobrzeg.wixsite.com/mcclean;tak;;;10;;;;?;
+kujawsko-pomorskie;CleanHome;Bydgoszcz;https://cleanhome-sprzatanie.pl/;tak;150;;20;;;;?;gruntowne 220
+kujawsko-pomorskie;Zielone Sprzątanie;Bydgoszcz;https://zielonesprzatanie.pl/cennik/;tak;160;;20;;;;?;gruntowne 250
+kujawsko-pomorskie;Mich-Mar;Bydgoszcz;https://www.mich-mar.com.pl/cennik.html;tak;120;;15;;;;brutto;40-90 m² 100-140
+kujawsko-pomorskie;Ultra-Clean;Toruń;https://ultra-clean.pl/;częściowo;;;;;;;;tylko wspólnoty zł/m²
+lodzkie;Magia Porządku;Łódź;https://magiaporzadku.pl/cennik/;tak;150;;20;160;;;?;2,5 zł/m², min. 150
+lodzkie;Michał Nowak;Łódź;https://www.michalnowaksprzatanie.eu/sprzatanie-cennik.html;tak;;;20;;;;?;
+lodzkie;Sopranoo;Łódź;https://www.sopranoo.pl/mieszkania-i-domy;tak;;;;;;;?;okna 10-15 zł/m²
+lodzkie;xClean;Łódź;https://xcleanlodz.pl/cennik/;tak;;;;;;;?;tapicerka od 100, min. 200
+lodzkie;BigMax Clean;Pabianice;https://bigmaxclean.pl/pranie-tapicerki-pabianice-cennik/;tak;;;;170;;;?;
+swietokrzyskie;Kurzomania;Kielce;https://kurzomania.pl/cennik/;tak;250;;25;;;;?;200 (<30 m²) - 300 (<100 m²)
+swietokrzyskie;Manutarg;Kielce;https://manutarg.pl/sprzatanie-kielce/;tak;130;25;;;;;?;2 pokoje od 130; po remoncie odstaje
+swietokrzyskie;Mowel;Kielce;https://mowel.pl/pranie-kielce-cennik-cena/;tak;;;;90;;;?;
+swietokrzyskie;Grupa Xpertus;Kielce/Ostrowiec;http://www.grupaxpertus.pl/pranie-mebli-tapicerowanych/;tak;;;;75;;;?;
+swietokrzyskie;Perfekt Anna;Kielce;http://www.perfektanna.pl/cennik;nie;;;;;;;;"do ustalenia"
+podkarpackie;Efekt Rzeszów;Rzeszów;https://efekt-rzeszow.pl/;tak;725;;30;;;;?;generalne: 40 m² 600, 60 m² 850
+podkarpackie;Mclean;Rzeszów;https://mcleanrzeszow.pl/cennik-uslug/;tak;275;;15;;;45;?;cennik ~2024
+podkarpackie;Geadka;Rzeszów;https://geadka.pl/;tak;230;;;;;;?;
+podkarpackie;Gosia Gosposia;Rzeszów;https://www.gosiagosposia.pl/cennik;tak;125;;12;;;;?;1-4 zł/m²; okno per szyba
+opolskie;TK Cleaning;Opole;https://tkcleaning.pl/;tak;150;;;;;;?;okna od 18 zł/m²
+opolskie;The Clean Team;Opole;https://www.thecleanteam.pl/;tak;280;;;;;;?;cyklicznie 150-200
+opolskie;Clean Mar;Opole;https://cleanmar.opole.pl/price-list/;tak;;;;100;10;;?;
+opolskie;Onyclean;Nysa;https://onyclean.pl/;tak;;;;220;20;;?;min. wyjazd 130
+opolskie;Pan Zmiotka;Kędzierzyn-Koźle;https://panzmiotka.pl/index.php/cennik/;tak;;;;;20;;?;
+opolskie;S.O.S. Serwis;Opole;https://www.sos-serwis.pl/;nie;;;;;;;;wycena indywidualna
+lubuskie;EffectBcleaner;Zielona Góra;https://effectbcleaner.pl/sprzatanie_mieszkania.php;tak;105;;;;;;?;abonament 419/mies. za 4 wizyty
+lubuskie;Czysty Świat;Zielona Góra;https://www.czystyswiat.com/;nie;;;;;;;;wycena indywidualna
+lubuskie;firmy z Gorzowa (wyniki wyszukiwania);Gorzów Wlkp.;https://cleanconnect.pl/firmy-sprzatajace/gorzow-wielkopolski;tak;300;15;30;200;17;;?;nieprzypisane do jednej firmy
+warminsko-mazurskie;Pranie Olsztyn;Olsztyn;https://pranie.olsztyn.pl/cennik/;tak;;;;150;15;;?;
+warminsko-mazurskie;Marpral;Olsztyn;https://marpral.olsztyn.pl/cennik/;tak;;;;125;;;?;
+warminsko-mazurskie;Pranie w Olsztynie;Olsztyn;https://praniewolsztynie.pl/;tak;;;;150;12;;?;
+warminsko-mazurskie;Czysty Dom Olsztyn;Olsztyn;https://czystydom.olsztyn.pl/;nie;;;;;;;;brak cen
+warminsko-mazurskie;Clean Planeta;Olsztyn;https://cleanplaneta.pl/;nie;;;;;;;;brak cen
+warminsko-mazurskie;Demiwash;Olsztyn;https://demiwash.pl/;nie;;;;;;;;brak cen
+warminsko-mazurskie;Blisco (katalog);Olsztyn;https://blisco.pl/sprzatanie-mieszkan/sprzatanie-mieszkan-olsztyn/;nie;;;;;;;;brak cen
