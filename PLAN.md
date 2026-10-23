@@ -119,3 +119,5 @@ Do weryfikacji na pierwszych zleceniach (pewność „niska” w danych):
 
 ## Otwarte pytania
 1. **„Doczyszczanie”**: czy chodzi o doczyszczanie posadzek i fug (tak jest teraz w danych), czy też o inne usługi, np. doczyszczanie mieszkań lub obiektów po budowie?
+2. **Usuwanie farby z posadzki** (`doczyszczanie.usuwanie_farby`): w bazie chemii nie ma zmywacza farb. Dozbierać go od jednego z 7 dostawców, czy zostawić pozycję bez podpowiedzi środka?
+3. **Dezynfekcja**: 5 środków w bazie nie jest przypisanych do żadnej usługi ani brudu, więc aplikacja sama ich nie podsunie. Przypiąć je np. do sprzątania biur i po wynajmie, czy zostawić jako kategorię do ręcznego wyboru?

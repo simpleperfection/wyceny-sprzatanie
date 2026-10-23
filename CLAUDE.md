@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Aplikacja PWA do wycen usług sprzątających i doboru chemii dla małych firm sprzątających (cały projekt jest po polsku: dane, identyfikatory opisowe, dokumentacja, commity). **`PLAN.md` jest źródłem prawdy**: linia „Status” mówi, który etap jest w toku, a sekcje „Ustalenia” i „Otwarte pytania” zawierają decyzje właściciela. Przy wznowieniu pracy zacznij od pierwszego niezamkniętego etapu i po każdym etapie zaktualizuj `PLAN.md` (status, ✅ przy etapie, hash commita).
 
-Na razie repo zawiera dane (`data/`), materiały źródłowe (`research/`), skrypt kalibracji, parsery do zbierania chemii i szablon workflow Claude Code w `.claude/`; kodu aplikacji jeszcze nie ma. Aplikacja (etap 5) ma powstać w czystym HTML/JS bez kroku budowania i działać na GitHub Pages.
+Na razie repo zawiera dane (`data/`), materiały źródłowe (`research/`), skrypt kalibracji, parsery do zbierania chemii, dokumenty wymagań z brainstormów (`docs/brainstorms/`) i szablon workflow Claude Code w `.claude/`; kodu aplikacji jeszcze nie ma. Aplikacja (etap 5) ma powstać w czystym HTML/JS bez kroku budowania i działać na GitHub Pages. Jej zakres poza kreatorem wyceny (cena minimalna z kosztów firmy, szybka wycena przez telefon, własne tempo, oferta z zakresem prac; wymagania R1–R24) opisuje `docs/brainstorms/2026-10-23-poczatkujace-firmy-requirements.md`.
 
 ## Środowisko i polecenia
 
