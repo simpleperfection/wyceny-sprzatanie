@@ -220,8 +220,8 @@
         { "id": "mycie", "nazwa": "Mycie ciśnieniowe", "jednostka": "m2", "cena": 15, "zakres": [8, 21], "pewnosc": "niska", "zrodla": ["szoruj", "cenauslug_kostka"], "wyliczenie": "Szoruj 13 (z chemią); cenauslug.pl średnio 17 → mediana 15", "sprzet": "myjka_cisnieniowa", "koszt_chemii_m2": 0.4 },
         { "id": "mech", "nazwa": "Usuwanie mchu z fug i ponowne piaskowanie", "jednostka": "m2", "cena": 7.5, "zakres": [5, 10], "pewnosc": "niska", "zrodla": ["cenauslug_kostka"], "koszt_chemii_m2": 1.5, "typ": "doplata", "uwagi": "Koszt piasku do fug wliczony w koszt chemii." },
         { "id": "olej", "nazwa": "Usuwanie plam oleju", "jednostka": "m2", "cena": 5.5, "zakres": [4, 7], "pewnosc": "niska", "zrodla": ["cenauslug_kostka"], "koszt_chemii_m2": 1.0, "typ": "doplata" },
-        { "id": "impregnacja", "nazwa": "Impregnacja bezbarwna", "jednostka": "m2", "cena": 21.5, "zakres": [15, 28], "pewnosc": "niska", "zrodla": ["cenauslug_impregnacja"], "koszt_chemii_m2": 8, "doliczaj_material": true, "typ": "doplata", "uwagi": "Rynek podaje cenę samej robocizny, więc impregnat doliczamy klientowi. Koszt impregnatu to szacunek (ok. 0,2 l/m² × 40 zł/l) do zastąpienia cenami produktów z etapu 4." },
-        { "id": "impregnacja_mokra", "nazwa": "Impregnacja z efektem mokrej kostki", "jednostka": "m2", "cena": 28.5, "zakres": [15, 42], "pewnosc": "niska", "zrodla": ["cenauslug_impregnacja"], "koszt_chemii_m2": 12, "doliczaj_material": true, "typ": "doplata", "uwagi": "Rynek podaje cenę samej robocizny, więc impregnat doliczamy klientowi. Koszt impregnatu to szacunek (ok. 0,3 l/m² × 40 zł/l) do zastąpienia cenami produktów z etapu 4." }
+        { "id": "impregnacja", "nazwa": "Impregnacja bezbarwna", "jednostka": "m2", "cena": 21.5, "zakres": [15, 28], "pewnosc": "niska", "zrodla": ["cenauslug_impregnacja"], "koszt_chemii_m2": 8, "doliczaj_material": true, "typ": "doplata", "uwagi": "Rynek podaje cenę samej robocizny, więc impregnat doliczamy klientowi. Koszt impregnatu to szacunek (ok. 0,2 l/m² × 40 zł/l); firma może go zmienić." },
+        { "id": "impregnacja_mokra", "nazwa": "Impregnacja z efektem mokrej kostki", "jednostka": "m2", "cena": 28.5, "zakres": [15, 42], "pewnosc": "niska", "zrodla": ["cenauslug_impregnacja"], "koszt_chemii_m2": 12, "doliczaj_material": true, "typ": "doplata", "uwagi": "Rynek podaje cenę samej robocizny, więc impregnat doliczamy klientowi. Koszt impregnatu to szacunek (ok. 0,3 l/m² × 40 zł/l); firma może go zmienić." }
       ]
     },
     {
@@ -302,7 +302,7 @@
       "wartosc": 4,
       "jednostka": "zł na godzinę pracy",
       "pewnosc": "niska",
-      "uwagi": "Szacunek dla usług w trybie 'pomieszczenia' do czasu zbudowania bazy chemii (etap 4). CleanConnect: chemia, sprzęt i paliwo to ok. 10% przychodu."
+      "uwagi": "Szacunek dla usług w trybie 'pomieszczenia'; firma może go zmienić. Nie wyliczamy go z data/chemia.json, bo ceny i dozowanie są różne u każdego producenta (decyzja właściciela 2026-10-23). CleanConnect: chemia, sprzęt i paliwo to ok. 10% przychodu."
     },
     "sprzet": {
       "pewnosc": "niska",

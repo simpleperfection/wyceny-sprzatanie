@@ -36,4 +36,4 @@ Dostęp do kart Buzila i Voigta sprawdzony 2026-10-23 (Voigt: karty przy produkt
 - **Liczba produktów:** 8–15 środków od każdej firmy, tak żeby każda kategoria z `normy.json` (`brud[].chemia`) i każda usługa z pozycjami miała co najmniej 2–3 środki.
 - **Pola produktu:** nazwa, firma, kategoria, przeznaczenie, pH (z opisu producenta albo z sekcji 9 karty SDS), rozcieńczenie robocze, opakowanie, cena netto i brutto ze źródłem i datą, link do karty SDS oraz data karty.
 - **Ceny marek bez sklepu producenta** (Clinex, Kiehl, Medi-Sept, Buzil): z jednego wskazanego sklepu internetowego, z linkiem i datą. Takie ceny mają w danych pewność „średnią”.
-- **Koszt chemii:** z ceny i rozcieńczenia wyjdzie koszt na m² lub na godzinę pracy. Ten koszt zastąpi szacunek 4 zł/h oraz impregnat 8–12 zł/m² w `data/ceny.json`.
+- **Koszt chemii:** nie wyliczamy go z bazy, bo ceny i dozowanie są różne u każdego producenta (decyzja właściciela 2026-10-23). Baza służy do doboru środków do usługi i brudu, a w koszcie firmy zostaje szacunek z `data/ceny.json` (4 zł/h, impregnat 8–12 zł/m²), który firma może zmienić.

@@ -96,7 +96,7 @@ Wersja 1 (etap 5) obejmuje cztery bloki: A (cena minimalna), B (wycena w dwóch 
 
 ## Zależności / Założenia
 - **Skutek do świadomości.** Przykład: ryczałt, ZUS liczony jako preferencyjny, koszty stałe ok. 1130 zł/mies., 4000 zł na rękę, 100 h u klientów. Minimalna stawka wychodzi ok. 70 zł/h, a mieszkanie 50 m² przy tempie 1,3× ok. 350–370 zł, przy medianie 250 zł. Aplikacja będzie więc często proponować ceny wyraźnie powyżej mediany. To zamierzone, ale komunikaty z R5 i R6 muszą to dobrze tłumaczyć.
-- Cena minimalna korzysta z kosztu chemii, który etap 4 ma wyliczyć z `data/chemia.json`. Planowanie może iść teraz, implementacja po domknięciu etapu 4.
+- Chemia w cenie minimalnej to szacunek z `data/ceny.json` (4 zł na godzinę pracy, przy impregnacie koszt na m²), który firma może zmienić. Z `data/chemia.json` kosztu nie liczymy, bo ceny i dozowanie są różne u każdego producenta (decyzja właściciela 2026-10-23).
 - Domyślne listy „wchodzi / nie wchodzi” (R19) i pytania do klienta (R13) przygotuje Claude z researchu, a właściciel zatwierdzi je na podstawie doświadczenia własnej firmy.
 - Kwoty na 2026 z researchu (do sprawdzenia przy planowaniu):
 
@@ -127,4 +127,4 @@ Wersja 1 (etap 5) obejmuje cztery bloki: A (cena minimalna), B (wycena w dwóch 
 - [Dotyczy R1][Wymaga researchu] Domyślne kwoty kosztów stałych: auto i paliwo, księgowość, OC (Orange podaje paliwo i auto 300–1000 zł/mies., księgowość 50–500 zł/mies., OC 300–800 zł rocznie).
 
 ## Następne kroki
-→ `/dev-plan` do planowania technicznego etapu 5 z tymi wymaganiami (implementacja po domknięciu etapu 4).
+→ `/dev-plan` do planowania technicznego etapu 5 z tymi wymaganiami.
