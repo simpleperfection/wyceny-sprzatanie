@@ -1,6 +1,6 @@
 # PLAN – aplikacja do wycen dla początkujących firm sprzątających
 
-Status: **w realizacji** – zaakceptowany 2026-10-23. Etapy 1–3 **zakończone** i wysłane na GitHuba: publiczne repo https://github.com/simpleperfection/wyceny-sprzatanie (gałąź `main`, commity z adresu noreply; etap 1 – `802f4e4`, etapy 2–3 – `5f48976`). Etap 4 w toku: lista 8 dostawców chemii **zatwierdzona** (`research/DYSTRYBUTORZY.md`); w `data/chemia.json` jest 55 produktów od 4 dostawców (Tenzi, Merida, Clinex, Voigt). Następny krok: Kärcher, Kiehl, Medi-Sept, Buzil, potem koszt chemii w `data/ceny.json`.
+Status: **w realizacji** – zaakceptowany 2026-10-23. Etapy 1–3 **zakończone** i wysłane na GitHuba: publiczne repo https://github.com/simpleperfection/wyceny-sprzatanie (gałąź `main`, commity z adresu noreply; etap 1 – `802f4e4`, etapy 2–3 – `5f48976`). Etap 4 w toku i wysłany na GitHuba: lista 8 dostawców chemii **zatwierdzona** (`research/DYSTRYBUTORZY.md`, commit `11a6a91`); w `data/chemia.json` jest 55 produktów od 4 dostawców – Tenzi, Merida, Clinex, Voigt (commit `88bb839`). **Następny krok:** produkty od Kärchera, Kiehla, Medi-Septa i Buzila, potem koszt chemii w `data/ceny.json` (instrukcja w etapie 4 niżej).
 Ostatnia aktualizacja: 2026-10-23
 
 ## Cel
@@ -100,11 +100,20 @@ Do weryfikacji na pierwszych zleceniach (pewność „niska” w danych):
    - Zebrane 2026-10-23 (`data/chemia.json`): Tenzi 16, Merida 11, Clinex 14 (ceny z hurtowniachemiczna.com), Voigt 14 – razem 55 produktów. Każdy ma cenę netto i brutto ze źródłem, pH (opis producenta albo sekcja 9 karty SDS), stężenia robocze i link do karty SDS z datą; wszystkie linki sprawdzone. Clinex podaje dodatkowo stężenia dla 3 poziomów brudu i wydajność 4 m² na litr roztworu (z kalkulatora na stronie producenta).
    - 16 kategorii środków powiązanych z brudem z `normy.json` i pozycjami z `ceny.json`. Luki: brak impregnatu do kostki; po 2 środki do powłok, biobójcze i poremontowe.
    - Zostało: Kärcher, Kiehl, Medi-Sept, Buzil; potem wyliczenie kosztu chemii na godzinę i na m² (zamiast 4 zł/h i impregnatu 8–12 zł/m² w `data/ceny.json`).
+   - **Jak kontynuować** (stan na 2026-10-23, nic z tych 4 firm nie jest jeszcze zebrane):
+     - Narzędzia: Git Bash ma `perl` (z `JSON::PP`) i `pdftotext`. Parsery stron Tenzi, Meridy i Voigta są w `scripts/chemia/` (wynik: jedna linia JSON na produkt). pH i datę karty czytamy z PDF karty SDS: `pdftotext -layout karta.pdf -` i szukamy linii `pH` (sekcja 9) oraz `Data aktualizacji`.
+     - Nowe produkty dopisujemy ręcznie do `produkty` w `data/chemia.json` w tym samym formacie (pola opisane w `meta`), uzupełniamy listy `produkty` w `kategorie`, licznik `produktow` w `dostawcy` i `meta.stan`, a potem sprawdzamy wszystkie linki (`cena_zrodlo.url`, `sds.url`).
+     - Kärcher: karta SDS po polsku pod adresem `https://s1.kaercher-media.com/documents/safetydatasheets/pl_PL/<numer katalogowy>_SDB_pl_PL.pdf` (np. RM 764 = `6.295-854.0`); numery są na stronach kategorii `karcher.com/pl/professional/srodki-czyszczace-i-pielegnacyjne/...`; cen chemii profesjonalnej na stronie producenta nie ma (`price: null`), więc trzeba znaleźć sklep dealera.
+     - Kiehl: karty PDF po polsku `https://www.kiehl-group.com/ix_pim_assets/doc/doc_Sicherheitsdatenblatt/<kod>_sd_<Nazwa>_pl.pdf`; ceny ze sklepu dystrybutora (np. sklep.tuden.com ma Kiehl).
+     - Medi-Sept: tabela kart na `medisept.pl/baza-wiedzy/do-pobrania/dokumentacja` (części kart brakuje w niektórych językach); ceny ze sklepu dystrybutora; przy pleśni sprawdzić działanie grzybobójcze.
+     - Buzil: karty przez formularz `www.buzil.pl/produkty/sicDownloads/downloadAll` (wybór języka i produktu; pojedynczej karty jeszcze nie sprawdzono, gdyby się nie dało – rezerwą jest Diversey); ceny ze sklepu dystrybutora.
+     - Szukamy zwłaszcza: impregnatu do kostki, środków do powłok, biobójczych (mech, glony) i poremontowych.
 5. **Aplikacja PWA**: kreator z paskiem postępu (usługa → województwo → pomieszczenia i brud → dodatki → chemia → podsumowanie kosztów), zapis wycen w przeglądarce, eksport do PDF lub linku. Silnik wyceny w JS ma dawać te same wyniki co scenariusze z `research/KALIBRACJA.md`.
 6. **Testy i publikacja** na GitHub Pages.
 
 ## Środowisko
 - Windows 11, PowerShell 5.1; Git 2.55 i GitHub CLI 2.103 (winget). Brak Pythona i Node.js – skrypty danych są w PowerShellu (`scripts/kalibracja.ps1`, zapisany jako UTF-8 z BOM).
+- Git Bash ma `perl` z `JSON::PP` i `pdftotext`; w Perlu są pomocnicze parsery stron dostawców chemii (`scripts/chemia/`).
 - Aplikacja będzie w czystym HTML/JS, bez kroku budowania.
 
 ## Otwarte pytania

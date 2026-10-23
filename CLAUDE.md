@@ -11,6 +11,7 @@ Na razie repo zawiera tylko dane i skrypt kalibracji. Aplikacja (etap 5) ma pows
 ## Środowisko i polecenia
 
 - Windows 11, Windows PowerShell 5.1. **Nie ma Pythona ani Node.js**, więc skrypty danych pisz w PowerShellu.
+- Git Bash (narzędzie Bash) ma `perl` z `JSON::PP` i `pdftotext`. Służą do zbierania chemii: `scripts/chemia/{tenzi,merida,voigt}.pl` czytają pobrane strony produktów (`perl scripts/chemia/tenzi.pl strona.html` → JSON z ceną, pH, dozowaniem i linkiem do karty), a `pdftotext -layout karta.pdf -` wyciąga pH (sekcja 9) i datę karty SDS. Instrukcja dla pozostałych dostawców jest w `PLAN.md`, etap 4.
 - Przeliczenie danych po każdej zmianie `data/ceny.json` lub plików CSV w `research/`:
   ```
   powershell -NoProfile -ExecutionPolicy Bypass -File scripts\kalibracja.ps1

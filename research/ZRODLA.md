@@ -10,6 +10,9 @@ Wszystkie strony pobrano 2026-10-23. Separator w plikach CSV to `;`, a część 
 | `kb_wojewodztwa.csv` | zakresy cen kb.pl dla 16 województw oraz płaca GUS w sekcji N (opis kolumn niżej) |
 | `ceny_nowe_uslugi.csv` | ceny usług dodanych 2026-10-23 (posadzki, doczyszczanie, kostka, elewacje, biura, firmy), AGD i dojazd, płaca minimalna i kilometrówka; każdy wiersz ma źródło, datę i link |
 | `KALIBRACJA.md` | raport z `scripts/kalibracja.ps1`: mediany, normy, porównanie modelu z rynkiem, województwa, marże |
+| `DYSTRYBUTORZY.md` | zatwierdzona lista 8 dostawców chemii (kryteria, karty SDS, ceny, rezerwa i odrzuceni) |
+
+Źródła cen środków chemicznych nie mają osobnego pliku: każdy produkt w `data/chemia.json` ma link do strony z ceną i datą pobrania (`cena_zrodlo`) oraz link do karty SDS z datą karty (`sds`).
 
 Z tych plików powstają dane aplikacji: `data/ceny.json` (ręcznie, każda cena ma pole `zrodla` z kluczem z sekcji `zrodla`) oraz `data/rynek.json` i `data/normy.json` (generuje `scripts/kalibracja.ps1`).
 
