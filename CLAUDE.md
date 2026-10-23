@@ -6,12 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Aplikacja PWA do wycen usług sprzątających i doboru chemii dla małych firm sprzątających (cały projekt jest po polsku: dane, identyfikatory opisowe, dokumentacja, commity). **`PLAN.md` jest źródłem prawdy**: linia „Status” mówi, który etap jest w toku, a sekcje „Ustalenia” i „Otwarte pytania” zawierają decyzje właściciela. Przy wznowieniu pracy zacznij od pierwszego niezamkniętego etapu i po każdym etapie zaktualizuj `PLAN.md` (status, ✅ przy etapie, hash commita).
 
-Na razie repo zawiera tylko dane i skrypt kalibracji. Aplikacja (etap 5) ma powstać w czystym HTML/JS bez kroku budowania i działać na GitHub Pages.
+Na razie repo zawiera dane (`data/`), materiały źródłowe (`research/`), skrypt kalibracji i parsery do zbierania chemii; kodu aplikacji jeszcze nie ma. Aplikacja (etap 5) ma powstać w czystym HTML/JS bez kroku budowania i działać na GitHub Pages.
 
 ## Środowisko i polecenia
 
-- Windows 11, Windows PowerShell 5.1. **Nie ma Pythona ani Node.js**, więc skrypty danych pisz w PowerShellu.
-- Git Bash (narzędzie Bash) ma `perl` z `JSON::PP` i `pdftotext`. Służą do zbierania chemii: `scripts/chemia/{tenzi,merida,voigt}.pl` czytają pobrane strony produktów (`perl scripts/chemia/tenzi.pl strona.html` → JSON z ceną, pH, dozowaniem i linkiem do karty), a `pdftotext -layout karta.pdf -` wyciąga pH (sekcja 9) i datę karty SDS. Instrukcja dla pozostałych dostawców jest w `PLAN.md`, etap 4.
+- Windows 11, Windows PowerShell 5.1. **Nie ma Pythona ani Node.js**, więc skrypty, które generują pliki w `data/`, pisz w PowerShellu.
+- Git Bash (narzędzie Bash) ma `perl` z `JSON::PP` i `pdftotext`. Używamy ich tylko pomocniczo, do zbierania chemii: `scripts/chemia/{tenzi,merida,voigt}.pl` czytają pobrane strony produktów (`perl scripts/chemia/tenzi.pl strona.html` → JSON z ceną, pH, dozowaniem i linkiem do karty), a `pdftotext -layout karta.pdf -` wyciąga pH (sekcja 9) i datę karty SDS. Instrukcja dla pozostałych dostawców jest w `PLAN.md`, etap 4.
 - Przeliczenie danych po każdej zmianie `data/ceny.json` lub plików CSV w `research/`:
   ```
   powershell -NoProfile -ExecutionPolicy Bypass -File scripts\kalibracja.ps1
@@ -27,10 +27,11 @@ research/cenniki_firm.csv ┐
 research/kb_wojewodztwa.csv ├─► scripts/kalibracja.ps1 ─► data/rynek.json
 data/ceny.json ────────────┘                           ├► data/normy.json
                                                        └► research/KALIBRACJA.md
+strony dostawców + karty SDS ──(scripts/chemia, ręcznie)──► data/chemia.json
 ```
 
 - `data/ceny.json` edytuje się ręcznie: katalog usług, ceny krajowe, progi metrażu, poziomy brudu i koszty firmy. Każda cena ma `zrodla` (klucze z sekcji `zrodla` na początku pliku), `zakres`, `pewnosc` (wysoka/średnia/niska wg liczby punktów danych) i zwykle `wyliczenie`. Nowe źródło dopisz do `zrodla` i opisz w `research/ZRODLA.md` (z datą i linkiem).
-- `data/chemia.json` też edytuje się ręcznie: dostawcy z `research/DYSTRYBUTORZY.md`, kategorie środków powiązane z `brud[].id` w `normy.json` i kluczami pozycji (`usługa.pozycja`) w `ceny.json`, produkty z ceną, pH, stężeniami (`proc` = % koncentratu w roztworze) i linkiem do karty SDS. Opis pól jest w `meta` pliku.
+- `data/chemia.json` też edytuje się ręcznie: dostawcy z `research/DYSTRYBUTORZY.md`, kategorie środków powiązane z `brud[].id` w `normy.json` i kluczami pozycji (`usługa.pozycja`) w `ceny.json`, produkty z ceną, pH, stężeniami (`proc` = % koncentratu w roztworze) i linkiem do karty SDS. Opis pól jest w `meta` pliku. Po zmianie sprawdź, czy JSON się wczytuje (np. `perl -MJSON::PP -e 'local $/; open my $f, "<", "data/chemia.json"; JSON::PP->new->utf8->decode(<$f>); print "OK\n"'` w Git Bash) i czy działają nowe linki `cena_zrodlo.url` i `sds.url`. Skrypt kalibracji jeszcze nie czyta tego pliku: koszt chemii w `data/ceny.json` (`koszty_firmy.chemia_h`, `koszt_chemii_m2`, `koszt_chemii_szt`) to wciąż szacunki, które mają zostać wyliczone z `chemia.json` (etap 4).
 - `data/rynek.json`, `data/normy.json` i `research/KALIBRACJA.md` są **generowane** – nie edytuj ich ręcznie, tylko zmień dane wejściowe albo skrypt. Data wersji jest wpisana na sztywno w `$dzis` na początku skryptu.
 - Pliki CSV w `research/` mają separator `;` i kropkę dziesiętną. Każdy wiersz ceny ma źródło i link.
 
