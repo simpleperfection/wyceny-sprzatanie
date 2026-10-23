@@ -11,7 +11,7 @@ Na razie repo zawiera dane (`data/`), materiały źródłowe (`research/`), skry
 ## Środowisko i polecenia
 
 - Windows 11, Windows PowerShell 5.1, Node.js 24 LTS (od 2026-10-23). Pythona nie ma. Node jest potrzebny maszynerii szablonu `.claude/` (hooki, doctor, workflowy); skrypty, które generują pliki w `data/`, nadal pisz w PowerShellu, a sama aplikacja nie ma kroku budowania.
-- Git Bash (narzędzie Bash) ma `perl` z `JSON::PP` i `pdftotext`. Używamy ich tylko pomocniczo, do zbierania chemii: `scripts/chemia/{tenzi,merida,voigt}.pl` czytają pobrane strony produktów (`perl scripts/chemia/tenzi.pl strona.html` → JSON z ceną, pH, dozowaniem i linkiem do karty), a `pdftotext -layout karta.pdf -` wyciąga pH (sekcja 9) i datę karty SDS. Instrukcja dla pozostałych dostawców jest w `PLAN.md`, etap 4.
+- Git Bash (narzędzie Bash) ma `perl` z `JSON::PP` i `pdftotext`. Używamy ich tylko pomocniczo, do zbierania chemii: `scripts/chemia/{tenzi,merida,voigt}.pl` czytają pobrane strony sklepów (`perl scripts/chemia/tenzi.pl strona.html` → JSON z ceną, pH, dozowaniem i linkiem do karty), `scripts/chemia/{kiehl,medisept,buzil}.pl` – strony producentów (pH, dozowanie, karta; ceny tych marek są ze sklepów dystrybutorów), a `pdftotext -layout karta.pdf -` wyciąga pH (sekcja 9) i datę karty SDS. Karty Buzila pobiera się tylko formularzem POST (opis w nagłówku `buzil.pl`).
 - Przeliczenie danych po każdej zmianie `data/ceny.json` lub plików CSV w `research/`:
   ```
   powershell -NoProfile -ExecutionPolicy Bypass -File scripts\kalibracja.ps1
