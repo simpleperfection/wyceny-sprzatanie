@@ -19,7 +19,7 @@ Narzędzie dla właściciela małej firmy sprzątającej:
 | Dane cen | własny skan firm lokalnych **+ średnie z porównywarek** (np. kb.pl) jako drugie źródło; firma może nadpisać swoje stawki |
 | Zabrudzenie → chemia | kurz, sierść → środek uniwersalny; tłuszcz → zasadowy; kamień/osad → kwaśny; pleśń → chlorowy/grzybobójczy; pył budowlany → preparat poremontowy; szyby → płyn do szyb |
 | GitHub | repo **publiczne** `simpleperfection/wyceny-sprzatanie` (darmowe GitHub Pages); Git i GitHub CLI zainstalowane przez winget, logowanie `gh auth login` robi właściciel (w osobnym oknie PowerShell) |
-| Workflow Claude Code | szablon [claude-code-starter](https://github.com/AIBiz-Automatyzacje/claude-code-starter) w `.claude/` (pipeline `dev-*`, review, baza wiedzy); dla jego hooków i doctora doinstalowany Node.js 24 LTS; opcjonalny plugin `dev-browser` niezainstalowany – opis w `CLAUDE.md` |
+| Workflow Claude Code | szablon [claude-code-starter](https://github.com/AIBiz-Automatyzacje/claude-code-starter) w `.claude/` (pipeline `dev-*`, review, baza wiedzy); dla jego hooków i doctora doinstalowany Node.js 24 LTS; pluginy `dev-browser` (projekt) i `figma` (konto) zainstalowane – opis w `CLAUDE.md` |
 | Dystrybutorzy chemii | listę 8 firm przygotowuje Claude (wg wielkości i dostępności kart SDS); lista zatwierdzona 2026-10-23 (Voigt zamiast Diversey) – `research/DYSTRYBUTORZY.md` |
 | Podsumowanie kosztów | cena dla klienta **+ koszt firmy** (chemia, robocizna, sprzęt, dojazd) **i marża** w zł i % |
 | Usługi w wersji 1 | mieszkanie: standard / gruntowne / po remoncie / po wynajmie; okna; tapicerka; dywany; **doczyszczanie; mycie posadzek; mycie kostki brukowej; mycie elewacji; sprzątanie biur; sprzątanie firm** (hale, magazyny, lokale usługowe) |

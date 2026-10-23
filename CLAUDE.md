@@ -22,7 +22,7 @@ Na razie repo zawiera dane (`data/`), materiały źródłowe (`research/`), skry
 ## Szablon workflow `.claude/`
 
 - `.claude/` to szablon [claude-code-starter](https://github.com/AIBiz-Automatyzacje/claude-code-starter) (commit `ba195e3`, zainstalowany 2026-10-23): pipeline `dev-*` (`/dev-brainstorm` → `/dev-plan` → `dev-autopilot-wf` → `/dev-pr`), agenci, reguły, hooki i workflowy. Szablon jest zestrojony pod React + Supabase; w tym projekcie przydają się głównie pipeline, review i baza wiedzy. Zmiany z szablonu zaciąga `/sync-template`.
-- Sprawdzian środowiska (w Git Bash): `bash .claude/scripts/doctor/doctor.sh`. `WYNIK: OK` = można startować. Jedyna uwaga to niezainstalowany plugin `dev-browser` (pipeline go nie woła).
+- Sprawdzian środowiska (w Git Bash): `bash .claude/scripts/doctor/doctor.sh`. `WYNIK: OK` = można startować (stan z 2026-10-23: OK, bez uwag). Pluginy projektu: `dev-browser` w zakresie projektu, `figma` na koncie właściciela.
 - Dostosowania do tego repo: `.gitattributes` wymusza LF w `*.sh` (przy `core.autocrlf=true` Git Bash nie czyta CRLF), `.gitignore` przepuszcza wzorce `.env*.example`, a ścieżki hooków Stop w `.claude/settings.json` są w cudzysłowie, bo katalog projektu ma spacje. Po `/sync-template` sprawdź, czy cudzysłowy zostały.
 - `claude` nie ma w PATH. Polecenia `claude plugin …` uruchamia się CLI dołączonym do aplikacji desktop: `%LOCALAPPDATA%\Claude-Data\<profil>\claude-code\<wersja>\<hash>\claude.exe`.
 
