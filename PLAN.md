@@ -1,6 +1,6 @@
 # PLAN – aplikacja do wycen dla początkujących firm sprzątających
 
-Status: **w realizacji** – zaakceptowany 2026-10-23. Etap 1: Git i GitHub CLI zainstalowane, `git init` zrobiony; czeka na `gh auth login`, potem pierwszy commit i wypchnięcie. Etap 2: ceny nowych usług zebrane.
+Status: **w realizacji** – zaakceptowany 2026-10-23. Etapy 1–3 **zakończone**: publiczne repo https://github.com/simpleperfection/wyceny-sprzatanie (gałąź `main`, commity z adresu noreply), dane cen (`data/ceny.json`, `data/rynek.json`) i skalibrowane normy czasu (`data/normy.json`). Następny: etap 4 – lista 8 dystrybutorów chemii do zatwierdzenia.
 Data: 2026-10-23
 
 ## Cel
@@ -15,7 +15,7 @@ Narzędzie dla właściciela małej firmy sprzątającej:
 | Użytkownik | właściciel firmy sprzątającej |
 | Forma | aplikacja webowa PWA (telefon i komputer), kod na GitHubie, hosting GitHub Pages |
 | Metoda wyceny | **B: lista pomieszczeń i typów brudu** (kuchnia, łazienka, pokój, okna…; brud: kurz, tłuszcz, kamień, pył budowlany, sierść, pleśń; intensywność 1–3) |
-| Wzór ceny | Σ(m² × norma min/m² dla typu brudu × mnożnik intensywności) / 60 × stawka zł/h województwa + dodatki (okna, AGD, kanapy, dywany); wynik porównany z medianą rynkową dla tej usługi |
+| Wzór ceny | usługi z pomieszczeniami: czas = 30 min przygotowania + Σ m² × (norma pomieszczenia × mnożnik zakresu + dodatek za brud wg poziomu 1–3), cena = czas / 60 × stawka zł/h województwa + dodatki (okna, AGD, tapicerka, dywany); usługi z pozycjami (posadzki, kostka, elewacja, hale): m² × cena krajowa × wsp województwa × próg metrażu (× poziom brudu); wynik porównany z medianą rynkową. Szczegóły w `data/normy.json` (pole `meta.wzor`) |
 | Dane cen | własny skan firm lokalnych **+ średnie z porównywarek** (np. kb.pl) jako drugie źródło; firma może nadpisać swoje stawki |
 | Zabrudzenie → chemia | tłuszcz → środek zasadowy; kamień/osad → kwaśny; pleśń → chlorowy/grzybobójczy; pył budowlany → preparat poremontowy; szyby → płyn do szyb |
 | GitHub | repo **publiczne** (darmowe GitHub Pages); Git i GitHub CLI instalowane przez winget, logowanie `gh auth login` robi właściciel |
@@ -44,14 +44,35 @@ Pliki: `research/ceny_nowe_uslugi.csv` (każda cena ze źródłem i linkiem), `r
 
 Wniosek: typy brudu z elewacji (atmosferyczny / biologiczny / chemiczny) pasują do metody B, więc w kreatorze będą tak samo jak przy pomieszczeniach. Dla posadzek, biur i hal cena mocno spada z metrażem, więc potrzebne są progi metrażu.
 
+## Dane i normy (etapy 2–3, 2026-10-23)
+| Plik | Zawartość | Jak powstaje |
+|---|---|---|
+| `data/ceny.json` | 14 usług, 35 pozycji z ceną, zakresem, pewnością i źródłem; progi metrażu, poziomy brudu, koszty firmy (praca, chemia, sprzęt, dojazd) | ręcznie, z plików `research/` |
+| `data/rynek.json` | mediany krajowe, współczynnik i stawka godzinowa 16 województw, płaca GUS | `scripts/kalibracja.ps1` |
+| `data/normy.json` | normy min/m² pomieszczeń i brudu, czasy pozycji, czas przygotowania | `scripts/kalibracja.ps1` |
+| `research/KALIBRACJA.md` | raport: model a rynek, województwa, marże | `scripts/kalibracja.ps1` |
+
+Uruchomienie po zmianie danych: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\kalibracja.ps1`.
+
+Najważniejsze wyniki:
+- Punkty kalibracji (mediany skanu): **65 zł/h**, **mieszkanie 50 m² = 250 zł** (3,8 h pracy), **po remoncie 11,75 zł/m²**. Model trafia w nie z dokładnością do 1%, gruntowne wychodzi 1,48× standard.
+- Normy: pokój 2,63 · kuchnia 6,83 · łazienka 11,56 min/m²; pył budowlany (poziom 2) +4 min/m²; kurz na poziomie 3 wydłuża pracę o 41% (rynek: +30–50%).
+- Współczynnik województwa łączy nasz skan (waga = liczba firm) z kb.pl (waga 5 firm): od 0,80 (świętokrzyskie) do 1,16 (wielkopolskie); stawki 52–75,50 zł/h.
+- Marża brutto na zleceniu przy płacy minimalnej (37,83 zł/h z ZUS pracodawcy): mieszkania 36%, okna/tapicerka/dywany 57–65%, usługi maszynowe 70–82% (bez kosztu zakupu sprzętu i auta).
+
+Do weryfikacji na pierwszych zleceniach (pewność „niska” w danych):
+- sprzątanie po wynajmie (brak danych rynkowych, przyjęto 1,49× standard);
+- duże biura przy częstym sprzątaniu: model jest powyżej widełek CleanConnect;
+- czasy pozycji i wydajności maszyn (m²/h), koszt sprzętu i chemii (chemia zostanie zastąpiona cenami produktów z etapu 4);
+- „doczyszczanie” przyjęto jako doczyszczanie posadzek i fug (szorowarka, usuwanie powłok, zabezpieczenie).
+
 ## Etapy prac (po akceptacji)
-1. **Repozytorium**: `git init`, `.gitignore`, pierwszy commit, prywatne repo na GitHubie, wypchnięcie kodu.
-2. **Dane cen**: uzupełnienie o średnie z porównywarek dla 16 województw → `data/ceny.json` (źródło i data przy każdej liczbie). Nowe usługi (doczyszczanie, posadzki, kostka, elewacja, biura, firmy) mają mało lokalnych cenników, więc dla nich: średnia krajowa z porównywarek × współczynnik województwa wyliczony ze stawek godzinowych i cen mieszkań.
-3. **Normy czasu pracy**: tabela min/m² dla typów brudu, skalibrowana tak, żeby dla mieszkania 50 m² wynik zgadzał się z medianą rynkową.
+1. ✅ **Repozytorium**: `git init`, `.gitignore`, pierwszy commit, publiczne repo na GitHubie, wypchnięcie kodu.
+2. ✅ **Dane cen**: uzupełnienie o średnie z porównywarek dla 16 województw → `data/ceny.json` (źródło i data przy każdej liczbie). Nowe usługi (doczyszczanie, posadzki, kostka, elewacja, biura, firmy) mają mało lokalnych cenników, więc dla nich: średnia krajowa z porównywarek × współczynnik województwa wyliczony ze stawek godzinowych i cen mieszkań.
+3. ✅ **Normy czasu pracy**: tabela min/m² dla typów brudu, skalibrowana tak, żeby dla mieszkania 50 m² wynik zgadzał się z medianą rynkową.
 4. **Baza chemii**: produkty i karty charakterystyki (SDS) od 8 dystrybutorów → `data/chemia.json` (nazwa, przeznaczenie, pH, rozcieńczenie, cena, link do SDS).
 5. **Aplikacja PWA**: kreator z paskiem postępu (usługa → województwo → pomieszczenia i brud → dodatki → chemia → podsumowanie kosztów), zapis wycen w przeglądarce, eksport do PDF lub linku.
 6. **Testy i publikacja** na GitHub Pages.
 
 ## Otwarte pytania
-Wszystkie 4 pytania rozstrzygnięte 2026-10-23 (patrz „Ustalenia”). Zostało:
-- nazwa repozytorium na GitHubie (propozycja: `wyceny-sprzatanie`); konto wyjdzie z `gh auth login`.
+Brak – wszystkie rozstrzygnięte 2026-10-23 (patrz „Ustalenia”). Repo: `simpleperfection/wyceny-sprzatanie`.

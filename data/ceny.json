@@ -1,0 +1,330 @@
+{
+  "meta": {
+    "wersja": "2026-10-23",
+    "waluta": "PLN",
+    "opis": "Katalog usług i krajowe ceny odniesienia. Cena w województwie = cena krajowa × wsp z data/rynek.json. Usługi w trybie 'pomieszczenia' liczy się z czasu pracy (data/normy.json) × stawka godzinowa województwa.",
+    "zasada_wartosci": "cena = mediana punktów ze źródeł (cena firmy, średnia porównywarki albo środek widełek), zakres = min–max ze źródeł",
+    "pewnosc": "wysoka: 10 i więcej punktów danych, średnia: 3–9, niska: 1–2 albo wartość wyliczona",
+    "podstawa_ceny": "brutto = cena końcowa dla klienta indywidualnego (tak podaje rynek); netto = cena dla firm, do której doliczasz VAT. Stawkę VAT (zwolnienie, 8% lub 23%) ustala księgowy.",
+    "zrodla_szczegolowe": "research/ZRODLA.md, research/cenniki_firm.csv, research/ceny_nowe_uslugi.csv"
+  },
+  "zrodla": {
+    "skan_firm": { "nazwa": "Skan cenników lokalnych firm (95 firm, 80 z cenami)", "plik": "research/cenniki_firm.csv", "data_pobrania": "2026-10-23" },
+    "kb_dom": { "nazwa": "kb.pl – cennik sprzątania domu 2026", "url": "https://kb.pl/cenniki/sprzatanie-domu/", "data_cennika": "2026-05-23" },
+    "kb_biura": { "nazwa": "kb.pl – cennik sprzątania biur 2026", "url": "https://kb.pl/cenniki/sprzatanie-biur/", "data_cennika": "2026-05-20" },
+    "kb_po_remoncie": { "nazwa": "kb.pl – cennik sprzątania po remoncie 2026", "url": "https://kb.pl/cenniki/sprzatanie-po-remoncie/", "data_cennika": "2026-04-29" },
+    "kb_elewacja": { "nazwa": "kb.pl – cennik mycia elewacji karcherem 2026", "url": "https://kb.pl/cenniki/mycie-elewacji-karcherem/", "data_cennika": "2026-04-29" },
+    "kb_elewacja_artykul": { "nazwa": "kb.pl – mycie elewacji, cennik w różnych miastach", "url": "https://kb.pl/elewacje-i-ocieplenie/elewacje/mycie-elewacji-cennik-w-roznych-miastach-w-polsce/", "data_cennika": "2026-01-07" },
+    "kb_tapicerka": { "nazwa": "kb.pl – cennik czyszczenia tapicerki meblowej 2026", "url": "https://kb.pl/cenniki/czyszczenie-tapicerki-meblowej/", "data_cennika": "2026-04-29" },
+    "cenauslug_kostka": { "nazwa": "cenauslug.pl – mycie ciśnieniowe kostki brukowej", "url": "https://cenauslug.pl/dom-i-ogrod/mycie-cisnieniowe-kostki-brukowej", "data_cennika": "2026-05-19" },
+    "cenauslug_impregnacja": { "nazwa": "cenauslug.pl – czyszczenie i impregnacja kostki (przewodnik)", "url": "https://cenauslug.pl/przewodnik/czyszczenie-i-impregnacja-kostki-brukowej", "data_cennika": "2026-08" },
+    "cenauslug_posadzki": { "nazwa": "cenauslug.pl – maszynowe doczyszczanie posadzek", "url": "https://cenauslug.pl/firma-i-biuro/maszynowe-doczyszczanie-posadzek", "data_cennika": "2026" },
+    "cenauslug_fugi": { "nazwa": "cenauslug.pl – mechaniczne czyszczenie fug", "url": "https://cenauslug.pl/dom-i-ogrod/mechaniczne-czyszczenie-fug", "data_cennika": "2026" },
+    "cenauslug_hale": { "nazwa": "cenauslug.pl – sprzątanie hali magazynowej", "url": "https://cenauslug.pl/firma-i-biuro/sprzatanie-hali-magazynowej/czestochowa", "data_cennika": "2026" },
+    "cleanconnect": { "nazwa": "CleanConnect – Stawki sprzątania 2026", "url": "https://cleanconnect.pl/blog/stawki-sprzatania-2026-ile-zarabiaja-firmy", "data_cennika": "2026-09-10" },
+    "tanie_doczyszczanie": { "nazwa": "Tanie Doczyszczanie (Lędziny) – cennik", "url": "https://www.taniedoczyszczanie.pl/cennik-uslug-sprzatania-maszynowego", "data_cennika": "b.d." },
+    "czyszczenie_posadzek": { "nazwa": "czyszczenie-posadzek.com.pl (Katowice) – cennik", "url": "https://czyszczenie-posadzek.com.pl/mycie-posadzek-hali-cennik/", "data_cennika": "2022-11-24" },
+    "szoruj": { "nazwa": "Szoruj (Warszawa) – cennik", "url": "https://szoruj.pl/cennik/cennik-mycie-posadzek/", "data_cennika": "b.d." },
+    "reefa": { "nazwa": "Reefa – cennik sprzątania biur (tytuł strony)", "url": "https://reefa.pl/cennik/sprzatanie-biur", "data_cennika": "2026" },
+    "cleaningroom": { "nazwa": "CleaningRoom (Gdańsk) – usługi dodatkowe", "url": "https://cleaningroom.pl/cennik-uslug/", "data_cennika": "2026" },
+    "czysciutko": { "nazwa": "Czyściutko (Prudnik) – cennik", "url": "https://www.czysciutkoprudnik.pl/cennik", "data_cennika": "2025" },
+    "sonicdom": { "nazwa": "SonicDom (Lublin) – cennik", "url": "https://sonic-dom.pl/cennik/", "data_cennika": "2026" },
+    "placa_minimalna_2026": { "nazwa": "Rozporządzenie RM z 11.09.2025 w sprawie minimalnego wynagrodzenia (Dz.U. 2025 poz. 1242)", "url": "https://zielonalinia.gov.pl/wynagrodzenie-minimalne-w-2026-1/", "data_cennika": "2026-01-01" },
+    "kilometrowka": { "nazwa": "Rozporządzenie MI z 22.12.2022 – stawki za 1 km przebiegu (bez zmian w 2026)", "url": "https://poradnikprzedsiebiorcy.pl/-stawka-za-1-km-przebiegu-pojazdu-jaki-limit", "data_cennika": "2023-01-17" }
+  },
+  "uslugi": [
+    {
+      "id": "mieszkanie_standard",
+      "nazwa": "Mieszkanie lub dom – sprzątanie standardowe",
+      "grupa": "dom",
+      "tryb": "pomieszczenia",
+      "zestaw_pomieszczen": "dom",
+      "podstawa_ceny": "brutto",
+      "mnoznik_zakresu": 1.0,
+      "brud_domyslny": [],
+      "dodatki": ["okna", "agd", "tapicerka", "dywany"],
+      "minimum_zl": 150,
+      "zrodla": ["skan_firm"],
+      "uwagi": "Punkt kalibracji norm: mieszkanie 50 m² = mediana rynkowa (data/rynek.json)."
+    },
+    {
+      "id": "mieszkanie_gruntowne",
+      "nazwa": "Mieszkanie lub dom – sprzątanie gruntowne",
+      "grupa": "dom",
+      "tryb": "pomieszczenia",
+      "zestaw_pomieszczen": "dom",
+      "podstawa_ceny": "brutto",
+      "mnoznik_zakresu": 1.55,
+      "brud_domyslny": [],
+      "dodatki": ["okna", "agd", "tapicerka", "dywany"],
+      "minimum_zl": 150,
+      "zrodla": ["skan_firm"],
+      "pewnosc": "niska",
+      "wyliczenie": "gruntowne / standard w cennikach: CleanHome 220/150 = 1,47; Zielone Sprzątanie 250/160 = 1,56; OlympHome 800/230 = 3,48 → mediana 1,56. Mnożnik dotyczy czasu pomieszczeń (bez stałego czasu przygotowania), więc cała usługa wychodzi ok. 1,5× standard."
+    },
+    {
+      "id": "mieszkanie_po_remoncie",
+      "nazwa": "Mieszkanie lub dom – sprzątanie po remoncie",
+      "grupa": "dom",
+      "tryb": "pomieszczenia",
+      "zestaw_pomieszczen": "dom",
+      "podstawa_ceny": "brutto",
+      "mnoznik_zakresu": 1.55,
+      "brud_domyslny": [{ "pomieszczenie": "*", "brud": "pyl_budowlany", "poziom": 2 }],
+      "dodatki": ["okna", "agd", "tapicerka", "dywany"],
+      "minimum_zl": 150,
+      "zrodla": ["skan_firm", "kb_po_remoncie"],
+      "uwagi": "Zakres jak przy gruntownym + pył budowlany (poziom 2) we wszystkich pomieszczeniach. Norma pyłu jest kalibrowana do mediany ceny po remoncie za m²."
+    },
+    {
+      "id": "mieszkanie_po_wynajmie",
+      "nazwa": "Mieszkanie – sprzątanie po wynajmie lub przeprowadzce",
+      "grupa": "dom",
+      "tryb": "pomieszczenia",
+      "zestaw_pomieszczen": "dom",
+      "podstawa_ceny": "brutto",
+      "mnoznik_zakresu": 1.3,
+      "brud_domyslny": [
+        { "pomieszczenie": "kuchnia", "brud": "tluszcz", "poziom": 2 },
+        { "pomieszczenie": "lazienka", "brud": "kamien", "poziom": 2 }
+      ],
+      "dodatki": ["okna", "agd", "tapicerka", "dywany"],
+      "minimum_zl": 150,
+      "zrodla": [],
+      "pewnosc": "niska",
+      "uwagi": "Założenie bez danych rynkowych: puste mieszkanie (szybciej niż gruntowne) + typowy tłuszcz w kuchni i kamień w łazience. Do weryfikacji na pierwszych zleceniach."
+    },
+    {
+      "id": "sprzatanie_biur",
+      "nazwa": "Sprzątanie biur i lokali usługowych",
+      "grupa": "firma",
+      "tryb": "pomieszczenia",
+      "zestaw_pomieszczen": "biuro",
+      "podstawa_ceny": "netto",
+      "mnoznik_zakresu": 1.0,
+      "warianty": [
+        { "id": "jednorazowe", "nazwa": "Jednorazowo", "wizyt_w_miesiacu": 1, "mnoznik_zakresu": 1.5 },
+        { "id": "abonament_1", "nazwa": "Abonament 1× w tygodniu", "wizyt_w_miesiacu": 4.33, "mnoznik_zakresu": 1.0 },
+        { "id": "abonament_2", "nazwa": "Abonament 2× w tygodniu", "wizyt_w_miesiacu": 8.67, "mnoznik_zakresu": 0.85 },
+        { "id": "abonament_3", "nazwa": "Abonament 3× w tygodniu", "wizyt_w_miesiacu": 13, "mnoznik_zakresu": 0.75 },
+        { "id": "abonament_5", "nazwa": "Abonament codziennie (5× w tygodniu)", "wizyt_w_miesiacu": 21.67, "mnoznik_zakresu": 0.65 }
+      ],
+      "brud_domyslny": [],
+      "dodatki": ["okna", "agd", "dywany"],
+      "minimum_zl": 150,
+      "zrodla": ["kb_biura", "cleanconnect", "reefa"],
+      "pewnosc": "niska",
+      "rynek_odniesienia": [
+        { "opis": "abonament 1× w tygodniu", "zakres": [4.5, 7.0], "jednostka": "zł/m²/mies.", "vat": "brutto", "zrodlo": "cleanconnect" },
+        { "opis": "abonament 3× w tygodniu i częściej (raczej duże biura)", "zakres": [2.8, 4.5], "jednostka": "zł/m²/mies.", "vat": "brutto", "zrodlo": "cleanconnect" },
+        { "opis": "jednorazowo, biuro do 100 m² (do 2 h)", "zakres": [366, 418], "jednostka": "zł/usługa", "vat": "brutto 8%", "zrodlo": "kb_biura" },
+        { "opis": "minimum miesięczne sieci sprzątającej (Warszawa)", "wartosc": 1200, "jednostka": "zł/mies.", "vat": "netto", "zrodlo": "reefa" }
+      ],
+      "uwagi": "Krótsza wizyta przy częstszym sprzątaniu (mnożniki 0,85–0,65) to założenie: przy częstych wizytach mniej brudu się odkłada. Lokale usługowe (sklep, gabinet) wycenia się tymi samymi pomieszczeniami."
+    },
+    {
+      "id": "okna",
+      "nazwa": "Mycie okien",
+      "grupa": "dom",
+      "tryb": "pozycje",
+      "podstawa_ceny": "brutto",
+      "minimum_zl": 150,
+      "pozycje": [
+        { "id": "okno_1", "nazwa": "Okno 1-skrzydłowe", "jednostka": "szt", "cena": 30, "zakres": [10, 70], "pewnosc": "wysoka", "zrodla": ["skan_firm"], "wyliczenie": "mediana 39 cenników" },
+        { "id": "okno_2", "nazwa": "Okno 2-skrzydłowe", "jednostka": "szt", "cena": 42, "zakres": [30, 80], "pewnosc": "niska", "zrodla": ["skan_firm"], "wyliczenie": "okno 1-skrz. × 1,4 (proporcja 2-skrz./1-skrz.: Stefpol 80/50 = 1,6; Łowcy Porządku 30/25 = 1,2)" },
+        { "id": "okno_balkonowe", "nazwa": "Okno balkonowe lub drzwi tarasowe", "jednostka": "szt", "cena": 50, "zakres": null, "pewnosc": "niska", "zrodla": ["skan_firm"], "wyliczenie": "Magiczny Błysk (Białystok) „od 50 zł”" }
+      ]
+    },
+    {
+      "id": "agd",
+      "nazwa": "AGD, szafki i balkon (tylko jako dodatek)",
+      "grupa": "dom",
+      "tryb": "pozycje",
+      "tylko_dodatek": true,
+      "podstawa_ceny": "brutto",
+      "pozycje": [
+        { "id": "piekarnik", "nazwa": "Piekarnik (wnętrze)", "jednostka": "szt", "cena": 70, "zakres": [50, 80], "pewnosc": "średnia", "zrodla": ["cleaningroom", "czysciutko", "sonicdom"], "wyliczenie": "70; 50–80 (środek 65); 70 → mediana 70" },
+        { "id": "lodowka", "nazwa": "Lodówka (wnętrze)", "jednostka": "szt", "cena": 60, "zakres": [50, 85], "pewnosc": "średnia", "zrodla": ["cleaningroom", "czysciutko", "sonicdom"], "wyliczenie": "55 (do 90 cm); 50–70 (środek 60); od 60 → mediana 60" },
+        { "id": "mikrofalowka", "nazwa": "Mikrofalówka", "jednostka": "szt", "cena": 30, "zakres": [15, 70], "pewnosc": "średnia", "zrodla": ["cleaningroom", "czysciutko", "sonicdom"], "wyliczenie": "30; 15–30 (środek 22,5); 70 → mediana 30" },
+        { "id": "okap", "nazwa": "Okap", "jednostka": "szt", "cena": 50, "zakres": [40, 60], "pewnosc": "niska", "zrodla": ["czysciutko"] },
+        { "id": "zmywarka", "nazwa": "Zmywarka", "jednostka": "szt", "cena": 55, "zakres": [50, 70], "pewnosc": "niska", "zrodla": ["czysciutko", "sonicdom"], "wyliczenie": "50–70 (środek 60); 50 → mediana 55" },
+        { "id": "szafka", "nazwa": "Wnętrze szafki kuchennej", "jednostka": "szt", "cena": 10, "zakres": null, "pewnosc": "niska", "zrodla": ["cleaningroom"], "uwagi": "Czyściutko: komplet szafek 70–100 zł" },
+        { "id": "balkon", "nazwa": "Balkon (do ok. 5 m²)", "jednostka": "szt", "cena": 45, "zakres": [35, 50], "pewnosc": "niska", "zrodla": ["cleaningroom", "czysciutko"], "wyliczenie": "od 50; 35–50 (środek 42,5) → mediana 46, zaokrąglone do 45" }
+      ]
+    },
+    {
+      "id": "tapicerka",
+      "nazwa": "Pranie tapicerki",
+      "grupa": "dom",
+      "tryb": "pozycje",
+      "podstawa_ceny": "brutto",
+      "minimum_zl": 150,
+      "pozycje": [
+        { "id": "kanapa_3", "nazwa": "Kanapa 3-osobowa", "jednostka": "szt", "cena": 150, "zakres": [60, 240], "pewnosc": "wysoka", "zrodla": ["skan_firm"], "wyliczenie": "mediana 23 cenników", "sprzet": "ekstraktor", "koszt_chemii_szt": 6 },
+        { "id": "kanapa_2", "nazwa": "Kanapa 2-osobowa", "jednostka": "szt", "cena": 120, "zakres": null, "pewnosc": "niska", "zrodla": ["skan_firm"], "wyliczenie": "Pranie Tapicerki Lublin: 120", "sprzet": "ekstraktor", "koszt_chemii_szt": 5 },
+        { "id": "naroznik", "nazwa": "Narożnik", "jednostka": "szt", "cena": 160, "zakres": [120, 200], "pewnosc": "średnia", "zrodla": ["skan_firm"], "wyliczenie": "Cleansi 160; InBlask od 200; Czysty Dom 120–190 (środek 155) → mediana 160", "sprzet": "ekstraktor", "koszt_chemii_szt": 8 },
+        { "id": "fotel", "nazwa": "Fotel", "jednostka": "szt", "cena": 50, "zakres": [46, 63], "pewnosc": "niska", "zrodla": ["kb_tapicerka"], "wyliczenie": "kb.pl: średnio 51,21 zł brutto „za czyszczenie tapicerki” (jednostka niepodana, przyjęto 1 mebel jednoosobowy)", "sprzet": "ekstraktor", "koszt_chemii_szt": 2 }
+      ]
+    },
+    {
+      "id": "dywany",
+      "nazwa": "Pranie dywanów i wykładzin",
+      "grupa": "dom",
+      "tryb": "pozycje",
+      "podstawa_ceny": "brutto",
+      "minimum_zl": 150,
+      "pozycje": [
+        { "id": "dywan", "nazwa": "Dywan", "jednostka": "m2", "cena": 17.5, "zakres": [5, 27], "pewnosc": "wysoka", "zrodla": ["skan_firm"], "wyliczenie": "mediana 14 cenników", "sprzet": "ekstraktor", "koszt_chemii_m2": 0.6 },
+        { "id": "wykladzina", "nazwa": "Wykładzina", "jednostka": "m2", "cena": 15, "zakres": null, "pewnosc": "niska", "zrodla": ["skan_firm"], "wyliczenie": "InBlask (Lublin) „od 15 zł/m²”", "sprzet": "ekstraktor", "koszt_chemii_m2": 0.5 }
+      ]
+    },
+    {
+      "id": "mycie_posadzek",
+      "nazwa": "Maszynowe mycie posadzek",
+      "grupa": "firma",
+      "tryb": "pozycje",
+      "podstawa_ceny": "netto",
+      "progi": "maszynowe",
+      "minimum_zl": 300,
+      "pozycje": [
+        { "id": "mycie_maszynowe", "nazwa": "Mycie szorowarką (beton, żywica, PCV)", "jednostka": "m2", "cena": 1.8, "zakres": [0.6, 10], "pewnosc": "średnia", "zrodla": ["tanie_doczyszczanie", "czyszczenie_posadzek", "szoruj"], "wyliczenie": "0,60 (duże hale); 1,80; 10 (małe zlecenia) → mediana 1,80", "sprzet": "szorowarka", "koszt_chemii_m2": 0.05 },
+        { "id": "mycie_plytek", "nazwa": "Mycie płytek razem z fugami", "jednostka": "m2", "cena": 4.0, "zakres": null, "pewnosc": "niska", "zrodla": ["czyszczenie_posadzek"], "sprzet": "szorowarka", "koszt_chemii_m2": 0.1 }
+      ]
+    },
+    {
+      "id": "doczyszczanie",
+      "nazwa": "Doczyszczanie posadzek i fug",
+      "grupa": "firma",
+      "tryb": "pozycje",
+      "podstawa_ceny": "netto",
+      "progi": "maszynowe",
+      "poziomy_brudu": true,
+      "minimum_zl": 300,
+      "pozycje": [
+        { "id": "doczyszczanie_posadzki", "nazwa": "Doczyszczanie posadzki szorowarką jednotarczową", "jednostka": "m2", "cena": 10, "zakres": [4, 25], "pewnosc": "średnia", "zrodla": ["tanie_doczyszczanie", "czyszczenie_posadzek", "szoruj", "cleanconnect", "cenauslug_posadzki"], "wyliczenie": "4,00; 4,20; 10; 8–15 (środek 11,5); średnio 20 → mediana 10", "sprzet": "szorowarka", "koszt_chemii_m2": 0.8 },
+        { "id": "doczyszczanie_fug", "nazwa": "Mechaniczne czyszczenie fug", "jednostka": "m2", "cena": 13.5, "zakres": [8, 25], "pewnosc": "niska", "zrodla": ["czyszczenie_posadzek", "cenauslug_fugi"], "wyliczenie": "od 8 (płytki z fugami); średnio 19 → mediana 13,5", "sprzet": "szorowarka", "koszt_chemii_m2": 1.0 },
+        { "id": "usuwanie_powlok", "nazwa": "Usuwanie starych powłok (akryl, wosk)", "jednostka": "m2", "cena": 6, "zakres": null, "pewnosc": "niska", "zrodla": ["tanie_doczyszczanie"], "sprzet": "szorowarka", "koszt_chemii_m2": 1.2 },
+        { "id": "zabezpieczenie", "nazwa": "Zabezpieczenie powłoką (polimer, wosk, akryl)", "jednostka": "m2", "cena": 9.5, "zakres": [6, 12], "pewnosc": "średnia", "zrodla": ["tanie_doczyszczanie", "czyszczenie_posadzek", "szoruj"], "wyliczenie": "6 (z materiałem); 9–10 (środek 9,5); od 12 → mediana 9,5", "koszt_chemii_m2": 2.5, "typ": "doplata" },
+        { "id": "usuwanie_farby", "nazwa": "Usuwanie farby z posadzki", "jednostka": "m2", "cena": 15, "zakres": null, "pewnosc": "niska", "zrodla": ["czyszczenie_posadzek"], "sprzet": "szorowarka", "koszt_chemii_m2": 1.5, "typ": "doplata" }
+      ]
+    },
+    {
+      "id": "mycie_kostki",
+      "nazwa": "Mycie kostki brukowej",
+      "grupa": "zewnatrz",
+      "tryb": "pozycje",
+      "podstawa_ceny": "brutto",
+      "progi": "zewnetrzne",
+      "minimum_zl": 300,
+      "pozycje": [
+        { "id": "mycie", "nazwa": "Mycie ciśnieniowe", "jednostka": "m2", "cena": 15, "zakres": [8, 21], "pewnosc": "niska", "zrodla": ["szoruj", "cenauslug_kostka"], "wyliczenie": "Szoruj 13 (z chemią); cenauslug.pl średnio 17 → mediana 15", "sprzet": "myjka_cisnieniowa", "koszt_chemii_m2": 0.4 },
+        { "id": "mech", "nazwa": "Usuwanie mchu z fug i ponowne piaskowanie", "jednostka": "m2", "cena": 7.5, "zakres": [5, 10], "pewnosc": "niska", "zrodla": ["cenauslug_kostka"], "koszt_chemii_m2": 1.5, "typ": "doplata", "uwagi": "Koszt piasku do fug wliczony w koszt chemii." },
+        { "id": "olej", "nazwa": "Usuwanie plam oleju", "jednostka": "m2", "cena": 5.5, "zakres": [4, 7], "pewnosc": "niska", "zrodla": ["cenauslug_kostka"], "koszt_chemii_m2": 1.0, "typ": "doplata" },
+        { "id": "impregnacja", "nazwa": "Impregnacja bezbarwna", "jednostka": "m2", "cena": 21.5, "zakres": [15, 28], "pewnosc": "niska", "zrodla": ["cenauslug_impregnacja"], "koszt_chemii_m2": 8, "doliczaj_material": true, "typ": "doplata", "uwagi": "Rynek podaje cenę samej robocizny, więc impregnat doliczamy klientowi. Koszt impregnatu to szacunek (ok. 0,2 l/m² × 40 zł/l) do zastąpienia cenami produktów z etapu 4." },
+        { "id": "impregnacja_mokra", "nazwa": "Impregnacja z efektem mokrej kostki", "jednostka": "m2", "cena": 28.5, "zakres": [15, 42], "pewnosc": "niska", "zrodla": ["cenauslug_impregnacja"], "koszt_chemii_m2": 12, "doliczaj_material": true, "typ": "doplata", "uwagi": "Rynek podaje cenę samej robocizny, więc impregnat doliczamy klientowi. Koszt impregnatu to szacunek (ok. 0,3 l/m² × 40 zł/l) do zastąpienia cenami produktów z etapu 4." }
+      ]
+    },
+    {
+      "id": "mycie_elewacji",
+      "nazwa": "Mycie elewacji",
+      "grupa": "zewnatrz",
+      "tryb": "pozycje",
+      "podstawa_ceny": "brutto",
+      "progi": "zewnetrzne",
+      "minimum_zl": 300,
+      "uwagi": "Ceny dla elewacji do ok. 200 m² o zwykłej trudności. Praca na wysokości (podnośnik, rusztowanie) do doliczenia osobno.",
+      "pozycje": [
+        { "id": "atmosferyczne", "nazwa": "Brud atmosferyczny (kurz, osady)", "jednostka": "m2", "cena": 24.5, "zakres": [22.3, 28.9], "pewnosc": "średnia", "zrodla": ["kb_elewacja", "cleanconnect"], "wyliczenie": "kb.pl średnio 24,52; CleanConnect 15–35 (środek 25) → 24,5", "sprzet": "myjka_cisnieniowa", "koszt_chemii_m2": 0.5 },
+        { "id": "biologiczne", "nazwa": "Glony, mech, pleśń", "jednostka": "m2", "cena": 38.5, "zakres": [34.1, 42.8], "pewnosc": "niska", "zrodla": ["kb_elewacja_artykul"], "wyliczenie": "środek zakresów wojewódzkich (kamień i beton); elewacje mineralne 35,60–49,80", "sprzet": "myjka_cisnieniowa", "koszt_chemii_m2": 2.0 },
+        { "id": "chemiczne", "nazwa": "Sadza, smog, graffiti", "jednostka": "m2", "cena": 39, "zakres": [32.8, 44.9], "pewnosc": "niska", "zrodla": ["kb_elewacja_artykul"], "wyliczenie": "środek zakresów wojewódzkich (kamień i beton); elewacje mineralne 37,60–50,20", "sprzet": "myjka_cisnieniowa", "koszt_chemii_m2": 2.5 }
+      ]
+    },
+    {
+      "id": "sprzatanie_firm",
+      "nazwa": "Sprzątanie hal i magazynów",
+      "grupa": "firma",
+      "tryb": "pozycje",
+      "podstawa_ceny": "netto",
+      "progi": "maszynowe",
+      "poziomy_brudu": true,
+      "minimum_zl": 300,
+      "uwagi": "Biura, sklepy i gabinety wycenia usługa 'sprzatanie_biur'. Mycie posadzek hali – usługa 'mycie_posadzek'.",
+      "pozycje": [
+        { "id": "zamiatanie", "nazwa": "Zamiatanie maszynowe", "jednostka": "m2", "cena": 0.4, "zakres": [0.4, 0.7], "pewnosc": "niska", "zrodla": ["tanie_doczyszczanie"], "wyliczenie": "maszynowe 0,40; ręczne 0,70", "sprzet": "zamiatarka", "koszt_chemii_m2": 0 },
+        { "id": "odkurzanie", "nazwa": "Odkurzanie posadzki", "jednostka": "m2", "cena": 1.0, "zakres": null, "pewnosc": "niska", "zrodla": ["tanie_doczyszczanie"], "sprzet": "odkurzacz_przemyslowy", "koszt_chemii_m2": 0 },
+        { "id": "utrzymanie", "nazwa": "Utrzymanie hali (zamiatanie i odkurzanie), cena za wizytę", "jednostka": "m2", "cena": 0.55, "zakres": [0.42, 0.69], "pewnosc": "niska", "zrodla": ["cleanconnect"], "wyliczenie": "CleanConnect: 1,80–3,00 zł/m² miesięcznie (środek 2,40, brutto) ÷ 4,33 wizyty (założenie: raz w tygodniu)", "sprzet": "zamiatarka", "koszt_chemii_m2": 0.02 },
+        { "id": "jednorazowe", "nazwa": "Sprzątanie kompleksowe jednorazowe", "jednostka": "m2", "cena": 7, "zakres": [3, 9], "pewnosc": "niska", "zrodla": ["cenauslug_hale"], "wyliczenie": "cenauslug.pl: typowo 7 zł/m², od 3 (Chełm) do 9 (Gdynia)", "sprzet": "szorowarka", "koszt_chemii_m2": 0.15 }
+      ]
+    }
+  ],
+  "progi_metrazu": {
+    "maszynowe": {
+      "pewnosc": "niska",
+      "uwagi": "Cena referencyjna dotyczy zleceń 100–500 m². Mniejsze zlecenia są droższe (Szoruj: 10 zł/m², min. 150 zł), duże tańsze (Tanie Doczyszczanie: mycie 0,60–1,10 zł/m², doczyszczanie 4 zł/m² przy minimum 2000 zł).",
+      "progi": [
+        { "od_m2": 0, "mnoznik": 1.3 },
+        { "od_m2": 100, "mnoznik": 1.0 },
+        { "od_m2": 500, "mnoznik": 0.7 },
+        { "od_m2": 2000, "mnoznik": 0.5 }
+      ]
+    },
+    "zewnetrzne": {
+      "pewnosc": "niska",
+      "uwagi": "Przy małych powierzchniach firmy często doliczają ryczałt za dojazd i rozłożenie sprzętu (cenauslug.pl). kb.pl: cena dla elewacji do 200 m², większe do negocjacji.",
+      "progi": [
+        { "od_m2": 0, "mnoznik": 1.15 },
+        { "od_m2": 50, "mnoznik": 1.0 },
+        { "od_m2": 300, "mnoznik": 0.9 }
+      ]
+    }
+  },
+  "poziomy_brudu": {
+    "uwagi": "Dla usług w trybie 'pozycje' z poziomy_brudu = true mnożymy cenę i czas. Rynek: silne zabrudzenie +30–50% (np. Czysty Dom Białystok +30%).",
+    "pewnosc": "średnia",
+    "zrodla": ["skan_firm"],
+    "poziomy": [
+      { "poziom": 1, "nazwa": "lekkie", "mnoznik": 1.0 },
+      { "poziom": 2, "nazwa": "średnie", "mnoznik": 1.2 },
+      { "poziom": 3, "nazwa": "silne", "mnoznik": 1.4 }
+    ]
+  },
+  "koszty_firmy": {
+    "uwagi": "Wartości domyślne do wyliczenia kosztu i marży. Właściciel może je zmienić w aplikacji.",
+    "praca": {
+      "stawka_brutto_h": 31.4,
+      "narzut_pracodawcy": 0.2048,
+      "koszt_h": 37.83,
+      "zrodla": ["placa_minimalna_2026"],
+      "wyliczenie": "minimalna stawka godzinowa 2026 (umowa zlecenie) 31,40 zł × (1 + 20,48% składek pracodawcy: emerytalna 9,76%, rentowa 6,5%, wypadkowa 1,67%, FP 2,45%, FGŚP 0,1%)",
+      "uwagi": "Średnią płacę w branży (GUS, sekcja N, 2024) dla województw podaje data/rynek.json. Student do 26 lat na zleceniu: bez składek ZUS."
+    },
+    "chemia_h": {
+      "wartosc": 4,
+      "jednostka": "zł na godzinę pracy",
+      "pewnosc": "niska",
+      "uwagi": "Szacunek dla usług w trybie 'pomieszczenia' do czasu zbudowania bazy chemii (etap 4). CleanConnect: chemia, sprzęt i paliwo to ok. 10% przychodu."
+    },
+    "sprzet": {
+      "pewnosc": "niska",
+      "uwagi": "Szacunkowy koszt godziny pracy maszyny (amortyzacja, prąd lub paliwo, serwis). Do weryfikacji z cenami zakupu i wynajmu.",
+      "myjka_cisnieniowa": { "nazwa": "Myjka ciśnieniowa z przystawką do powierzchni", "koszt_h": 15 },
+      "szorowarka": { "nazwa": "Szorowarka (jednotarczowa lub z odsysaniem)", "koszt_h": 20 },
+      "ekstraktor": { "nazwa": "Odkurzacz piorący / ekstraktor", "koszt_h": 8 },
+      "zamiatarka": { "nazwa": "Zamiatarka maszynowa", "koszt_h": 25 },
+      "odkurzacz_przemyslowy": { "nazwa": "Odkurzacz przemysłowy", "koszt_h": 5 }
+    },
+    "dojazd": {
+      "klient_zl_km": 2.0,
+      "zakres_rynkowy": [1.4, 3.0],
+      "darmowy_promien_km": 10,
+      "koszt_firmy_zl_km": 1.15,
+      "zrodla": ["skan_firm", "tanie_doczyszczanie", "czysciutko", "kilometrowka"],
+      "wyliczenie": "dopłata dla klienta: Tanie Doczyszczanie 1,40; Kwadrat na błysk 1,5–2,5 (środek 2,0); Czyściutko 3,00 → mediana 2,00 zł/km. Koszt firmy: kilometrówka dla auta powyżej 900 cm³ (1,15 zł/km).",
+      "uwagi": "Darmowy promień 10 km to założenie (czyszczenie-posadzek.com.pl: 30 km bez opłat; Szoruj: Warszawa bez opłat)."
+    },
+    "struktura_przychodu": {
+      "zrodlo": "cleanconnect",
+      "uwagi": "Szacunek autora, nie dane GUS: pensje z ZUS pracodawcy 50–55%, chemia, sprzęt i paliwo ok. 10%, koszty stałe ok. 5%, podatek i ZUS właściciela ok. 7%, zostaje 20–30%."
+    }
+  }
+}

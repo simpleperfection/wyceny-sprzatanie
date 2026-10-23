@@ -1,0 +1,592 @@
+{
+  "meta": {
+    "wersja": "2026-10-23",
+    "opis": "Plik generowany przez scripts/kalibracja.ps1 – nie edytować ręcznie. Mediany krajowe i współczynniki województw z research/cenniki_firm.csv i research/kb_wojewodztwa.csv.",
+    "metoda_wsp": "wsp = (n × indeks_skanu + 5 × indeks_kb) / (n + 5), ograniczony do 0,80–1,25; n = liczba firm z cenami. indeks_skanu = mediana po firmach województwa z (mediana proporcji cen firmy do median krajowych); indeks_kb = średnia z serii kb.pl (środek widełek / średnia krajowa serii): dom_do40, dom_40_100, dom_100_200, po_remoncie_h, elewacja_atm, biuro_do100, biuro_do200.",
+    "stawka_h": "stawka_h województwa = mediana krajowa stawki godzinowej × wsp, zaokrąglona do 0,50 zł",
+    "placa_gus": "GUS BDL, zmienna 151738: przeciętne wynagrodzenie brutto w sekcji N (2024) / 168 h",
+    "vat": "Ceny ze skanu firm są w większości bez informacji o VAT (część netto, część brutto) – mediana traktowana jako cena końcowa dla klienta."
+  },
+  "kraj": {
+    "stawka_h": {
+      "mediana": 65,
+      "n": 11,
+      "zakres": [45, 120],
+      "srednia": 69.09
+    },
+    "mieszkanie_50m2": {
+      "mediana": 250,
+      "n": 38,
+      "zakres": [120, 450],
+      "srednia": 247.37
+    },
+    "po_remoncie_m2": {
+      "mediana": 11.75,
+      "n": 20,
+      "zakres": [7, 20],
+      "srednia": 12.17
+    },
+    "okno_1skrz": {
+      "mediana": 30,
+      "n": 39,
+      "zakres": [10, 70],
+      "srednia": 28.82
+    },
+    "kanapa_3os": {
+      "mediana": 150,
+      "n": 23,
+      "zakres": [60, 240],
+      "srednia": 147.17
+    },
+    "dywan_m2": {
+      "mediana": 17.5,
+      "n": 14,
+      "zakres": [5, 27],
+      "srednia": 16.36
+    }
+  },
+  "wykluczenia": [
+    {
+      "firma": "Mika",
+      "kolumna": "mieszkanie_50m2_zl",
+      "powod": "cena sprzątania cyklicznego (1–2 zł/m²), oznaczona w skanie jako odstająca"
+    },
+    {
+      "firma": "Mika",
+      "kolumna": "po_remoncie_zl_m2",
+      "powod": "oznaczona w skanie jako odstająca"
+    },
+    {
+      "firma": "Tanie Sprzątanie",
+      "kolumna": "mieszkanie_50m2_zl",
+      "powod": "pakiet podstawowy do 60 m², oznaczony w skanie jako odstający"
+    },
+    {
+      "firma": "Tanie Sprzątanie",
+      "kolumna": "stawka_h_zl",
+      "powod": "oznaczona w skanie jako odstająca"
+    },
+    {
+      "firma": "Manutarg",
+      "kolumna": "po_remoncie_zl_m2",
+      "powod": "oznaczona w skanie jako odstająca"
+    },
+    {
+      "firma": "Efekt Rzeszów",
+      "kolumna": "mieszkanie_50m2_zl",
+      "powod": "cena sprzątania generalnego, nie standardowego"
+    },
+    {
+      "firma": "PERFECT",
+      "kolumna": "mieszkanie_50m2_zl",
+      "powod": "cena sprzątania generalnego (8 zł/m²)"
+    },
+    {
+      "firma": "EffectBcleaner",
+      "kolumna": "mieszkanie_50m2_zl",
+      "powod": "cena jednej wizyty w abonamencie"
+    }
+  ],
+  "wojewodztwa": [
+    {
+      "id": "dolnoslaskie",
+      "nazwa": "dolnośląskie",
+      "wsp": 1.04,
+      "wsp_skladniki": {
+        "skan_firm": 1.03,
+        "firm_w_skanie": 6,
+        "kb_pl": 1.04,
+        "waga_skanu": 0.55
+      },
+      "stawka_h": 67.5,
+      "placa_gus_h_2024": 38.64,
+      "rynek": {
+        "stawka_h": {
+          "mediana": 65,
+          "n": 1
+        },
+        "mieszkanie_50m2": {
+          "mediana": 300,
+          "n": 1
+        },
+        "okno_1skrz": {
+          "mediana": 39,
+          "n": 3
+        },
+        "kanapa_3os": {
+          "mediana": 145,
+          "n": 4
+        },
+        "dywan_m2": {
+          "mediana": 19.5,
+          "n": 2
+        }
+      }
+    },
+    {
+      "id": "kujawsko-pomorskie",
+      "nazwa": "kujawsko-pomorskie",
+      "wsp": 0.86,
+      "wsp_skladniki": {
+        "skan_firm": 0.63,
+        "firm_w_skanie": 3,
+        "kb_pl": 1,
+        "waga_skanu": 0.38
+      },
+      "stawka_h": 56,
+      "placa_gus_h_2024": 33.86,
+      "rynek": {
+        "mieszkanie_50m2": {
+          "mediana": 150,
+          "n": 3
+        },
+        "okno_1skrz": {
+          "mediana": 20,
+          "n": 3
+        }
+      }
+    },
+    {
+      "id": "lubelskie",
+      "nazwa": "lubelskie",
+      "wsp": 1.07,
+      "wsp_skladniki": {
+        "skan_firm": 1.17,
+        "firm_w_skanie": 5,
+        "kb_pl": 0.97,
+        "waga_skanu": 0.5
+      },
+      "stawka_h": 69.5,
+      "placa_gus_h_2024": 34.26,
+      "rynek": {
+        "stawka_h": {
+          "mediana": 70,
+          "n": 1
+        },
+        "mieszkanie_50m2": {
+          "mediana": 317.5,
+          "n": 2
+        },
+        "okno_1skrz": {
+          "mediana": 22.5,
+          "n": 2
+        },
+        "kanapa_3os": {
+          "mediana": 162.5,
+          "n": 2
+        },
+        "dywan_m2": {
+          "mediana": 27,
+          "n": 1
+        }
+      }
+    },
+    {
+      "id": "lubuskie",
+      "nazwa": "lubuskie",
+      "wsp": 1.05,
+      "wsp_skladniki": {
+        "skan_firm": 1.2,
+        "firm_w_skanie": 1,
+        "kb_pl": 1.02,
+        "waga_skanu": 0.17
+      },
+      "stawka_h": 68.5,
+      "placa_gus_h_2024": 33.5,
+      "rynek": {
+        "mieszkanie_50m2": {
+          "mediana": 300,
+          "n": 1
+        },
+        "po_remoncie_m2": {
+          "mediana": 15,
+          "n": 1
+        },
+        "okno_1skrz": {
+          "mediana": 30,
+          "n": 1
+        },
+        "kanapa_3os": {
+          "mediana": 200,
+          "n": 1
+        },
+        "dywan_m2": {
+          "mediana": 17,
+          "n": 1
+        }
+      }
+    },
+    {
+      "id": "lodzkie",
+      "nazwa": "łódzkie",
+      "wsp": 0.88,
+      "wsp_skladniki": {
+        "skan_firm": 0.67,
+        "firm_w_skanie": 3,
+        "kb_pl": 1.01,
+        "waga_skanu": 0.38
+      },
+      "stawka_h": 57,
+      "placa_gus_h_2024": 35.76,
+      "rynek": {
+        "mieszkanie_50m2": {
+          "mediana": 150,
+          "n": 1
+        },
+        "okno_1skrz": {
+          "mediana": 20,
+          "n": 2
+        },
+        "kanapa_3os": {
+          "mediana": 165,
+          "n": 2
+        }
+      }
+    },
+    {
+      "id": "malopolskie",
+      "nazwa": "małopolskie",
+      "wsp": 1,
+      "wsp_skladniki": {
+        "skan_firm": 1.02,
+        "firm_w_skanie": 5,
+        "kb_pl": 0.99,
+        "waga_skanu": 0.5
+      },
+      "stawka_h": 65,
+      "placa_gus_h_2024": 44.21,
+      "rynek": {
+        "stawka_h": {
+          "mediana": 67.5,
+          "n": 2
+        },
+        "mieszkanie_50m2": {
+          "mediana": 260,
+          "n": 5
+        },
+        "po_remoncie_m2": {
+          "mediana": 8,
+          "n": 1
+        },
+        "okno_1skrz": {
+          "mediana": 30,
+          "n": 4
+        },
+        "kanapa_3os": {
+          "mediana": 195,
+          "n": 2
+        },
+        "dywan_m2": {
+          "mediana": 19,
+          "n": 2
+        }
+      }
+    },
+    {
+      "id": "mazowieckie",
+      "nazwa": "mazowieckie",
+      "wsp": 1,
+      "wsp_skladniki": {
+        "skan_firm": 0.97,
+        "firm_w_skanie": 6,
+        "kb_pl": 1.03,
+        "waga_skanu": 0.55
+      },
+      "stawka_h": 65,
+      "placa_gus_h_2024": 41.2,
+      "rynek": {
+        "stawka_h": {
+          "mediana": 96.25,
+          "n": 2
+        },
+        "mieszkanie_50m2": {
+          "mediana": 230,
+          "n": 5
+        },
+        "po_remoncie_m2": {
+          "mediana": 12.25,
+          "n": 4
+        },
+        "okno_1skrz": {
+          "mediana": 27,
+          "n": 3
+        },
+        "kanapa_3os": {
+          "mediana": 180,
+          "n": 1
+        },
+        "dywan_m2": {
+          "mediana": 18,
+          "n": 1
+        }
+      }
+    },
+    {
+      "id": "opolskie",
+      "nazwa": "opolskie",
+      "wsp": 1.07,
+      "wsp_skladniki": {
+        "skan_firm": 1.12,
+        "firm_w_skanie": 5,
+        "kb_pl": 1.03,
+        "waga_skanu": 0.5
+      },
+      "stawka_h": 69.5,
+      "placa_gus_h_2024": 35.39,
+      "rynek": {
+        "mieszkanie_50m2": {
+          "mediana": 215,
+          "n": 2
+        },
+        "kanapa_3os": {
+          "mediana": 160,
+          "n": 2
+        },
+        "dywan_m2": {
+          "mediana": 20,
+          "n": 3
+        }
+      }
+    },
+    {
+      "id": "podkarpackie",
+      "nazwa": "podkarpackie",
+      "wsp": 0.9,
+      "wsp_skladniki": {
+        "skan_firm": 0.81,
+        "firm_w_skanie": 4,
+        "kb_pl": 0.98,
+        "waga_skanu": 0.44
+      },
+      "stawka_h": 58.5,
+      "placa_gus_h_2024": 31.01,
+      "rynek": {
+        "stawka_h": {
+          "mediana": 45,
+          "n": 1
+        },
+        "mieszkanie_50m2": {
+          "mediana": 230,
+          "n": 3
+        },
+        "okno_1skrz": {
+          "mediana": 15,
+          "n": 3
+        }
+      }
+    },
+    {
+      "id": "podlaskie",
+      "nazwa": "podlaskie",
+      "wsp": 0.98,
+      "wsp_skladniki": {
+        "skan_firm": 1,
+        "firm_w_skanie": 6,
+        "kb_pl": 0.96,
+        "waga_skanu": 0.55
+      },
+      "stawka_h": 63.5,
+      "placa_gus_h_2024": 31.59,
+      "rynek": {
+        "stawka_h": {
+          "mediana": 50,
+          "n": 1
+        },
+        "mieszkanie_50m2": {
+          "mediana": 350,
+          "n": 1
+        },
+        "po_remoncie_m2": {
+          "mediana": 12.5,
+          "n": 3
+        },
+        "okno_1skrz": {
+          "mediana": 30,
+          "n": 4
+        },
+        "kanapa_3os": {
+          "mediana": 100,
+          "n": 3
+        },
+        "dywan_m2": {
+          "mediana": 8,
+          "n": 1
+        }
+      }
+    },
+    {
+      "id": "pomorskie",
+      "nazwa": "pomorskie",
+      "wsp": 1.13,
+      "wsp_skladniki": {
+        "skan_firm": 1.27,
+        "firm_w_skanie": 6,
+        "kb_pl": 0.98,
+        "waga_skanu": 0.55
+      },
+      "stawka_h": 73.5,
+      "placa_gus_h_2024": 38.85,
+      "rynek": {
+        "mieszkanie_50m2": {
+          "mediana": 275,
+          "n": 4
+        },
+        "po_remoncie_m2": {
+          "mediana": 9,
+          "n": 3
+        },
+        "okno_1skrz": {
+          "mediana": 40,
+          "n": 5
+        }
+      }
+    },
+    {
+      "id": "slaskie",
+      "nazwa": "śląskie",
+      "wsp": 1.05,
+      "wsp_skladniki": {
+        "skan_firm": 1.1,
+        "firm_w_skanie": 4,
+        "kb_pl": 1.01,
+        "waga_skanu": 0.44
+      },
+      "stawka_h": 68.5,
+      "placa_gus_h_2024": 34.36,
+      "rynek": {
+        "stawka_h": {
+          "mediana": 52.5,
+          "n": 1
+        },
+        "mieszkanie_50m2": {
+          "mediana": 330,
+          "n": 2
+        },
+        "po_remoncie_m2": {
+          "mediana": 16,
+          "n": 1
+        },
+        "okno_1skrz": {
+          "mediana": 40,
+          "n": 1
+        }
+      }
+    },
+    {
+      "id": "swietokrzyskie",
+      "nazwa": "świętokrzyskie",
+      "wsp": 0.8,
+      "wsp_skladniki": {
+        "skan_firm": 0.56,
+        "firm_w_skanie": 4,
+        "kb_pl": 1,
+        "waga_skanu": 0.44
+      },
+      "stawka_h": 52,
+      "placa_gus_h_2024": 32.44,
+      "rynek": {
+        "mieszkanie_50m2": {
+          "mediana": 190,
+          "n": 2
+        },
+        "okno_1skrz": {
+          "mediana": 25,
+          "n": 1
+        },
+        "kanapa_3os": {
+          "mediana": 82.5,
+          "n": 2
+        }
+      }
+    },
+    {
+      "id": "warminsko-mazurskie",
+      "nazwa": "warmińsko-mazurskie",
+      "wsp": 0.92,
+      "wsp_skladniki": {
+        "skan_firm": 0.84,
+        "firm_w_skanie": 3,
+        "kb_pl": 0.97,
+        "waga_skanu": 0.38
+      },
+      "stawka_h": 60,
+      "placa_gus_h_2024": 31.86,
+      "rynek": {
+        "kanapa_3os": {
+          "mediana": 150,
+          "n": 3
+        },
+        "dywan_m2": {
+          "mediana": 13.5,
+          "n": 2
+        }
+      }
+    },
+    {
+      "id": "wielkopolskie",
+      "nazwa": "wielkopolskie",
+      "wsp": 1.16,
+      "wsp_skladniki": {
+        "skan_firm": 1.28,
+        "firm_w_skanie": 6,
+        "kb_pl": 1.01,
+        "waga_skanu": 0.55
+      },
+      "stawka_h": 75.5,
+      "placa_gus_h_2024": 38.24,
+      "rynek": {
+        "stawka_h": {
+          "mediana": 75,
+          "n": 2
+        },
+        "mieszkanie_50m2": {
+          "mediana": 240,
+          "n": 2
+        },
+        "po_remoncie_m2": {
+          "mediana": 15,
+          "n": 5
+        },
+        "okno_1skrz": {
+          "mediana": 23,
+          "n": 2
+        },
+        "kanapa_3os": {
+          "mediana": 110,
+          "n": 1
+        },
+        "dywan_m2": {
+          "mediana": 5,
+          "n": 1
+        }
+      }
+    },
+    {
+      "id": "zachodniopomorskie",
+      "nazwa": "zachodniopomorskie",
+      "wsp": 0.91,
+      "wsp_skladniki": {
+        "skan_firm": 0.85,
+        "firm_w_skanie": 7,
+        "kb_pl": 1,
+        "waga_skanu": 0.58
+      },
+      "stawka_h": 59,
+      "placa_gus_h_2024": 39.49,
+      "rynek": {
+        "mieszkanie_50m2": {
+          "mediana": 300,
+          "n": 4
+        },
+        "po_remoncie_m2": {
+          "mediana": 9.25,
+          "n": 2
+        },
+        "okno_1skrz": {
+          "mediana": 25,
+          "n": 5
+        }
+      }
+    }
+  ]
+}

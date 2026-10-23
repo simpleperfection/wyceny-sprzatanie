@@ -31,3 +31,24 @@ sprzatanie_firm;zamiatanie maszynowe / ręczne / odkurzanie;zł/m²;0.40;1.00;;n
 okna;mycie okien z ramami i parapetami;zł/m²;6;12;;brutto;CleanConnect (blog);porównywarka;2026-09-10;https://cleanconnect.pl/blog/stawki-sprzatania-2026-ile-zarabiaja-firmy;
 po_remoncie;sprzątanie po remoncie, jednorazowo;zł/m²;8;15;;brutto;CleanConnect (blog);porównywarka;2026-09-10;https://cleanconnect.pl/blog/stawki-sprzatania-2026-ile-zarabiaja-firmy;
 po_remoncie;stawka godzinowa (1 osoba);zł/h;58.31;79.14;64.30;brutto 8%;kb.pl;porównywarka;2026-04-29;https://kb.pl/cenniki/sprzatanie-po-remoncie/;sama robocizna; zakresy wojewódzkie w kb_wojewodztwa.csv
+agd;piekarnik;zł/szt.;70;;;?;CleaningRoom, Gdańsk;firma;2026;https://cleaningroom.pl/cennik-uslug/;
+agd;lodówka;zł/szt.;55;85;;?;CleaningRoom, Gdańsk;firma;2026;https://cleaningroom.pl/cennik-uslug/;do 90 cm 55; od 90 cm 65; z zamrażarką 70–85
+agd;mikrofalówka;zł/szt.;30;;;?;CleaningRoom, Gdańsk;firma;2026;https://cleaningroom.pl/cennik-uslug/;
+agd;wnętrze szafki kuchennej;zł/szt.;10;;;?;CleaningRoom, Gdańsk;firma;2026;https://cleaningroom.pl/cennik-uslug/;
+agd;balkon/taras;zł/szt.;50;;;?;CleaningRoom, Gdańsk;firma;2026;https://cleaningroom.pl/cennik-uslug/;"od 50", zależnie od wielkości
+agd;piekarnik;zł/szt.;50;80;;?;Czyściutko, Prudnik;firma;2025;https://www.czysciutkoprudnik.pl/cennik;
+agd;lodówka;zł/szt.;50;70;;?;Czyściutko, Prudnik;firma;2025;https://www.czysciutkoprudnik.pl/cennik;
+agd;mikrofalówka;zł/szt.;15;30;;?;Czyściutko, Prudnik;firma;2025;https://www.czysciutkoprudnik.pl/cennik;
+agd;okap;zł/szt.;40;60;;?;Czyściutko, Prudnik;firma;2025;https://www.czysciutkoprudnik.pl/cennik;
+agd;zmywarka;zł/szt.;50;70;;?;Czyściutko, Prudnik;firma;2025;https://www.czysciutkoprudnik.pl/cennik;
+agd;wnętrza szafek kuchennych (komplet);zł/usługa;70;100;;?;Czyściutko, Prudnik;firma;2025;https://www.czysciutkoprudnik.pl/cennik;
+agd;balkon;zł/szt.;35;50;;?;Czyściutko, Prudnik;firma;2025;https://www.czysciutkoprudnik.pl/cennik;
+agd;piekarnik;zł/szt.;70;;;?;SonicDom, Lublin;firma;2026;https://sonic-dom.pl/cennik/;
+agd;lodówka;zł/szt.;60;;;?;SonicDom, Lublin;firma;2026;https://sonic-dom.pl/cennik/;"od 60"
+agd;mikrofalówka;zł/szt.;70;;;?;SonicDom, Lublin;firma;2026;https://sonic-dom.pl/cennik/;
+agd;zmywarka;zł/szt.;50;;;?;SonicDom, Lublin;firma;2026;https://sonic-dom.pl/cennik/;w cenniku "50 – zł"
+mieszkanie;sprzątanie mieszkań i domów wg metrażu;zł/usługa;250;700;;?;Czyściutko, Prudnik;firma;2025;https://www.czysciutkoprudnik.pl/cennik;do 40 m² 250–300; 41–70 m² 300–450; 71–100 m² 450–700
+po_remoncie;sprzątanie po remoncie wg metrażu;zł/usługa;300;1000;;?;Czyściutko, Prudnik;firma;2025;https://www.czysciutkoprudnik.pl/cennik;do 40 m² 300–450; 41–70 m² 450–750; 71–100 m² 750–1000
+dojazd;dojazd poza miejscowość;zł/km;3;;;?;Czyściutko, Prudnik;firma;2025;https://www.czysciutkoprudnik.pl/cennik;
+koszty;minimalna stawka godzinowa (umowa zlecenie) 2026;zł/h;31.40;;;brutto;Rozporządzenie RM z 11.09.2025 (Dz.U. 2025 poz. 1242);przepis;2026-01-01;https://zielonalinia.gov.pl/wynagrodzenie-minimalne-w-2026-1/;płaca minimalna 4806 zł/mies.
+koszty;kilometrówka – samochód osobowy;zł/km;0.89;1.15;;-;Rozporządzenie MI z 22.12.2022;przepis;2023-01-17;https://poradnikprzedsiebiorcy.pl/-stawka-za-1-km-przebiegu-pojazdu-jaki-limit;do 900 cm³ 0,89; powyżej 900 cm³ 1,15; bez zmian w 2026

@@ -1,0 +1,284 @@
+{
+  "meta": {
+    "wersja": "2026-10-23",
+    "opis": "Plik generowany przez scripts/kalibracja.ps1 – nie edytować ręcznie. Normy czasu pracy jednej osoby.",
+    "wzor": "czas [min] = przygotowanie_min + Σ pomieszczenia: m² × (min_m2 pomieszczenia × mnożnik zakresu usługi × mnożnik z progi_wydajnosci + Σ brud: min_m2[poziom − 1])",
+    "wzor_pozycji": "czas [min] = przygotowanie_min_uslug[usługa] + Σ pozycje: ilość × min_na_jednostke × mnożnik poziomu brudu (jeśli usługa go ma)",
+    "cena": "cena = czas / 60 × stawka_h województwa (data/rynek.json); usługi w trybie pozycji mają cenę z data/ceny.json, a czas służy do kosztu firmy",
+    "kalibracja": {
+      "stawka_h_kraj": 65,
+      "mieszkanie_50m2_kraj": 250,
+      "cel_min_50m2": 230.8,
+      "skala_dom": 1.0511,
+      "po_remoncie_m2_kraj": 11.75,
+      "cel_min_po_remoncie_50m2": 542.3,
+      "cel_min_biuro_100m2": 120,
+      "skala_biuro": 0.6169,
+      "uklad_mieszkania": "kuchnia 16% (6–14 m²), przedpokój 12%, łazienka 4 m² (do 60 m²), 5 m² (do 100 m²) lub 8 + 5 m², reszta pokoje",
+      "uklad_biura_100m2": "biuro 60, sala 15, kuchnia socjalna 6, toalety 5, korytarz 14 m²",
+      "raport": "research/KALIBRACJA.md"
+    },
+    "pewnosc": "Normy pomieszczeń: skalibrowane do median rynkowych. Normy brudu (poza pyłem budowlanym), czasy pozycji i wydajności: szacunki do sprawdzenia na pierwszych zleceniach."
+  },
+  "przygotowanie_min": 30,
+  "przygotowanie_min_uslug": {
+    "okna": 30,
+    "tapicerka": 30,
+    "dywany": 30,
+    "mycie_posadzek": 60,
+    "doczyszczanie": 60,
+    "mycie_kostki": 60,
+    "mycie_elewacji": 90,
+    "sprzatanie_firm": 45
+  },
+  "zestawy_pomieszczen": {
+    "dom": [
+      {
+        "id": "pokoj",
+        "nazwa": "Pokój, sypialnia, salon",
+        "min_m2": 2.63
+      },
+      {
+        "id": "przedpokoj",
+        "nazwa": "Przedpokój, korytarz, schowek",
+        "min_m2": 2.63
+      },
+      {
+        "id": "kuchnia",
+        "nazwa": "Kuchnia lub aneks",
+        "min_m2": 6.83
+      },
+      {
+        "id": "lazienka",
+        "nazwa": "Łazienka lub WC",
+        "min_m2": 11.56
+      }
+    ],
+    "biuro": [
+      {
+        "id": "biuro",
+        "nazwa": "Biuro, gabinet, open space",
+        "min_m2": 0.62
+      },
+      {
+        "id": "sala",
+        "nazwa": "Sala konferencyjna, sala sprzedaży, poczekalnia",
+        "min_m2": 0.56
+      },
+      {
+        "id": "kuchnia_socjalna",
+        "nazwa": "Kuchnia socjalna",
+        "min_m2": 2.47
+      },
+      {
+        "id": "toaleta",
+        "nazwa": "Toaleta",
+        "min_m2": 4.93
+      },
+      {
+        "id": "korytarz",
+        "nazwa": "Korytarz, hol, klatka schodowa",
+        "min_m2": 0.37
+      }
+    ]
+  },
+  "progi_wydajnosci": {
+    "biuro": [
+      {
+        "od_m2": 0,
+        "mnoznik": 1
+      },
+      {
+        "od_m2": 300,
+        "mnoznik": 0.85
+      },
+      {
+        "od_m2": 1000,
+        "mnoznik": 0.7
+      }
+    ]
+  },
+  "brud": [
+    {
+      "id": "kurz",
+      "nazwa": "Kurz",
+      "chemia": "uniwersalny",
+      "min_m2": [0, 0.9, 1.9]
+    },
+    {
+      "id": "siersc",
+      "nazwa": "Sierść zwierząt",
+      "chemia": "uniwersalny",
+      "min_m2": [0.5, 1.2, 2.5]
+    },
+    {
+      "id": "tluszcz",
+      "nazwa": "Tłuszcz",
+      "chemia": "zasadowy",
+      "min_m2": [1.5, 4, 8]
+    },
+    {
+      "id": "kamien",
+      "nazwa": "Kamień i osad wapienny",
+      "chemia": "kwasowy",
+      "min_m2": [2, 5, 10]
+    },
+    {
+      "id": "plesn",
+      "nazwa": "Pleśń",
+      "chemia": "chlorowy lub grzybobójczy",
+      "min_m2": [2, 5, 10]
+    },
+    {
+      "id": "pyl_budowlany",
+      "nazwa": "Pył budowlany",
+      "chemia": "poremontowy",
+      "min_m2": [2, 4, 7.2]
+    }
+  ],
+  "poziomy": [
+    {
+      "poziom": 1,
+      "nazwa": "lekkie",
+      "opis": "typowe, codzienne zabrudzenie"
+    },
+    {
+      "poziom": 2,
+      "nazwa": "średnie",
+      "opis": "wyraźne, zaniedbane kilka tygodni"
+    },
+    {
+      "poziom": 3,
+      "nazwa": "silne",
+      "opis": "zaschnięte, wymaga kilku przejść"
+    }
+  ],
+  "pozycje": {
+    "okna.okno_1": {
+      "min_na_jednostke": 15
+    },
+    "okna.okno_2": {
+      "min_na_jednostke": 22
+    },
+    "okna.okno_balkonowe": {
+      "min_na_jednostke": 25
+    },
+    "agd.piekarnik": {
+      "min_na_jednostke": 45
+    },
+    "agd.lodowka": {
+      "min_na_jednostke": 30
+    },
+    "agd.mikrofalowka": {
+      "min_na_jednostke": 10
+    },
+    "agd.okap": {
+      "min_na_jednostke": 25
+    },
+    "agd.zmywarka": {
+      "min_na_jednostke": 20
+    },
+    "agd.szafka": {
+      "min_na_jednostke": 5
+    },
+    "agd.balkon": {
+      "min_na_jednostke": 35
+    },
+    "tapicerka.kanapa_3": {
+      "min_na_jednostke": 60
+    },
+    "tapicerka.kanapa_2": {
+      "min_na_jednostke": 45
+    },
+    "tapicerka.naroznik": {
+      "min_na_jednostke": 75
+    },
+    "tapicerka.fotel": {
+      "min_na_jednostke": 25
+    },
+    "dywany.dywan": {
+      "wydajnosc_m2_h": 10,
+      "min_na_jednostke": 6
+    },
+    "dywany.wykladzina": {
+      "wydajnosc_m2_h": 15,
+      "min_na_jednostke": 4
+    },
+    "mycie_posadzek.mycie_maszynowe": {
+      "wydajnosc_m2_h": 300,
+      "min_na_jednostke": 0.2
+    },
+    "mycie_posadzek.mycie_plytek": {
+      "wydajnosc_m2_h": 60,
+      "min_na_jednostke": 1
+    },
+    "doczyszczanie.doczyszczanie_posadzki": {
+      "wydajnosc_m2_h": 30,
+      "min_na_jednostke": 2
+    },
+    "doczyszczanie.doczyszczanie_fug": {
+      "wydajnosc_m2_h": 12,
+      "min_na_jednostke": 5
+    },
+    "doczyszczanie.usuwanie_powlok": {
+      "wydajnosc_m2_h": 25,
+      "min_na_jednostke": 2.4
+    },
+    "doczyszczanie.zabezpieczenie": {
+      "wydajnosc_m2_h": 40,
+      "min_na_jednostke": 1.5
+    },
+    "doczyszczanie.usuwanie_farby": {
+      "wydajnosc_m2_h": 15,
+      "min_na_jednostke": 4
+    },
+    "mycie_kostki.mycie": {
+      "wydajnosc_m2_h": 15,
+      "min_na_jednostke": 4
+    },
+    "mycie_kostki.mech": {
+      "wydajnosc_m2_h": 15,
+      "min_na_jednostke": 4
+    },
+    "mycie_kostki.olej": {
+      "wydajnosc_m2_h": 30,
+      "min_na_jednostke": 2
+    },
+    "mycie_kostki.impregnacja": {
+      "wydajnosc_m2_h": 30,
+      "min_na_jednostke": 2
+    },
+    "mycie_kostki.impregnacja_mokra": {
+      "wydajnosc_m2_h": 25,
+      "min_na_jednostke": 2.4
+    },
+    "mycie_elewacji.atmosferyczne": {
+      "wydajnosc_m2_h": 15,
+      "min_na_jednostke": 4
+    },
+    "mycie_elewacji.biologiczne": {
+      "wydajnosc_m2_h": 10,
+      "min_na_jednostke": 6
+    },
+    "mycie_elewacji.chemiczne": {
+      "wydajnosc_m2_h": 8,
+      "min_na_jednostke": 7.5
+    },
+    "sprzatanie_firm.zamiatanie": {
+      "wydajnosc_m2_h": 1000,
+      "min_na_jednostke": 0.06
+    },
+    "sprzatanie_firm.odkurzanie": {
+      "wydajnosc_m2_h": 150,
+      "min_na_jednostke": 0.4
+    },
+    "sprzatanie_firm.utrzymanie": {
+      "wydajnosc_m2_h": 300,
+      "min_na_jednostke": 0.2
+    },
+    "sprzatanie_firm.jednorazowe": {
+      "wydajnosc_m2_h": 30,
+      "min_na_jednostke": 2
+    }
+  }
+}
