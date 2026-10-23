@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Etap 5 – szkic ekranów, wersja 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+:root{--brand:#0f6e56;--brand-dark:#085041;--brand-soft:#e1f5ee;--brand-mid:#9fe1cb;--ink:#14231f;--ink-2:#55635f;--ink-3:#8a9692;--line:#e3e8e6;--bg:#eef2f0;--card:#fff;--warn:#854f0b;--warn-soft:#faeeda;--bad:#a32d2d;--bad-soft:#fcebeb;--acid:#c0392b;--neutral:#5f5e5a;--alk:#534ab7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,sans-serif;padding:24px 16px}
+main{max-width:1180px;margin:0 auto}
+h1{font-size:20px;margin:0 0 4px;font-weight:700}
+.intro{font-size:13px;color:var(--ink-2);margin:0 0 20px;max-width:760px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;align-items:start}
+.phone{background:var(--card);border-radius:28px;overflow:hidden;border:1px solid var(--line);display:flex;flex-direction:column;min-height:640px}
+.top{background:var(--brand);color:#fff;padding:14px 16px 12px}
+.top .t{display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px}
+.top .s{font-size:12px;opacity:.85;margin-top:2px}
+.prog{height:4px;background:rgba(255,255,255,.25);border-radius:4px;margin-top:10px}
+.prog i{display:block;height:4px;background:#fff;border-radius:4px}
+.body{padding:16px;flex:1}
+.nav{display:flex;border-top:1px solid var(--line);font-size:11px;color:var(--ink-3)}
+.nav div{flex:1;text-align:center;padding:8px 0 10px}
+.nav i{font-size:22px;display:block}
+.nav .on{color:var(--brand);font-weight:600}
+.lbl{font-size:12px;color:var(--ink-2);margin:0 0 6px;font-weight:500}
+.seg{display:flex;background:var(--bg);border-radius:12px;padding:3px;margin-bottom:14px}
+.seg span{flex:1;text-align:center;font-size:13px;padding:7px 0;border-radius:10px;color:var(--ink-2)}
+.seg .on{background:var(--card);color:var(--brand);font-weight:600;border:1px solid var(--line)}
+.field{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;font-size:14px}
+.step{display:flex;align-items:center;gap:10px}
+.step b{width:28px;height:28px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:500;color:var(--brand)}
+.result{background:var(--brand-soft);border-radius:16px;padding:14px;margin:14px 0}
+.big{font-size:30px;font-weight:700;color:var(--brand-dark);line-height:1.1}
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;border:0;border-radius:14px;padding:13px;font:600 15px Manrope,sans-serif;background:var(--brand);color:#fff;margin-top:8px}
+.btn.ghost{background:transparent;color:var(--brand);border:1.5px solid var(--brand)}
+.card{border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:10px}
+.ph{font-size:11px;font-weight:700;padding:3px 7px;border-radius:8px;color:#fff}
+.prod{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.prod:first-of-type{border-top:0}
+.prod .n{flex:1;font-size:14px;font-weight:600}
+.prod .d{font-size:12px;color:var(--ink-2);font-weight:400}
+.sds{font-size:12px;color:var(--brand);border:1px solid var(--brand-mid);border-radius:8px;padding:4px 8px;white-space:nowrap}
+.rangebox{position:relative;height:54px;margin:8px 4px 4px}
+.track{position:absolute;top:22px;left:0;right:0;height:8px;background:var(--bg);border-radius:8px}
+.band{position:absolute;top:22px;height:8px;background:var(--brand-mid);border-radius:8px}
+.mk{position:absolute;top:14px;width:2px;height:24px;background:var(--ink-2)}
+.mk span{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--ink-2);white-space:nowrap}
+.mk.min{background:var(--warn)}.mk.min span{color:var(--warn);top:28px}
+.dot{position:absolute;top:16px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:var(--brand);border:3px solid #fff;box-shadow:0 0 0 1px var(--brand)}
+.line{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-top:1px solid var(--line)}
+.keep{border-radius:16px;padding:14px;margin:12px 0}
+input[type=range]{width:100%;accent-color:var(--brand)}
+.doc{background:var(--card)}
+.firm{background:var(--brand-dark);color:#fff;padding:18px 16px}
+.chk{display:flex;gap:8px;font-size:13px;padding:4px 0}
+.chk i{color:var(--brand);font-size:18px}
+.chk.no i{color:var(--ink-3)}
+.wy{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.wy .ic{width:40px;height:40px;border-radius:12px;background:var(--brand-soft);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:20px}
+.tag{font-size:11px;font-weight:600;padding:3px 8px;border-radius:8px}
+.cap{font-size:12px;color:var(--ink-3);text-align:center;margin:8px 0 0}
+</style>
+</head>
+<body>
+<main>
+<h1>Etap 5 – szkic ekranów, wersja 2</h1>
+<p class="intro">Drugi kierunek wyglądu (2026-10-23): wygląd aplikacji na telefon, kolor przewodni morski, kroki kreatora z paskiem postępu, dolna nawigacja i wykres miejsca ceny na rynku. Liczby jak w wersji 1: mazowieckie, ryczałt, 4000 zł na rękę, 100 h u klientów w miesiącu, tempo 1,3×. Nazwa „Wyceny sprzątania” jest robocza, listy zakresu są przykładowe.</p>
+<div class="grid">
+
+<div>
+<div class="phone">
+<div class="top"><div class="t"><i class="ti ti-sparkles"></i>Wyceny sprzątania</div><div class="s">Dzień dobry! Masz 2 wyceny do wysłania</div></div>
+<div class="body">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+<div style="background:var(--brand);color:#fff;border-radius:16px;padding:14px"><i class="ti ti-phone" style="font-size:22px"></i><div style="font-weight:600;margin-top:6px">Szybka wycena</div><div style="font-size:12px;opacity:.85">przez telefon</div></div>
+<div style="background:var(--brand-soft);color:var(--brand-dark);border-radius:16px;padding:14px"><i class="ti ti-list-check" style="font-size:22px"></i><div style="font-weight:600;margin-top:6px">Dokładna</div><div style="font-size:12px">po oględzinach</div></div>
+</div>
+<div style="background:var(--warn-soft);color:var(--warn);border-radius:12px;padding:10px 12px;font-size:12px;display:flex;gap:8px;align-items:center;margin-bottom:12px"><i class="ti ti-database-export" style="font-size:18px"></i>Zrób kopię danych – od ostatniej przybyło 8 wycen</div>
+<p class="lbl">Ostatnie</p>
+<div class="wy"><div class="ic"><i class="ti ti-home"></i></div><div style="flex:1"><div style="font-weight:600;font-size:14px">Mieszkanie 50 m², standard</div><div style="font-size:12px;color:var(--ink-2)">Kowalska · 370 zł</div></div><span class="tag" style="background:var(--brand-soft);color:var(--brand-dark)">wycena</span></div>
+<div class="wy"><div class="ic"><i class="ti ti-window"></i></div><div style="flex:1"><div style="font-weight:600;font-size:14px">Okna, 8 szt.</div><div style="font-size:12px;color:var(--ink-2)">Nowak · 260 zł</div></div><span class="tag" style="background:var(--bg);color:var(--ink-2)">wykonane</span></div>
+<div class="wy"><div class="ic"><i class="ti ti-building"></i></div><div style="flex:1"><div style="font-weight:600;font-size:14px">Biuro 120 m², 2× w tyg.</div><div style="font-size:12px;color:var(--ink-2)">Firma XYZ · 1450 zł/mies.</div></div><span class="tag" style="background:var(--brand-soft);color:var(--brand-dark)">wycena</span></div>
+</div>
+<div class="nav"><div class="on"><i class="ti ti-home"></i>Start</div><div><i class="ti ti-file-invoice"></i>Wyceny</div><div><i class="ti ti-building-store"></i>Firma</div></div>
+</div>
+<p class="cap">Ekran startowy · R16, R23, R24</p>
+</div>
+
+<div>
+<div class="phone">
+<div class="top"><div class="t"><i class="ti ti-arrow-left"></i>Szybka wycena</div><div class="s">Mieszkanie lub dom</div></div>
+<div class="body">
+<p class="lbl">Rodzaj sprzątania</p>
+<div class="seg"><span class="on">Standard</span><span>Gruntowne</span><span>Po wynajmie</span></div>
+<div class="field"><span>Metraż</span><b>50 m²</b></div>
+<div class="field"><span>Łazienki</span><span class="step"><b>−</b>1<b>+</b></span></div>
+<div class="field"><span>Kuchnia</span><b>aneks</b></div>
+<p class="lbl" style="margin-top:12px">Spodziewany stan</p>
+<div class="seg"><span>Lekki</span><span class="on">Typowy</span><span>Mocny</span></div>
+<div class="result">
+<div style="font-size:12px;color:var(--brand-dark);font-weight:600">Podaj klientowi</div>
+<div class="big">370–480 zł</div>
+<div style="font-size:12px;color:var(--ink-2);margin-top:4px">Rynek w mazowieckim: 250 zł. Niżej niż 370 zł dokładasz do zlecenia.</div>
+</div>
+<button class="btn"><i class="ti ti-message"></i>Kopiuj SMS dla klienta</button>
+<button class="btn ghost">Przejdź do dokładnej wyceny</button>
+</div>
+<div class="nav"><div><i class="ti ti-home"></i>Start</div><div class="on"><i class="ti ti-file-invoice"></i>Wyceny</div><div><i class="ti ti-building-store"></i>Firma</div></div>
+</div>
+<p class="cap">Szybka wycena · R10–R14</p>
+</div>
+
+<div>
+<div class="phone">
+<div class="top"><div class="t"><i class="ti ti-arrow-left"></i>Podsumowanie</div><div class="s">Krok 6 z 6 · mieszkanie 50 m², standard</div><div class="prog"><i style="width:100%"></i></div></div>
+<div class="body">
+<p class="lbl">Gdzie jest Twoja cena na rynku</p>
+<div class="rangebox" id="rb">
+<div class="track"></div>
+<div class="band" id="band"></div>
+<div class="mk" id="mMed"><span>mediana 250</span></div>
+<div class="mk min" id="mMin"><span>Twoje minimum 370</span></div>
+<div class="dot" id="dot"></div>
+</div>
+<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ink-3);margin:6px 4px 10px"><span>rynek od 120 zł</span><span>do 450 zł</span></div>
+<div style="display:flex;align-items:baseline;justify-content:space-between"><span class="lbl" style="margin:0">Cena dla klienta</span><span id="cenaOut" class="big" style="font-size:26px">370 zł</span></div>
+<input type="range" id="cena" min="200" max="520" step="10" value="370" aria-label="Cena dla klienta">
+<div id="rynek" style="font-size:12px;color:var(--ink-2)">+48% nad medianą, w widełkach rynku</div>
+<div class="keep" id="box">
+<div id="zost" style="font-size:16px;font-weight:700">Zostaje dla Ciebie 199 zł</div>
+<div id="stawka" style="font-size:13px;margin-top:2px">40 zł za godzinę pracy · cel 40 zł/h</div>
+</div>
+<div class="line"><span>Ryczałt 8,5%</span><span id="pod">31 zł</span></div>
+<div class="line"><span>Chemia (szacunek)</span><span>20 zł</span></div>
+<div class="line"><span>ZUS, zdrowotna, koszty stałe</span><span>119 zł</span></div>
+<button class="btn"><i class="ti ti-send"></i>Przygotuj ofertę</button>
+</div>
+</div>
+<p class="cap">Podsumowanie – suwak działa · R5–R9</p>
+</div>
+
+<div>
+<div class="phone">
+<div class="top"><div class="t"><i class="ti ti-arrow-left"></i>Dobór chemii</div><div class="s">Krok 5 z 6 · na podstawie zaznaczonego brudu</div><div class="prog"><i style="width:83%"></i></div></div>
+<div class="body">
+<div class="card">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><i class="ti ti-bath" style="color:var(--brand);font-size:20px"></i><b style="font-size:14px">Kamień w łazience</b><span style="margin-left:auto;font-size:12px;color:var(--ink-2)">środek kwasowy</span></div>
+<div class="prod"><span class="ph" style="background:var(--acid)">pH 1</span><div class="n">Tenzi TopEfekt Sanit<div class="d">płytki 0,5–1% · 5 l, 86 zł</div></div><span class="sds">SDS</span></div>
+<div class="prod"><span class="ph" style="background:var(--acid)">pH 1</span><div class="n">Clinex M3 Acid<div class="d">bieżące 0,1–0,5% · 5 l, 94 zł</div></div><span class="sds">SDS</span></div>
+</div>
+<div class="card">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><i class="ti ti-tools-kitchen-2" style="color:var(--brand);font-size:20px"></i><b style="font-size:14px">Tłuszcz w kuchni</b><span style="margin-left:auto;font-size:12px;color:var(--ink-2)">zasadowy</span></div>
+<div class="prod"><span class="ph" style="background:var(--alk)">pH 14</span><div class="n">Tenzi Top Grill<div class="d">gotowy do użycia · 5 l, 123 zł</div></div><span class="sds">SDS</span></div>
+</div>
+<div class="card">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><i class="ti ti-wind" style="color:var(--brand);font-size:20px"></i><b style="font-size:14px">Kurz</b><span style="margin-left:auto;font-size:12px;color:var(--ink-2)">uniwersalny</span></div>
+<div class="prod"><span class="ph" style="background:var(--neutral)">pH 7</span><div class="n">Merida Eco-Uni<div class="d">0,2–0,5% · 10 l, 170 zł</div></div><span class="sds">SDS</span></div>
+<div class="prod"><span class="ph" style="background:var(--neutral)">pH 8</span><div class="n">Kiehl Clarida Uni<div class="d">0,2–1% · 10 l, 163 zł</div></div><span class="sds">SDS</span></div>
+</div>
+<div style="font-size:12px;color:var(--ink-2);text-align:center">Pokaż wszystkie (40 środków)</div>
+<button class="btn">Dalej: podsumowanie</button>
+</div>
+</div>
+<p class="cap">Dobór chemii · PLAN etap 5</p>
+</div>
+
+<div>
+<div class="phone doc">
+<div class="firm"><div style="font-size:12px;opacity:.8">Oferta nr 14 · ważna do 6 listopada 2026</div><div style="font-size:19px;font-weight:700;margin-top:4px">Twoja firma sprzątająca</div><div style="font-size:13px;opacity:.9;margin-top:2px"><i class="ti ti-phone"></i> 500 000 000</div></div>
+<div class="body">
+<div style="display:flex;justify-content:space-between;align-items:center;background:var(--brand-soft);border-radius:16px;padding:14px;margin-bottom:12px"><div><div style="font-size:12px;color:var(--brand-dark)">Sprzątanie mieszkania</div><div style="font-weight:600">50 m², standard</div></div><div class="big" style="font-size:26px">370 zł</div></div>
+<p class="lbl">W cenie</p>
+<div class="chk"><i class="ti ti-circle-check"></i>Odkurzanie i mycie podłóg</div>
+<div class="chk"><i class="ti ti-circle-check"></i>Łazienka i WC, armatura</div>
+<div class="chk"><i class="ti ti-circle-check"></i>Kuchnia z frontami szafek</div>
+<div class="chk"><i class="ti ti-circle-check"></i>Kurze na dostępnych powierzchniach</div>
+<p class="lbl" style="margin-top:10px">Poza ceną</p>
+<div class="chk no"><i class="ti ti-circle-minus"></i>Mycie okien</div>
+<div class="chk no"><i class="ti ti-circle-minus"></i>Wnętrza szafek i AGD</div>
+<p class="lbl" style="margin-top:10px">Do dobrania</p>
+<div class="line" style="border:0"><span>Okno 1-skrzydłowe</span><b>+30 zł/szt.</b></div>
+<div class="line"><span>Piekarnik (wnętrze)</span><b>+70 zł</b></div>
+<div style="font-size:11px;color:var(--ink-3);margin-top:10px">Bezpłatne odwołanie do 24 h przed terminem, później 50% ceny. Robimy zdjęcia przed i po pracy.</div>
+<button class="btn"><i class="ti ti-phone-call"></i>Zadzwoń, żeby umówić termin</button>
+</div>
+</div>
+<p class="cap">Oferta dla klienta (link) · R18–R22</p>
+</div>
+
+</div>
+</main>
+<script>
+const s=document.getElementById('cena'),f=n=>Math.round(n).toLocaleString('pl-PL');
+const lo=100,hi=520,pos=v=>((v-lo)/(hi-lo)*100)+'%';
+const band=document.getElementById('band');band.style.left=pos(120);band.style.width=((450-120)/(hi-lo)*100)+'%';
+document.getElementById('mMed').style.left=pos(250);document.getElementById('mMin').style.left=pos(370);
+function u(){const p=+s.value,h=5,stale=119.05,chem=20,pod=p*0.085,z=p-pod-chem-stale,zh=z/h,m=250;
+document.getElementById('dot').style.left=pos(p);
+document.getElementById('cenaOut').textContent=f(p)+' zł';
+document.getElementById('pod').textContent=f(pod)+' zł';
+const d=Math.round((p-m)/m*100);
+let r=(d>=0?'+':'')+d+'% '+(d>=0?'nad medianą':'pod medianą');
+r+=p>450?' · ponad widełkami rynku, klient prawdopodobnie odmówi':', w widełkach rynku';
+document.getElementById('rynek').textContent=r;
+const ok=zh>=39.5,b=document.getElementById('box');
+b.style.background=ok?'var(--brand-soft)':'var(--bad-soft)';b.style.color=ok?'var(--brand-dark)':'var(--bad)';
+document.getElementById('zost').textContent='Zostaje dla Ciebie '+f(z)+' zł';
+document.getElementById('stawka').textContent=f(zh)+' zł za godzinę pracy · cel 40 zł/h'+(ok?'':' · poniżej Twojego minimum');}
+s.addEventListener('input',u);u();
+</script>
+</body>
+</html>

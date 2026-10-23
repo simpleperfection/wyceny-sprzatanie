@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Etap 5 – szkic ekranów</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+:root{--surface-0:#f5f4ef;--surface-1:#f0eee6;--surface-2:#fff;--border:rgba(0,0,0,.12);--border-strong:rgba(0,0,0,.2);--text-primary:#141413;--text-secondary:#5f5e5a;--text-muted:#888780;--text-accent:#185fa5;--bg-accent:#e6f1fb;--text-success:#3b6d11;--bg-success:#eaf3de;--text-danger:#a32d2d;--bg-danger:#fcebeb;--radius:8px}
+body{margin:0;padding:24px 16px;background:var(--surface-0);color:var(--text-primary);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
+main{max-width:720px;margin:0 auto}
+h1{font-size:20px;font-weight:500;margin:0 0 4px}
+.intro{font-size:13px;color:var(--text-secondary);margin:0 0 16px}
+button{font:inherit;background:transparent;border:0.5px solid var(--border-strong);border-radius:var(--radius);padding:6px 10px;color:var(--text-primary)}
+a{color:var(--text-accent)}
+.ph{background:var(--surface-2);border:0.5px solid var(--border-strong);border-radius:24px;padding:14px 14px 18px;min-width:0}
+.bar{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary);margin-bottom:10px}
+.lbl{font-size:12px;color:var(--text-secondary);margin:0}
+.row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;padding:5px 0;border-bottom:0.5px solid var(--border)}
+.chip{font-size:11px;padding:2px 8px;border-radius:var(--radius);background:var(--surface-1);color:var(--text-secondary)}
+.cap{font-size:12px;color:var(--text-muted);text-align:center;margin:8px 0 0}
+</style>
+</head>
+<body>
+<main>
+<h1>Etap 5 – poglądowy szkic ekranów</h1>
+<p class="intro">Szkic z 2026-10-23, podstawa makiet w Figmie (decyzja w <code>etap-5-aplikacja-wyceny-przygotowanie.md</code>). Pokazuje układ i treść, nie styl. Przykład: mazowieckie, ryczałt, 4000 zł na rękę, 100 h u klientów w miesiącu, tempo 1,3×. Listy „wchodzi / nie wchodzi” są przykładowe.</p>
+<div style="background:var(--surface-1);border-radius:12px;padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
+
+<div>
+<div class="ph">
+<div class="bar"><i class="ti ti-phone" aria-hidden="true"></i>Szybka wycena<span style="margin-left:auto" class="chip">telefon</span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px;margin-bottom:12px">
+<div style="background:var(--surface-1);border-radius:var(--radius);padding:6px 8px"><p class="lbl">Rodzaj</p>Standard</div>
+<div style="background:var(--surface-1);border-radius:var(--radius);padding:6px 8px"><p class="lbl">Metraż</p>50 m²</div>
+<div style="background:var(--surface-1);border-radius:var(--radius);padding:6px 8px"><p class="lbl">Łazienki</p>1</div>
+<div style="background:var(--surface-1);border-radius:var(--radius);padding:6px 8px"><p class="lbl">Kuchnia</p>Aneks</div>
+</div>
+<p class="lbl">Spodziewany stan</p>
+<div style="display:flex;gap:6px;margin:4px 0 14px;font-size:12px">
+<span class="chip">lekki</span><span class="chip" style="background:var(--bg-accent);color:var(--text-accent)">typowy</span><span class="chip">mocny</span>
+</div>
+<p class="lbl">Widełki dla klienta</p>
+<p style="font-size:26px;font-weight:500;margin:0 0 2px">370–480 zł</p>
+<p style="font-size:12px;color:var(--text-secondary);margin:0 0 12px">Dolna granica to Twoje minimum. Rynek w mazowieckim: mediana 250 zł.</p>
+<div style="background:var(--surface-1);border-radius:var(--radius);padding:8px 10px;font-size:12px;color:var(--text-secondary);margin-bottom:10px">Sprzątanie mieszkania 50 m²: 370–480 zł. Cena ostateczna po obejrzeniu lokalu lub zdjęć.</div>
+<div style="display:flex;gap:8px"><button style="flex:1;font-size:13px"><i class="ti ti-copy" aria-hidden="true"></i> Kopiuj tekst</button><button style="flex:1;font-size:13px">Dokładna wycena</button></div>
+</div>
+<p class="cap">Wymagania R10–R14</p>
+</div>
+
+<div>
+<div class="ph">
+<div class="bar"><i class="ti ti-receipt" aria-hidden="true"></i>Podsumowanie wyceny<span style="margin-left:auto" class="chip">krok 6 z 6</span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+<div style="background:var(--surface-1);border-radius:var(--radius);padding:8px"><p class="lbl">Rynek (mediana)</p><p style="font-size:18px;font-weight:500;margin:0">250 zł</p><p class="lbl">widełki 120–450</p></div>
+<div style="background:var(--surface-1);border-radius:var(--radius);padding:8px"><p class="lbl">Twoje minimum</p><p style="font-size:18px;font-weight:500;margin:0">370 zł</p><p class="lbl">5,0 h × tempo 1,3</p></div>
+</div>
+<p class="lbl">Cena dla klienta (proponowana: wyższa z dwóch)</p>
+<div style="display:flex;align-items:center;gap:10px;margin:4px 0">
+<input type="range" id="cena" min="200" max="520" step="10" value="370" style="flex:1" aria-label="Cena dla klienta">
+<span id="cenaOut" style="font-size:20px;font-weight:500;min-width:72px;text-align:right">370 zł</span>
+</div>
+<p id="rynek" style="font-size:12px;color:var(--text-secondary);margin:0 0 10px">+48% nad medianą, w widełkach rynku</p>
+<div id="box" style="border-radius:var(--radius);padding:10px;background:var(--bg-success)">
+<p id="zost" style="font-size:14px;font-weight:500;margin:0;color:var(--text-success)">Zostaje dla Ciebie 199 zł</p>
+<p id="stawka" style="font-size:12px;margin:2px 0 0;color:var(--text-success)">czyli 40 zł za godzinę pracy (cel: 40 zł/h)</p>
+</div>
+<div style="margin-top:10px">
+<div class="row"><span>Ryczałt 8,5%</span><span id="pod">31 zł</span></div>
+<div class="row"><span>Chemia (szacunek 4 zł/h)</span><span>20 zł</span></div>
+<div class="row" style="border:none"><span>ZUS, zdrowotna, koszty stałe</span><span>119 zł</span></div>
+</div>
+</div>
+<p class="cap">Suwak ceny działa · R5–R9</p>
+</div>
+
+<div>
+<div class="ph">
+<div class="bar"><i class="ti ti-flask" aria-hidden="true"></i>Dobór chemii<span style="margin-left:auto" class="chip">krok 5 z 6</span></div>
+<p class="lbl" style="margin-bottom:6px">Na podstawie brudu: kurz, kamień (łazienka), tłuszcz (kuchnia)</p>
+<p style="font-size:13px;font-weight:500;margin:8px 0 4px">Środek uniwersalny</p>
+<div class="row"><span>Kiehl Clarida Uni<br><span class="lbl">pH 8 · 0,2–1% · 10 l, 163 zł</span></span><a href="#">karta SDS</a></div>
+<div class="row"><span>Merida Eco-Uni<br><span class="lbl">pH 7 · 0,2–0,5% · 10 l, 170 zł</span></span><a href="#">karta SDS</a></div>
+<p style="font-size:13px;font-weight:500;margin:10px 0 4px">Środek kwasowy</p>
+<div class="row"><span>Tenzi TopEfekt Sanit<br><span class="lbl">pH 1 · płytki 0,5–1% · 5 l, 86 zł</span></span><a href="#">karta SDS</a></div>
+<div class="row"><span>Clinex M3 Acid<br><span class="lbl">pH 1 · bieżące 0,1–0,5% · 5 l, 94 zł</span></span><a href="#">karta SDS</a></div>
+<p style="font-size:13px;font-weight:500;margin:10px 0 4px">Odtłuszczacz zasadowy</p>
+<div class="row" style="border:none"><span>Tenzi Top Grill<br><span class="lbl">pH 14 · gotowy · 5 l, 123 zł</span></span><a href="#">karta SDS</a></div>
+<p style="font-size:12px;color:var(--text-muted);margin:8px 0 0">i 35 innych środków z tych 3 kategorii</p>
+</div>
+<p class="cap">Dane z data/chemia.json · PLAN etap 5</p>
+</div>
+
+<div>
+<div class="ph">
+<div class="bar"><i class="ti ti-file-text" aria-hidden="true"></i>Oferta dla klienta<span style="margin-left:auto" class="chip">link</span></div>
+<p style="font-size:15px;font-weight:500;margin:0">Twoja firma sprzątająca</p>
+<p class="lbl" style="margin-bottom:10px">tel. 500 000 000 · ważna do 6 listopada 2026</p>
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font-size:13px">Sprzątanie mieszkania 50 m²</span><span style="font-size:20px;font-weight:500">370 zł</span></div>
+<p style="font-size:13px;font-weight:500;margin:0 0 4px">Wchodzi w cenę</p>
+<p style="font-size:12px;color:var(--text-secondary);margin:0 0 8px"><i class="ti ti-check" aria-hidden="true"></i> odkurzanie i mycie podłóg <i class="ti ti-check" aria-hidden="true"></i> łazienka i WC <i class="ti ti-check" aria-hidden="true"></i> kuchnia z frontami szafek <i class="ti ti-check" aria-hidden="true"></i> kurze na dostępnych powierzchniach</p>
+<p style="font-size:13px;font-weight:500;margin:0 0 4px">Nie wchodzi</p>
+<p style="font-size:12px;color:var(--text-secondary);margin:0 0 8px"><i class="ti ti-x" aria-hidden="true"></i> mycie okien <i class="ti ti-x" aria-hidden="true"></i> wnętrza szafek i AGD <i class="ti ti-x" aria-hidden="true"></i> pranie tapicerki</p>
+<p style="font-size:13px;font-weight:500;margin:0 0 4px">Opcjonalnie</p>
+<div class="row"><span>Okno 1-skrzydłowe</span><span>30 zł/szt.</span></div>
+<div class="row"><span>Piekarnik (wnętrze)</span><span>70 zł</span></div>
+<p style="font-size:11px;color:var(--text-muted);margin:8px 0 0">Bezpłatne odwołanie do 24 h przed terminem, później 50%. Zdjęcia przed i po pracy.</p>
+</div>
+<p class="cap">Bez kosztów i marży firmy · R18–R22</p>
+</div>
+
+</div>
+</main>
+<script>
+const s=document.getElementById('cena'),f=n=>Math.round(n).toLocaleString('pl-PL');
+function u(){const p=+s.value,h=5,stale=119.05,chem=20,pod=p*0.085,z=p-pod-chem-stale,zh=z/h,m=250;
+document.getElementById('cenaOut').textContent=f(p)+' zł';
+document.getElementById('pod').textContent=f(pod)+' zł';
+const d=Math.round((p-m)/m*100);
+let r=(d>=0?'+':'')+d+'% '+(d>=0?'nad medianą':'pod medianą');
+if(p>450)r+=' · ponad widełkami rynku, klient prawdopodobnie odmówi';else r+=', w widełkach rynku';
+document.getElementById('rynek').textContent=r;
+const ok=zh>=39.5,b=document.getElementById('box'),a=document.getElementById('zost'),c=document.getElementById('stawka');
+b.style.background=ok?'var(--bg-success)':'var(--bg-danger)';
+a.style.color=c.style.color=ok?'var(--text-success)':'var(--text-danger)';
+a.textContent='Zostaje dla Ciebie '+f(z)+' zł'+(ok?'':' · poniżej Twojego minimum');
+c.textContent='czyli '+f(zh)+' zł za godzinę pracy (cel: 40 zł/h)';}
+s.addEventListener('input',u);u();
+</script>
+</body>
+</html>

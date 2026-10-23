@@ -1,6 +1,6 @@
 # PLAN – aplikacja do wycen dla początkujących firm sprzątających
 
-Status: **w realizacji** – zaakceptowany 2026-10-23. Etapy 1–4 **zakończone**: publiczne repo https://github.com/simpleperfection/wyceny-sprzatanie (gałąź `main`, commity z adresu noreply; etap 1 – `802f4e4`, etapy 2–3 – `5f48976`, etap 4 – `11a6a91`, `88bb839`, `abbaa59` i `fbd0dd9`). Baza chemii: 87 produktów od 7 dostawców (Kärcher pominięty decyzją właściciela); każda pozycja usług ma przypisane środki, a kosztu chemii z bazy nie liczymy (decyzja właściciela 2026-10-23). Poza etapami: w `.claude/` jest szablon workflow Claude Code (claude-code-starter, commity `75a6d07` i `941713d`), doctor daje `WYNIK: OK`. Brainstorm 2026-10-23 poszerzył zakres etapu 5 o funkcje dla początkujących firm (`docs/brainstorms/2026-10-23-poczatkujace-firmy-requirements.md`). **Następny krok:** `/dev-plan` dla etapu 5 (aplikacja PWA z funkcjami A–D z dokumentu wymagań).
+Status: **w realizacji** – zaakceptowany 2026-10-23. Etapy 1–4 **zakończone**: publiczne repo https://github.com/simpleperfection/wyceny-sprzatanie (gałąź `main`, commity z adresu noreply; etap 1 – `802f4e4`, etapy 2–3 – `5f48976`, etap 4 – `11a6a91`, `88bb839`, `abbaa59` i `fbd0dd9`). Baza chemii: 87 produktów od 7 dostawców (Kärcher pominięty decyzją właściciela); każda pozycja usług ma przypisane środki, a kosztu chemii z bazy nie liczymy (decyzja właściciela 2026-10-23). Poza etapami: w `.claude/` jest szablon workflow Claude Code (claude-code-starter, commity `75a6d07` i `941713d`), doctor daje `WYNIK: OK`. Brainstorm 2026-10-23 poszerzył zakres etapu 5 o funkcje dla początkujących firm (`docs/brainstorms/2026-10-23-poczatkujace-firmy-requirements.md`). Etap 5 w przygotowaniu: checklista `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (decyzje rozstrzygnięte 2026-10-23, kierunek wyglądu: wersja 3 w pliku Figmy). **Następny krok:** dokończyć checklistę – szkice treści (zakresy, pytania do klienta, warunki oferty), logo i kolory Simple Perfection, ceny nowej usługi „doczyszczanie mieszkań i obiektów po budowie”, makiety 15 ekranów w Figmie – a potem `/dev-plan`.
 Ostatnia aktualizacja: 2026-10-23
 
 ## Cel
@@ -27,6 +27,9 @@ Narzędzie dla właściciela małej firmy sprzątającej:
 | Odbiorca i funkcje dla początkujących (brainstorm 2026-10-23) | aplikacja **publiczna** dla dowolnej początkującej firmy; wersja 1 zakłada firmę **jednoosobową** (sprząta właściciel). Do etapu 5 dochodzą: **A** cena minimalna z kosztów firmy (ZUS liczony na następnym progu, podatek, VAT, koszty stałe, kwota na rękę, godziny u klientów), **B** szybka wycena przez telefon (widełki) i pytania do klienta, **C** własne tempo (domyślnie 1,3× normy, potem z zapisanych czasów zleceń), **D** oferta jako link lub PDF z zakresem „wchodzi / nie wchodzi” i warunkami. Wymagania R1–R24 w `docs/brainstorms/2026-10-23-poczatkujace-firmy-requirements.md` |
 | Cena proponowana | **wyższa z dwóch**: mediana rynku w województwie albo cena minimalna firmy; ostrzeżenie, gdy wychodzi ponad widełki rynku. Tempo zmienia koszt i cenę minimalną, nie cenę rynkową |
 | Dane użytkownika | tylko w przeglądarce, z kopią do pliku; konta i synchronizacji na razie nie planujemy |
+| Makiety etapu 5 (2026-10-23) | projektuje Claude w Figmie, właściciel akceptuje każdy ekran; plik [Wyceny sprzątania – etap 5, szkice](https://www.figma.com/design/sDtiv6VdCbpyfM6Gfs7Xej). Bazą jest **wersja 3** (inspirowana Jobberem i Housecall Pro: start „do zrobienia”, przycisk „+”, wycena jako lista pozycji, oferta jak dokument). Konto Figma: plan Starter, miejsce View – do 20 odczytów przez MCP miesięcznie, więc odczyty oszczędzamy |
+| Marka (2026-10-23) | barwy i logo **Simple Perfection** w całej aplikacji; oferta dla klienta pokazuje firmę, która korzysta z aplikacji. Nazwa robocza „Wyceny sprzątania” (właściciel bez preferencji) |
+| Doczyszczanie, farba, dezynfekcja (2026-10-23) | „doczyszczanie” = posadzki i fugi **oraz** nowa usługa: doczyszczanie mieszkań i obiektów po budowie (ceny do zebrania); usuwanie farby bez podpowiedzi środka; dezynfekcja do ręcznego dodania przy każdej usłudze |
 
 ## Wyniki skanu cenników (etap 0)
 - Pliki: `research/cenniki_firm.csv` (95 firm, z czego 80 ma ceny, każda z linkiem) i `research/srednie_wojewodztwa.csv`.
@@ -118,6 +121,6 @@ Do weryfikacji na pierwszych zleceniach (pewność „niska” w danych):
 - Aplikacja będzie w czystym HTML/JS, bez kroku budowania.
 
 ## Otwarte pytania
-1. **„Doczyszczanie”**: czy chodzi o doczyszczanie posadzek i fug (tak jest teraz w danych), czy też o inne usługi, np. doczyszczanie mieszkań lub obiektów po budowie?
-2. **Usuwanie farby z posadzki** (`doczyszczanie.usuwanie_farby`): w bazie chemii nie ma zmywacza farb. Dozbierać go od jednego z 7 dostawców, czy zostawić pozycję bez podpowiedzi środka?
-3. **Dezynfekcja**: 5 środków w bazie nie jest przypisanych do żadnej usługi ani brudu, więc aplikacja sama ich nie podsunie. Przypiąć je np. do sprzątania biur i po wynajmie, czy zostawić jako kategorię do ręcznego wyboru?
+1. **Adres aplikacji** (decyzja przed publikacją, etap 6): subdomena firmy (np. `wyceny.simple-perfection.pl`) czy adres GitHub Pages? Linki do wysłanych ofert zawierają adres, więc zmiana po starcie może je zepsuć.
+
+Rozstrzygnięte 2026-10-23 (szczegóły w Ustaleniach): „doczyszczanie”, usuwanie farby, dezynfekcja.
