@@ -1,6 +1,6 @@
 # PLAN – aplikacja do wycen dla początkujących firm sprzątających
 
-Status: **w realizacji** – zaakceptowany 2026-10-23. Etapy 1–3 **zakończone** i wysłane na GitHuba: publiczne repo https://github.com/simpleperfection/wyceny-sprzatanie (gałąź `main`, commity z adresu noreply; etap 1 – `802f4e4`, etapy 2–3 – `5f48976`). Następny: etap 4 – lista 8 dystrybutorów chemii do zatwierdzenia.
+Status: **w realizacji** – zaakceptowany 2026-10-23. Etapy 1–3 **zakończone** i wysłane na GitHuba: publiczne repo https://github.com/simpleperfection/wyceny-sprzatanie (gałąź `main`, commity z adresu noreply; etap 1 – `802f4e4`, etapy 2–3 – `5f48976`). Etap 4 w toku: lista 8 dostawców chemii **zatwierdzona** (`research/DYSTRYBUTORZY.md`), trwa zbieranie produktów do `data/chemia.json`.
 Ostatnia aktualizacja: 2026-10-23
 
 ## Cel
@@ -19,7 +19,7 @@ Narzędzie dla właściciela małej firmy sprzątającej:
 | Dane cen | własny skan firm lokalnych **+ średnie z porównywarek** (np. kb.pl) jako drugie źródło; firma może nadpisać swoje stawki |
 | Zabrudzenie → chemia | kurz, sierść → środek uniwersalny; tłuszcz → zasadowy; kamień/osad → kwaśny; pleśń → chlorowy/grzybobójczy; pył budowlany → preparat poremontowy; szyby → płyn do szyb |
 | GitHub | repo **publiczne** `simpleperfection/wyceny-sprzatanie` (darmowe GitHub Pages); Git i GitHub CLI zainstalowane przez winget, logowanie `gh auth login` robi właściciel (w osobnym oknie PowerShell) |
-| Dystrybutorzy chemii | listę 8 firm przygotowuje Claude (wg wielkości i dostępności kart SDS); lista do zatwierdzenia przed zbieraniem produktów |
+| Dystrybutorzy chemii | listę 8 firm przygotowuje Claude (wg wielkości i dostępności kart SDS); lista zatwierdzona 2026-10-23 (Voigt zamiast Diversey) – `research/DYSTRYBUTORZY.md` |
 | Podsumowanie kosztów | cena dla klienta **+ koszt firmy** (chemia, robocizna, sprzęt, dojazd) **i marża** w zł i % |
 | Usługi w wersji 1 | mieszkanie: standard / gruntowne / po remoncie / po wynajmie; okna; tapicerka; dywany; **doczyszczanie; mycie posadzek; mycie kostki brukowej; mycie elewacji; sprzątanie biur; sprzątanie firm** (hale, magazyny, lokale usługowe) |
 
@@ -95,6 +95,8 @@ Do weryfikacji na pierwszych zleceniach (pewność „niska” w danych):
 2. ✅ **Dane cen**: średnie z porównywarek i skanu dla 16 województw → `data/ceny.json` i `data/rynek.json` (źródło przy każdej cenie). Ceny krajowe × współczynnik województwa, który łączy skan firm (wszystkie kolumny cennika, waga = liczba firm) z indeksem kb.pl (commit `5f48976`).
 3. ✅ **Normy czasu pracy**: normy min/m² pomieszczeń i brudu → `data/normy.json`, skalibrowane tak, żeby mieszkanie 50 m² i sprzątanie po remoncie zgadzały się z medianą rynkową; raport `research/KALIBRACJA.md` (commit `5f48976`).
 4. **Baza chemii**: produkty i karty charakterystyki (SDS) od 8 dystrybutorów → `data/chemia.json` (nazwa, przeznaczenie, pH, rozcieńczenie, cena, link do SDS). Zastąpi szacunki chemii w `data/ceny.json` (chemia 4 zł/h, impregnat 8–12 zł/m²).
+   - Zatwierdzone 2026-10-23: Tenzi, Merida, Clinex (Amtra), Kärcher, Kiehl, Medi-Sept, Buzil, Voigt (właściciel wybrał Voigt zamiast Diversey/TASKI; Diversey jest pierwszą rezerwą). Uzasadnienie, odrzuceni i sposób zbierania produktów w `research/DYSTRYBUTORZY.md`.
+   - Polskie karty SDS bez zastrzeżeń ma 6 pierwszych firm. U Buzila i Voigta dostęp do kart trzeba potwierdzić. Publiczne ceny mają Tenzi, Merida i Voigt, więc pozostałe ceny weźmiemy z jednego wskazanego sklepu internetowego (pewność „średnia”).
 5. **Aplikacja PWA**: kreator z paskiem postępu (usługa → województwo → pomieszczenia i brud → dodatki → chemia → podsumowanie kosztów), zapis wycen w przeglądarce, eksport do PDF lub linku. Silnik wyceny w JS ma dawać te same wyniki co scenariusze z `research/KALIBRACJA.md`.
 6. **Testy i publikacja** na GitHub Pages.
 
