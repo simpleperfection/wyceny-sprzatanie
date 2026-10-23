@@ -6,18 +6,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Aplikacja PWA do wycen usług sprzątających i doboru chemii dla małych firm sprzątających (cały projekt jest po polsku: dane, identyfikatory opisowe, dokumentacja, commity). **`PLAN.md` jest źródłem prawdy**: linia „Status” mówi, który etap jest w toku, a sekcje „Ustalenia” i „Otwarte pytania” zawierają decyzje właściciela. Przy wznowieniu pracy zacznij od pierwszego niezamkniętego etapu i po każdym etapie zaktualizuj `PLAN.md` (status, ✅ przy etapie, hash commita).
 
-Na razie repo zawiera dane (`data/`), materiały źródłowe (`research/`), skrypt kalibracji i parsery do zbierania chemii; kodu aplikacji jeszcze nie ma. Aplikacja (etap 5) ma powstać w czystym HTML/JS bez kroku budowania i działać na GitHub Pages.
+Na razie repo zawiera dane (`data/`), materiały źródłowe (`research/`), skrypt kalibracji, parsery do zbierania chemii i szablon workflow Claude Code w `.claude/`; kodu aplikacji jeszcze nie ma. Aplikacja (etap 5) ma powstać w czystym HTML/JS bez kroku budowania i działać na GitHub Pages.
 
 ## Środowisko i polecenia
 
-- Windows 11, Windows PowerShell 5.1. **Nie ma Pythona ani Node.js**, więc skrypty, które generują pliki w `data/`, pisz w PowerShellu.
+- Windows 11, Windows PowerShell 5.1, Node.js 24 LTS (od 2026-10-23). Pythona nie ma. Node jest potrzebny maszynerii szablonu `.claude/` (hooki, doctor, workflowy); skrypty, które generują pliki w `data/`, nadal pisz w PowerShellu, a sama aplikacja nie ma kroku budowania.
 - Git Bash (narzędzie Bash) ma `perl` z `JSON::PP` i `pdftotext`. Używamy ich tylko pomocniczo, do zbierania chemii: `scripts/chemia/{tenzi,merida,voigt}.pl` czytają pobrane strony produktów (`perl scripts/chemia/tenzi.pl strona.html` → JSON z ceną, pH, dozowaniem i linkiem do karty), a `pdftotext -layout karta.pdf -` wyciąga pH (sekcja 9) i datę karty SDS. Instrukcja dla pozostałych dostawców jest w `PLAN.md`, etap 4.
 - Przeliczenie danych po każdej zmianie `data/ceny.json` lub plików CSV w `research/`:
   ```
   powershell -NoProfile -ExecutionPolicy Bypass -File scripts\kalibracja.ps1
   ```
   Nie ma osobnych testów. Kontrolą jest sam skrypt: przerywa się (`throw`), gdy dane są niespójne, a na końcu wypisuje liczbę „niezgodności katalogu” (powinno być 0). Zmiany w wynikach sprawdzaj przez `git diff` na `data/rynek.json`, `data/normy.json` i `research/KALIBRACJA.md`.
-- Git i GitHub CLI są zainstalowane w Program Files. Jeśli w PowerShellu nie ma ich w PATH, odśwież zmienną: `$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')`. Polecenie `gh auth login` uruchamia właściciel w osobnym oknie PowerShell, nie w panelu terminala aplikacji.
+- Git, GitHub CLI i Node.js są zainstalowane w Program Files. Jeśli w PowerShellu nie ma ich w PATH, odśwież zmienną: `$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')` (w Git Bash: `export PATH="/c/Program Files/nodejs:$PATH"`). Polecenie `gh auth login` uruchamia właściciel w osobnym oknie PowerShell, nie w panelu terminala aplikacji.
+
+## Szablon workflow `.claude/`
+
+- `.claude/` to szablon [claude-code-starter](https://github.com/AIBiz-Automatyzacje/claude-code-starter) (commit `ba195e3`, zainstalowany 2026-10-23): pipeline `dev-*` (`/dev-brainstorm` → `/dev-plan` → `dev-autopilot-wf` → `/dev-pr`), agenci, reguły, hooki i workflowy. Szablon jest zestrojony pod React + Supabase; w tym projekcie przydają się głównie pipeline, review i baza wiedzy. Zmiany z szablonu zaciąga `/sync-template`.
+- Sprawdzian środowiska (w Git Bash): `bash .claude/scripts/doctor/doctor.sh`. `WYNIK: OK` = można startować. Jedyna uwaga to niezainstalowany plugin `dev-browser` (pipeline go nie woła).
+- Dostosowania do tego repo: `.gitattributes` wymusza LF w `*.sh` (przy `core.autocrlf=true` Git Bash nie czyta CRLF), `.gitignore` przepuszcza wzorce `.env*.example`, a ścieżki hooków Stop w `.claude/settings.json` są w cudzysłowie, bo katalog projektu ma spacje. Po `/sync-template` sprawdź, czy cudzysłowy zostały.
+- `claude` nie ma w PATH. Polecenia `claude plugin …` uruchamia się CLI dołączonym do aplikacji desktop: `%LOCALAPPDATA%\Claude-Data\<profil>\claude-code\<wersja>\<hash>\claude.exe`.
 
 ## Przepływ danych
 

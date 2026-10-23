@@ -112,7 +112,7 @@ Do weryfikacji na pierwszych zleceniach (pewność „niska” w danych):
 6. **Testy i publikacja** na GitHub Pages.
 
 ## Środowisko
-- Windows 11, PowerShell 5.1; Git 2.55 i GitHub CLI 2.103 (winget). Brak Pythona i Node.js – skrypty danych są w PowerShellu (`scripts/kalibracja.ps1`, zapisany jako UTF-8 z BOM).
+- Windows 11, PowerShell 5.1; Git 2.55, GitHub CLI 2.103 i Node.js 24 LTS (winget; Node od 2026-10-23 dla szablonu `.claude/`). Brak Pythona – skrypty danych są w PowerShellu (`scripts/kalibracja.ps1`, zapisany jako UTF-8 z BOM).
 - Git Bash ma `perl` z `JSON::PP` i `pdftotext`; w Perlu są pomocnicze parsery stron dostawców chemii (`scripts/chemia/`).
 - Aplikacja będzie w czystym HTML/JS, bez kroku budowania.
 
