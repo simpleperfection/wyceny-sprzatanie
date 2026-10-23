@@ -1,6 +1,6 @@
 # PLAN – aplikacja do wycen dla początkujących firm sprzątających
 
-Status: **w realizacji** – zaakceptowany 2026-10-23. Etapy 1–3 **zakończone** i wysłane na GitHuba: publiczne repo https://github.com/simpleperfection/wyceny-sprzatanie (gałąź `main`, commity z adresu noreply; etap 1 – `802f4e4`, etapy 2–3 – `5f48976`). Etap 4 w toku i wysłany na GitHuba: lista 8 dostawców chemii **zatwierdzona** (`research/DYSTRYBUTORZY.md`, commit `11a6a91`); w `data/chemia.json` jest 55 produktów od 4 dostawców – Tenzi, Merida, Clinex, Voigt (commit `88bb839`). **Następny krok:** produkty od Kärchera, Kiehla, Medi-Septa i Buzila, potem koszt chemii w `data/ceny.json` (instrukcja w etapie 4 niżej).
+Status: **w realizacji** – zaakceptowany 2026-10-23. Etapy 1–3 **zakończone** i wysłane na GitHuba: publiczne repo https://github.com/simpleperfection/wyceny-sprzatanie (gałąź `main`, commity z adresu noreply; etap 1 – `802f4e4`, etapy 2–3 – `5f48976`). Etap 4 w toku i wysłany na GitHuba: lista 8 dostawców chemii **zatwierdzona** (`research/DYSTRYBUTORZY.md`, commit `11a6a91`); w `data/chemia.json` jest 55 produktów od 4 dostawców – Tenzi, Merida, Clinex, Voigt (commit `88bb839`). Poza etapami: w `.claude/` jest szablon workflow Claude Code (claude-code-starter, commity `75a6d07` i `941713d`), doctor daje `WYNIK: OK`. **Następny krok:** produkty od Kärchera, Kiehla, Medi-Septa i Buzila, potem koszt chemii w `data/ceny.json` (instrukcja w etapie 4 niżej).
 Ostatnia aktualizacja: 2026-10-23
 
 ## Cel
@@ -19,6 +19,7 @@ Narzędzie dla właściciela małej firmy sprzątającej:
 | Dane cen | własny skan firm lokalnych **+ średnie z porównywarek** (np. kb.pl) jako drugie źródło; firma może nadpisać swoje stawki |
 | Zabrudzenie → chemia | kurz, sierść → środek uniwersalny; tłuszcz → zasadowy; kamień/osad → kwaśny; pleśń → chlorowy/grzybobójczy; pył budowlany → preparat poremontowy; szyby → płyn do szyb |
 | GitHub | repo **publiczne** `simpleperfection/wyceny-sprzatanie` (darmowe GitHub Pages); Git i GitHub CLI zainstalowane przez winget, logowanie `gh auth login` robi właściciel (w osobnym oknie PowerShell) |
+| Workflow Claude Code | szablon [claude-code-starter](https://github.com/AIBiz-Automatyzacje/claude-code-starter) w `.claude/` (pipeline `dev-*`, review, baza wiedzy); dla jego hooków i doctora doinstalowany Node.js 24 LTS; opcjonalny plugin `dev-browser` niezainstalowany – opis w `CLAUDE.md` |
 | Dystrybutorzy chemii | listę 8 firm przygotowuje Claude (wg wielkości i dostępności kart SDS); lista zatwierdzona 2026-10-23 (Voigt zamiast Diversey) – `research/DYSTRYBUTORZY.md` |
 | Podsumowanie kosztów | cena dla klienta **+ koszt firmy** (chemia, robocizna, sprzęt, dojazd) **i marża** w zł i % |
 | Usługi w wersji 1 | mieszkanie: standard / gruntowne / po remoncie / po wynajmie; okna; tapicerka; dywany; **doczyszczanie; mycie posadzek; mycie kostki brukowej; mycie elewacji; sprzątanie biur; sprzątanie firm** (hale, magazyny, lokale usługowe) |
