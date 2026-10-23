@@ -1,6 +1,6 @@
 # PLAN – aplikacja do wycen dla początkujących firm sprzątających
 
-Status: **w realizacji** – zaakceptowany 2026-10-23. Etapy 1–3 **zakończone** i wysłane na GitHuba: publiczne repo https://github.com/simpleperfection/wyceny-sprzatanie (gałąź `main`, commity z adresu noreply; etap 1 – `802f4e4`, etapy 2–3 – `5f48976`). Etap 4 w toku: lista 8 dostawców chemii **zatwierdzona** (`research/DYSTRYBUTORZY.md`), trwa zbieranie produktów do `data/chemia.json`.
+Status: **w realizacji** – zaakceptowany 2026-10-23. Etapy 1–3 **zakończone** i wysłane na GitHuba: publiczne repo https://github.com/simpleperfection/wyceny-sprzatanie (gałąź `main`, commity z adresu noreply; etap 1 – `802f4e4`, etapy 2–3 – `5f48976`). Etap 4 w toku: lista 8 dostawców chemii **zatwierdzona** (`research/DYSTRYBUTORZY.md`); w `data/chemia.json` jest 55 produktów od 4 dostawców (Tenzi, Merida, Clinex, Voigt). Następny krok: Kärcher, Kiehl, Medi-Sept, Buzil, potem koszt chemii w `data/ceny.json`.
 Ostatnia aktualizacja: 2026-10-23
 
 ## Cel
@@ -96,7 +96,10 @@ Do weryfikacji na pierwszych zleceniach (pewność „niska” w danych):
 3. ✅ **Normy czasu pracy**: normy min/m² pomieszczeń i brudu → `data/normy.json`, skalibrowane tak, żeby mieszkanie 50 m² i sprzątanie po remoncie zgadzały się z medianą rynkową; raport `research/KALIBRACJA.md` (commit `5f48976`).
 4. **Baza chemii**: produkty i karty charakterystyki (SDS) od 8 dystrybutorów → `data/chemia.json` (nazwa, przeznaczenie, pH, rozcieńczenie, cena, link do SDS). Zastąpi szacunki chemii w `data/ceny.json` (chemia 4 zł/h, impregnat 8–12 zł/m²).
    - Zatwierdzone 2026-10-23: Tenzi, Merida, Clinex (Amtra), Kärcher, Kiehl, Medi-Sept, Buzil, Voigt (właściciel wybrał Voigt zamiast Diversey/TASKI; Diversey jest pierwszą rezerwą). Uzasadnienie, odrzuceni i sposób zbierania produktów w `research/DYSTRYBUTORZY.md`.
-   - Polskie karty SDS bez zastrzeżeń ma 6 pierwszych firm. U Buzila i Voigta dostęp do kart trzeba potwierdzić. Publiczne ceny mają Tenzi, Merida i Voigt, więc pozostałe ceny weźmiemy z jednego wskazanego sklepu internetowego (pewność „średnia”).
+   - Polskie karty SDS bez zastrzeżeń ma 6 pierwszych firm. Voigt ma publiczne karty przy produktach w sklepie (sprawdzone 2026-10-23). U Buzila dostęp do kart trzeba potwierdzić. Publiczne ceny mają Tenzi, Merida i Voigt, więc pozostałe ceny weźmiemy z jednego wskazanego sklepu internetowego (pewność „średnia”).
+   - Zebrane 2026-10-23 (`data/chemia.json`): Tenzi 16, Merida 11, Clinex 14 (ceny z hurtowniachemiczna.com), Voigt 14 – razem 55 produktów. Każdy ma cenę netto i brutto ze źródłem, pH (opis producenta albo sekcja 9 karty SDS), stężenia robocze i link do karty SDS z datą; wszystkie linki sprawdzone. Clinex podaje dodatkowo stężenia dla 3 poziomów brudu i wydajność 4 m² na litr roztworu (z kalkulatora na stronie producenta).
+   - 16 kategorii środków powiązanych z brudem z `normy.json` i pozycjami z `ceny.json`. Luki: brak impregnatu do kostki; po 2 środki do powłok, biobójcze i poremontowe.
+   - Zostało: Kärcher, Kiehl, Medi-Sept, Buzil; potem wyliczenie kosztu chemii na godzinę i na m² (zamiast 4 zł/h i impregnatu 8–12 zł/m² w `data/ceny.json`).
 5. **Aplikacja PWA**: kreator z paskiem postępu (usługa → województwo → pomieszczenia i brud → dodatki → chemia → podsumowanie kosztów), zapis wycen w przeglądarce, eksport do PDF lub linku. Silnik wyceny w JS ma dawać te same wyniki co scenariusze z `research/KALIBRACJA.md`.
 6. **Testy i publikacja** na GitHub Pages.
 

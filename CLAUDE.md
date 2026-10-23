@@ -29,6 +29,7 @@ data/ceny.json ────────────┘                          
 ```
 
 - `data/ceny.json` edytuje się ręcznie: katalog usług, ceny krajowe, progi metrażu, poziomy brudu i koszty firmy. Każda cena ma `zrodla` (klucze z sekcji `zrodla` na początku pliku), `zakres`, `pewnosc` (wysoka/średnia/niska wg liczby punktów danych) i zwykle `wyliczenie`. Nowe źródło dopisz do `zrodla` i opisz w `research/ZRODLA.md` (z datą i linkiem).
+- `data/chemia.json` też edytuje się ręcznie: dostawcy z `research/DYSTRYBUTORZY.md`, kategorie środków powiązane z `brud[].id` w `normy.json` i kluczami pozycji (`usługa.pozycja`) w `ceny.json`, produkty z ceną, pH, stężeniami (`proc` = % koncentratu w roztworze) i linkiem do karty SDS. Opis pól jest w `meta` pliku.
 - `data/rynek.json`, `data/normy.json` i `research/KALIBRACJA.md` są **generowane** – nie edytuj ich ręcznie, tylko zmień dane wejściowe albo skrypt. Data wersji jest wpisana na sztywno w `$dzis` na początku skryptu.
 - Pliki CSV w `research/` mają separator `;` i kropkę dziesiętną. Każdy wiersz ceny ma źródło i link.
 
