@@ -1,0 +1,2 @@
+# Skrypty bash z szablonu .claude/ muszą mieć LF także przy core.autocrlf=true (Git Bash nie czyta CRLF)
+*.sh text eol=lf
