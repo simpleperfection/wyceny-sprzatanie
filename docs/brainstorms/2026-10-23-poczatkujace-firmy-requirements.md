@@ -5,6 +5,8 @@ topic: poczatkujace-firmy
 
 # Aplikacja dla początkujących firm: ile brać, ile to potrwa, co obejmuje cena
 
+> **Zmiana 2026-10-24 (decyzja właściciela):** blok A „cena minimalna z kosztów firmy” wycięty z wersji 1 (R1–R4 i R6 usunięte, R5, R7–R10, R15, R21 i R24 poprawione). Z ustawień podatkowych zostaje tylko status VAT. Z warunków oferty wypada zaliczka (R20). Numeracja wymagań bez zmian.
+
 ## Problem
 
 Aplikacja jest publiczna i darmowa, dla dowolnej początkującej firmy sprzątającej w Polsce. Właściciel (sam prowadzi firmę sprzątającą) wskazał bóle startu w kolejności: **nie wiedziałem, ile brać** (główny), brak zleceń, zlecenia trwały dłużej niż zakładałem, spory z klientem o zakres prac.
@@ -18,52 +20,45 @@ Research (2026-10-23): w Polsce nie ma narzędzia do wycen dla firm sprzątając
 
 ## Wymagania
 
-Wersja 1 (etap 5) obejmuje cztery bloki: A (cena minimalna), B (wycena w dwóch krokach), C (własne tempo), D (oferta). Firma jest **jednoosobowa: sprząta sam właściciel**.
+Wersja 1 (etap 5) obejmuje bloki: A (cena w wycenie), B (wycena w dwóch krokach), C (własne tempo), D (oferta). Firma jest **jednoosobowa: sprząta sam właściciel**.
 
-**A. Twoja firma i cena minimalna**
-- R1. Ustawienia firmy: województwo; status VAT (zwolniony podmiotowo albo czynny); forma opodatkowania (ryczałt 8,5%, skala, liniowy); etap ZUS (ulga na start, preferencyjny, mały ZUS plus, pełny) z datą rozpoczęcia działalności; miesięczne koszty stałe (auto i paliwo, OC, księgowość, telefon i internet, reklama, inne), każdy z podpowiedzią kwoty; docelowa kwota „na rękę” miesięcznie; liczba godzin pracy u klientów w miesiącu, z podpowiedzią, że na starcie to zwykle mniej niż pełny etat.
-- R2. Aplikacja wylicza **minimalną stawkę za godzinę pracy u klienta** z ZUS, składki zdrowotnej, podatku, kosztów stałych i kwoty na rękę podzielonych przez godziny u klientów. Pokazuje rozbicie i liczbę zleceń „mieszkanie 50 m², standard” potrzebnych w miesiącu.
-- R3. ZUS w cenie minimalnej liczy się **na następnym progu**: na uldze na start jak dla preferencyjnego, na preferencyjnym jak dla pełnego, na małym ZUS plus i pełnym według aktualnego. Aplikacja pokazuje, ile dziś zostaje ponad minimum dzięki niższej składce i od którego miesiąca (z daty rozpoczęcia) składka rośnie.
-- R4. Kwoty ZUS, składki zdrowotnej, stawki podatku i limit zwolnienia z VAT mają datę „stan na” i źródło. Aplikacja pokazuje je razem z zastrzeżeniem: „to nie jest porada podatkowa, sprawdź z księgowym”. Kwoty aktualizuje się raz w roku.
-- R5. W każdej wycenie, szybkiej i dokładnej, aplikacja pokazuje trzy liczby:
-  - cenę rynkową: medianę w województwie i widełki rynku;
-  - cenę minimalną firmy: własny czas (R15) × minimalna stawka + chemia, sprzęt i dojazd, a u czynnego podatnika VAT do tego VAT;
-  - **cenę proponowaną, czyli wyższą z dwóch**, z informacją, gdzie leży względem rynku (np. „+12% nad medianą, w widełkach 220–290 zł”).
-- R6. Gdy cena proponowana przekracza górną granicę widełek rynku, aplikacja pokazuje osobne ostrzeżenie: klient prawdopodobnie odmówi. Podpowiada też, co zmienić: koszty stałe, liczbę godzin u klientów, tempo albo minimum zlecenia.
-- R7. Właściciel może ręcznie zmienić cenę proponowaną. Aplikacja na bieżąco pokazuje, ile zostaje dla niego i ile wynosi jego realna stawka za godzinę na tym zleceniu. Poniżej minimum ta stawka jest na czerwono.
-- R8. Ceny w aplikacji to kwoty, które płaci klient. Dla czynnego podatnika VAT są z VAT 23% (z kwotą netto obok), dla zwolnionego bez VAT. Mediany rynkowe traktujemy jako kwoty płacone przez klienta.
-- R9. W podsumowaniu wyceny zamiast „marży %” jest zdanie: „zostaje dla Ciebie X zł, czyli Y zł za godzinę Twojej pracy (cel: Z zł/h)”.
+**A. Cena w wycenie** (do 2026-10-24: „Twoja firma i cena minimalna”)
+- R1–R4. *Usunięte 2026-10-24 decyzją właściciela:* ustawienia kosztowe i podatkowe firmy (forma opodatkowania, etap ZUS, koszty stałe, kwota „na rękę”, godziny u klientów), minimalna stawka za godzinę, ZUS liczony na następnym progu oraz kwoty podatkowe z datą „stan na”. Status VAT przeszedł do R8, a województwo do kreatora z R24.
+- R5. W każdej wycenie, szybkiej i dokładnej, aplikacja pokazuje cenę rynkową, czyli medianę w województwie (wynik modelu wyceny) z widełkami rynku. To jest cena proponowana. Pod nią jest koszt zlecenia: czas pracy z własnym tempem (R15), chemia, sprzęt i dojazd (szacunki z `data/ceny.json`, które firma może zmienić).
+- R6. *Usunięte 2026-10-24:* ostrzeżenie o cenie ponad widełkami rynku wynikało z ceny minimalnej.
+- R7. Właściciel może ręcznie zmienić cenę proponowaną. Aplikacja na bieżąco pokazuje, ile zostaje dla niego i ile wynosi jego realna stawka za godzinę na tym zleceniu.
+- R8. Ceny w aplikacji to kwoty, które płaci klient. Jedyne ustawienie podatkowe firmy to status VAT (zwolniony podmiotowo albo czynny; decyzja 2026-10-24). Dla czynnego podatnika VAT ceny są z VAT 23% (z kwotą netto obok), dla zwolnionego bez VAT. Mediany rynkowe traktujemy jako kwoty płacone przez klienta.
+- R9. W podsumowaniu wyceny zamiast „marży %” jest zdanie: „zostaje dla Ciebie X zł, czyli Y zł za godzinę Twojej pracy” (cena minus chemia, sprzęt i dojazd, podzielone przez czas pracy). Celu godzinowego nie ma, bo nie ma ceny minimalnej (decyzja 2026-10-24).
 
 **B. Wycena w dwóch krokach**
-- R10. **Szybka wycena** (telefon, czat) dla mieszkań (standard, gruntowne, po wynajmie), biur jednorazowo, okien, tapicerki, dywanów i AGD. Przy mieszkaniach i biurach właściciel podaje rodzaj sprzątania, metraż, liczbę łazienek, kuchnię albo aneks i spodziewany stan (lekki, typowy, mocny). Wynik to widełki od–do obejmujące sąsiednie poziomy zabrudzenia. Dolna granica nigdy nie schodzi poniżej ceny minimalnej (R5).
+- R10. **Szybka wycena** (telefon, czat) dla mieszkań (standard, gruntowne, po wynajmie), biur jednorazowo, okien, tapicerki, dywanów i AGD. Przy mieszkaniach i biurach właściciel podaje rodzaj sprzątania, metraż, liczbę łazienek, kuchnię albo aneks i spodziewany stan (lekki, typowy, mocny). Wynik to widełki od–do obejmujące sąsiednie poziomy zabrudzenia.
 - R11. Przy usługach, które wymagają oględzin (po remoncie, doczyszczanie, mycie posadzek, kostka, elewacja, hale), szybka wycena daje tylko „orientacyjnie od X zł” i zaleca oględziny albo zdjęcia.
 - R12. Szybka wycena daje gotowy tekst do wysłania klientowi: widełki i zastrzeżenie „cena ostateczna po obejrzeniu lokalu lub zdjęć”.
 - R13. **Pytania do klienta przed wyceną**, osobne dla każdej usługi: zwierzęta, parking i dojazd, piętro i winda, dostęp do wody i prądu, czyj sprzęt i chemia, termin, prośba o zdjęcia. Odpowiedzi zapisują się przy wycenie. Jeśli pytanie ma odpowiednik w modelu (zwierzęta → sierść, odległość → dojazd), odpowiedź ustawia go automatycznie.
 - R14. Szybką wycenę można zamienić w dokładną (obecny kreator: pomieszczenia i brud) bez wpisywania danych od nowa.
 
 **C. Własne tempo**
-- R15. Domyślne tempo nowej firmy to **1,3× normy rynkowej** (mieszkanie 50 m²: ok. 5 h zamiast 3,8 h). Tempo jest widoczne i można je zmienić w ustawieniach. Wpływa na czas pracy, cenę minimalną i to, co zostaje dla właściciela, ale **nie zmienia ceny rynkowej**.
+- R15. Domyślne tempo nowej firmy to **1,3× normy rynkowej** (mieszkanie 50 m²: ok. 5 h zamiast 3,8 h). Tempo jest widoczne i można je zmienić w ustawieniach. Wpływa na czas pracy i na to, ile zostaje dla właściciela za godzinę, ale **nie zmienia ceny rynkowej**.
 - R16. Po wykonaniu zlecenia właściciel oznacza wycenę jako wykonaną i wpisuje faktyczny czas pracy. Aplikacja pokazuje plan i fakt oraz realną stawkę za godzinę na tym zleceniu.
 - R17. Z zapisanych zleceń aplikacja liczy własne tempo i używa go zamiast 1,3×. Najpierw jest jedno wspólne tempo; osobne dla danej usługi pojawia się, gdy w tej usłudze są co najmniej 3 wpisy. Aplikacja podaje podstawę wyliczenia (np. „1,18× z 7 zleceń”). Właściciel może wrócić do wartości ręcznej.
 
 **D. Oferta jako mini-umowa**
 - R18. Z wyceny powstaje oferta dla klienta jako link (do otwarcia w telefonie) i jako PDF do wydruku. Oferta zawiera: dane firmy (nazwa, telefon, e-mail, opcjonalnie NIP), usługę, opcjonalnie adres i termin, cenę (zgodnie z R8), zakres „wchodzi / nie wchodzi”, dodatki opcjonalne z cenami, warunki i datę ważności (domyślnie 14 dni).
 - R19. Zakres „wchodzi / nie wchodzi” jest gotowy dla każdej usługi i rodzaju sprzątania. Właściciel może go zmienić raz w ustawieniach albo tylko w jednej ofercie.
-- R20. Warunki domyślne, wszystkie do edycji:
+- R20. Warunki domyślne, wszystkie do edycji (zatwierdzone przez właściciela 2026-10-24; zaliczki nie ma, bo w praktyce się jej nie stosuje):
   - bezpłatne odwołanie do 24 h przed terminem, później opłata 50%;
   - brak dostępu do lokalu: opłata 50%;
-  - zaliczka (domyślnie wyłączona, z podpowiedzią 50% przy pierwszym zleceniu);
   - zdjęcia przed i po pracy;
   - przy szybkiej wycenie zastrzeżenie o stanie lokalu.
-- R21. Oferta nigdy nie pokazuje kosztów firmy, ceny minimalnej, tempa ani tego, ile zostaje dla właściciela.
+- R21. Oferta nigdy nie pokazuje kosztów firmy, tempa ani tego, ile zostaje dla właściciela.
 - R22. Link do oferty działa bez logowania i bez instalowania czegokolwiek, a dane klienta nie są zapisywane na żadnym serwerze.
 
 **Wspólne**
 - R23. Wszystkie dane (ustawienia, wyceny, zlecenia) są tylko w przeglądarce. Jest eksport i import kopii do pliku oraz regularne przypomnienie o zrobieniu kopii.
-- R24. Przy pierwszym uruchomieniu krótki kreator ustawień firmy (R1). Można go pominąć: wtedy działają wartości domyślne (zwolniony z VAT, ryczałt 8,5%, ulga na start, tempo 1,3×), a aplikacja pokazuje znacznik „ustawienia domyślne – uzupełnij”.
+- R24. Przy pierwszym uruchomieniu krótki kreator ustawień firmy: województwo, status VAT (R8), dane firmy do oferty (R18) i tempo (R15). Można go pominąć: wtedy działają wartości domyślne (zwolniony z VAT, tempo 1,3×), a aplikacja pokazuje znacznik „ustawienia domyślne – uzupełnij”.
 
 ## Kryteria sukcesu
-- Nowa firma w ok. 5 minut wypełnia ustawienia i widzi swoją minimalną stawkę za godzinę. Przy każdej wycenie wie, czy cena jest powyżej jej minimum i gdzie leży na rynku województwa.
+- Przy każdej wycenie właściciel widzi, gdzie cena leży na rynku województwa i ile zostaje dla niego za godzinę pracy.
 - Szybka wycena mieszkania podczas rozmowy telefonicznej trwa poniżej minuty i kończy się tekstem do wysłania.
 - Po kilku zleceniach z wpisanym czasem planowany czas zbliża się do faktycznego: aplikacja pokazuje, jak zmieniała się różnica między planem a faktem.
 - Właściciel używa ofert z zakresem i warunkami w swojej firmie zamiast dotychczasowej formy (sprawdzian na żywym rynku).
@@ -74,6 +69,7 @@ Wersja 1 (etap 5) obejmuje cztery bloki: A (cena minimalna), B (wycena w dwóch 
   - E. Zdobywanie klientów: cennik z własnych stawek do publikacji (strona, Facebook, wizytówka Google), szablony odpowiedzi na zapytania (Fixly, Oferteo, komunikatory), lista wysłanych ofert z przypomnieniem o kontakcie, lista startowa (wizytówka Google, OC z klauzulą o mieniu powierzonym, polecenia).
   - G. Bezpieczeństwo chemii: czego nie mieszać, jakie środki ochrony (z kart SDS).
 - **Na razie nie planujemy:**
+  - ceny minimalnej z kosztów firmy (dawny blok A: ZUS, podatek dochodowy, koszty stałe, kwota „na rękę”, godziny u klientów) – wycięta 2026-10-24 decyzją właściciela;
   - rabatu za częstotliwość przy mieszkaniach (F);
   - konta i synchronizacji między urządzeniami (zostaje plik kopii);
   - pracowników i kilku osób na zleceniu (wersja 1 to firma jednoosobowa);
@@ -84,34 +80,20 @@ Wersja 1 (etap 5) obejmuje cztery bloki: A (cena minimalna), B (wycena w dwóch 
   - zdjęcia w aplikacji (aplikacja tylko przypomina, żeby o nie poprosić);
   - logo w ofercie;
   - grafik, kalendarz i faktury;
-  - doradztwo podatkowe: aplikacja podaje tylko kwoty ze źródłem i zastrzeżenie.
+  - doradztwo podatkowe: aplikacja zna tylko status VAT firmy.
 
 ## Kluczowe decyzje
-- **Cena proponowana to wyższa z ceny rynkowej i minimalnej.** Zaniżanie cen to błąd numer 1 początkujących firm, a widełki rynku są szerokie (mieszkanie 50 m²: 120–450 zł). Gdy cena wychodzi ponad całe widełki, chroni przed tym ostrzeżenie z R6.
-- **ZUS na następnym progu.** Ceny ustalone w czasie ulgi na start trudno potem podnieść stałym klientom.
+- **Cena proponowana to cena rynkowa** (mediana województwa z modelu wyceny), którą właściciel może zmienić ręcznie. Cenę minimalną z kosztów firmy wycięto 2026-10-24 decyzją właściciela.
 - **Domyślne tempo 1,3×.** To środek między normą rynku a przypadkiem z researchu (ok. 1,67×). Z czasem zastępują je dane z własnych zleceń.
-- **Tempo nie zmienia ceny rynkowej.** Klient płaci za efekt, nie za wolniejsze tempo; tempo zmienia tylko koszt i cenę minimalną.
-- **Firma jednoosobowa.** Koszt pracy to kwota „na rękę”, której chce właściciel. Pracownicy zmieniają cały rachunek, więc dojdą w kolejnej wersji.
+- **Tempo nie zmienia ceny rynkowej.** Klient płaci za efekt, nie za wolniejsze tempo; tempo zmienia tylko czas pracy i to, ile zostaje dla właściciela za godzinę.
+- **Firma jednoosobowa.** Zamiast kosztu robocizny aplikacja pokazuje, ile zostaje dla właściciela za godzinę pracy (R9). Pracownicy zmieniają cały rachunek, więc dojdą w kolejnej wersji.
+- **Oferta bez zaliczki** (2026-10-24): w praktyce właściciela zaliczek się nie stosuje.
 - **Dane tylko w przeglądarce.** Bez serwera nie ma kosztów ani obowiązków RODO po naszej stronie; kopia w pliku zastępuje synchronizację.
 
 ## Zależności / Założenia
-- **Skutek do świadomości.** Przykład: ryczałt, ZUS liczony jako preferencyjny, koszty stałe ok. 1130 zł/mies., 4000 zł na rękę, 100 h u klientów. Minimalna stawka wychodzi ok. 70 zł/h, a mieszkanie 50 m² przy tempie 1,3× ok. 350–370 zł, przy medianie 250 zł. Aplikacja będzie więc często proponować ceny wyraźnie powyżej mediany. To zamierzone, ale komunikaty z R5 i R6 muszą to dobrze tłumaczyć.
-- Chemia w cenie minimalnej to szacunek z `data/ceny.json` (4 zł na godzinę pracy, przy impregnacie koszt na m²), który firma może zmienić. Z `data/chemia.json` kosztu nie liczymy, bo ceny i dozowanie są różne u każdego producenta (decyzja właściciela 2026-10-23).
+- Chemia w koszcie zlecenia to szacunek z `data/ceny.json` (4 zł na godzinę pracy, przy impregnacie koszt na m²), który firma może zmienić. Z `data/chemia.json` kosztu nie liczymy, bo ceny i dozowanie są różne u każdego producenta (decyzja właściciela 2026-10-23).
 - Domyślne listy „wchodzi / nie wchodzi” (R19) i pytania do klienta (R13) przygotuje Claude z researchu, a właściciel zatwierdzi je na podstawie doświadczenia własnej firmy.
-- Kwoty na 2026 z researchu (do sprawdzenia przy planowaniu):
-
-  | Pozycja | Kwota | Źródło |
-  |---|---|---|
-  | Ulga na start | 6 miesięcy bez składek społecznych | ZUS |
-  | ZUS preferencyjny | 420,87 zł (456,19 zł z chorobowym) | [ZUS](https://www.zus.pl/documents/10182/13364587/Sk%C5%82adki+przedsi%C4%99biorc%C3%B3w+w+2026+roku_DFF.pdf/c8d4e1dc-c80b-91d6-7453-02309976f713?t=1772712579703) |
-  | ZUS pełny | 1788,29 zł (1926,76 zł z chorobowym) | ZUS |
-  | Mały ZUS plus | podstawa 1441,80–5652 zł, nie w pierwszym roku | [biznes.gov.pl](https://www.biznes.gov.pl/pl/portal/00284) |
-  | Zdrowotna na ryczałcie | 498,35 / 830,58 / 1495,04 zł (przychód do 60 tys. / do 300 tys. / powyżej) | [Firmove](https://www.firmove.pl/aktualnosci/finanse/zus/wysokosc-skladek-zus) |
-  | Zdrowotna na skali i liniowym | 9% / 4,9% dochodu, minimum 432,54 zł | Firmove |
-  | Ryczałt dla sprzątania (PKWiU 81.21, 81.22) | 8,5% | [interpretacja KIS](https://solidnaksiegowa.com/uslugi-sprzatajace-a-ryczalt-jaka-stawka-podatku/) |
-  | Limit zwolnienia z VAT | 240 000 zł, proporcjonalnie przy starcie w trakcie roku | [Infor](https://ksiegowosc.infor.pl/wiadomosci/6852348,nowy-limit-zwolnienia-z-vat-od-2026-roku-240-tys-zl-sejm-uchwalil-nowelizacje-ustawy-o-podatku-od-towarow-i-uslug.html) |
-  | VAT na sprzątanie mieszkań i biur | 23% | pewność średnio-wysoka |
-  | OC działalności | 300–800 zł rocznie | jedno źródło (Orange), pewność niska |
+- Kwoty ZUS, składki zdrowotnej i podatku dochodowego na 2026 z researchu przestały być potrzebne po wycięciu bloku A (tabela jest w historii repo, w wersji tego pliku z commita `abbaa59`). Zostaje stawka VAT na sprzątanie mieszkań i biur: 23% (pewność średnio-wysoka; właściciel zlecił sprawdzenie w źródłach 2026-10-24).
 
 ## Otwarte pytania
 
@@ -119,12 +101,10 @@ Wersja 1 (etap 5) obejmuje cztery bloki: A (cena minimalna), B (wycena w dwóch 
 (brak)
 
 ### Odroczone do planowania
-- [Dotyczy R2][Techniczne] Jak dokładnie liczyć podatek i składkę zdrowotną na skali i liniowym (zależą od dochodu, więc wymagają rachunku wstecznego) oraz progi zdrowotnej na ryczałcie liczone od przewidywanego przychodu.
 - [Dotyczy R10][Techniczne] Jak rozłożyć metraż na pomieszczenia w szybkiej wycenie (typowe proporcje), żeby szybka wycena mieszkania 50 m² dawała to samo co kreator i `research/KALIBRACJA.md`.
 - [Dotyczy R17][Techniczne] Jak liczyć własne tempo: średnia czy mediana, odrzucanie skrajnych zleceń, większa waga nowszych.
 - [Dotyczy R18, R22][Techniczne] Jak zmieścić ofertę w linku bez serwera (długość adresu) i jak wygenerować PDF.
-- [Dotyczy R8][Wymaga researchu] Czy mediany z cenników to kwoty brutto. Większość cenników tego nie podaje, a od tego zależy porównanie ceny minimalnej czynnego podatnika VAT z rynkiem.
-- [Dotyczy R1][Wymaga researchu] Domyślne kwoty kosztów stałych: auto i paliwo, księgowość, OC (Orange podaje paliwo i auto 300–1000 zł/mies., księgowość 50–500 zł/mies., OC 300–800 zł rocznie).
+- [Dotyczy R8][Wymaga researchu] Czy mediany z cenników to kwoty brutto. Większość cenników tego nie podaje, a według właściciela (2026-10-24) firmy podają je różnie. Od tego zależy, jak czynny podatnik VAT ma czytać medianę: jako cenę z VAT czy bez.
 
 ## Następne kroki
 → `/dev-plan` do planowania technicznego etapu 5 z tymi wymaganiami.

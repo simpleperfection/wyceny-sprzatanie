@@ -28,11 +28,20 @@ status: do-zrobienia
   - Dlaczego blokuje: `/dev-plan` czyta makiety z Figmy, a buildery z Figmą czytają je przy każdym ekranie. Przy 15 ekranach 20 odczytów miesięcznie prawdopodobnie nie wystarczy.
   - Opcje: A) wykupić płatne miejsce Dev albo Full (plan Professional) na czas etapu 5; B) zostać na planie Starter i oszczędzać odczyty: makiety powstają z `generate_figma_design` i `create_new_file` (poza limitem), plan pobiera je raz, a buildery pracują na zapisanej specyfikacji i szkicu; C) wrócić do opcji C z poprzedniej decyzji (bez makiet).
   - Ustalono: **B** – zostajemy na planie Starter i oszczędzamy odczyty (2026-10-23). Czy da się rysować w pliku, sprawdzamy na pierwszym pliku makiet.
+  - Zmiana 2026-10-24: rysowanie działa, ale `use_figma` też wlicza się do limitu i limit na ten miesiąc jest wyczerpany (szczegóły w sekcji 4).
 - [x] **Jaki kierunek wyglądu?** — Ustalono: **wersja 3** (granat i zieleń, start „do zrobienia”, przycisk „+”, wycena jako lista pozycji, oferta jak dokument; sekcja „Wersja 3” w pliku Figmy) jest bazą makiet wszystkich ekranów (2026-10-23).
+- [ ] **Wariant kolorystyczny: wersja 3 czy wariant B „kartka i długopis”?** (propozycja 2026-10-24)
+  - Opcje: A) zostaje wersja 3 (granat i szmaragd); B) wariant B: kremowy papier, grafit, niebieski tusz `#2340a8`, żółty zakreślacz, font Source Sans 3, zaokrąglenia 6–10 px, zieleń tylko dla pieniędzy, przykładowe dane jak z prawdziwego zeszytu. Podgląd: `docs/operator/etap-5-wariant-b.html`.
+  - Dlaczego: wersja 3 jest bardzo blisko Jobbera (ciemny granat i limonka) i przypomina typowe projekty z generatorów; wariant B nie powtarza kolorów konkurencji (Joist, ServiceM8 i Booksy: zieleń lub limonka; Housecall Pro: niebieski z pomarańczem; ZenMaid: turkus; Fixly: żółty).
+  - W Figmie wariant B ma być drugim trybem kolekcji kolorów (wersja 3 zostaje do porównania), razem ze zmianą fontu, zaokrągleń i przykładowych danych. Skrypt jest gotowy; nie został uruchomiony, bo limit Figmy jest wyczerpany. Planowania nie blokuje: kolory to zmienne, a w kodzie zmienne CSS.
+  - Ustalono: _(wpisz wybór i datę)_
 - [x] **Czyja marka?** (rozstrzygnij przed projektowaniem makiet)
   - Opcje: A) neutralny wygląd bez marki autora; B) barwy i logo Simple Perfection; C) neutralny wygląd z dyskretną stopką „przygotował Simple Perfection”.
   - Dlaczego ważne: aplikacja jest publiczna dla dowolnej firmy (ustalenie z brainstormu). Oferta (R18) idzie do klientów tych firm i nie ma logo w wersji 1.
   - Ustalono: **B** – barwy i logo Simple Perfection w całej aplikacji; kolory wersji 3 dopasujemy do marki (2026-10-23). Założenie do potwierdzenia przy makietach: oferta dla klienta pokazuje firmę, która z aplikacji korzysta, a nie markę Simple Perfection.
+  - Zmiana 2026-10-24: na razie makiety zostają w kolorach wersji 3, a logo i barwy marki dołożymy później (sekcja 3).
+- [x] **Czy zostaje cena minimalna z kosztów firmy (blok A)?** (2026-10-24)
+  - Ustalono: **nie** – blok A wycięty z wersji 1 decyzją właściciela. Wycena pokazuje cenę rynkową (medianę województwa) jako cenę proponowaną, koszt zlecenia (czas pracy, chemia, sprzęt, dojazd) i zdanie „zostaje dla Ciebie X zł, czyli Y zł za godzinę pracy”, bez celu godzinowego. Z ustawień podatkowych zostaje tylko status VAT (czynny podatnik ma ceny brutto z kwotą netto obok). Znika ekran `stawka-minimalna` i pola ZUS, podatku, kosztów stałych, kwoty na rękę i godzin u klientów. Szczegóły: nagłówek i R1–R10 w dokumencie wymagań.
 - [x] **Jak nazywa się aplikacja?** (tytuł, nazwa w manifeście PWA i na ekranie telefonu)
   - Opcje: A) robocza „Wyceny sprzątania” (jak repo); B) własna nazwa: _(wpisz)_.
   - Dlaczego ważne: od nazwy zależy ikona (sekcja 3), a nazwa pojawia się w nagłówkach makiet, więc warto ją ustalić przed ich projektowaniem. Planowania nie blokuje.
@@ -72,10 +81,10 @@ Treści ustala właściciel na podstawie praktyki własnej firmy. Ustalono 2026-
 
 - [ ] 🔓 **Zakres „wchodzi / nie wchodzi”** dla każdej usługi i rodzaju sprzątania (R19). Usługi: mieszkanie standard, gruntowne, po remoncie, po wynajmie; biura; okna; AGD; tapicerka; dywany; mycie posadzek; doczyszczanie; kostka; elewacja; hale. Dostarcza: właściciel (szkic: Claude). Ląduje w: `data/` (plik ustali plan).
 - [ ] 🔓 **Pytania do klienta przed wyceną** dla każdej usługi (R13), z zaznaczeniem, które odpowiedzi ustawiają coś w wycenie (np. zwierzęta → sierść, odległość → dojazd). Dostarcza: właściciel (szkic: Claude). Ląduje w: `data/`.
-- [ ] 🔓 **Treść domyślnych warunków oferty** (R20): odwołanie (bezpłatnie do 24 h, później 50%), brak dostępu do lokalu (50%), zaliczka (domyślnie wyłączona, podpowiedź 50%), zdjęcia przed i po, zastrzeżenie o stanie lokalu przy szybkiej wycenie, ważność 14 dni. Dostarcza: właściciel (potwierdza brzmienie). Ląduje w: `data/`.
-- [ ] 🔓 **Domyślne wartości ustawień firmy** (R1, R24): koszty stałe (auto i paliwo, OC, księgowość, telefon i internet, reklama), domyślna liczba godzin u klientów w miesiącu i kwota „na rękę”. Research daje tylko szerokie widełki (OC: pewność niska), więc najlepsze są realne kwoty z firmy właściciela. Dostarcza: właściciel. Ląduje w: `data/`.
-- [ ] 🔓 **Potwierdzenie kwot podatkowych i ZUS na 2026** (R4): tabela w dokumencie wymagań, zwłaszcza VAT 23% na sprzątanie (pewność średnio-wysoka) i ryczałt 8,5%, oraz brzmienie zastrzeżenia „to nie jest porada podatkowa”. Dostarcza: właściciel, opcjonalnie z księgowym. Ląduje w: `data/`.
-- [ ] 🔓 **Logo i kolory Simple Perfection**: logo w wektorze (SVG, ewentualnie PNG 1024 px) w wersji na jasne i ciemne tło oraz kody kolorów marki (HEX). Bez nich makiety zostaną w kolorach wersji 3. Dostarcza: właściciel. Ląduje w: plik Figmy (zmienne kolorów) i katalog ikon aplikacji.
+- [x] 🔓 **Treść domyślnych warunków oferty** (R20): odwołanie (bezpłatnie do 24 h, później 50%), brak dostępu do lokalu (50%), zdjęcia przed i po, zastrzeżenie o stanie lokalu przy szybkiej wycenie, ważność 14 dni. Zatwierdzone przez właściciela 2026-10-24; zaliczka wypadła, bo w praktyce się jej nie stosuje. Ląduje w: `data/`.
+- [x] ~~**Domyślne wartości ustawień firmy** (R1, R24)~~ — nie dotyczy: blok A (koszty stałe, godziny u klientów, kwota „na rękę”) wycięty 2026-10-24. Ustawienia z R24 mają już wartości domyślne (zwolniony z VAT, tempo 1,3×).
+- [ ] 🔓 **Potwierdzenie stawki VAT na sprzątanie** (R8): 23% (pewność średnio-wysoka). Kwoty ZUS i podatku dochodowego nie są już potrzebne (blok A wycięty 2026-10-24). Dostarcza: Claude – sprawdzenie w źródłach z datą i linkiem (decyzja właściciela 2026-10-24). Ląduje w: `data/`.
+- [~] 🔓 **Logo i kolory Simple Perfection**: logo w wektorze (SVG, ewentualnie PNG 1024 px) w wersji na jasne i ciemne tło oraz kody kolorów marki (HEX). Odłożone 2026-10-24: makiety powstają w kolorach wersji 3, a markę dołożymy najpóźniej przed publikacją (etap 6). Dostarcza: właściciel. Ląduje w: plik Figmy (zmienne kolorów) i katalog ikon aplikacji.
 - [ ] 🔓 **Ikona aplikacji (PWA)**: 512×512 i 192×192 (także w wersji maskable), 180×180 dla iPhone'a, favicon. Zależy od nazwy i stylu (sekcja 1). Dostarcza: właściciel albo projektant. Gdy wybrany jest neutralny styl bez marki: `[~]` prosta ikona wygenerowana przy implementacji. Ląduje w: katalog ikon aplikacji (ustali plan).
 
 ## 4. Makiety
@@ -84,100 +93,97 @@ Po zaprojektowaniu wklej URL-e — `/dev-plan` weźmie je stąd zamiast pytać. 
 
 Makiety projektuje Claude w Figmie (decyzja z 2026-10-23). Punkty wyjścia to dwa szkice: wersja 1 neutralna (`docs/operator/etap-5-szkic-ekranow.html`, 4 ekrany) i wersja 2 w stylu aplikacji na telefon (`docs/operator/etap-5-szkic-ekranow-v2.html`, 5 ekranów). Wersja 3 powstała tylko w Figmie i czerpie z najlepiej ocenianych aplikacji dla firm usługowych (Housecall Pro 4,7/5 i Jobber 4,6/5 na Capterra, do tego QuotePro i Joist). Przejmuje z nich: ekran startowy jako listę „do zrobienia” z podsumowaniem miesiąca, przycisk „+” w dolnym pasku, wycenę jako listę pozycji z pozycjami opcjonalnymi i paskiem „Razem”, kolorowe statusy oraz ofertę w formie dokumentu. Wszystkie trzy wersje są w pliku Figmy [Wyceny sprzątania – etap 5, szkice](https://www.figma.com/design/sDtiv6VdCbpyfM6Gfs7Xej) (strona „Szkice etapu 5”, sekcje „Wersja 1”, „Wersja 2”, „Wersja 3” i „Komponenty”). Kolejność: najpierw decyzje o limicie MCP, stylu i nazwie (sekcja 1), potem makiety. Właściciel akceptuje każdy ekran i dopiero wtedy stawia `[x]` przy pozycji z URL-em.
 
-- [ ] **`ekran-startowy`** — nowy
+Stan 2026-10-24: makiety głównego stanu wszystkich 14 ekranów (telefon, 360 px) są na stronie „Makiety etapu 5” w sekcjach 1–5 według przepływu, a nazwy ramek są takie same jak nazwy ekranów niżej. Wszystkie ekrany pokazują jeden przykład: mieszkanie 50 m², standard, mazowieckie, 294 zł z dojazdem. Nowe komponenty (chip, licznik, wiersz, opcja, pytanie, produkt chemii, pole, baner, pasek postępu) są w sekcji „Komponenty etapu 5”. Kolory wszystkich komponentów i ekranów v3 są podpięte pod zmienne kolekcji „Kolory v3”, więc przejście na barwy Simple Perfection to zmiana wartości zmiennych. Zakres prac i warunki na ekranach ofert to szkic do zatwierdzenia (sekcja 3). Do zrobienia po akceptacji: pozostałe stany z listy przy każdym ekranie i wersja na komputer. Właściciel zaakceptował główny stan wszystkich 14 ekranów (2026-10-24). **Limit Figmy wyczerpany 2026-10-24:** `use_figma` jednak wlicza się do limitu 20 wywołań miesięcznie (po 21 wywołaniach z 23–24 października, w tym `whoami`, Figma odrzuca kolejne). Do odnowienia limitu Claude nie może ani zmieniać, ani czytać pliku. Plan i buildery nie mogą więc czytać makiet z Figmy; specyfikacją dla nich są opisy ekranów w tej sekcji, podgląd HTML i zrzuty wyeksportowane ręcznie z Figmy (eksport w aplikacji Figma nie korzysta z limitu).
+
+- [x] **`ekran-startowy`** — nowy
   - Co pokazuje: zapisane wyceny i wykonane zlecenia, wejście do szybkiej i do dokładnej wyceny, przypomnienie o kopii danych.
   - Stany: pierwsze uruchomienie (pusta lista) · lista wycen i zleceń · przypomnienie o kopii · znacznik „ustawienia domyślne – uzupełnij”
   - Breakpointy: mobile + desktop
   - Wymagania: R16, R23, R24; `PLAN.md` etap 5 (zapis wycen)
-  - URL Figma: _(wklej po zaprojektowaniu)_
-- [ ] **`ustawienia-firmy`** — nowy
-  - Co pokazuje: kreator pierwszego uruchomienia i późniejsza edycja ustawień firmy: województwo, VAT, forma podatku, etap ZUS z datą rozpoczęcia, koszty stałe, kwota na rękę, godziny u klientów, tempo pracy.
-  - Stany: pierwsze uruchomienie krok po kroku · pominięty kreator (wartości domyślne) · błędy walidacji · podpowiedzi kwot ze źródłem i datą „stan na” · tempo domyślne 1,3× · tempo z N zleceń z powrotem do wartości ręcznej
+  - URL Figma: https://www.figma.com/design/sDtiv6VdCbpyfM6Gfs7Xej?node-id=10-322 (stan główny, telefon; zaakceptowany przez właściciela 2026-10-24)
+- [x] **`ustawienia-firmy`** — nowy
+  - Co pokazuje: kreator pierwszego uruchomienia i późniejsza edycja ustawień firmy: województwo, status VAT, dane firmy do oferty (nazwa, telefon, e-mail, opcjonalnie NIP), tempo pracy i szacunki kosztów zlecenia (chemia, sprzęt, dojazd).
+  - Stany: pierwsze uruchomienie krok po kroku · pominięty kreator (wartości domyślne) · błędy walidacji · tempo domyślne 1,3× · tempo z N zleceń z powrotem do wartości ręcznej
   - Breakpointy: mobile + desktop
-  - Wymagania: R1, R3, R4, R15, R17, R24
-  - URL Figma: _(wklej po zaprojektowaniu)_
-- [ ] **`stawka-minimalna`** — nowy
-  - Co pokazuje: minimalna stawka za godzinę z rozbiciem (ZUS, zdrowotna, podatek, koszty stałe, kwota na rękę), liczba zleceń „mieszkanie 50 m²” potrzebnych w miesiącu, ile dziś zostaje ponad minimum dzięki niższej składce i od którego miesiąca składka rośnie.
-  - Stany: ulga na start · ZUS preferencyjny · mały ZUS plus lub pełny (bez dopłaty z niższej składki) · ustawienia domyślne (nieuzupełnione)
-  - Breakpointy: mobile + desktop
-  - Wymagania: R2, R3, R4
-  - URL Figma: _(wklej po zaprojektowaniu)_
-- [ ] **`szybka-wycena`** — nowy
+  - Wymagania: R5, R8, R15, R17, R24
+  - URL Figma: https://www.figma.com/design/sDtiv6VdCbpyfM6Gfs7Xej?node-id=10-429 (stan główny, telefon; zaakceptowany przez właściciela 2026-10-24)
+- ~~`stawka-minimalna`~~ — ekran usunięty 2026-10-24 razem z ceną minimalną (blok A).
+- [x] **`szybka-wycena`** — nowy
   - Co pokazuje: krótki formularz do rozmowy telefonicznej (rodzaj sprzątania, metraż, łazienki, kuchnia lub aneks, spodziewany stan) i wynik jako widełki z gotowym tekstem dla klienta.
-  - Stany: usługa wyceniana przez telefon (widełki) · usługa wymagająca oględzin („orientacyjnie od X zł” i zalecenie oględzin lub zdjęć) · dolna granica podniesiona do ceny minimalnej · ostrzeżenie: cena ponad widełkami rynku · tekst skopiowany · przejście do dokładnej wyceny
+  - Stany: usługa wyceniana przez telefon (widełki) · usługa wymagająca oględzin („orientacyjnie od X zł” i zalecenie oględzin lub zdjęć) · tekst skopiowany · przejście do dokładnej wyceny
   - Breakpointy: mobile + desktop (głównie telefon w trakcie rozmowy)
-  - Wymagania: R5, R6, R10, R11, R12, R14
-  - URL Figma: _(wklej po zaprojektowaniu)_
-- [ ] **`pytania-do-klienta`** — nowy (komponent szybkiej i dokładnej wyceny)
+  - Wymagania: R5, R10, R11, R12, R14
+  - URL Figma: https://www.figma.com/design/sDtiv6VdCbpyfM6Gfs7Xej?node-id=11-471 (stan główny, telefon; zaakceptowany przez właściciela 2026-10-24)
+- [x] **`pytania-do-klienta`** — nowy (komponent szybkiej i dokładnej wyceny)
   - Co pokazuje: lista pytań do klienta dla wybranej usługi z miejscem na odpowiedzi zapisywane przy wycenie.
   - Stany: bez odpowiedzi · częściowo wypełnione · odpowiedź, która ustawiła coś w wycenie (np. sierść, dojazd)
   - Breakpointy: mobile + desktop
   - Wymagania: R13
-  - URL Figma: _(wklej po zaprojektowaniu)_
-- [ ] **`kreator-wybor-uslugi`** — nowy
+  - URL Figma: https://www.figma.com/design/sDtiv6VdCbpyfM6Gfs7Xej?node-id=11-561 (stan główny, telefon; zaakceptowany przez właściciela 2026-10-24)
+- [x] **`kreator-wybor-uslugi`** — nowy
   - Co pokazuje: pierwszy krok dokładnej wyceny z paskiem postępu: wybór usługi i województwa (podpowiedziane z ustawień firmy).
   - Stany: brak wyboru · wybrana usługa z pomieszczeniami · wybrana usługa z pozycjami · AGD tylko jako dodatek
   - Breakpointy: mobile + desktop
   - Wymagania: `PLAN.md` etap 5 (kreator, pasek postępu)
-  - URL Figma: _(wklej po zaprojektowaniu)_
-- [ ] **`kreator-pomieszczenia`** — nowy
+  - URL Figma: https://www.figma.com/design/sDtiv6VdCbpyfM6Gfs7Xej?node-id=11-622 (stan główny, telefon; zaakceptowany przez właściciela 2026-10-24)
+- [x] **`kreator-pomieszczenia`** — nowy
   - Co pokazuje: usługi z pomieszczeniami (mieszkania, biura): lista pomieszczeń z metrażem i poziomem brudu 1–3 dla każdego rodzaju brudu; przy biurach wariant jednorazowy albo abonament.
   - Stany: pusta lista pomieszczeń · dodane pomieszczenia · dane przeniesione z szybkiej wyceny · błąd metrażu
   - Breakpointy: mobile + desktop
   - Wymagania: R14; `PLAN.md` etap 5
-  - URL Figma: _(wklej po zaprojektowaniu)_
-- [ ] **`kreator-pozycje`** — nowy
+  - URL Figma: https://www.figma.com/design/sDtiv6VdCbpyfM6Gfs7Xej?node-id=11-786 (stan główny, telefon; zaakceptowany przez właściciela 2026-10-24)
+- [x] **`kreator-pozycje`** — nowy
   - Co pokazuje: usługi z pozycjami (okna, tapicerka, dywany, posadzki, doczyszczanie, kostka, elewacja, hale): ilości lub metraż pozycji, dopłaty, poziom brudu tam, gdzie usługa go ma.
   - Stany: brak pozycji · pozycje wybrane · dopłata (np. mech, olej) · próg metrażu zmieniający cenę za m² · błąd ilości
   - Breakpointy: mobile + desktop
   - Wymagania: `PLAN.md` etap 5
-  - URL Figma: _(wklej po zaprojektowaniu)_
-- [ ] **`kreator-dodatki`** — nowy
+  - URL Figma: https://www.figma.com/design/sDtiv6VdCbpyfM6Gfs7Xej?node-id=11-965 (stan główny, telefon; zaakceptowany przez właściciela 2026-10-24)
+- [x] **`kreator-dodatki`** — nowy
   - Co pokazuje: dodatki do usługi (AGD, szafki, balkon) i dojazd w kilometrach.
   - Stany: bez dodatków · wybrane dodatki · dojazd w promieniu bez opłat · dojazd płatny
   - Breakpointy: mobile + desktop
   - Wymagania: `PLAN.md` etap 5
-  - URL Figma: _(wklej po zaprojektowaniu)_
-- [ ] **`dobor-chemii`** — nowy
+  - URL Figma: https://www.figma.com/design/sDtiv6VdCbpyfM6Gfs7Xej?node-id=11-1073 (stan główny, telefon; zaakceptowany przez właściciela 2026-10-24)
+- [x] **`dobor-chemii`** — nowy
   - Co pokazuje: środki dobrane do zaznaczonego brudu i pozycji usługi, z przeznaczeniem, pH, stężeniem roboczym, ceną i linkiem do karty SDS.
   - Stany: kilka kategorii środków · pozycja bez kategorii (zamiatanie na sucho, usuwanie farby) · produkt bez pH (np. Buzil) · karta SDS dostępna tylko na stronie produktu (Buzil)
   - Breakpointy: mobile + desktop
   - Wymagania: `PLAN.md` etap 5 (krok chemii), cel 2 w `PLAN.md`
-  - URL Figma: _(wklej po zaprojektowaniu)_
-- [ ] **`podsumowanie-wyceny`** — nowy
-  - Co pokazuje: cena rynkowa (mediana i widełki), cena minimalna firmy i cena proponowana z miejscem na rynku; ręczna zmiana ceny z bieżącym „zostaje dla Ciebie X zł, Y zł/h”.
-  - Stany: rynek powyżej minimum · minimum powyżej mediany (proponowane minimum) · cena ponad widełkami rynku (ostrzeżenie z podpowiedziami) · ręczna cena poniżej minimum (na czerwono) · firma zwolniona z VAT · czynny podatnik VAT (brutto i netto)
+  - URL Figma: https://www.figma.com/design/sDtiv6VdCbpyfM6Gfs7Xej?node-id=11-1212 (stan główny, telefon; zaakceptowany przez właściciela 2026-10-24)
+- [x] **`podsumowanie-wyceny`** — nowy
+  - Co pokazuje: cena rynkowa (mediana i widełki) jako cena proponowana, koszt zlecenia (czas pracy, chemia, sprzęt, dojazd) i zdanie „zostaje dla Ciebie X zł, czyli Y zł za godzinę pracy”; ręczna zmiana ceny z bieżącym przeliczeniem.
+  - Stany: cena z modelu · cena zmieniona ręcznie · firma zwolniona z VAT · czynny podatnik VAT (brutto i netto)
   - Breakpointy: mobile + desktop
-  - Wymagania: R5, R6, R7, R8, R9
-  - URL Figma: _(wklej po zaprojektowaniu)_
-- [ ] **`zakonczenie-zlecenia`** — nowy
+  - Wymagania: R5, R7, R8, R9
+  - URL Figma: https://www.figma.com/design/sDtiv6VdCbpyfM6Gfs7Xej?node-id=11-1339 (stan główny, telefon; zaakceptowany przez właściciela 2026-10-24)
+- [x] **`zakonczenie-zlecenia`** — nowy
   - Co pokazuje: oznaczenie wyceny jako wykonanej, wpis faktycznego czasu pracy, plan i fakt, realna stawka za godzinę i nowe tempo.
-  - Stany: pierwsze zlecenie · tempo z N zleceń · pierwsze osobne tempo usługi (po 3 wpisach) · stawka poniżej minimum · błąd czasu
+  - Stany: pierwsze zlecenie · tempo z N zleceń · pierwsze osobne tempo usługi (po 3 wpisach) · błąd czasu
   - Breakpointy: mobile + desktop
   - Wymagania: R15, R16, R17
-  - URL Figma: _(wklej po zaprojektowaniu)_
-- [ ] **`oferta-edycja`** — nowy
+  - URL Figma: https://www.figma.com/design/sDtiv6VdCbpyfM6Gfs7Xej?node-id=11-1602 (stan główny, telefon; zaakceptowany przez właściciela 2026-10-24)
+- [x] **`oferta-edycja`** — nowy
   - Co pokazuje: przygotowanie oferty z wyceny: dane firmy, opcjonalnie adres i termin, zakres „wchodzi / nie wchodzi”, dodatki opcjonalne z cenami, warunki, ważność; utworzenie linku i PDF.
   - Stany: brak danych firmy (nazwa, telefon) · zakres zmieniony tylko dla tej oferty · warunki zmienione · link skopiowany · PDF gotowy do druku
   - Breakpointy: mobile + desktop
   - Wymagania: R18, R19, R20, R21
-  - URL Figma: _(wklej po zaprojektowaniu)_
-- [ ] **`oferta-klient`** — nowy
-  - Co pokazuje: oferta, którą klient otwiera z linku bez logowania, i jej wersja do druku. Nigdy nie pokazuje kosztów firmy, ceny minimalnej, tempa ani tego, ile zostaje dla właściciela.
+  - URL Figma: https://www.figma.com/design/sDtiv6VdCbpyfM6Gfs7Xej?node-id=11-1438 (stan główny, telefon; zaakceptowany przez właściciela 2026-10-24)
+- [x] **`oferta-klient`** — nowy
+  - Co pokazuje: oferta, którą klient otwiera z linku bez logowania, i jej wersja do druku. Nigdy nie pokazuje kosztów firmy, tempa ani tego, ile zostaje dla właściciela.
   - Stany: oferta ważna · oferta po terminie ważności · uszkodzony lub niepełny link · wydruk A4
   - Breakpointy: mobile + desktop + druk A4
   - Wymagania: R18, R21, R22
-  - URL Figma: _(wklej po zaprojektowaniu)_
-- [ ] **`kopia-zapasowa`** — nowy
+  - URL Figma: https://www.figma.com/design/sDtiv6VdCbpyfM6Gfs7Xej?node-id=11-1545 (stan główny, telefon; zaakceptowany przez właściciela 2026-10-24)
+- [x] **`kopia-zapasowa`** — nowy
   - Co pokazuje: eksport wszystkich danych do pliku i import z pliku.
   - Stany: eksport gotowy · import udany · zły lub uszkodzony plik · import nadpisujący istniejące dane (potwierdzenie)
   - Breakpointy: mobile + desktop
   - Wymagania: R23
-  - URL Figma: _(wklej po zaprojektowaniu)_
+  - URL Figma: https://www.figma.com/design/sDtiv6VdCbpyfM6Gfs7Xej?node-id=10-578 (stan główny, telefon; zaakceptowany przez właściciela 2026-10-24)
 
 ## Gdzie to ląduje
 
-- 🔓 Treści z sekcji 3 (zakresy, pytania, warunki, wartości domyślne, kwoty 2026) → pliki danych w `data/` (nazwy ustali plan), w repo.
+- 🔓 Treści z sekcji 3 (zakresy, pytania, warunki, stawka VAT) → pliki danych w `data/` (nazwy ustali plan), w repo.
 - 🔓 Ikony → katalog aplikacji w repo.
 - 🔒 Brak sekretów: aplikacja nie ma serwera ani kluczy API.
 
