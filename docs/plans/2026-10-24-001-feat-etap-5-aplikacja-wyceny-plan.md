@@ -192,8 +192,8 @@ R1–R4 i R6 zostały usunięte ze źródła 2026-10-24 (cena minimalna z koszt�
 
 Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzupełniona przez `/dev-plan` 2026-10-24).
 
-- [ ] Zainstalować `agent-browser` — **[blokuje: faza 1]** (bramka środowiska E2E)
-- [ ] Utworzyć `.env.e2e` z `E2E_URL` i `E2E_START` dla serwera `scripts/serwer-dev.mjs` — **[blokuje: faza 1]** (bramka środowiska E2E; serwer powstaje w IU-1)
+- [x] Zainstalować `agent-browser` — **[blokuje: faza 1]** (bramka środowiska E2E)
+- [x] Utworzyć `.env.e2e` z `E2E_URL` i `E2E_START` dla serwera `scripts/serwer-dev.mjs` — **[blokuje: faza 1]** (bramka środowiska E2E; serwer powstaje w IU-1)
 - [x] Wyeksportować 14 PNG makiet do `docs/plans/etap-5-aplikacja-wyceny-figma/` — **[blokuje: faza 3]** (IU-9 i kolejne jednostki UI)
 - [ ] Zatwierdzić `data/pytania.json` (szkic z Claude w osobnej sesji) — **[blokuje: faza 5]** (IU-20)
 - [ ] Zatwierdzić `data/zakresy.json` (szkic z Claude w osobnej sesji) — **[blokuje: faza 6]** (IU-22)

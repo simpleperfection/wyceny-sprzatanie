@@ -69,10 +69,11 @@ Uzupełnione przez /dev-plan 2026-10-24 — pozycje z Implementation Units oznac
 
 Aplikacja nie ma serwera ani kluczy API (dane tylko w przeglądarce, R23), a hosting to GitHub Pages na istniejącym repo, w którym `gh` jest zalogowany (doctor: OK). Kont zewnętrznych i sekretów nie trzeba. Włączenie GitHub Pages należy do etapu 6.
 
-- [ ] 🔓 **Zainstalować `agent-browser`** — **[blokuje: faza 1]** (bramka środowiska E2E)
+- [x] 🔓 **Zainstalować `agent-browser`** — **[blokuje: faza 1]** (bramka środowiska E2E)
   - Po co: tester E2E autopilota odgrywa scenariusze `[E2E]` w przeglądarce przez `agent-browser` wywoływany z PATH. Plan ma 19 scenariuszy w fazach 3–6, a bramka gotowości sprawdza narzędzie przed startem autopilota.
   - Jak: `npm install -g agent-browser && agent-browser install` (w Git Bash albo PowerShell z Node.js w PATH).
   - Dowód: `bash .claude/scripts/doctor/doctor.sh` pokazuje `OK` w wierszu `agent-browser`.
+  - Zrobione 2026-10-24: `agent-browser` 0.39.2 (npm pominął skrypt postinstall, ale binarka dla Windows jest w paczce) i Chrome 156 w `~/.agent-browser/browsers/`; doctor: `OK`.
 - [ ] 🔓 **Autoryzować serwer MCP pluginu `figma`**
   - Po co: buildery z Figmą (`feature-builder-ui-figma`, `feature-builder-fullstack-figma`) czytają makiety narzędziami `mcp__plugin_figma_figma__*`. W sesji 2026-10-23 serwer `plugin:figma:figma` wymagał autoryzacji. Łącznik Figmy w aplikacji Claude działa (`whoami`: konto „Łukasz XYZ”), ale to osobny serwer.
   - Jak: w interaktywnym terminalu `claude` polecenie `/mcp` → `plugin:figma:figma` → zaloguj się kontem Figma, na którym będą makiety.
@@ -81,10 +82,11 @@ Aplikacja nie ma serwera ani kluczy API (dane tylko w przeglądarce, R23), a hos
 
 ### Środowisko E2E
 
-- [ ] 🔓 **Utworzyć `.env.e2e` dla serwera `scripts/serwer-dev.mjs`** — **[blokuje: faza 1]** (bramka środowiska E2E; serwer powstaje w IU-1)
+- [x] 🔓 **Utworzyć `.env.e2e` dla serwera `scripts/serwer-dev.mjs`** — **[blokuje: faza 1]** (bramka środowiska E2E; serwer powstaje w IU-1)
   - Po co: plan ma 19 scenariuszy `[E2E]`. Bez `.env.e2e` bramka gotowości zatrzyma autopilota przed fazą 1. Aplikacja nie ma bazy ani serwera API, więc wystarczą dwa klucze (bez Supabase i konta testowego).
   - Jak: w katalogu projektu utwórz plik `.env.e2e` z dwiema liniami: `E2E_URL=http://localhost:5174` i `E2E_START="node scripts/serwer-dev.mjs --port 5174"`. Plik jest już ignorowany przez `.gitignore` (wzorzec `.env.*`). Skrypt serwera napisze autopilot w IU-1. Do tego czasu start serwera jest odroczony, bo repo nie ma jeszcze aplikacji, a pierwsze scenariusze są w fazie 3.
   - Dowód: `test -f .env.e2e && git check-ignore -q .env.e2e && echo OK` zwraca OK, a `grep -c '^E2E_START=' .env.e2e` zwraca 1.
+  - Zrobione 2026-10-24: oba dowody przechodzą, doctor pokazuje `OK` w wierszu „port E2E”.
 
 ## 3. Assety i treści
 
