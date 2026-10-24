@@ -1,0 +1,1148 @@
+{
+  "meta": {
+    "wersja": "2026-10-23",
+    "opis": "Plik generowany przez scripts/kalibracja.ps1 – nie edytować ręcznie. Scenariusze z sekcji 2–5 i 7 research/KALIBRACJA.md w pełnej precyzji; czyta je test parytetu silnika wyceny (src/silnik/parytet.test.js).",
+    "pomieszczenia": "usługi w trybie pomieszczeń przy typowym układzie (data/normy.json, uklady): minuty z przygotowaniem i brudem domyślnym usługi (biura: mnożnik wariantu × progi_wydajnosci); cena = minuty / 60 × stawka_h, bez minimum zlecenia i dojazdu; wojewodztwo null = stawka krajowa; wizyt_w_miesiacu z wariantu biura, null dla mieszkań.",
+    "pozycje": "zlecenia wzorcowe w trybie pozycji (pierwsza pozycja usługi), tempo 1, bez mnożnika poziomu brudu: cena = max(minimum_zl, ilosc × (cena pozycji × prog + material)); prog = mnożnik progu metrażu; material = materiał doliczany klientowi na jednostkę; minuty = przygotowanie usługi + minuty_pracy; chemia = koszt chemii zlecenia; sprzet = minuty_pracy / 60 × koszt_h sprzętu."
+  },
+  "stawka_kraj": 65,
+  "pomieszczenia": [
+    {
+      "opis": "sekcja 2: mieszkanie_standard, 50 m², stawka krajowa",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 50,
+      "wojewodztwo": null,
+      "stawka_h": 65,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 32
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 6
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 8
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 230.82,
+      "cena": 250.055,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 2: mieszkanie_gruntowne, 50 m², stawka krajowa",
+      "usluga": "mieszkanie_gruntowne",
+      "wariant": null,
+      "m2": 50,
+      "wojewodztwo": null,
+      "stawka_h": 65,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 32
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 6
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 8
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 341.27100000000007,
+      "cena": 369.71025000000009,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 2: mieszkanie_po_remoncie, 50 m², stawka krajowa",
+      "usluga": "mieszkanie_po_remoncie",
+      "wariant": null,
+      "m2": 50,
+      "wojewodztwo": null,
+      "stawka_h": 65,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 32
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 6
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 8
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 541.271,
+      "cena": 586.3769166666666,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 2: mieszkanie_po_wynajmie, 50 m², stawka krajowa",
+      "usluga": "mieszkanie_po_wynajmie",
+      "wariant": null,
+      "m2": 50,
+      "wojewodztwo": null,
+      "stawka_h": 65,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 32
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 6
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 8
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 343.06600000000003,
+      "cena": 371.65483333333333,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 3: mieszkanie_standard, 35 m², stawka krajowa",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 35,
+      "wojewodztwo": null,
+      "stawka_h": 65,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 20.8
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 4.2
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 6
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 182.97000000000003,
+      "cena": 198.21750000000003,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 3: mieszkanie_standard, 70 m², stawka krajowa",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 70,
+      "wojewodztwo": null,
+      "stawka_h": 65,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 45.6
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 8.4
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 11
+        },
+        {
+          "typ": "lazienka",
+          "m2": 5
+        }
+      ],
+      "minuty": 304.95,
+      "cena": 330.36249999999995,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 3: mieszkanie_standard, 150 m², stawka krajowa",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 150,
+      "wojewodztwo": null,
+      "stawka_h": 65,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 105
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 18
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 14
+        },
+        {
+          "typ": "lazienka",
+          "m2": 8
+        },
+        {
+          "typ": "lazienka",
+          "m2": 5
+        }
+      ],
+      "minuty": 599.38999999999987,
+      "cena": 649.33916666666653,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 3: Czyściutko (Prudnik), do 40 m²: 250–300, mieszkanie_standard 35 m²",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 35,
+      "wojewodztwo": "opolskie",
+      "stawka_h": 69.5,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 20.8
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 4.2
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 6
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 182.97000000000003,
+      "cena": 211.94025000000005,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 3: Czyściutko (Prudnik), 41–70 m²: 300–450, mieszkanie_standard 55 m²",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 55,
+      "wojewodztwo": "opolskie",
+      "stawka_h": 69.5,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 35.4
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 6.6
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 9
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 248.17,
+      "cena": 287.4635833333333,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 3: Czyściutko (Prudnik), 71–100 m²: 450–700, mieszkanie_standard 85 m²",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 85,
+      "wojewodztwo": "opolskie",
+      "stawka_h": 69.5,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 55.8
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 10.2
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 14
+        },
+        {
+          "typ": "lazienka",
+          "m2": 5
+        }
+      ],
+      "minuty": 357,
+      "cena": 413.52500000000003,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 3: Kwik Czystości (Lublin), 30 m²: 250, mieszkanie_standard 30 m²",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 30,
+      "wojewodztwo": "lubelskie",
+      "stawka_h": 69.5,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 16.4
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 3.5999999999999996
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 6
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 169.82000000000002,
+      "cena": 196.7081666666667,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 3: Kwik Czystości (Lublin), 51–74 m²: 500, mieszkanie_standard 62 m²",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 62,
+      "wojewodztwo": "lubelskie",
+      "stawka_h": 69.5,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 39.56
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 7.4399999999999995
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 10
+        },
+        {
+          "typ": "lazienka",
+          "m2": 5
+        }
+      ],
+      "minuty": 279.71,
+      "cena": 323.99741666666665,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 3: Kwik Czystości (Lublin), 75–98 m²: 600, mieszkanie_standard 86 m²",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 86,
+      "wojewodztwo": "lubelskie",
+      "stawka_h": 69.5,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 56.68
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 10.32
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 14
+        },
+        {
+          "typ": "lazienka",
+          "m2": 5
+        }
+      ],
+      "minuty": 359.63000000000005,
+      "cena": 416.57141666666672,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 3: DoMi (Lublin), 50–70 m²: 325, mieszkanie_standard 60 m²",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 60,
+      "wojewodztwo": "lubelskie",
+      "stawka_h": 69.5,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 37.8
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 7.1999999999999993
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 10
+        },
+        {
+          "typ": "lazienka",
+          "m2": 5
+        }
+      ],
+      "minuty": 274.45,
+      "cena": 317.90458333333333,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 4: sprzatanie_biur, jednorazowe, 100 m², stawka krajowa",
+      "usluga": "sprzatanie_biur",
+      "wariant": "jednorazowe",
+      "m2": 100,
+      "wojewodztwo": null,
+      "stawka_h": 65,
+      "uklad": [
+        {
+          "typ": "biuro",
+          "m2": 60
+        },
+        {
+          "typ": "sala",
+          "m2": 15
+        },
+        {
+          "typ": "kuchnia_socjalna",
+          "m2": 6
+        },
+        {
+          "typ": "toaleta",
+          "m2": 5
+        },
+        {
+          "typ": "korytarz",
+          "m2": 14
+        }
+      ],
+      "minuty": 165.37500000000003,
+      "cena": 179.15625000000003,
+      "wizyt_w_miesiacu": 1
+    },
+    {
+      "opis": "sekcja 4: sprzatanie_biur, abonament_1, 100 m², stawka krajowa",
+      "usluga": "sprzatanie_biur",
+      "wariant": "abonament_1",
+      "m2": 100,
+      "wojewodztwo": null,
+      "stawka_h": 65,
+      "uklad": [
+        {
+          "typ": "biuro",
+          "m2": 60
+        },
+        {
+          "typ": "sala",
+          "m2": 15
+        },
+        {
+          "typ": "kuchnia_socjalna",
+          "m2": 6
+        },
+        {
+          "typ": "toaleta",
+          "m2": 5
+        },
+        {
+          "typ": "korytarz",
+          "m2": 14
+        }
+      ],
+      "minuty": 120.25000000000003,
+      "cena": 130.27083333333337,
+      "wizyt_w_miesiacu": 4.33
+    },
+    {
+      "opis": "sekcja 4: sprzatanie_biur, abonament_1, 1000 m², stawka krajowa",
+      "usluga": "sprzatanie_biur",
+      "wariant": "abonament_1",
+      "m2": 1000,
+      "wojewodztwo": null,
+      "stawka_h": 65,
+      "uklad": [
+        {
+          "typ": "biuro",
+          "m2": 600
+        },
+        {
+          "typ": "sala",
+          "m2": 150
+        },
+        {
+          "typ": "kuchnia_socjalna",
+          "m2": 60
+        },
+        {
+          "typ": "toaleta",
+          "m2": 50
+        },
+        {
+          "typ": "korytarz",
+          "m2": 140
+        }
+      ],
+      "minuty": 661.75,
+      "cena": 716.89583333333337,
+      "wizyt_w_miesiacu": 4.33
+    },
+    {
+      "opis": "sekcja 4: sprzatanie_biur, abonament_3, 100 m², stawka krajowa",
+      "usluga": "sprzatanie_biur",
+      "wariant": "abonament_3",
+      "m2": 100,
+      "wojewodztwo": null,
+      "stawka_h": 65,
+      "uklad": [
+        {
+          "typ": "biuro",
+          "m2": 60
+        },
+        {
+          "typ": "sala",
+          "m2": 15
+        },
+        {
+          "typ": "kuchnia_socjalna",
+          "m2": 6
+        },
+        {
+          "typ": "toaleta",
+          "m2": 5
+        },
+        {
+          "typ": "korytarz",
+          "m2": 14
+        }
+      ],
+      "minuty": 97.6875,
+      "cena": 105.828125,
+      "wizyt_w_miesiacu": 13
+    },
+    {
+      "opis": "sekcja 4: sprzatanie_biur, abonament_3, 1000 m², stawka krajowa",
+      "usluga": "sprzatanie_biur",
+      "wariant": "abonament_3",
+      "m2": 1000,
+      "wojewodztwo": null,
+      "stawka_h": 65,
+      "uklad": [
+        {
+          "typ": "biuro",
+          "m2": 600
+        },
+        {
+          "typ": "sala",
+          "m2": 150
+        },
+        {
+          "typ": "kuchnia_socjalna",
+          "m2": 60
+        },
+        {
+          "typ": "toaleta",
+          "m2": 50
+        },
+        {
+          "typ": "korytarz",
+          "m2": 140
+        }
+      ],
+      "minuty": 503.81249999999994,
+      "cena": 545.796875,
+      "wizyt_w_miesiacu": 13
+    },
+    {
+      "opis": "sekcja 5: mieszkanie_standard, 50 m², dolnośląskie",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 50,
+      "wojewodztwo": "dolnoslaskie",
+      "stawka_h": 67.5,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 32
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 6
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 8
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 230.82,
+      "cena": 259.6725,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 5: mieszkanie_standard, 50 m², kujawsko-pomorskie",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 50,
+      "wojewodztwo": "kujawsko-pomorskie",
+      "stawka_h": 56,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 32
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 6
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 8
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 230.82,
+      "cena": 215.432,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 5: mieszkanie_standard, 50 m², lubelskie",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 50,
+      "wojewodztwo": "lubelskie",
+      "stawka_h": 69.5,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 32
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 6
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 8
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 230.82,
+      "cena": 267.3665,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 5: mieszkanie_standard, 50 m², lubuskie",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 50,
+      "wojewodztwo": "lubuskie",
+      "stawka_h": 68.5,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 32
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 6
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 8
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 230.82,
+      "cena": 263.5195,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 5: mieszkanie_standard, 50 m², łódzkie",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 50,
+      "wojewodztwo": "lodzkie",
+      "stawka_h": 57,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 32
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 6
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 8
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 230.82,
+      "cena": 219.279,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 5: mieszkanie_standard, 50 m², małopolskie",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 50,
+      "wojewodztwo": "malopolskie",
+      "stawka_h": 65,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 32
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 6
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 8
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 230.82,
+      "cena": 250.055,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 5: mieszkanie_standard, 50 m², mazowieckie",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 50,
+      "wojewodztwo": "mazowieckie",
+      "stawka_h": 65,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 32
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 6
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 8
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 230.82,
+      "cena": 250.055,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 5: mieszkanie_standard, 50 m², opolskie",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 50,
+      "wojewodztwo": "opolskie",
+      "stawka_h": 69.5,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 32
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 6
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 8
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 230.82,
+      "cena": 267.3665,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 5: mieszkanie_standard, 50 m², podkarpackie",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 50,
+      "wojewodztwo": "podkarpackie",
+      "stawka_h": 58.5,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 32
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 6
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 8
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 230.82,
+      "cena": 225.0495,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 5: mieszkanie_standard, 50 m², podlaskie",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 50,
+      "wojewodztwo": "podlaskie",
+      "stawka_h": 63.5,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 32
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 6
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 8
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 230.82,
+      "cena": 244.2845,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 5: mieszkanie_standard, 50 m², pomorskie",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 50,
+      "wojewodztwo": "pomorskie",
+      "stawka_h": 73.5,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 32
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 6
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 8
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 230.82,
+      "cena": 282.7545,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 5: mieszkanie_standard, 50 m², śląskie",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 50,
+      "wojewodztwo": "slaskie",
+      "stawka_h": 68.5,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 32
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 6
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 8
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 230.82,
+      "cena": 263.5195,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 5: mieszkanie_standard, 50 m², świętokrzyskie",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 50,
+      "wojewodztwo": "swietokrzyskie",
+      "stawka_h": 52,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 32
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 6
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 8
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 230.82,
+      "cena": 200.044,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 5: mieszkanie_standard, 50 m², warmińsko-mazurskie",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 50,
+      "wojewodztwo": "warminsko-mazurskie",
+      "stawka_h": 60,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 32
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 6
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 8
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 230.82,
+      "cena": 230.82,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 5: mieszkanie_standard, 50 m², wielkopolskie",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 50,
+      "wojewodztwo": "wielkopolskie",
+      "stawka_h": 75.5,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 32
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 6
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 8
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 230.82,
+      "cena": 290.4485,
+      "wizyt_w_miesiacu": null
+    },
+    {
+      "opis": "sekcja 5: mieszkanie_standard, 50 m², zachodniopomorskie",
+      "usluga": "mieszkanie_standard",
+      "wariant": null,
+      "m2": 50,
+      "wojewodztwo": "zachodniopomorskie",
+      "stawka_h": 59,
+      "uklad": [
+        {
+          "typ": "pokoj",
+          "m2": 32
+        },
+        {
+          "typ": "przedpokoj",
+          "m2": 6
+        },
+        {
+          "typ": "kuchnia",
+          "m2": 8
+        },
+        {
+          "typ": "lazienka",
+          "m2": 4
+        }
+      ],
+      "minuty": 230.82,
+      "cena": 226.97299999999998,
+      "wizyt_w_miesiacu": null
+    }
+  ],
+  "pozycje": [
+    {
+      "usluga": "okna",
+      "pozycja": "okno_1",
+      "ilosc": 8,
+      "prog": 1,
+      "material": 0,
+      "cena": 240,
+      "minuty_pracy": 120,
+      "minuty": 150,
+      "chemia": 8,
+      "sprzet": 0
+    },
+    {
+      "usluga": "tapicerka",
+      "pozycja": "kanapa_3",
+      "ilosc": 2,
+      "prog": 1,
+      "material": 0,
+      "cena": 300,
+      "minuty_pracy": 120,
+      "minuty": 150,
+      "chemia": 12,
+      "sprzet": 16
+    },
+    {
+      "usluga": "dywany",
+      "pozycja": "dywan",
+      "ilosc": 20,
+      "prog": 1,
+      "material": 0,
+      "cena": 350,
+      "minuty_pracy": 120,
+      "minuty": 150,
+      "chemia": 12,
+      "sprzet": 16
+    },
+    {
+      "usluga": "mycie_posadzek",
+      "pozycja": "mycie_maszynowe",
+      "ilosc": 300,
+      "prog": 1,
+      "material": 0,
+      "cena": 540,
+      "minuty_pracy": 60,
+      "minuty": 120,
+      "chemia": 15,
+      "sprzet": 20
+    },
+    {
+      "usluga": "doczyszczanie",
+      "pozycja": "doczyszczanie_posadzki",
+      "ilosc": 200,
+      "prog": 1,
+      "material": 0,
+      "cena": 2000,
+      "minuty_pracy": 400,
+      "minuty": 460,
+      "chemia": 160,
+      "sprzet": 133.33333333333334
+    },
+    {
+      "usluga": "mycie_kostki",
+      "pozycja": "mycie",
+      "ilosc": 100,
+      "prog": 1,
+      "material": 0,
+      "cena": 1500,
+      "minuty_pracy": 400,
+      "minuty": 460,
+      "chemia": 40,
+      "sprzet": 100
+    },
+    {
+      "usluga": "mycie_elewacji",
+      "pozycja": "atmosferyczne",
+      "ilosc": 150,
+      "prog": 1,
+      "material": 0,
+      "cena": 3675,
+      "minuty_pracy": 600,
+      "minuty": 690,
+      "chemia": 75,
+      "sprzet": 150
+    },
+    {
+      "usluga": "sprzatanie_firm",
+      "pozycja": "zamiatanie",
+      "ilosc": 1000,
+      "prog": 0.7,
+      "material": 0,
+      "cena": 300,
+      "minuty_pracy": 60,
+      "minuty": 105,
+      "chemia": 0,
+      "sprzet": 25
+    }
+  ]
+}

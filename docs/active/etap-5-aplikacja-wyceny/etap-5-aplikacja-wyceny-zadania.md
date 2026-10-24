@@ -12,25 +12,25 @@ Zależy od: Brak
 
 ### IU-1: Narzędzia projektu i serwer deweloperski (feature-builder-data)
 
-- [ ] Stwórz: `package.json`
-- [ ] Stwórz: `package-lock.json`
-- [ ] Stwórz: `tsconfig.json`
-- [ ] Stwórz: `scripts/serwer-dev.mjs`
-- [ ] Test (unit): `scripts/serwer-dev.test.mjs`
-- [ ] Modyfikuj: `CLAUDE.md`
-- [ ] Test: [Unit] serwer na losowym porcie zwraca `index.html` dla `/` (jeśli plik istnieje) albo 404, a dla `/data/ceny.json` status 200 i `application/json`
-- [ ] Test: [Unit] żądanie `/../package.json` i `/%2e%2e/package.json` dostaje 403, a nieistniejący plik 404
-- [ ] Test: [Unit] plik `.webmanifest` ma typ `application/manifest+json`, `.woff2` — `font/woff2`, `.js` — `text/javascript`
+- [x] Stwórz: `package.json`
+- [x] Stwórz: `package-lock.json`
+- [x] Stwórz: `tsconfig.json`
+- [x] Stwórz: `scripts/serwer-dev.mjs`
+- [x] Test (unit): `scripts/serwer-dev.test.mjs`
+- [x] Modyfikuj: `CLAUDE.md`
+- [x] Test: [Unit] serwer na losowym porcie zwraca `index.html` dla `/` (jeśli plik istnieje) albo 404, a dla `/data/ceny.json` status 200 i `application/json`
+- [x] Test: [Unit] żądanie `/../package.json` i `/%2e%2e/package.json` dostaje 403, a nieistniejący plik 404
+- [x] Test: [Unit] plik `.webmanifest` ma typ `application/manifest+json`, `.woff2` — `font/woff2`, `.js` — `text/javascript`
 - [ ] Weryfikacja: `npm test` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 - [ ] Weryfikacja: `node --test scripts/serwer-dev.test.mjs` przechodzi
 
 ### IU-2: Układy i scenariusze kalibracji dla silnika (feature-builder-data)
 
-- [ ] Modyfikuj: `scripts/kalibracja.ps1`
-- [ ] Modyfikuj: `data/normy.json`
-- [ ] Stwórz: `research/kalibracja-scenariusze.json`
-- [ ] Modyfikuj: `CLAUDE.md`
+- [x] Modyfikuj: `scripts/kalibracja.ps1`
+- [x] Modyfikuj: `data/normy.json`
+- [x] Stwórz: `research/kalibracja-scenariusze.json`
+- [x] Modyfikuj: `CLAUDE.md`
 - [ ] Weryfikacja: `bash -c "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/kalibracja.ps1"` kończy się bez wyjątku i wypisuje „niezgodności katalogu: 0”
 - [ ] Weryfikacja: `git diff --exit-code research/KALIBRACJA.md data/rynek.json` nie pokazuje zmian
 - [ ] Weryfikacja: `bash -c "head -c3 scripts/kalibracja.ps1 | od -An -tx1"` zwraca `ef bb bf`
@@ -38,58 +38,58 @@ Zależy od: Brak
 
 ### IU-3: Silnik: katalog danych, układy i czas pracy (feature-builder-data)
 
-- [ ] Stwórz: `src/silnik/katalog.js`
-- [ ] Stwórz: `src/silnik/bledy.js`
-- [ ] Stwórz: `src/silnik/uklad.js`
-- [ ] Stwórz: `src/silnik/czas.js`
-- [ ] Stwórz: `tests/pomocnicze.js`
-- [ ] Stwórz: `tests/fixtures/katalog-maly.json`
-- [ ] Test (unit): `src/silnik/katalog.test.js`
-- [ ] Test (unit): `src/silnik/uklad.test.js`
-- [ ] Test (unit): `src/silnik/czas.test.js`
-- [ ] Test: [Unit] `ukladMieszkania(50)` daje pokój 32, przedpokój 6, kuchnię 8 i łazienkę 4 m² (suma 50); dla 120 m² dwie łazienki 8 i 5 m²
-- [ ] Test: [Unit] `ukladMieszkania(50, { lazienki: 2 })` daje dwie łazienki po 4 m², a `kuchnia: 'aneks'` kuchnię 5 m² i pokój 35 m²
-- [ ] Test: [Unit] `ukladMieszkania(12, { lazienki: 3 })` rzuca `BladWejscia` z kodem `metraz`
-- [ ] Test: [Unit] minuty 50 m² standard (układ typowy, mnożnik 1) zgadzają się z polem `minuty` scenariusza w `research/kalibracja-scenariusze.json` z dokładnością 0,01
-- [ ] Test: [Unit] reguła brudu `pyl_budowlany` poziom 2 na `*` dokłada m² × norma pyłu do każdego pomieszczenia
-- [ ] Test: [Unit] `minutyPozycji('okna', [{ id: 'okno_1', ilosc: 8 }])` = 30 + 8 × 15; dla usługi z `poziomy_brudu` poziom 3 mnoży czas pozycji przez 1,4
-- [ ] Test: [Unit] `wczytajKatalog` z katalogiem bez normy pozycji rzuca `BladKatalogu` z kodem `brak_normy`; `wojewodztwo(null)` zwraca stawkę 65 i wsp 1
+- [x] Stwórz: `src/silnik/katalog.js`
+- [x] Stwórz: `src/silnik/bledy.js`
+- [x] Stwórz: `src/silnik/uklad.js`
+- [x] Stwórz: `src/silnik/czas.js`
+- [x] Stwórz: `tests/pomocnicze.js`
+- [x] Stwórz: `tests/fixtures/katalog-maly.json`
+- [x] Test (unit): `src/silnik/katalog.test.js`
+- [x] Test (unit): `src/silnik/uklad.test.js`
+- [x] Test (unit): `src/silnik/czas.test.js`
+- [x] Test: [Unit] `ukladMieszkania(50)` daje pokój 32, przedpokój 6, kuchnię 8 i łazienkę 4 m² (suma 50); dla 120 m² dwie łazienki 8 i 5 m²
+- [x] Test: [Unit] `ukladMieszkania(50, { lazienki: 2 })` daje dwie łazienki po 4 m², a `kuchnia: 'aneks'` kuchnię 5 m² i pokój 35 m²
+- [x] Test: [Unit] `ukladMieszkania(12, { lazienki: 3 })` rzuca `BladWejscia` z kodem `metraz`
+- [x] Test: [Unit] minuty 50 m² standard (układ typowy, mnożnik 1) zgadzają się z polem `minuty` scenariusza w `research/kalibracja-scenariusze.json` z dokładnością 0,01
+- [x] Test: [Unit] reguła brudu `pyl_budowlany` poziom 2 na `*` dokłada m² × norma pyłu do każdego pomieszczenia
+- [x] Test: [Unit] `minutyPozycji('okna', [{ id: 'okno_1', ilosc: 8 }])` = 30 + 8 × 15; dla usługi z `poziomy_brudu` poziom 3 mnoży czas pozycji przez 1,4
+- [x] Test: [Unit] `wczytajKatalog` z katalogiem bez normy pozycji rzuca `BladKatalogu` z kodem `brak_normy`; `wojewodztwo(null)` zwraca stawkę 65 i wsp 1
 - [ ] Weryfikacja: `node --test src/silnik/katalog.test.js src/silnik/uklad.test.js src/silnik/czas.test.js` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-4: Silnik: cena usługi i widełki rynku (feature-builder-data)
 
-- [ ] Stwórz: `src/silnik/cena.js`
-- [ ] Stwórz: `src/silnik/widelki.js`
-- [ ] Modyfikuj: `data/ceny.json`
-- [ ] Test (unit): `src/silnik/cena.test.js`
-- [ ] Test (unit): `src/silnik/widelki.test.js`
-- [ ] Test (unit): `src/silnik/parytet.test.js`
-- [ ] Test: [Unit] wszystkie scenariusze z `research/kalibracja-scenariusze.json` dają te same minuty i ceny z dokładnością 0,01
-- [ ] Test: [Unit] mieszkanie 50 m² standard w mazowieckim kosztuje 250 zł, a z dojazdem 32 km — 294 zł (dojazd 44 zł)
-- [ ] Test: [Unit] okna: 4 × okno 1-skrz. = 120 zł, cena 150 zł i `czyMinimum: true`; dojazd 8 km bez dopłaty
-- [ ] Test: [Unit] kostka 40 m²: mycie 40 × 15 × 1,15 = 690 zł, dopłata mech 40 × 7,50 = 300 zł bez progu, razem 990 zł (makieta `kreator-pozycje`); impregnacja 40 m² dokłada 40 × (21,50 + 8) bez progu
-- [ ] Test: [Unit] mieszkanie z dodatkiem okna 4 × okno 1-skrz. w trybie `propozycja`: cena bez zmian, `propozycje` ma pozycję 120 zł; w trybie `w_cenie` cena rośnie o 120 zł
-- [ ] Test: [Unit] doczyszczanie 200 m² z poziomem brudu 3: cena i czas pozycji × 1,4
-- [ ] Test: [Unit] abonament 1× w tygodniu dla 100 m²: `cenaMiesieczna` = cena wizyty × 4,33
-- [ ] Test: [Unit] usługa AGD jako główna rzuca `BladWejscia`; ujemna ilość i m² = 0 rzucają `BladWejscia`
-- [ ] Test: [Unit] widełki mieszkania 50 m² w mazowieckim to 120–450 zł; okno balkonowe (`zakres: null`) daje `pelne: false`
+- [x] Stwórz: `src/silnik/cena.js`
+- [x] Stwórz: `src/silnik/widelki.js`
+- [x] Modyfikuj: `data/ceny.json`
+- [x] Test (unit): `src/silnik/cena.test.js`
+- [x] Test (unit): `src/silnik/widelki.test.js`
+- [x] Test (unit): `src/silnik/parytet.test.js`
+- [x] Test: [Unit] wszystkie scenariusze z `research/kalibracja-scenariusze.json` dają te same minuty i ceny z dokładnością 0,01
+- [x] Test: [Unit] mieszkanie 50 m² standard w mazowieckim kosztuje 250 zł, a z dojazdem 32 km — 294 zł (dojazd 44 zł)
+- [x] Test: [Unit] okna: 4 × okno 1-skrz. = 120 zł, cena 150 zł i `czyMinimum: true`; dojazd 8 km bez dopłaty
+- [x] Test: [Unit] kostka 40 m²: mycie 40 × 15 × 1,15 = 690 zł, dopłata mech 40 × 7,50 = 300 zł bez progu, razem 990 zł (makieta `kreator-pozycje`); impregnacja 40 m² dokłada 40 × (21,50 + 8) bez progu
+- [x] Test: [Unit] mieszkanie z dodatkiem okna 4 × okno 1-skrz. w trybie `propozycja`: cena bez zmian, `propozycje` ma pozycję 120 zł; w trybie `w_cenie` cena rośnie o 120 zł
+- [x] Test: [Unit] doczyszczanie 200 m² z poziomem brudu 3: cena i czas pozycji × 1,4
+- [x] Test: [Unit] abonament 1× w tygodniu dla 100 m²: `cenaMiesieczna` = cena wizyty × 4,33
+- [x] Test: [Unit] usługa AGD jako główna rzuca `BladWejscia`; ujemna ilość i m² = 0 rzucają `BladWejscia`
+- [x] Test: [Unit] widełki mieszkania 50 m² w mazowieckim to 120–450 zł; okno balkonowe (`zakres: null`) daje `pelne: false`
 - [ ] Weryfikacja: `node --test src/silnik/cena.test.js src/silnik/widelki.test.js src/silnik/parytet.test.js` przechodzi
 - [ ] Weryfikacja: `bash -c "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/kalibracja.ps1"` wypisuje „niezgodności katalogu: 0”
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-5: Silnik: VAT, koszt zlecenia i „zostaje dla Ciebie” (feature-builder-data)
 
-- [ ] Stwórz: `src/silnik/vat.js`
-- [ ] Stwórz: `src/silnik/koszt.js`
-- [ ] Test (unit): `src/silnik/vat.test.js`
-- [ ] Test (unit): `src/silnik/koszt.test.js`
-- [ ] Test: [Unit] mieszkanie 250 zł, firma zwolniona: brutto 250, netto 250; czynny VAT: brutto 250, netto 203,25, vat 46,75
-- [ ] Test: [Unit] mycie posadzek 300 zł modelu (podstawa netto), czynny VAT: netto 300, brutto 369
-- [ ] Test: [Unit] mieszkanie 50 m² (230,82 min normy), tempo 1,3, dojazd 24 km, firma zwolniona: chemia = 4 × 230,82 / 60, dojazd firmy = 2 × 24 × 1,15, `zostajeNaGodzine` = zostaje / (230,82 × 1,3 / 60)
-- [ ] Test: [Unit] zlecenia wzorcowe z `research/kalibracja-scenariusze.json` przy tempie 1: chemia i sprzęt równe polom `chemia` i `sprzet` z dokładnością 0,01
-- [ ] Test: [Unit] ręczna cena 290 zł zmienia `zostaje` i `zostajeNaGodzine`, a nie zmienia `minutyWlasne`
-- [ ] Test: [Unit] tempo ≤ 0 albo brak `minutyNormowe` rzuca `BladWejscia`
+- [x] Stwórz: `src/silnik/vat.js`
+- [x] Stwórz: `src/silnik/koszt.js`
+- [x] Test (unit): `src/silnik/vat.test.js`
+- [x] Test (unit): `src/silnik/koszt.test.js`
+- [x] Test: [Unit] mieszkanie 250 zł, firma zwolniona: brutto 250, netto 250; czynny VAT: brutto 250, netto 203,25, vat 46,75
+- [x] Test: [Unit] mycie posadzek 300 zł modelu (podstawa netto), czynny VAT: netto 300, brutto 369
+- [x] Test: [Unit] mieszkanie 50 m² (230,82 min normy), tempo 1,3, dojazd 24 km, firma zwolniona: chemia = 4 × 230,82 / 60, dojazd firmy = 2 × 24 × 1,15, `zostajeNaGodzine` = zostaje / (230,82 × 1,3 / 60)
+- [x] Test: [Unit] zlecenia wzorcowe z `research/kalibracja-scenariusze.json` przy tempie 1: chemia i sprzęt równe polom `chemia` i `sprzet` z dokładnością 0,01
+- [x] Test: [Unit] ręczna cena 290 zł zmienia `zostaje` i `zostajeNaGodzine`, a nie zmienia `minutyWlasne`
+- [x] Test: [Unit] tempo ≤ 0 albo brak `minutyNormowe` rzuca `BladWejscia`
 - [ ] Weryfikacja: `node --test src/silnik/vat.test.js src/silnik/koszt.test.js` przechodzi
 - [ ] Weryfikacja: `npm test` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów

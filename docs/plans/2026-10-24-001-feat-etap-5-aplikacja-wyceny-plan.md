@@ -204,7 +204,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 
 **Zależy od:** Brak
 
-- [ ] **IU-1: Narzędzia projektu i serwer deweloperski**
+- [x] **IU-1: Narzędzia projektu i serwer deweloperski**
 
 **Cel:** `package.json` ze skryptami testów, typów i serwera, konfiguracja `tsc` dla JSDoc i zerozależnościowy serwer plików statycznych dla E2E i pracy lokalnej.
 
@@ -247,7 +247,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - `npm run typecheck` przechodzi bez błędów
 - `node --test scripts/serwer-dev.test.mjs` przechodzi
 
-- [ ] **IU-2: Układy i scenariusze kalibracji dla silnika**
+- [x] **IU-2: Układy i scenariusze kalibracji dla silnika**
 
 **Cel:** `scripts/kalibracja.ps1` zapisuje układy typowego mieszkania i biura do `data/normy.json` i scenariusze referencyjne do `research/kalibracja-scenariusze.json`, z których korzysta test parytetu silnika.
 
@@ -288,7 +288,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - `bash -c "head -c3 scripts/kalibracja.ps1 | od -An -tx1"` zwraca `ef bb bf`
 - `node -e "JSON.parse(require('fs').readFileSync('research/kalibracja-scenariusze.json','utf8'))"` kończy się bez błędu
 
-- [ ] **IU-3: Silnik: katalog danych, układy i czas pracy**
+- [x] **IU-3: Silnik: katalog danych, układy i czas pracy**
 
 **Cel:** Wczytanie i indeksy danych referencyjnych, układ typowego mieszkania i biura oraz czas pracy usług z pomieszczeniami i z pozycjami.
 
@@ -340,7 +340,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - `node --test src/silnik/katalog.test.js src/silnik/uklad.test.js src/silnik/czas.test.js` przechodzi
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-4: Silnik: cena usługi i widełki rynku**
+- [x] **IU-4: Silnik: cena usługi i widełki rynku**
 
 **Cel:** Cena wyceny dla obu trybów usług (linie, dodatki, minimum, dojazd klienta, abonament) i widełki rynku, zgodne ze scenariuszami kalibracji.
 
@@ -368,7 +368,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - `cena.js`: `wycenUsluge(wejscie, katalog)`; `wejscie` (typ JSDoc `WejscieWyceny`): `uslugaId`, `wojewodztwoId` (null = średnia krajowa), `wariantId`, `pomieszczenia` (`{ typ, nazwa, m2, brud: [{ id, poziom }] }`), `pozycje` (`{ id, ilosc }`), `poziomBrudu` (1–3), `dodatki` (`{ uslugaId, pozycjaId, ilosc, tryb: 'w_cenie' | 'propozycja' }`), `dojazdKm`, `dezynfekcja`. Wynik `WynikWyceny`: `linie` (`{ rodzaj: 'praca' | 'pozycja' | 'doplata' | 'dodatek' | 'material', opis, ilosc, jednostka, cenaJedn, cenaBazowa, mnoznikProgu, kwota, zakres }`), `propozycje` (dodatki w trybie `propozycja`: `{ opis, ilosc, jednostka, kwota }`, poza ceną i czasem), `cenaUslugi`, `minimum`, `czyMinimum`, `dojazd: { km, kwota }`, `cena` (bez zaokrągleń), `cenaZaokraglona` (pełne zł), `minutyNormowe` (praca + dodatki, z przygotowaniem), `wizytWMiesiacu`, `cenaMiesieczna`, `podstawaCeny`.
 - Pomieszczenia: cena pracy = minuty / 60 × `stawka_h` województwa. Pozycje główne: ilość × (cena × wsp × próg × brud + materiał), próg z ilości pozycji m² przy usłudze z `progi`, brud z `poziomy_brudu` w `data/ceny.json` przy usłudze z `poziomy_brudu: true` (cena i czas). Dopłaty (`typ: "doplata"`): ilość × (cena × wsp + materiał), bez progu i brudu (makieta `kreator-pozycje`). Materiał (`doliczaj_material`) = `koszt_chemii_m2` bez wsp, progu i brudu. Dodatki `w_cenie`: ilość × cena × wsp, bez minimum i przygotowania; dodatki `propozycja` liczone tak samo, ale tylko do listy `propozycje`. Kolejność: Σ linii → `max(minimum_zl, Σ)` → + dojazd klienta = max(0, km − `darmowy_promien_km`) × `klient_zl_km` (stawki z `koszty_firmy.dojazd`, nadpisywalne parametrem `stawkiDojazdu`). Abonament biura: wszystko za wizytę, `cenaMiesieczna` = cena × `wizyt_w_miesiacu`.
 - Walidacja na wejściu: nieznana usługa albo pozycja, usługa `tylko_dodatek` jako główna, m² ≤ 0 albo > 100 000, ilość < 0, brak linii o dodatniej ilości → `BladWejscia` z kodem.
-- `widelki.js`: `widelkiRynku(wynik, wejscie, katalog)` → `{ od, do, pelne }`. Pomieszczenia: cena pracy × `zakres[i] / mediana` pozycji `kraj[rynek_odniesienie]` w `data/rynek.json`; pozycje i dodatki: Σ (zakres pozycji × wsp × próg × brud + materiał) × ilość, a pozycja z `zakres: null` wchodzi kwotą na obu końcach i ustawia `pelne: false`; na obu końcach minimum zlecenia, potem dojazd.
+- `widelki.js`: `widelkiRynku(wynik, wejscie, katalog)` → `{ od, do, pelne }`. Pomieszczenia: cena pracy × `zakres[i] / mediana` pozycji `kraj[rynek_odniesienie]` w `data/rynek.json`; pozycje i dodatki: Σ (zakres pozycji × wsp × próg × brud + materiał) × ilość, a pozycja z `zakres: null` wchodzi kwotą na obu końcach i ustawia `pelne: false`; na obu końcach minimum zlecenia (tylko usługi z pozycjami — korekta z fazy 1: zakres rynku usług z pomieszczeniami to ceny całych zleceń, więc minimum by go zawyżyło, np. 150 zamiast 120 zł dla mieszkania 50 m²; do potwierdzenia przez właściciela), potem dojazd. Medianę i zakres rynku daje akcesor `katalog.rynekKraj(klucz)` (dopisany w `katalog.js` w IU-4).
 - `data/ceny.json`: pole `rynek_odniesienie` w usługach z pomieszczeniami — `mieszkanie_standard`, `mieszkanie_gruntowne`, `mieszkanie_po_wynajmie` → `"mieszkanie_50m2"`, `mieszkanie_po_remoncie` → `"po_remoncie_m2"`, `sprzatanie_biur` → `"stawka_h"`. Po zmianie skrypt kalibracji musi przejść bez wyjątku.
 - `parytet.test.js` czyta prawdziwe dane (`katalogZDysku()` z `tests/pomocnicze.js`) i `research/kalibracja-scenariusze.json`: dla każdego scenariusza `pomieszczenia` minuty i cena (przed minimum) z dokładnością 0,01; dla `pozycje` cena (z minimum, progiem i materiałem) i minuty z dokładnością 0,01.
 
@@ -393,7 +393,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - `bash -c "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/kalibracja.ps1"` wypisuje „niezgodności katalogu: 0”
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-5: Silnik: VAT, koszt zlecenia i „zostaje dla Ciebie”**
+- [x] **IU-5: Silnik: VAT, koszt zlecenia i „zostaje dla Ciebie”**
 
 **Cel:** Cena dla klienta brutto i netto według statusu VAT i podstawy ceny oraz koszt zlecenia jednoosobowej firmy z tempem i kwotą, która zostaje dla właściciela.
 

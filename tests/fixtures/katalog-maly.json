@@ -1,0 +1,95 @@
+{
+  "ceny": {
+    "meta": { "wersja": "test-ceny" },
+    "uslugi": [
+      {
+        "id": "mieszkanie_standard", "nazwa": "Mieszkanie – sprzątanie standardowe", "grupa": "dom", "tryb": "pomieszczenia",
+        "zestaw_pomieszczen": "dom", "podstawa_ceny": "brutto", "mnoznik_zakresu": 1, "brud_domyslny": [], "dodatki": ["doczyszczanie"], "minimum_zl": 150
+      },
+      {
+        "id": "sprzatanie_biur", "nazwa": "Sprzątanie biur", "grupa": "firma", "tryb": "pomieszczenia",
+        "zestaw_pomieszczen": "biuro", "podstawa_ceny": "netto", "mnoznik_zakresu": 1, "brud_domyslny": [], "dodatki": [], "minimum_zl": 150,
+        "warianty": [
+          { "id": "jednorazowe", "nazwa": "Jednorazowo", "wizyt_w_miesiacu": 1, "mnoznik_zakresu": 1.5 },
+          { "id": "abonament_1", "nazwa": "Abonament 1× w tygodniu", "wizyt_w_miesiacu": 4.33, "mnoznik_zakresu": 1 }
+        ]
+      },
+      {
+        "id": "doczyszczanie", "nazwa": "Doczyszczanie posadzek", "grupa": "firma", "tryb": "pozycje", "podstawa_ceny": "netto",
+        "progi": "maszynowe", "poziomy_brudu": true, "minimum_zl": 300,
+        "pozycje": [
+          { "id": "doczyszczanie_posadzki", "nazwa": "Doczyszczanie posadzki", "jednostka": "m2", "cena": 10, "zakres": [4, 25], "sprzet": "szorowarka", "koszt_chemii_m2": 0.8 },
+          { "id": "zabezpieczenie", "nazwa": "Zabezpieczenie powłoką", "jednostka": "m2", "cena": 9.5, "zakres": [6, 12], "koszt_chemii_m2": 2.5, "typ": "doplata" }
+        ]
+      }
+    ],
+    "progi_metrazu": {
+      "maszynowe": { "progi": [{ "od_m2": 0, "mnoznik": 1.3 }, { "od_m2": 100, "mnoznik": 1 }, { "od_m2": 500, "mnoznik": 0.7 }] }
+    },
+    "poziomy_brudu": {
+      "poziomy": [{ "poziom": 1, "nazwa": "lekkie", "mnoznik": 1 }, { "poziom": 2, "nazwa": "średnie", "mnoznik": 1.2 }, { "poziom": 3, "nazwa": "silne", "mnoznik": 1.4 }]
+    },
+    "koszty_firmy": {
+      "praca": { "stawka_brutto_h": 31.4, "narzut_pracodawcy": 0.2048, "koszt_h": 37.83 },
+      "chemia_h": { "wartosc": 4 },
+      "sprzet": { "szorowarka": { "nazwa": "Szorowarka", "koszt_h": 20 } },
+      "dojazd": { "klient_zl_km": 2, "zakres_rynkowy": [1.4, 3], "darmowy_promien_km": 10, "koszt_firmy_zl_km": 1.15 }
+    }
+  },
+  "normy": {
+    "meta": { "wersja": "test-normy" },
+    "przygotowanie_min": 30,
+    "przygotowanie_min_uslug": { "doczyszczanie": 60 },
+    "zestawy_pomieszczen": {
+      "dom": [
+        { "id": "pokoj", "nazwa": "Pokój, sypialnia, salon", "min_m2": 2.63 },
+        { "id": "przedpokoj", "nazwa": "Przedpokój, korytarz, schowek", "min_m2": 2.63 },
+        { "id": "kuchnia", "nazwa": "Kuchnia lub aneks", "min_m2": 6.83 },
+        { "id": "lazienka", "nazwa": "Łazienka lub WC", "min_m2": 11.56 }
+      ],
+      "biuro": [
+        { "id": "biuro", "nazwa": "Biuro, gabinet, open space", "min_m2": 0.62 },
+        { "id": "sala", "nazwa": "Sala konferencyjna", "min_m2": 0.56 },
+        { "id": "kuchnia_socjalna", "nazwa": "Kuchnia socjalna", "min_m2": 2.47 },
+        { "id": "toaleta", "nazwa": "Toaleta", "min_m2": 4.93 },
+        { "id": "korytarz", "nazwa": "Korytarz, hol", "min_m2": 0.37 }
+      ]
+    },
+    "progi_wydajnosci": { "biuro": [{ "od_m2": 0, "mnoznik": 1 }, { "od_m2": 300, "mnoznik": 0.85 }, { "od_m2": 1000, "mnoznik": 0.7 }] },
+    "uklady": {
+      "mieszkanie": {
+        "kuchnia": { "udzial": 0.16, "min_m2": 6, "max_m2": 14 },
+        "aneks": { "udzial": 0.1, "min_m2": 4, "max_m2": 8 },
+        "przedpokoj": { "udzial": 0.12 },
+        "lazienki": [{ "do_m2": 60, "m2": [4] }, { "do_m2": 100, "m2": [5] }, { "do_m2": null, "m2": [8, 5] }]
+      },
+      "biuro": {
+        "na_m2": 100,
+        "pomieszczenia": [
+          { "typ": "biuro", "m2": 60 }, { "typ": "sala", "m2": 15 }, { "typ": "kuchnia_socjalna", "m2": 6 }, { "typ": "toaleta", "m2": 5 }, { "typ": "korytarz", "m2": 14 }
+        ]
+      }
+    },
+    "brud": [
+      { "id": "kurz", "nazwa": "Kurz", "chemia": "uniwersalny", "min_m2": [0, 0.9, 1.9] },
+      { "id": "pyl_budowlany", "nazwa": "Pył budowlany", "chemia": "poremontowy", "min_m2": [2, 4, 7.2] }
+    ],
+    "poziomy": [
+      { "poziom": 1, "nazwa": "lekkie", "opis": "typowe, codzienne zabrudzenie" },
+      { "poziom": 2, "nazwa": "średnie", "opis": "wyraźne, zaniedbane kilka tygodni" },
+      { "poziom": 3, "nazwa": "silne", "opis": "zaschnięte, wymaga kilku przejść" }
+    ],
+    "pozycje": {
+      "doczyszczanie.doczyszczanie_posadzki": { "wydajnosc_m2_h": 30, "min_na_jednostke": 2 },
+      "doczyszczanie.zabezpieczenie": { "wydajnosc_m2_h": 40, "min_na_jednostke": 1.5 }
+    }
+  },
+  "rynek": {
+    "meta": { "wersja": "test-rynek" },
+    "kraj": { "stawka_h": { "mediana": 65, "n": 11, "zakres": [45, 120] } },
+    "wojewodztwa": [
+      { "id": "mazowieckie", "nazwa": "mazowieckie", "wsp": 1, "stawka_h": 65 },
+      { "id": "opolskie", "nazwa": "opolskie", "wsp": 1.07, "stawka_h": 69.5 }
+    ]
+  }
+}

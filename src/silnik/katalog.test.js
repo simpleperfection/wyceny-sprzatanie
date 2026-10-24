@@ -1,0 +1,108 @@
+import assert from 'node:assert/strict'
+import { describe, it } from 'node:test'
+
+import { daneTestowe, katalogTestowy, katalogZDanych, katalogZDysku } from '../../tests/pomocnicze.js'
+import { BladKatalogu, BladWejscia } from './bledy.js'
+import { wczytajKatalog } from './katalog.js'
+
+/** @param {string} kod */
+const bladKatalogu = (kod) => (/** @type {unknown} */ blad) => blad instanceof BladKatalogu && blad.kod === kod
+/** @param {string} kod */
+const bladWejscia = (kod) => (/** @type {unknown} */ blad) => blad instanceof BladWejscia && blad.kod === kod
+
+describe('wczytajKatalog: indeksy', () => {
+  it('prawdziwe dane: średnia krajowa ma stawkę 65 zł/h i wsp 1', async () => {
+    const katalog = await katalogZDysku()
+
+    assert.deepEqual(katalog.wojewodztwo(null), { id: null, nazwa: 'średnia krajowa', wsp: 1, stawka_h: 65 })
+    assert.equal(katalog.wojewodztwa.length, 16)
+  })
+
+  it('województwo, usługa i pozycja z małego katalogu', async () => {
+    const katalog = await katalogTestowy()
+
+    assert.deepEqual(katalog.wojewodztwo('opolskie'), { id: 'opolskie', nazwa: 'opolskie', wsp: 1.07, stawka_h: 69.5 })
+    assert.equal(katalog.usluga('doczyszczanie').minimum_zl, 300)
+    assert.equal(katalog.pozycja('doczyszczanie', 'zabezpieczenie').typ, 'doplata')
+    assert.deepEqual(katalog.wersjaDanych, { ceny: 'test-ceny', normy: 'test-normy', rynek: 'test-rynek' })
+  })
+
+  it('normy pomieszczeń, brudu i pozycji oraz zestaw', async () => {
+    const katalog = await katalogTestowy()
+
+    assert.equal(katalog.normaPomieszczenia('lazienka'), 11.56)
+    assert.equal(katalog.normaPomieszczenia('toaleta'), 4.93)
+    assert.equal(katalog.normaBrudu('pyl_budowlany', 2), 4)
+    assert.equal(katalog.normaPozycji('doczyszczanie.zabezpieczenie').min_na_jednostke, 1.5)
+    assert.deepEqual(katalog.zestaw('biuro').map((p) => p.id), ['biuro', 'sala', 'kuchnia_socjalna', 'toaleta', 'korytarz'])
+  })
+
+  it('progMetrazu bierze ostatni próg, którego od_m2 ≤ metraż', async () => {
+    const katalog = await katalogTestowy()
+
+    assert.deepEqual([50, 100, 499, 600].map((m2) => katalog.progMetrazu('maszynowe', m2)), [1.3, 1, 1, 0.7])
+  })
+
+  it('przygotowanie: usługa z pozycjami z przygotowanie_min_uslug, z pomieszczeniami przygotowanie_min', async () => {
+    const katalog = await katalogTestowy()
+
+    assert.equal(katalog.przygotowanie('doczyszczanie'), 60)
+    assert.equal(katalog.przygotowanie('mieszkanie_standard'), 30)
+  })
+
+  it('nieznane identyfikatory rzucają BladWejscia, a brak progów i zestawu BladKatalogu', async () => {
+    const katalog = await katalogTestowy()
+
+    assert.throws(() => katalog.usluga('nieznana'), bladWejscia('nieznana_usluga'))
+    assert.throws(() => katalog.pozycja('doczyszczanie', 'brak'), bladWejscia('nieznana_pozycja'))
+    assert.throws(() => katalog.pozycja('nieznana', 'brak'), bladWejscia('nieznana_usluga'))
+    assert.throws(() => katalog.wojewodztwo('nieznane'), bladWejscia('nieznane_wojewodztwo'))
+    assert.throws(() => katalog.normaBrudu('kurz', 4), bladWejscia('poziom_brudu'))
+    assert.throws(() => katalog.normaBrudu('blota', 1), bladWejscia('nieznany_brud'))
+    assert.throws(() => katalog.normaPozycji('doczyszczanie.brak'), bladWejscia('nieznana_pozycja'))
+    assert.throws(() => katalog.progMetrazu('brak', 10), bladKatalogu('brak_progu'))
+    assert.throws(() => katalog.zestaw('brak'), bladKatalogu('brak_zestawu'))
+  })
+})
+
+describe('wczytajKatalog: kontrole danych', () => {
+  it('pozycja bez normy czasu rzuca BladKatalogu z kodem brak_normy', async () => {
+    const dane = await daneTestowe()
+    delete dane.normy.pozycje['doczyszczanie.zabezpieczenie']
+
+    await assert.rejects(katalogZDanych(dane), bladKatalogu('brak_normy'))
+  })
+
+  it('usługa z pozycjami bez przygotowania rzuca BladKatalogu z kodem brak_przygotowania', async () => {
+    const dane = await daneTestowe()
+    dane.normy.przygotowanie_min_uslug = {}
+
+    await assert.rejects(katalogZDanych(dane), bladKatalogu('brak_przygotowania'))
+  })
+
+  it('usługa z pomieszczeniami bez zestawu rzuca BladKatalogu z kodem brak_zestawu', async () => {
+    const dane = await daneTestowe()
+    delete dane.normy.zestawy_pomieszczen.biuro
+
+    await assert.rejects(katalogZDanych(dane), bladKatalogu('brak_zestawu'))
+  })
+
+  it('plik o złym kształcie rzuca BladKatalogu z kodem zly_format', async () => {
+    const dane = await daneTestowe()
+    dane.rynek.wojewodztwa = null
+
+    await assert.rejects(katalogZDanych(dane), bladKatalogu('zly_format'))
+  })
+
+  it('niepobrany plik rzuca BladKatalogu z kodem brak_pliku i przyczyną', async () => {
+    const przyczyna = new Error('HTTP 404')
+    const dane = await daneTestowe()
+    /** @param {string} sciezka */
+    const pobierz = async (sciezka) => {
+      if (sciezka === 'data/normy.json') throw przyczyna
+      return sciezka === 'data/ceny.json' ? dane.ceny : dane.rynek
+    }
+
+    await assert.rejects(wczytajKatalog(pobierz), (blad) => bladKatalogu('brak_pliku')(blad) && blad instanceof Error && blad.cause === przyczyna)
+  })
+})
