@@ -19,9 +19,9 @@ const MNOZNIK_PROGU_DOMYSLNY = 1
  *   tylko_dodatek?: boolean, rynek_odniesienie?: string }} Usluga
  * @typedef {{ od_m2: number, mnoznik: number }} Prog
  * @typedef {{ poziom: number, nazwa: string, mnoznik: number }} PoziomBrudu
- * @typedef {{ praca: { stawka_brutto_h: number, narzut_pracodawcy: number, koszt_h: number }, chemia_h: { wartosc: number },
+ * @typedef {{ praca?: { stawka_brutto_h: number, narzut_pracodawcy: number, koszt_h: number }, chemia_h: { wartosc: number },
  *   sprzet: Record<string, { nazwa: string, koszt_h: number } | string>,
- *   dojazd: { klient_zl_km: number, zakres_rynkowy: number[], darmowy_promien_km: number, koszt_firmy_zl_km: number } }} KosztyFirmy
+ *   dojazd: { klient_zl_km: number, zakres_rynkowy?: number[], darmowy_promien_km: number, koszt_firmy_zl_km: number } }} KosztyFirmy
  * @typedef {{ meta: { wersja: string }, uslugi: Usluga[], progi_metrazu: Record<string, { progi: Prog[] }>,
  *   poziomy_brudu: { poziomy: PoziomBrudu[] }, koszty_firmy: KosztyFirmy }} Ceny
  * @typedef {{ id: string, nazwa: string, min_m2: number }} NormaPomieszczenia
@@ -123,11 +123,14 @@ function jestUsluga(x) {
     brakAlbo(x.brud_domyslny, (b) => jestTablica(b, czyRegulaBrudu))
 }
 
-/** Koszty firmy: praca, chemia na godzine i dojazd (koszt sprzetu sprawdza koszt.js przy uzyciu). @param {unknown} x */
+/**
+ * Tylko pola kosztow firmy czytane przez silnik: chemia na godzine, slownik sprzetu (koszt.js czyta koszty.sprzet[id],
+ * a koszt godziny wpisu sprawdza przy uzyciu) i stawki dojazdu. Pol praca i dojazd.zakres_rynkowy silnik nie czyta.
+ * @param {unknown} x
+ */
 function jestKosztamiFirmy(x) {
-  return jestObiektem(x) && maLiczby(x.praca, ['stawka_brutto_h', 'narzut_pracodawcy', 'koszt_h']) && maLiczby(x.chemia_h, ['wartosc']) &&
-    jestObiektem(x.sprzet) && jestObiektem(x.dojazd) && maLiczby(x.dojazd, ['klient_zl_km', 'darmowy_promien_km', 'koszt_firmy_zl_km']) &&
-    jestTablica(x.dojazd.zakres_rynkowy, jestLiczba)
+  return jestObiektem(x) && maLiczby(x.chemia_h, ['wartosc']) && jestObiektem(x.sprzet) &&
+    maLiczby(x.dojazd, ['klient_zl_km', 'darmowy_promien_km', 'koszt_firmy_zl_km'])
 }
 
 /** @param {unknown} x @returns {x is Ceny} */
@@ -163,7 +166,8 @@ function jestNormami(x) {
 /** @param {unknown} x @returns {x is Rynek} */
 function jestRynkiem(x) {
   return maWersje(x) && jestObiektem(x) && jestObiektem(x.kraj) && maLiczby(x.kraj.stawka_h, ['mediana']) &&
-    jestTablica(x.wojewodztwa, (w) => maTeksty(w, ['id', 'nazwa']) && maLiczby(w, ['wsp', 'stawka_h']))
+    jestTablica(x.wojewodztwa, (w) => jestObiektem(w) && (w.id === null || jestTekstem(w.id)) && maTeksty(w, ['nazwa']) &&
+      maLiczby(w, ['wsp', 'stawka_h']))
 }
 
 /** @param {PobierzJson} pobierzJson @returns {Promise<{ ceny: unknown, normy: unknown, rynek: unknown }>} */

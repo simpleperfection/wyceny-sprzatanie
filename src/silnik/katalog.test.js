@@ -115,6 +115,16 @@ describe('wczytajKatalog: kontrole danych', () => {
     })
   }
 
+  it('pola, których silnik nie czyta (koszty_firmy.praca, dojazd.zakres_rynkowy), nie są wymagane', async () => {
+    const dane = await daneTestowe()
+    delete dane.ceny.koszty_firmy.praca
+    delete dane.ceny.koszty_firmy.dojazd.zakres_rynkowy
+
+    const katalog = await katalogZDanych(dane)
+
+    assert.equal(katalog.kosztyFirmy.dojazd.koszt_firmy_zl_km, 1.15)
+  })
+
   it('niepobrany plik rzuca BladKatalogu z kodem brak_pliku i przyczyną', async () => {
     const przyczyna = new Error('HTTP 404')
     const dane = await daneTestowe()
