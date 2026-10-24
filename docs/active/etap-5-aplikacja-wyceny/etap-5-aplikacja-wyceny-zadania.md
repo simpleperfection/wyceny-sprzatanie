@@ -110,52 +110,52 @@ Zależy od: Faza 1
 
 ### IU-6: Magazyn, schemat stanu i ustawienia firmy (feature-builder-data)
 
-- [ ] Stwórz: `data/domyslne.json`
-- [ ] Stwórz: `src/dane/magazyn.js`
-- [ ] Stwórz: `src/dane/ustawienia.js`
-- [ ] Stwórz: `src/dane/walidacja.js`
-- [ ] Stwórz: `tests/pamiec-magazynu.js`
-- [ ] Test (unit): `src/dane/magazyn.test.js`
-- [ ] Test (unit): `src/dane/ustawienia.test.js`
-- [ ] Test (unit): `src/dane/walidacja.test.js`
-- [ ] Test: [Unit] pusty storage → `wczytaj()` zwraca stan v1 z `ustawienia: null` i pustą listą wycen
-- [ ] Test: [Unit] `zmien` zapisuje stan pod `wyceny-sprzatanie:stan` i ustawia `kopia.zmianaOd`
-- [ ] Test: [Unit] uszkodzony JSON pod kluczem → `{ blad: 'uszkodzony', surowe }` z oryginalnym tekstem; stan z wersją 2 → `nowsza_wersja`
-- [ ] Test: [Unit] przepełnienie (atrapa `setItem` rzuca `QuotaExceededError`) → `BladMagazynu` z kodem `pelny`
-- [ ] Test: [Unit] `pominKreator` daje status VAT „zwolniony”, tempo ręczne null, województwo null, a `brakujeUstawien` zwraca `['wojewodztwo', 'firma']`
-- [ ] Test: [Unit] NIP `5260250274` przechodzi, `5260250275` daje błąd; telefon `600 123 456` i `+48600123456` przechodzą, `12345` daje błąd
-- [ ] Test: [Unit] `scalKoszty` nadpisuje `chemia_h` z ustawień i zostawia pozostałe wartości z `data/ceny.json`
+- [x] Stwórz: `data/domyslne.json`
+- [x] Stwórz: `src/dane/magazyn.js`
+- [x] Stwórz: `src/dane/ustawienia.js`
+- [x] Stwórz: `src/dane/walidacja.js`
+- [x] Stwórz: `tests/pamiec-magazynu.js`
+- [x] Test (unit): `src/dane/magazyn.test.js`
+- [x] Test (unit): `src/dane/ustawienia.test.js`
+- [x] Test (unit): `src/dane/walidacja.test.js`
+- [x] Test: [Unit] pusty storage → `wczytaj()` zwraca stan v1 z `ustawienia: null` i pustą listą wycen
+- [x] Test: [Unit] `zmien` zapisuje stan pod `wyceny-sprzatanie:stan` i ustawia `kopia.zmianaOd`
+- [x] Test: [Unit] uszkodzony JSON pod kluczem → `{ blad: 'uszkodzony', surowe }` z oryginalnym tekstem; stan z wersją 2 → `nowsza_wersja`
+- [x] Test: [Unit] przepełnienie (atrapa `setItem` rzuca `QuotaExceededError`) → `BladMagazynu` z kodem `pelny`
+- [x] Test: [Unit] `pominKreator` daje status VAT „zwolniony”, tempo ręczne null, województwo null, a `brakujeUstawien` zwraca `['wojewodztwo', 'firma']`
+- [x] Test: [Unit] NIP `5260250274` przechodzi, `5260250275` daje błąd; telefon `600 123 456` i `+48600123456` przechodzą, `12345` daje błąd
+- [x] Test: [Unit] `scalKoszty` nadpisuje `chemia_h` z ustawień i zostawia pozostałe wartości z `data/ceny.json`
 - [ ] Weryfikacja: `node --test src/dane/magazyn.test.js src/dane/ustawienia.test.js src/dane/walidacja.test.js` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-7: Wyceny, zlecenia i własne tempo (feature-builder-data)
 
-- [ ] Stwórz: `src/dane/wyceny.js`
-- [ ] Stwórz: `src/silnik/tempo.js`
-- [ ] Test (unit): `src/dane/wyceny.test.js`
-- [ ] Test (unit): `src/silnik/tempo.test.js`
-- [ ] Test: [Unit] dwie wyceny zapisane w październiku 2026 dostają numery `1/10/2026` i `2/10/2026`, a pierwsza w listopadzie `1/11/2026`
-- [ ] Test: [Unit] przejście `szkic → przyjeta` rzuca `BladWyceny` z kodem `przejscie`; `do_wyslania → wyslana → przyjeta → wykonana` przechodzi
-- [ ] Test: [Unit] zmiana wejścia wysłanej wyceny ustawia `oferta.nieaktualna`, a wykonanej rzuca `tylko_odczyt`
-- [ ] Test: [Unit] wykonanie 0 minut i 1500 minut rzuca błąd; abonament po dwóch wizytach ma status `przyjeta` i dwa wpisy
-- [ ] Test: [Unit] tempo z wpisów 1,1, 1,2 i 1,4 = 1,2 (mediana) z `liczba: 3`; dwa wpisy → null i `tempoDoWyceny` zwraca 1,3 ze źródłem `domyslne`
-- [ ] Test: [Unit] wpis 3,5× zapisuje się z `liczony: false` i nie zmienia mediany; z 12 wpisów liczy się 10 najnowszych
-- [ ] Test: [Unit] trzy wpisy usługi `okna` i dwa innej usługi: dla `okna` zakres `usluga`, dla innej `wspolne` z pięciu wpisów
-- [ ] Test: [Unit] `tempo.reczne = 1,5` wygrywa z tempem z zleceń; `opisTempa` daje „1,18× z 7 zleceń”
+- [x] Stwórz: `src/dane/wyceny.js`
+- [x] Stwórz: `src/silnik/tempo.js`
+- [x] Test (unit): `src/dane/wyceny.test.js`
+- [x] Test (unit): `src/silnik/tempo.test.js`
+- [x] Test: [Unit] dwie wyceny zapisane w październiku 2026 dostają numery `1/10/2026` i `2/10/2026`, a pierwsza w listopadzie `1/11/2026`
+- [x] Test: [Unit] przejście `szkic → przyjeta` rzuca `BladWyceny` z kodem `przejscie`; `do_wyslania → wyslana → przyjeta → wykonana` przechodzi
+- [x] Test: [Unit] zmiana wejścia wysłanej wyceny ustawia `oferta.nieaktualna`, a wykonanej rzuca `tylko_odczyt`
+- [x] Test: [Unit] wykonanie 0 minut i 1500 minut rzuca błąd; abonament po dwóch wizytach ma status `przyjeta` i dwa wpisy
+- [x] Test: [Unit] tempo z wpisów 1,1, 1,2 i 1,4 = 1,2 (mediana) z `liczba: 3`; dwa wpisy → null i `tempoDoWyceny` zwraca 1,3 ze źródłem `domyslne`
+- [x] Test: [Unit] wpis 3,5× zapisuje się z `liczony: false` i nie zmienia mediany; z 12 wpisów liczy się 10 najnowszych
+- [x] Test: [Unit] trzy wpisy usługi `okna` i dwa innej usługi: dla `okna` zakres `usluga`, dla innej `wspolne` z pięciu wpisów
+- [x] Test: [Unit] `tempo.reczne = 1,5` wygrywa z tempem z zleceń; `opisTempa` daje „1,18× z 7 zleceń”
 - [ ] Weryfikacja: `node --test src/dane/wyceny.test.js src/silnik/tempo.test.js` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-8: Kopia zapasowa: eksport, import i przypomnienie (feature-builder-data)
 
-- [ ] Stwórz: `src/dane/kopia.js`
-- [ ] Stwórz: `tests/fixtures/kopia-v1.json`
-- [ ] Test (unit): `src/dane/kopia.test.js`
-- [ ] Test: [Unit] `utworzKopie` → `odczytajKopie` → ten sam stan (wyceny, ustawienia, licznik) i nazwa pliku `wyceny-kopia-2026-10-24.json`
-- [ ] Test: [Unit] plik `tests/fixtures/kopia-v1.json` wczytuje się bez błędów
-- [ ] Test: [Unit] tekst „to nie json”, plik z `aplikacja: 'inna'` i plik z `wersjaSchematu: 2` dają kody `zly_plik`, `zly_plik` i `nowsza_wersja`
-- [ ] Test: [Unit] `polacz`: wycena o tym samym `id` z nowszą datą w pliku zastępuje lokalną, starsza zostaje lokalna, nowe dochodzą; licznik numerów bierze maksimum
-- [ ] Test: [Unit] `zastap` usuwa wyceny spoza pliku
-- [ ] Test: [Unit] przypomnienie: kopia sprzed 8 dni i zmiana po niej → true; ta sama przy `przypomnienieKopiiDni: 14` → false; kopia sprzed 8 dni bez zmian → false; brak kopii i wycena sprzed 7 dni → true; same szkice → false
+- [x] Stwórz: `src/dane/kopia.js`
+- [x] Stwórz: `tests/fixtures/kopia-v1.json`
+- [x] Test (unit): `src/dane/kopia.test.js`
+- [x] Test: [Unit] `utworzKopie` → `odczytajKopie` → ten sam stan (wyceny, ustawienia, licznik) i nazwa pliku `wyceny-kopia-2026-10-24.json`
+- [x] Test: [Unit] plik `tests/fixtures/kopia-v1.json` wczytuje się bez błędów
+- [x] Test: [Unit] tekst „to nie json”, plik z `aplikacja: 'inna'` i plik z `wersjaSchematu: 2` dają kody `zly_plik`, `zly_plik` i `nowsza_wersja`
+- [x] Test: [Unit] `polacz`: wycena o tym samym `id` z nowszą datą w pliku zastępuje lokalną, starsza zostaje lokalna, nowe dochodzą; licznik numerów bierze maksimum
+- [x] Test: [Unit] `zastap` usuwa wyceny spoza pliku
+- [x] Test: [Unit] przypomnienie: kopia sprzed 8 dni i zmiana po niej → true; ta sama przy `przypomnienieKopiiDni: 14` → false; kopia sprzed 8 dni bez zmian → false; brak kopii i wycena sprzed 7 dni → true; same szkice → false
 - [ ] Weryfikacja: `node --test src/dane/kopia.test.js` przechodzi
 - [ ] Weryfikacja: `npm test` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów

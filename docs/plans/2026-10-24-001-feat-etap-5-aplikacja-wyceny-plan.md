@@ -442,7 +442,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 
 **Zależy od:** Faza 1
 
-- [ ] **IU-6: Magazyn, schemat stanu i ustawienia firmy**
+- [x] **IU-6: Magazyn, schemat stanu i ustawienia firmy**
 
 **Cel:** Zapis stanu aplikacji w localStorage z wersją schematu i aktualizacją starszych wersji stanu oraz ustawienia firmy z wartościami domyślnymi i walidacją.
 
@@ -497,7 +497,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - `node --test src/dane/magazyn.test.js src/dane/ustawienia.test.js src/dane/walidacja.test.js` przechodzi
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-7: Wyceny, zlecenia i własne tempo**
+- [x] **IU-7: Wyceny, zlecenia i własne tempo**
 
 **Cel:** Zapis wycen z migawką wyniku, cykl życia statusów, numeracja, wpisy wykonania i wyliczenie własnego tempa z zapisanych zleceń.
 
@@ -541,7 +541,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - `node --test src/dane/wyceny.test.js src/silnik/tempo.test.js` przechodzi
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-8: Kopia zapasowa: eksport, import i przypomnienie**
+- [x] **IU-8: Kopia zapasowa: eksport, import i przypomnienie**
 
 **Cel:** Plik kopii ze wszystkimi danymi, import z walidacją i wyborem „połącz” albo „zastąp” oraz reguła przypomnienia o kopii.
 

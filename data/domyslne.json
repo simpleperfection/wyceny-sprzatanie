@@ -1,0 +1,54 @@
+{
+  "meta": {
+    "wersja": "2026-10-24",
+    "opis": "Wartości domyślne ustawień firmy i oferty. Biorą je nowa firma i firma, która pominęła kreator ustawień (R24); każdą może zmienić w ustawieniach aplikacji. Plik edytuje się ręcznie, jak data/ceny.json.",
+    "pola": {
+      "status_vat": "zwolniony | czynny – status VAT nowej firmy (R8); zwolniona firma podaje ceny bez VAT",
+      "stawka_vat_proc": "stawka VAT w procentach dla czynnego podatnika; ceny w trybie 'netto' dostają ją na górze (decyzja „wg podstawy ceny”)",
+      "tempo": "domyślne tempo nowej firmy jako krotność normy rynkowej (R15); działa, dopóki firma nie ma 3 zleceń z wpisanym czasem albo wartości ręcznej",
+      "wojewodztwo": "id województwa z data/rynek.json; null = średnia krajowa",
+      "oferta.waznosc_dni": "liczba dni ważności oferty od dnia wystawienia",
+      "oferta.warunki": "warunki w ofercie: id, treść i tylko_szybka (true = tylko przy szybkiej wycenie przez telefon, R20)",
+      "szybka_wycena.zastrzezenie": "zdanie dopisywane do tekstu szybkiej wyceny wysyłanego klientowi"
+    },
+    "zrodla_decyzji": {
+      "status_vat": "docs/brainstorms/2026-10-23-poczatkujace-firmy-requirements.md, R8",
+      "stawka_vat_proc": "docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md – checklista, potwierdzenie stawki VAT",
+      "tempo": "docs/brainstorms/2026-10-23-poczatkujace-firmy-requirements.md, R15",
+      "oferta": "treść warunków zatwierdzona przez właściciela 2026-10-24 (plan docs/plans/2026-10-24-001-feat-etap-5-aplikacja-wyceny-plan.md, IU-6)"
+    }
+  },
+  "status_vat": "zwolniony",
+  "stawka_vat_proc": 23,
+  "stawka_vat_uwagi": "do potwierdzenia w źródłach (checklista etapu 5)",
+  "tempo": 1.3,
+  "wojewodztwo": null,
+  "oferta": {
+    "waznosc_dni": 14,
+    "warunki": [
+      {
+        "id": "odwolanie",
+        "tresc": "Odwołanie zlecenia jest bezpłatne do 24 godzin przed terminem. Przy późniejszym odwołaniu opłata wynosi 50% ceny.",
+        "tylko_szybka": false
+      },
+      {
+        "id": "brak_dostepu",
+        "tresc": "Jeśli w umówionym terminie nie będzie dostępu do lokalu, opłata wynosi 50% ceny.",
+        "tylko_szybka": false
+      },
+      {
+        "id": "zdjecia",
+        "tresc": "Przed rozpoczęciem i po zakończeniu pracy robimy zdjęcia sprzątanych miejsc.",
+        "tylko_szybka": false
+      },
+      {
+        "id": "stan_lokalu",
+        "tresc": "Cena została podana na podstawie opisu lokalu. Ostateczną cenę potwierdzimy po obejrzeniu lokalu lub zdjęć.",
+        "tylko_szybka": true
+      }
+    ]
+  },
+  "szybka_wycena": {
+    "zastrzezenie": "Cena ostateczna po obejrzeniu lokalu lub zdjęć."
+  }
+}
