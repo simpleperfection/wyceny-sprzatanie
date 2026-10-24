@@ -18,6 +18,9 @@ const LINIE_OGONA_LOGU = 20
 const LIMIT_ZATRZYMANIA_MS = 5000
 // Token Management API (advisors) — dostep do calego konta Supabase; procesowi aplikacji niepotrzebny, takze z powloki operatora.
 const KLUCZE_POZA_SERWEREM = ['SUPABASE_ACCESS_TOKEN']
+// Windows (wyceny-sprzatanie, 2026-10-24): bez `ps -o lstart`, grup procesow i sygnalow POSIX — czas startu z Get-Process,
+// start bez cmd.exe, zatrzymanie przez taskkill drzewa procesow.
+const NA_WINDOWS = process.platform === 'win32'
 
 /**
  * @typedef {import('./srodowisko.mjs').Konfiguracja} Konfiguracja
@@ -91,7 +94,10 @@ function ogonLogu(plik) {
  * @returns {string | null} czas startu procesu albo null, gdy procesu nie ma
  */
 function czasStartu(pid, env = { ...process.env, LC_ALL: 'C' }) {
-  const w = spawnSync('ps', ['-o', 'lstart=', '-p', String(pid)], { encoding: 'utf8', env })
+  // `ps` z Git Bash nie zna `-o lstart` ani PID-ow Windows; format ISO nie zalezy od locale.
+  const w = NA_WINDOWS
+    ? spawnSync('powershell', ['-NoProfile', '-NonInteractive', '-Command', `(Get-Process -Id ${pid} -ErrorAction Stop).StartTime.ToString('o')`], { encoding: 'utf8', windowsHide: true })
+    : spawnSync('ps', ['-o', 'lstart=', '-p', String(pid)], { encoding: 'utf8', env })
   return w.status === 0 && w.stdout.trim() ? w.stdout.trim() : null
 }
 
@@ -117,6 +123,11 @@ const zyjeNasz = (z) => z !== null && (czasStartu(z.pid) === z.uruchomiony || cz
 
 /** @param {number} pid @param {NodeJS.Signals} sygnal */
 function sygnalGrupie(pid, sygnal) {
+  // Windows: SIGCONT i SIGTERM nie istnieja — taskkill zabija drzewo (serwer i jego procesy potomne).
+  if (NA_WINDOWS) {
+    if (sygnal !== 'SIGCONT') spawnSync('taskkill', ['/PID', String(pid), '/T', '/F'], { windowsHide: true })
+    return
+  }
   for (const cel of [-pid, pid]) {
     try {
       process.kill(cel, sygnal)
@@ -134,6 +145,8 @@ async function zatrzymajProces(z) {
   const termin = Date.now() + LIMIT_ZATRZYMANIA_MS
   while (Date.now() < termin && zyjeNasz(z)) await czekaj(ODSTEP_SONDY_MS / 5)
   if (zyjeNasz(z)) sygnalGrupie(z.pid, 'SIGKILL')
+  // Windows: taskkill /T zabil juz cale drzewo, grup procesow nie ma.
+  if (NA_WINDOWS) return
   // Potomek, ktory przezyl SIGTERM po smierci rodzica, zostaje w grupie procesu i trzyma port — bez tego restart widzialby go
   // jako obcy serwer. Tylko grupa (-pid): sam PID mogl juz trafic do innego procesu.
   try {
@@ -191,14 +204,26 @@ export async function uruchomSerwer(projekt, konf, env, { odNowa = false } = {})
   const log = openSync(konf.log, 'w')
   const srodowisko = { ...process.env, ...env }
   for (const k of KLUCZE_POZA_SERWEREM) delete srodowisko[k]
-  const dziecko = spawn(konf.start, { cwd: projekt, shell: true, detached: true, stdio: ['ignore', log, log], env: srodowisko })
+  /** @type {import('node:child_process').SpawnOptions} */
+  const opcje = { cwd: projekt, detached: true, windowsHide: true, stdio: ['ignore', log, log], env: srodowisko }
+  // Windows: bez cmd.exe — ginal razem z procesem startu (obiekt zadania Node), a serwer pod nim zostawal sierota, ktorej PID-u
+  // nie bylo w pliku. Komenda bez skladni powloki (&&, |, >): program .exe i argumenty, cudzyslow "…" grupuje argument.
+  const [program, ...argumenty] = [...konf.start.matchAll(/"([^"]*)"|(\S+)/g)].map((m) => m[1] ?? m[2])
+  const dziecko = NA_WINDOWS ? spawn(program, argumenty, opcje) : spawn(konf.start, { ...opcje, shell: true })
   closeSync(log)
   /** @type {number | string | null} */
   let wyjscie = null
   dziecko.on('exit', (kod, sygnal) => { wyjscie = kod ?? sygnal ?? 'nieznany' })
+  // Bez powloki brak programu to zdarzenie `error` (ENOENT) — bez nasluchu wywracalo skrypt.
+  dziecko.on('error', (blad) => { wyjscie = 'code' in blad ? String(blad.code) : blad.message })
   dziecko.unref()
   const uruchomiony = dziecko.pid === undefined ? null : czasStartu(dziecko.pid)
-  if (dziecko.pid === undefined || uruchomiony === null) return { serwer: 'brak', blad: `komenda startu nie wystartowala: ${konf.start}. Log ${konf.log}:\n${ogonLogu(konf.log)}` }
+  if (dziecko.pid === undefined || uruchomiony === null) {
+    // Ogon i tu: na Windows odczyt czasu startu trwa ok. 0,5 s i komenda bez aplikacji konczy sie przed nim — start przed faza 1
+    // rozpoznaje projekt bez aplikacji po ogonie.
+    const ogon = ogonLogu(konf.log)
+    return { serwer: 'brak', blad: `komenda startu nie wystartowala: ${konf.start}. Log ${konf.log}:\n${ogon}`, ogon }
+  }
   /** @type {ZapisPid} */
   const zapis = { pid: dziecko.pid, start: konf.start, odcisk: konf.odcisk, uruchomiony }
   writeFileSync(konf.pid, JSON.stringify(zapis))
