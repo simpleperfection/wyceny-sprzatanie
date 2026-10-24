@@ -13,6 +13,17 @@ import { BladKatalogu } from './bledy.js'
 /** @typedef {{ od: number, do: number, pelne: boolean }} WidelkiRynku */
 
 const TRYB_POZYCJI = 'pozycje'
+const RYNEK_STAWKI_GODZINOWEJ = 'stawka_h'
+
+/**
+ * Minimum zlecenia wchodzi do widelek, gdy punkt rynku nie zawiera minimum firm: zakres pozycji to cena jednostki,
+ * a stawka_h (biura) to cena godziny. Zakresy calych zlecen (mieszkania) juz je zawieraja.
+ * @param {Usluga} usluga
+ * @returns {boolean}
+ */
+function czyWidelkiZMinimum(usluga) {
+  return usluga.tryb === TRYB_POZYCJI || usluga.rynek_odniesienie === RYNEK_STAWKI_GODZINOWEJ
+}
 
 /** @param {Usluga} usluga @param {Katalog} katalog @returns {[number, number]} */
 function proporcjeRynkuPracy(usluga, katalog) {
@@ -32,8 +43,8 @@ function widelkiLinii(linia, usluga, katalog) {
 }
 
 /**
- * Widelki rynku wyceny. Uslugi z pozycjami dostaja na obu koncach minimum zlecenia (zakres pozycji to cena jednostki,
- * bez minimum firm); uslugi z pomieszczeniami nie, bo zakres z data/rynek.json to ceny calych zlecen. Na koncu dojazd klienta.
+ * Widelki rynku wyceny. Uslugi z pozycjami i uslugi odniesione do stawki godzinowej (biura) dostaja na obu koncach minimum
+ * zlecenia (czyWidelkiZMinimum); mieszkania nie, bo zakres z data/rynek.json to ceny calych zlecen. Na koncu dojazd klienta.
  * @param {WynikWyceny} wynik wynik wycenUsluge dla tego samego wejscia
  * @param {WejscieWyceny} wejscie
  * @param {Katalog} katalog
@@ -50,7 +61,7 @@ export function widelkiRynku(wynik, wejscie, katalog) {
     doKwoty += w.do
     pelne &&= w.pelne
   }
-  const minimum = usluga.tryb === TRYB_POZYCJI ? wynik.minimum : 0
+  const minimum = czyWidelkiZMinimum(usluga) ? wynik.minimum : 0
   return {
     od: Math.max(minimum, od) + wynik.dojazd.kwota,
     do: Math.max(minimum, doKwoty) + wynik.dojazd.kwota,

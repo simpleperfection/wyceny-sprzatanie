@@ -2,7 +2,8 @@
 // Kolejnosc jak w sekcji „Zlecenia wzorcowe” scripts/kalibracja.ps1: Σ linii → max(minimum_zl, Σ) → + dojazd klienta.
 
 import { BladWejscia } from './bledy.js'
-import { minutyDodatkow, minutyPomieszczen, mnoznikZakresu } from './czas.js'
+import { brudPozycji, minutyDodatkow, minutyJednejPozycji, minutyPomieszczen, mnoznikBrudu, mnoznikZakresu } from './czas.js'
+import { sprawdzIlosc, sprawdzMetraz } from './walidacja.js'
 
 /** @typedef {import('./katalog.js').Katalog} Katalog */
 /** @typedef {import('./katalog.js').Usluga} Usluga */
@@ -23,31 +24,12 @@ import { minutyDodatkow, minutyPomieszczen, mnoznikZakresu } from './czas.js'
  *   wizytWMiesiacu: number | null, cenaMiesieczna: number | null, podstawaCeny: string }} WynikWyceny
  */
 
-const M2_MAKS = 100_000
 const MINUT_W_GODZINIE = 60
 const MNOZNIK_NEUTRALNY = 1
 const POZIOM_BRUDU_DOMYSLNY = 1
 const JEDNOSTKA_M2 = 'm2'
 const JEDNOSTKA_GODZINY = 'h'
 const TRYBY_DODATKU = ['w_cenie', 'propozycja']
-
-/** @param {number} ilosc */
-function sprawdzIlosc(ilosc) {
-  if (!Number.isFinite(ilosc) || ilosc < 0) throw new BladWejscia('ilosc', `Ilość musi być nieujemna, jest ${ilosc}`)
-}
-
-/** @param {number} m2 */
-function sprawdzMetraz(m2) {
-  if (!Number.isFinite(m2) || m2 <= 0 || m2 > M2_MAKS) throw new BladWejscia('metraz', `Metraż musi być w przedziale (0, ${M2_MAKS}], jest ${m2}`)
-}
-
-/** @param {Usluga} usluga @param {number} poziom @param {Katalog} katalog */
-function mnoznikBrudu(usluga, poziom, katalog) {
-  if (!usluga.poziomy_brudu) return MNOZNIK_NEUTRALNY
-  const znaleziony = katalog.poziomyBrudu.find((p) => p.poziom === poziom)
-  if (!znaleziony) throw new BladWejscia('poziom_brudu', `Nieznany poziom brudu ${poziom}`)
-  return znaleziony.mnoznik
-}
 
 /**
  * Linia pozycji: kwota = ilosc × cena × wsp × prog × brud; zakres rynku tym samym mnoznikiem (null, gdy pozycja go nie ma).
@@ -105,9 +87,8 @@ function liniePozycji(usluga, wejscie, katalog) {
     if (ilosc === 0) continue
     const czyDoplata = pozycja.typ === 'doplata'
     const prog = !czyDoplata && usluga.progi && pozycja.jednostka === JEDNOSTKA_M2 ? katalog.progMetrazu(usluga.progi, ilosc) : MNOZNIK_NEUTRALNY
-    const brudPozycji = czyDoplata ? MNOZNIK_NEUTRALNY : brud
-    const minuty = minutyDodatkow([{ uslugaId: usluga.id, pozycjaId: id, ilosc }], katalog) * brudPozycji
-    linie.push(liniaPozycji({ rodzaj: czyDoplata ? 'doplata' : 'pozycja', uslugaId: usluga.id, pozycja, ilosc, mnoznik: wsp * prog * brudPozycji, prog, minuty }))
+    const minuty = minutyJednejPozycji(usluga.id, pozycja, ilosc, brud, katalog)
+    linie.push(liniaPozycji({ rodzaj: czyDoplata ? 'doplata' : 'pozycja', uslugaId: usluga.id, pozycja, ilosc, mnoznik: wsp * prog * brudPozycji(pozycja, brud), prog, minuty }))
     linie.push(...liniaMaterialu(usluga.id, pozycja, ilosc))
   }
   return { linie, minutyPrzygotowania: linie.length > 0 ? katalog.przygotowanie(usluga.id) : 0, wariant: null }

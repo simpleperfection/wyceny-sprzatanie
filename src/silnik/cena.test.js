@@ -160,6 +160,12 @@ describe('wycenUsluge: walidacja i opcje (mały katalog)', () => {
     assert.throws(() => wycenUsluge({ ...wejscie, dodatki: [dodatek] }, katalog), bladWejscia('tryb_dodatku'))
   })
 
+  it('poziom brudu 4 w usłudze z poziomy_brudu rzuca BladWejscia poziom_brudu zamiast liczyć cenę poziomu 1', () => {
+    const wejscie = { uslugaId: 'doczyszczanie', pozycje: [{ id: 'doczyszczanie_posadzki', ilosc: 10 }], poziomBrudu: 4 }
+
+    assert.throws(() => wycenUsluge(wejscie, katalog), bladWejscia('poziom_brudu'))
+  })
+
   it('pozycje z ilością 0 nie tworzą linii, a dopłata nie dostaje progu metrażu', () => {
     const pozycje = [{ id: 'doczyszczanie_posadzki', ilosc: 50 }, { id: 'zabezpieczenie', ilosc: 50 }, { id: 'zabezpieczenie', ilosc: 0 }]
 

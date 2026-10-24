@@ -21,9 +21,9 @@ Zależy od: Brak
 - [x] Test: [Unit] serwer na losowym porcie zwraca `index.html` dla `/` (jeśli plik istnieje) albo 404, a dla `/data/ceny.json` status 200 i `application/json`
 - [x] Test: [Unit] żądanie `/../package.json` i `/%2e%2e/package.json` dostaje 403, a nieistniejący plik 404
 - [x] Test: [Unit] plik `.webmanifest` ma typ `application/manifest+json`, `.woff2` — `font/woff2`, `.js` — `text/javascript`
-- [ ] Weryfikacja: `npm test` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
-- [ ] Weryfikacja: `node --test scripts/serwer-dev.test.mjs` przechodzi
+- [x] Weryfikacja: `npm test` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `node --test scripts/serwer-dev.test.mjs` przechodzi
 
 ### IU-2: Układy i scenariusze kalibracji dla silnika (feature-builder-data)
 
@@ -31,10 +31,10 @@ Zależy od: Brak
 - [x] Modyfikuj: `data/normy.json`
 - [x] Stwórz: `research/kalibracja-scenariusze.json`
 - [x] Modyfikuj: `CLAUDE.md`
-- [ ] Weryfikacja: `bash -c "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/kalibracja.ps1"` kończy się bez wyjątku i wypisuje „niezgodności katalogu: 0”
-- [ ] Weryfikacja: `git diff --exit-code research/KALIBRACJA.md data/rynek.json` nie pokazuje zmian
-- [ ] Weryfikacja: `bash -c "head -c3 scripts/kalibracja.ps1 | od -An -tx1"` zwraca `ef bb bf`
-- [ ] Weryfikacja: `node -e "JSON.parse(require('fs').readFileSync('research/kalibracja-scenariusze.json','utf8'))"` kończy się bez błędu
+- [x] Weryfikacja: `bash -c "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/kalibracja.ps1"` kończy się bez wyjątku i wypisuje „niezgodności katalogu: 0”
+- [x] Weryfikacja: `git diff --exit-code research/KALIBRACJA.md data/rynek.json` nie pokazuje zmian
+- [x] Weryfikacja: `bash -c "head -c3 scripts/kalibracja.ps1 | od -An -tx1"` zwraca `ef bb bf`
+- [x] Weryfikacja: `node -e "JSON.parse(require('fs').readFileSync('research/kalibracja-scenariusze.json','utf8'))"` kończy się bez błędu
 
 ### IU-3: Silnik: katalog danych, układy i czas pracy (feature-builder-data)
 
@@ -54,8 +54,8 @@ Zależy od: Brak
 - [x] Test: [Unit] reguła brudu `pyl_budowlany` poziom 2 na `*` dokłada m² × norma pyłu do każdego pomieszczenia
 - [x] Test: [Unit] `minutyPozycji('okna', [{ id: 'okno_1', ilosc: 8 }])` = 30 + 8 × 15; dla usługi z `poziomy_brudu` poziom 3 mnoży czas pozycji przez 1,4
 - [x] Test: [Unit] `wczytajKatalog` z katalogiem bez normy pozycji rzuca `BladKatalogu` z kodem `brak_normy`; `wojewodztwo(null)` zwraca stawkę 65 i wsp 1
-- [ ] Weryfikacja: `node --test src/silnik/katalog.test.js src/silnik/uklad.test.js src/silnik/czas.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `node --test src/silnik/katalog.test.js src/silnik/uklad.test.js src/silnik/czas.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-4: Silnik: cena usługi i widełki rynku (feature-builder-data)
 
@@ -74,9 +74,9 @@ Zależy od: Brak
 - [x] Test: [Unit] abonament 1× w tygodniu dla 100 m²: `cenaMiesieczna` = cena wizyty × 4,33
 - [x] Test: [Unit] usługa AGD jako główna rzuca `BladWejscia`; ujemna ilość i m² = 0 rzucają `BladWejscia`
 - [x] Test: [Unit] widełki mieszkania 50 m² w mazowieckim to 120–450 zł; okno balkonowe (`zakres: null`) daje `pelne: false`
-- [ ] Weryfikacja: `node --test src/silnik/cena.test.js src/silnik/widelki.test.js src/silnik/parytet.test.js` przechodzi
-- [ ] Weryfikacja: `bash -c "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/kalibracja.ps1"` wypisuje „niezgodności katalogu: 0”
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `node --test src/silnik/cena.test.js src/silnik/widelki.test.js src/silnik/parytet.test.js` przechodzi
+- [x] Weryfikacja: `bash -c "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/kalibracja.ps1"` wypisuje „niezgodności katalogu: 0”
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-5: Silnik: VAT, koszt zlecenia i „zostaje dla Ciebie” (feature-builder-data)
 
@@ -90,14 +90,19 @@ Zależy od: Brak
 - [x] Test: [Unit] zlecenia wzorcowe z `research/kalibracja-scenariusze.json` przy tempie 1: chemia i sprzęt równe polom `chemia` i `sprzet` z dokładnością 0,01
 - [x] Test: [Unit] ręczna cena 290 zł zmienia `zostaje` i `zostajeNaGodzine`, a nie zmienia `minutyWlasne`
 - [x] Test: [Unit] tempo ≤ 0 albo brak `minutyNormowe` rzuca `BladWejscia`
-- [ ] Weryfikacja: `node --test src/silnik/vat.test.js src/silnik/koszt.test.js` przechodzi
-- [ ] Weryfikacja: `npm test` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `node --test src/silnik/vat.test.js src/silnik/koszt.test.js` przechodzi
+- [x] Weryfikacja: `npm test` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+
+## Do poprawy po review fazy 1
+
+Zamkniete cyklem fix: 8 pozycji — pelna tresc findingow i uzasadnienia w `review-faza-1.md`.
 
 ## Operator checklist faza 1
 
 - [ ] [Manual] po uruchomieniu skryptu `research/kalibracja-scenariusze.json` ma scenariusz „mieszkanie_standard, 50 m², stawka 65” z ceną 250 ± 1 zł (automatycznie sprawdza go test parytetu w IU-4) (IU-2)
 - [ ] [Manual] `git diff data/normy.json` pokazuje tylko nowe pole `uklady`, bez zmian norm (IU-2)
+- [ ] Operator: widełki usług z pomieszczeniami bez minimum zlecenia (mieszkanie 50 m² w mazowieckim: 120 zamiast 150 zł); decyzja wykonawcy z IU-4 (`docs/plans/2026-10-24-001-feat-etap-5-aplikacja-wyceny-plan.md:369`) nie trafiła na listę spraw do potwierdzenia — Operator action: dopisać tę pozycję do listy „Założenia planu do potwierdzenia przez właściciela w smoke'u” w PLAN.md:120; po potwierdzeniu usunąć dopisek „do potwierdzenia przez właściciela” z linii 369 planu.
 
 ## Faza 2 — Dane w przeglądarce
 

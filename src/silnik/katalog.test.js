@@ -94,6 +94,27 @@ describe('wczytajKatalog: kontrole danych', () => {
     await assert.rejects(katalogZDanych(dane), bladKatalogu('zly_format'))
   })
 
+  /** @type {[string, (dane: Awaited<ReturnType<typeof daneTestowe>>) => void][]} */
+  const brakiPol = [
+    ['cena pozycji usługi', (dane) => { delete dane.ceny.uslugi[2].pozycje[0].cena }],
+    ['tryb usługi', (dane) => { dane.ceny.uslugi[0].tryb = 'pomieszczenie' }],
+    ['mnoznik_zakresu wariantu biura', (dane) => { delete dane.ceny.uslugi[1].warianty[0].mnoznik_zakresu }],
+    ['koszt_firmy_zl_km dojazdu', (dane) => { delete dane.ceny.koszty_firmy.dojazd.koszt_firmy_zl_km }],
+    ['mnoznik progu metrażu', (dane) => { dane.ceny.progi_metrazu.maszynowe.progi[1].mnoznik = '1' }],
+    ['udzial kuchni w układzie mieszkania', (dane) => { delete dane.normy.uklady.mieszkanie.kuchnia.udzial }],
+    ['min_m2 normy pomieszczenia', (dane) => { delete dane.normy.zestawy_pomieszczen.dom[0].min_m2 }],
+    ['wsp województwa (tekst z przecinkiem)', (dane) => { dane.rynek.wojewodztwa[1].wsp = '1,07' }],
+    ['stawka_h województwa', (dane) => { delete dane.rynek.wojewodztwa[0].stawka_h }],
+  ]
+  for (const [pole, zepsuj] of brakiPol) {
+    it(`brak albo zły typ pola (${pole}) rzuca BladKatalogu zly_format zamiast liczyć NaN`, async () => {
+      const dane = await daneTestowe()
+      zepsuj(dane)
+
+      await assert.rejects(katalogZDanych(dane), bladKatalogu('zly_format'))
+    })
+  }
+
   it('niepobrany plik rzuca BladKatalogu z kodem brak_pliku i przyczyną', async () => {
     const przyczyna = new Error('HTTP 404')
     const dane = await daneTestowe()

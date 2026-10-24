@@ -71,6 +71,42 @@ describe('widelkiRynku: prawdziwe dane', () => {
     assertBlisko(wynik.do, 40 * 21 * 1.15 + 40 * 10 + 40 * 28 + 40 * 8)
     assert.equal(wynik.pelne, true)
   })
+
+  it('okna 8 × okno 1-skrz. w opolskim (wsp 1,07): górny koniec 8 × 70 × 1,07 = 599,2 zł, dolny podniesiony do minimum 150 zł', () => {
+    const wynik = widelki({ uslugaId: 'okna', wojewodztwoId: 'opolskie', pozycje: [{ id: 'okno_1', ilosc: 8 }] }, katalog)
+
+    assert.equal(wynik.od, 150)
+    assertBlisko(wynik.do, 599.2)
+    assert.equal(wynik.pelne, true)
+  })
+
+  it('doczyszczanie 200 m² na poziomie brudu 3: zakres 4–25 zł/m² × próg 1 × brud 1,4 = 1120–7000 zł', () => {
+    const wejscie = { uslugaId: 'doczyszczanie', wojewodztwoId: 'mazowieckie', pozycje: [{ id: 'doczyszczanie_posadzki', ilosc: 200 }], poziomBrudu: 3 }
+
+    const wynik = widelki(wejscie, katalog)
+
+    assertBlisko(wynik.od, 1120)
+    assertBlisko(wynik.do, 7000)
+    assert.equal(wynik.pelne, true)
+  })
+
+  it('biuro 20 m² jednorazowo (rynek stawka_h): oba końce podniesione do minimum zlecenia 150 zł, jak cena', () => {
+    const wejscie = { uslugaId: 'sprzatanie_biur', wariantId: 'jednorazowe', pomieszczenia: [{ typ: 'biuro', m2: 20 }] }
+    const cena = wycenUsluge(wejscie, katalog)
+
+    const wynik = widelki(wejscie, katalog)
+
+    assert.equal(cena.cena, 150)
+    assert.deepEqual(wynik, { od: 150, do: 150, pelne: true })
+  })
+
+  it('mieszkanie (rynek całych zleceń) nie dostaje minimum w widełkach: 10 m² ma dolny koniec poniżej 150 zł', () => {
+    const wejscie = { uslugaId: 'mieszkanie_standard', wojewodztwoId: 'mazowieckie', pomieszczenia: [{ typ: 'pokoj', m2: 10 }] }
+
+    const wynik = widelki(wejscie, katalog)
+
+    assert.ok(wynik.od < 150, `od = ${wynik.od}`)
+  })
 })
 
 describe('widelkiRynku: brak danych rynku (mały katalog)', () => {

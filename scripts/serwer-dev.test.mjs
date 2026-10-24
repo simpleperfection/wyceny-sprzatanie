@@ -88,6 +88,19 @@ describe('serwer-dev: katalog repo i proby wyjscia poza korzen', () => {
     })
   }
 
+  // Segment z litera dysku nie zaczyna sie od kropki, wiec zatrzymuje go dopiero sprawdzenie prefiksu korzenia:
+  // na Windows path.resolve wychodzi nim poza repo (403), na innych systemach to zwykla nazwa w repo (403 albo 404).
+  for (const sciezka of ['/C:..%5Cpackage.json', '/C:../C:../CLAUDE.md', '/D:/x']) {
+    it(`odpowiada 403 na sciezke z litera dysku ${sciezka} (nigdy 200)`, async () => {
+      const oczekiwane = process.platform === 'win32' ? [403] : [403, 404]
+
+      const { status } = await serwer.pobierz(sciezka)
+
+      assert.ok(oczekiwane.includes(status ?? 0), `status ${status}, oczekiwany ${oczekiwane.join(' albo ')}`)
+      assert.notEqual(status, 200)
+    })
+  }
+
   it('odpowiada 404 na nieistniejacy plik i na katalog (bez listowania)', async () => {
     assert.equal((await serwer.pobierz('/nie-ma-takiego-pliku.js')).status, 404)
     const katalog = await serwer.pobierz('/data/')

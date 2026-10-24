@@ -56,27 +56,114 @@ function jestObiektem(x) {
 }
 
 /** @param {unknown} x */
+function jestTekstem(x) {
+  return typeof x === 'string'
+}
+
+/** @param {unknown} x */
+function jestLiczba(x) {
+  return typeof x === 'number' && Number.isFinite(x)
+}
+
+/** @param {unknown} x @param {(element: unknown) => boolean} czyElement */
+function jestTablica(x, czyElement) {
+  return Array.isArray(x) && x.every(czyElement)
+}
+
+/** Pole opcjonalne: brak albo poprawna wartosc. @param {unknown} x @param {(wartosc: unknown) => boolean} czyWartosc */
+function brakAlbo(x, czyWartosc) {
+  return x === undefined || czyWartosc(x)
+}
+
+/** @param {unknown} x @param {(wartosc: unknown) => boolean} czyWartosc */
+function maWartosci(x, czyWartosc) {
+  return jestObiektem(x) && Object.values(x).every(czyWartosc)
+}
+
+/** Obiekt z polami liczbowymi. @param {unknown} x @param {string[]} pola */
+function maLiczby(x, pola) {
+  return jestObiektem(x) && pola.every((pole) => jestLiczba(x[pole]))
+}
+
+/** Obiekt z polami tekstowymi. @param {unknown} x @param {string[]} pola */
+function maTeksty(x, pola) {
+  return jestObiektem(x) && pola.every((pole) => jestTekstem(x[pole]))
+}
+
+/** @param {unknown} x */
 function maWersje(x) {
-  return jestObiektem(x) && jestObiektem(x.meta) && typeof x.meta.wersja === 'string'
+  return jestObiektem(x) && maTeksty(x.meta, ['wersja'])
+}
+
+/** @param {unknown} x */
+function jestProgiem(x) {
+  return maLiczby(x, ['od_m2', 'mnoznik'])
+}
+
+/** @param {unknown} x */
+function jestZakresem(x) {
+  return Array.isArray(x) && x.length === 2 && x.every(jestLiczba)
+}
+
+/** Pola pozycji czytane przez silnik (cena, zakres, chemia, sprzet). @param {unknown} x */
+function jestPozycja(x) {
+  return jestObiektem(x) && maTeksty(x, ['id', 'nazwa', 'jednostka']) && jestLiczba(x.cena) &&
+    (x.zakres === undefined || x.zakres === null || jestZakresem(x.zakres)) && brakAlbo(x.koszt_chemii_m2, jestLiczba) &&
+    brakAlbo(x.koszt_chemii_szt, jestLiczba) && brakAlbo(x.sprzet, jestTekstem)
+}
+
+/** Pola uslugi czytane przez silnik (tryb, minimum, mnoznik zakresu, warianty, pozycje, progi, rynek). @param {unknown} x */
+function jestUsluga(x) {
+  const czyWariant = (/** @type {unknown} */ w) => maTeksty(w, ['id', 'nazwa']) && maLiczby(w, ['wizyt_w_miesiacu', 'mnoznik_zakresu'])
+  const czyRegulaBrudu = (/** @type {unknown} */ r) => maTeksty(r, ['pomieszczenie', 'brud']) && maLiczby(r, ['poziom'])
+  return jestObiektem(x) && maTeksty(x, ['id', 'nazwa', 'podstawa_ceny']) && (x.tryb === 'pomieszczenia' || x.tryb === 'pozycje') &&
+    brakAlbo(x.minimum_zl, jestLiczba) && brakAlbo(x.mnoznik_zakresu, jestLiczba) && brakAlbo(x.zestaw_pomieszczen, jestTekstem) &&
+    brakAlbo(x.progi, jestTekstem) && brakAlbo(x.rynek_odniesienie, jestTekstem) &&
+    brakAlbo(x.pozycje, (p) => jestTablica(p, jestPozycja)) && brakAlbo(x.warianty, (w) => jestTablica(w, czyWariant)) &&
+    brakAlbo(x.brud_domyslny, (b) => jestTablica(b, czyRegulaBrudu))
+}
+
+/** Koszty firmy: praca, chemia na godzine i dojazd (koszt sprzetu sprawdza koszt.js przy uzyciu). @param {unknown} x */
+function jestKosztamiFirmy(x) {
+  return jestObiektem(x) && maLiczby(x.praca, ['stawka_brutto_h', 'narzut_pracodawcy', 'koszt_h']) && maLiczby(x.chemia_h, ['wartosc']) &&
+    jestObiektem(x.sprzet) && jestObiektem(x.dojazd) && maLiczby(x.dojazd, ['klient_zl_km', 'darmowy_promien_km', 'koszt_firmy_zl_km']) &&
+    jestTablica(x.dojazd.zakres_rynkowy, jestLiczba)
 }
 
 /** @param {unknown} x @returns {x is Ceny} */
 function jestCenami(x) {
-  return maWersje(x) && jestObiektem(x) && Array.isArray(x.uslugi) && jestObiektem(x.progi_metrazu) &&
-    jestObiektem(x.poziomy_brudu) && Array.isArray(x.poziomy_brudu.poziomy) && jestObiektem(x.koszty_firmy)
+  return maWersje(x) && jestObiektem(x) && jestTablica(x.uslugi, jestUsluga) &&
+    maWartosci(x.progi_metrazu, (p) => jestObiektem(p) && jestTablica(p.progi, jestProgiem)) &&
+    jestObiektem(x.poziomy_brudu) && jestTablica(x.poziomy_brudu.poziomy, (p) => maLiczby(p, ['poziom', 'mnoznik'])) &&
+    jestKosztamiFirmy(x.koszty_firmy)
+}
+
+/** Uklady typowego mieszkania i biura (uklad.js). @param {unknown} x */
+function jestUkladami(x) {
+  if (!jestObiektem(x) || !jestObiektem(x.mieszkanie) || !jestObiektem(x.biuro)) return false
+  const { mieszkanie, biuro } = x
+  const czyLazienki = (/** @type {unknown} */ l) => jestObiektem(l) && (l.do_m2 === null || jestLiczba(l.do_m2)) && jestTablica(l.m2, jestLiczba)
+  return maLiczby(mieszkanie.kuchnia, ['udzial', 'min_m2', 'max_m2']) && maLiczby(mieszkanie.aneks, ['udzial', 'min_m2', 'max_m2']) &&
+    maLiczby(mieszkanie.przedpokoj, ['udzial']) && Array.isArray(mieszkanie.lazienki) && mieszkanie.lazienki.length > 0 &&
+    jestTablica(mieszkanie.lazienki, czyLazienki) && jestLiczba(biuro.na_m2) &&
+    jestTablica(biuro.pomieszczenia, (p) => maTeksty(p, ['typ']) && maLiczby(p, ['m2']))
 }
 
 /** @param {unknown} x @returns {x is Normy} */
 function jestNormami(x) {
-  return maWersje(x) && jestObiektem(x) && typeof x.przygotowanie_min === 'number' && jestObiektem(x.przygotowanie_min_uslug) &&
-    jestObiektem(x.zestawy_pomieszczen) && jestObiektem(x.progi_wydajnosci) && Array.isArray(x.progi_wydajnosci.biuro) &&
-    jestObiektem(x.uklady) && Array.isArray(x.brud) && Array.isArray(x.poziomy) && jestObiektem(x.pozycje)
+  const czyNormaPomieszczenia = (/** @type {unknown} */ p) => maTeksty(p, ['id', 'nazwa']) && maLiczby(p, ['min_m2'])
+  const czyBrud = (/** @type {unknown} */ b) => jestObiektem(b) && maTeksty(b, ['id', 'nazwa']) && jestTablica(b.min_m2, jestLiczba)
+  return maWersje(x) && jestObiektem(x) && jestLiczba(x.przygotowanie_min) && maWartosci(x.przygotowanie_min_uslug, jestLiczba) &&
+    maWartosci(x.zestawy_pomieszczen, (z) => jestTablica(z, czyNormaPomieszczenia)) &&
+    jestObiektem(x.progi_wydajnosci) && jestTablica(x.progi_wydajnosci.biuro, jestProgiem) && jestUkladami(x.uklady) &&
+    jestTablica(x.brud, czyBrud) && jestTablica(x.poziomy, (p) => maLiczby(p, ['poziom']) && maTeksty(p, ['nazwa'])) &&
+    maWartosci(x.pozycje, jestObiektem)
 }
 
 /** @param {unknown} x @returns {x is Rynek} */
 function jestRynkiem(x) {
-  return maWersje(x) && jestObiektem(x) && jestObiektem(x.kraj) && jestObiektem(x.kraj.stawka_h) &&
-    typeof x.kraj.stawka_h.mediana === 'number' && Array.isArray(x.wojewodztwa)
+  return maWersje(x) && jestObiektem(x) && jestObiektem(x.kraj) && maLiczby(x.kraj.stawka_h, ['mediana']) &&
+    jestTablica(x.wojewodztwa, (w) => maTeksty(w, ['id', 'nazwa']) && maLiczby(w, ['wsp', 'stawka_h']))
 }
 
 /** @param {PobierzJson} pobierzJson @returns {Promise<{ ceny: unknown, normy: unknown, rynek: unknown }>} */

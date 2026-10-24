@@ -2,17 +2,13 @@
 // ze scripts/kalibracja.ps1. Kolejnosc dzialan jak w skrypcie, zeby wyniki zgadzaly sie co do bitu.
 
 import { BladWejscia } from './bledy.js'
+import { sprawdzMetraz } from './walidacja.js'
 
 /** @typedef {import('./katalog.js').Uklady} Uklady */
 /** @typedef {{ typ: string, m2: number }} PomieszczenieUkladu */
 /** @typedef {'osobna' | 'aneks'} RodzajKuchni */
 
 const MIN_M2_POKOI = 1
-
-/** @param {number} m2 */
-function sprawdzMetraz(m2) {
-  if (!Number.isFinite(m2) || m2 <= 0) throw new BladWejscia('metraz', `Metraż musi być dodatni, jest ${m2}`)
-}
 
 /** @param {number} wartosc @param {number} min @param {number} max */
 function wGranicach(wartosc, min, max) {

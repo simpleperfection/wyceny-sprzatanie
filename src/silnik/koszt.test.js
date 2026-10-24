@@ -181,6 +181,24 @@ describe('kosztZlecenia: błędne wejście', () => {
     assert.throws(() => kosztZlecenia({ ...reszta, wynik: bezMinut }, katalog), { name: BladWejscia.name, kod: 'minuty_normowe' })
   })
 
+  for (const cenaKlienta of [{ brutto: Number.NaN, netto: 0, vat: 0 }, { brutto: 250, vat: 0 }, undefined]) {
+    it(`cena dla klienta ${JSON.stringify(cenaKlienta)} bez liczby brutto albo netto rzuca BladWejscia cena_klienta`, () => {
+      assert.throws(() => kosztZlecenia(wejscie({ cenaKlienta }), katalog), { name: BladWejscia.name, kod: 'cena_klienta' })
+    })
+  }
+
+  it('koszty firmy bez chemia_h.wartosc rzucają BladWejscia koszty_firmy', () => {
+    const koszty = { ...katalog.kosztyFirmy, chemia_h: {} }
+
+    assert.throws(() => kosztZlecenia(wejscie({ koszty }), katalog), { name: BladWejscia.name, kod: 'koszty_firmy' })
+  })
+
+  it('koszty firmy bez dojazd.koszt_firmy_zl_km rzucają BladWejscia koszty_firmy', () => {
+    const koszty = { ...katalog.kosztyFirmy, dojazd: { ...katalog.kosztyFirmy.dojazd, koszt_firmy_zl_km: undefined } }
+
+    assert.throws(() => kosztZlecenia(wejscie({ koszty }), katalog), { name: BladWejscia.name, kod: 'koszty_firmy' })
+  })
+
   it('nieznany status VAT rzuca BladWejscia', () => {
     assert.throws(() => kosztZlecenia(wejscie({ statusVat: 'ryczalt' }), katalog), { name: BladWejscia.name, kod: 'status_vat' })
   })

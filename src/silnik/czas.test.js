@@ -3,7 +3,8 @@ import { before, describe, it } from 'node:test'
 
 import { assertBlisko, czytajJson, katalogTestowy, katalogZDysku } from '../../tests/pomocnicze.js'
 import { BladWejscia } from './bledy.js'
-import { minutyDodatkow, minutyPomieszczen, minutyPozycji, mnoznikZakresu, skalaBiura, zBrudem } from './czas.js'
+import { wycenUsluge } from './cena.js'
+import { brudPozycji, minutyDodatkow, minutyJednejPozycji, minutyPomieszczen, minutyPozycji, mnoznikBrudu, mnoznikZakresu, skalaBiura, zBrudem } from './czas.js'
 import { ukladBiura, ukladMieszkania } from './uklad.js'
 
 /** @typedef {import('./katalog.js').Katalog} Katalog */
@@ -142,5 +143,46 @@ describe('czas: brud, skala biura i pozycje (mały katalog)', () => {
 
   it('minutyDodatkow odrzuca nieznaną pozycję dodatku', () => {
     assert.throws(() => minutyDodatkow([{ uslugaId: 'doczyszczanie', pozycjaId: 'brak', ilosc: 1 }], katalog), bladWejscia('nieznana_pozycja'))
+  })
+})
+
+describe('czas: wspólna reguła czasu pozycji i mnożnika brudu (mały katalog)', () => {
+  /** @type {Katalog} */ let katalog
+  before(async () => {
+    katalog = await katalogTestowy()
+  })
+
+  it('mnoznikBrudu: poziom 3 usługi z poziomy_brudu to 1,4, usługa bez poziomów zawsze 1', () => {
+    assert.equal(mnoznikBrudu(katalog.usluga('doczyszczanie'), 3, katalog), 1.4)
+    assert.equal(mnoznikBrudu(katalog.usluga('mieszkanie_standard'), 3, katalog), 1)
+  })
+
+  it('mnoznikBrudu odrzuca poziom 4 kodem poziom_brudu', () => {
+    assert.throws(() => mnoznikBrudu(katalog.usluga('doczyszczanie'), 4, katalog), bladWejscia('poziom_brudu'))
+  })
+
+  it('brudPozycji: pozycja główna dostaje mnożnik brudu, dopłata 1', () => {
+    assert.equal(brudPozycji(katalog.pozycja('doczyszczanie', 'doczyszczanie_posadzki'), 1.4), 1.4)
+    assert.equal(brudPozycji(katalog.pozycja('doczyszczanie', 'zabezpieczenie'), 1.4), 1)
+  })
+
+  it('minutyJednejPozycji: 100 m² doczyszczania przy brudzie 1,4 to 100 × 2 × 1,4, dopłata bez brudu 100 × 1,5', () => {
+    assertBlisko(minutyJednejPozycji('doczyszczanie', katalog.pozycja('doczyszczanie', 'doczyszczanie_posadzki'), 100, 1.4, katalog), 280)
+    assert.equal(minutyJednejPozycji('doczyszczanie', katalog.pozycja('doczyszczanie', 'zabezpieczenie'), 100, 1.4, katalog), 150)
+  })
+
+  it('minutyJednejPozycji odrzuca ujemną ilość kodem ilosc', () => {
+    const pozycja = katalog.pozycja('doczyszczanie', 'doczyszczanie_posadzki')
+
+    assert.throws(() => minutyJednejPozycji('doczyszczanie', pozycja, -1, 1, katalog), bladWejscia('ilosc'))
+  })
+
+  it('wycenUsluge liczy minuty normowe tą samą regułą co minutyPozycji (poziom brudu 3, z dopłatą)', () => {
+    const pozycje = [{ id: 'doczyszczanie_posadzki', ilosc: 120 }, { id: 'zabezpieczenie', ilosc: 120 }]
+
+    const wynik = wycenUsluge({ uslugaId: 'doczyszczanie', pozycje, poziomBrudu: 3 }, katalog)
+
+    assert.equal(wynik.minutyNormowe, minutyPozycji('doczyszczanie', pozycje, 3, katalog))
+    assertBlisko(wynik.minutyNormowe, 60 + 120 * 2 * 1.4 + 120 * 1.5)
   })
 })
