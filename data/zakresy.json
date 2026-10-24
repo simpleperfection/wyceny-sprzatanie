@@ -1,0 +1,235 @@
+{
+  "meta": {
+    "wersja": "2026-10-24",
+    "zatwierdzone": "2026-10-24 przez właściciela (przegląd: docs/operator/etap-5-pytania-i-zakresy.html)",
+    "opis": "Domyślny zakres prac „wchodzi / nie wchodzi” w ofercie dla klienta (R19), dla każdej usługi z data/ceny.json poza AGD (tylko_dodatek). Firma może go zmienić raz w ustawieniach albo tylko w jednej ofercie.",
+    "teksty": "Krótkie punkty, jak na makiecie oferty („Odkurzanie i mycie podłóg”). W ofercie „W cenie” to lista, a „Poza ceną” jedno zdanie z punktów po przecinku.",
+    "warianty": "Klucz to id wariantu usługi z data/ceny.json. Zakres wariantu zastępuje w całości zakres usługi (obie listy); warianty bez wpisu biorą zakres usługi.",
+    "dodatki": "Okna, AGD z szafkami, tapicerka i dywany to w mieszkaniach i biurach dodatki z własną ceną (krok dodatków), więc w zakresie usługi są „poza ceną”."
+  },
+  "uslugi": {
+    "mieszkanie_standard": {
+      "wchodzi": [
+        "Odkurzanie i mycie podłóg",
+        "Kurze na meblach, parapetach i drzwiach",
+        "Łazienka i WC z armaturą i lustrami",
+        "Kuchnia: blaty, fronty szafek, zlew, płyta",
+        "AGD z zewnątrz",
+        "Odkurzenie dywanów",
+        "Wyniesienie śmieci"
+      ],
+      "nie_wchodzi": [
+        "Wnętrza szafek i AGD",
+        "Mycie okien",
+        "Pranie tapicerki i dywanów",
+        "Zmywanie naczyń i prasowanie"
+      ]
+    },
+    "mieszkanie_gruntowne": {
+      "wchodzi": [
+        "Odkurzanie i mycie podłóg, także pod lekkimi meblami",
+        "Kurze ze wszystkich dostępnych powierzchni, także z góry szaf",
+        "Listwy, drzwi, futryny, kontakty i kaloryfery",
+        "Łazienka: odkamienianie armatury i kabiny, fugi, sanitariaty",
+        "Kuchnia: odtłuszczanie blatów, płytek, frontów i okapu",
+        "Lustra i lampy w zasięgu ręki",
+        "Wyniesienie śmieci"
+      ],
+      "nie_wchodzi": [
+        "Wnętrza szafek i AGD",
+        "Mycie okien",
+        "Pranie tapicerki i dywanów",
+        "Mycie ścian i sufitów",
+        "Przesuwanie ciężkich mebli",
+        "Zmywanie naczyń i prasowanie"
+      ]
+    },
+    "mieszkanie_po_remoncie": {
+      "wchodzi": [
+        "Kilkukrotne odkurzanie i mycie podłóg",
+        "Odpylanie mebli, parapetów, drzwi, listew i kaloryferów",
+        "Usuwanie drobnych zachlapań farbą, klejem i fugą",
+        "Łazienka: sanitariaty, armatura, płytki, kabina",
+        "Kuchnia: blaty, fronty, zlew, płyta, AGD z zewnątrz",
+        "Wyniesienie śmieci ze sprzątania"
+      ],
+      "nie_wchodzi": [
+        "Wywóz gruzu i odpadów budowlanych",
+        "Mycie okien i usuwanie naklejek z szyb",
+        "Wnętrza szafek i AGD",
+        "Skuwanie zaprawy i usuwanie dużych plam farby",
+        "Maszynowe doczyszczanie posadzek i fug"
+      ]
+    },
+    "mieszkanie_po_wynajmie": {
+      "wchodzi": [
+        "Odkurzanie i mycie podłóg w całym mieszkaniu",
+        "Kurze ze wszystkich powierzchni i parapetów",
+        "Listwy, drzwi, futryny, kontakty i kaloryfery",
+        "Kuchnia: odtłuszczanie blatów, płytek, frontów i okapu",
+        "Łazienka: odkamienianie armatury, kabiny i sanitariatów",
+        "Wnętrza pustych szafek i szaf"
+      ],
+      "nie_wchodzi": [
+        "Wnętrza AGD (piekarnik, lodówka, zmywarka)",
+        "Mycie okien",
+        "Pranie tapicerki i dywanów",
+        "Wynoszenie rzeczy i mebli po najemcach",
+        "Naprawy, malowanie i wymiana silikonu"
+      ]
+    },
+    "sprzatanie_biur": {
+      "wchodzi": [
+        "Odkurzanie i mycie podłóg",
+        "Opróżnianie koszy i wymiana worków",
+        "Kurze z wolnych blatów biurek, parapetów i szafek",
+        "Toalety: sanitariaty, umywalki, lustra, armatura",
+        "Kuchnia socjalna: blaty, zlew, AGD z zewnątrz",
+        "Klamki, włączniki i ślady na szklanych drzwiach",
+        "Uzupełnianie papieru i mydła"
+      ],
+      "nie_wchodzi": [
+        "Mycie okien",
+        "Wnętrza szafek, lodówki i mikrofalówki",
+        "Porządkowanie dokumentów i rzeczy na biurkach",
+        "Zmywanie naczyń",
+        "Pranie wykładzin i krzeseł"
+      ],
+      "warianty": {
+        "jednorazowe": {
+          "wchodzi": [
+            "Odkurzanie i mycie podłóg, także pod biurkami",
+            "Kurze ze wszystkich dostępnych powierzchni",
+            "Listwy, drzwi, klamki, włączniki i kaloryfery",
+            "Toalety: odkamienianie armatury, sanitariaty, lustra",
+            "Kuchnia socjalna: blaty, fronty, zlew, AGD z zewnątrz",
+            "Opróżnianie koszy"
+          ],
+          "nie_wchodzi": [
+            "Mycie okien",
+            "Wnętrza szafek, lodówki i mikrofalówki",
+            "Porządkowanie dokumentów i rzeczy na biurkach",
+            "Zmywanie naczyń",
+            "Pranie wykładzin i krzeseł"
+          ]
+        }
+      }
+    },
+    "okna": {
+      "wchodzi": [
+        "Mycie szyb z obu stron",
+        "Ramy i uszczelki",
+        "Parapety wewnętrzne i zewnętrzne",
+        "Wycieranie do sucha, bez smug",
+        "Zabezpieczenie podłogi pod oknem"
+      ],
+      "nie_wchodzi": [
+        "Rolety, żaluzje i moskitiery",
+        "Usuwanie farby, kleju i naklejek po remoncie",
+        "Okna, do których trzeba podnośnika lub rusztowania",
+        "Zdejmowanie i pranie firan"
+      ]
+    },
+    "tapicerka": {
+      "wchodzi": [
+        "Odkurzanie mebli przed praniem",
+        "Pranie ekstrakcyjne siedzisk, oparć i boków",
+        "Poduszki należące do mebla",
+        "Usuwanie typowych plam (napoje, jedzenie)",
+        "Odsysanie brudnej wody i wilgoci"
+      ],
+      "nie_wchodzi": [
+        "Gwarancja zejścia starych plam i przebarwień",
+        "Czyszczenie i impregnacja skóry",
+        "Impregnacja tkaniny",
+        "Materace, dywany i zasłony"
+      ]
+    },
+    "dywany": {
+      "wchodzi": [
+        "Odkurzanie przed praniem",
+        "Pranie ekstrakcyjne na miejscu",
+        "Usuwanie typowych plam (napoje, jedzenie)",
+        "Odsysanie brudnej wody i wilgoci"
+      ],
+      "nie_wchodzi": [
+        "Gwarancja zejścia starych plam i przebarwień",
+        "Przesuwanie ciężkich mebli",
+        "Dywany ręcznie tkane i jedwabne",
+        "Odbiór dywanu i pranie w pralni"
+      ]
+    },
+    "mycie_posadzek": {
+      "wchodzi": [
+        "Zamiecenie lub odkurzenie posadzki przed myciem",
+        "Mycie szorowarką ze środkiem dobranym do posadzki",
+        "Ręczne domycie narożników i krawędzi",
+        "Zebranie brudnej wody i osuszenie posadzki"
+      ],
+      "nie_wchodzi": [
+        "Usuwanie starych powłok i farby",
+        "Nakładanie powłok ochronnych",
+        "Przestawianie towaru, regałów i maszyn",
+        "Mycie ścian, okien i regałów"
+      ]
+    },
+    "doczyszczanie": {
+      "wchodzi": [
+        "Zamiecenie i odkurzenie posadzki przed pracą",
+        "Doczyszczanie posadzki maszyną jednotarczową",
+        "Ręczne domycie narożników i krawędzi",
+        "Zebranie brudnej wody i neutralizacja posadzki"
+      ],
+      "nie_wchodzi": [
+        "Wymiana i uzupełnianie fug",
+        "Naprawa pęknięć i ubytków posadzki",
+        "Usuwanie trwałych przebarwień i wżerów",
+        "Przestawianie ciężkich mebli i maszyn"
+      ]
+    },
+    "mycie_kostki": {
+      "wchodzi": [
+        "Zamiecenie liści i śmieci przed myciem",
+        "Mycie ciśnieniowe całej powierzchni",
+        "Mycie krawężników i obrzeży",
+        "Spłukanie błota i piasku po myciu"
+      ],
+      "nie_wchodzi": [
+        "Naprawa i wymiana kostki",
+        "Usuwanie rdzy, smoły i gumy do żucia",
+        "Mycie elewacji i ogrodzenia"
+      ]
+    },
+    "mycie_elewacji": {
+      "wchodzi": [
+        "Osłonięcie okien, drzwi i roślin",
+        "Mycie środkiem dobranym do brudu i elewacji",
+        "Spłukanie z ciśnieniem bezpiecznym dla elewacji",
+        "Parapety zewnętrzne i cokół",
+        "Zdjęcie osłon i sprzątnięcie po pracy"
+      ],
+      "nie_wchodzi": [
+        "Podnośnik lub rusztowanie",
+        "Mycie okien",
+        "Impregnacja i malowanie elewacji",
+        "Naprawy tynku i ocieplenia",
+        "Mycie dachu i rynien"
+      ]
+    },
+    "sprzatanie_firm": {
+      "wchodzi": [
+        "Zamiatanie i odkurzanie posadzki",
+        "Alejki i miejsca przy regałach na poziomie posadzki",
+        "Kurz i pajęczyny do wysokości 2 m",
+        "Zebranie śmieci i wyniesienie do kontenera"
+      ],
+      "nie_wchodzi": [
+        "Mycie posadzki szorowarką",
+        "Prace powyżej 2 m",
+        "Wywóz odpadów, palet i folii",
+        "Mycie maszyn i urządzeń",
+        "Biura, szatnie i toalety"
+      ]
+    }
+  }
+}

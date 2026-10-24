@@ -1,0 +1,178 @@
+{
+  "meta": {
+    "wersja": "2026-10-24",
+    "zatwierdzone": "2026-10-24 przez właściciela (przegląd: docs/operator/etap-5-pytania-i-zakresy.html)",
+    "opis": "Pytania do klienta przed wyceną (R13), osobne dla każdej usługi z data/ceny.json poza AGD (tylko_dodatek). Odpowiedzi zapisują się przy wycenie. Odpowiedź ze skutkiem sama ustawia wycenę: brud w pomieszczeniach albo kilometry dojazdu.",
+    "lista": "Lista pytań usługi = wspolne + uslugi[id usługi], w tej kolejności. Wspólne są tylko dojazd i termin, bo na początku rozmowy sprawdza się, czy firma dojedzie i ma wolny termin; reszta zależy od usługi.",
+    "id": "Unikalne w liście pytań usługi (wspólne + usługa). To samo pytanie w kilku usługach ma to samo id oraz ten sam typ i opcje, więc odpowiedź zostaje po zmianie usługi (np. ze standardowego na gruntowne); treść i skutek mogą być dopasowane do usługi.",
+    "typy": "tak_nie – odpowiedź „tak” albo „nie”; wybor – jedna z opcje; liczba – liczba z jednostka; tekst – dowolny tekst. Każda odpowiedź może mieć notatkę (np. „Tak, kot”, „12 km, parking pod blokiem”).",
+    "skutek": "brud: gdy odpowiedź = gdy („tak” albo jedna z opcji), ustaw brud (id z brud w data/normy.json) na poziom 1–3 w pomieszczeniu (typ z zestawy_pomieszczen albo * = wszystkie); działa tylko w usługach z pomieszczeniami. dojazd_km: liczba z odpowiedzi to kilometry dojazdu (tylko typ liczba).",
+    "zdjecia": "Podpowiedź na ekranie pytań i tekst prośby o zdjęcia do skopiowania klientowi, dla każdej usługi."
+  },
+  "wspolne": [
+    { "id": "dojazd", "tresc": "Parking i dojazd", "typ": "liczba", "jednostka": "km", "skutek": { "rodzaj": "dojazd_km" } },
+    { "id": "termin", "tresc": "Termin", "typ": "tekst" }
+  ],
+  "uslugi": {
+    "mieszkanie_standard": [
+      { "id": "zwierzeta", "tresc": "Czy w domu są zwierzęta?", "typ": "tak_nie", "skutek": { "rodzaj": "brud", "brud": "siersc", "poziom": 1, "pomieszczenie": "pokoj", "gdy": "tak" } },
+      { "id": "pietro", "tresc": "Piętro i winda", "typ": "tekst" },
+      { "id": "woda_prad", "tresc": "Dostęp do wody i prądu", "typ": "tak_nie" },
+      { "id": "sprzet_chemia", "tresc": "Czyj sprzęt i chemia?", "typ": "wybor", "opcje": ["Nasze", "Klienta", "Część klienta"] },
+      { "id": "zdjecia", "tresc": "Zdjęcia od klienta", "typ": "tak_nie" }
+    ],
+    "mieszkanie_gruntowne": [
+      { "id": "zwierzeta", "tresc": "Czy w domu są zwierzęta?", "typ": "tak_nie", "skutek": { "rodzaj": "brud", "brud": "siersc", "poziom": 1, "pomieszczenie": "pokoj", "gdy": "tak" } },
+      { "id": "tluszcz", "tresc": "Czy w kuchni jest wyraźny tłuszcz (okap, płytki, fronty)?", "typ": "tak_nie", "skutek": { "rodzaj": "brud", "brud": "tluszcz", "poziom": 2, "pomieszczenie": "kuchnia", "gdy": "tak" } },
+      { "id": "kamien", "tresc": "Czy w łazience jest wyraźny kamień lub osad?", "typ": "tak_nie", "skutek": { "rodzaj": "brud", "brud": "kamien", "poziom": 2, "pomieszczenie": "lazienka", "gdy": "tak" } },
+      { "id": "plesn", "tresc": "Czy w łazience jest pleśń (fugi, silikony)?", "typ": "tak_nie", "skutek": { "rodzaj": "brud", "brud": "plesn", "poziom": 2, "pomieszczenie": "lazienka", "gdy": "tak" } },
+      { "id": "pietro", "tresc": "Piętro i winda", "typ": "tekst" },
+      { "id": "woda_prad", "tresc": "Dostęp do wody i prądu", "typ": "tak_nie" },
+      { "id": "sprzet_chemia", "tresc": "Czyj sprzęt i chemia?", "typ": "wybor", "opcje": ["Nasze", "Klienta", "Część klienta"] },
+      { "id": "zdjecia", "tresc": "Zdjęcia od klienta", "typ": "tak_nie" }
+    ],
+    "mieszkanie_po_remoncie": [
+      { "id": "remont", "tresc": "Jaki był remont?", "typ": "wybor", "opcje": ["Malowanie", "Częściowy", "Generalny"], "skutek": { "rodzaj": "brud", "brud": "pyl_budowlany", "poziom": 3, "pomieszczenie": "*", "gdy": "Generalny" } },
+      { "id": "zachlapania", "tresc": "Czy są zachlapania farbą, klejem lub fugą?", "typ": "tak_nie" },
+      { "id": "odpady", "tresc": "Czy po ekipie zostały gruz, worki lub folie?", "typ": "tak_nie" },
+      { "id": "meble", "tresc": "Czy mieszkanie jest już umeblowane?", "typ": "tak_nie" },
+      { "id": "pietro", "tresc": "Piętro i winda", "typ": "tekst" },
+      { "id": "woda_prad", "tresc": "Dostęp do wody i prądu", "typ": "tak_nie" },
+      { "id": "zdjecia", "tresc": "Zdjęcia od klienta", "typ": "tak_nie" }
+    ],
+    "mieszkanie_po_wynajmie": [
+      { "id": "pusty_lokal", "tresc": "Czy mieszkanie będzie puste?", "typ": "tak_nie" },
+      { "id": "zwierzeta_najemcow", "tresc": "Czy najemcy mieli zwierzęta?", "typ": "tak_nie", "skutek": { "rodzaj": "brud", "brud": "siersc", "poziom": 2, "pomieszczenie": "*", "gdy": "tak" } },
+      { "id": "plesn", "tresc": "Czy w łazience jest pleśń (fugi, silikony)?", "typ": "tak_nie", "skutek": { "rodzaj": "brud", "brud": "plesn", "poziom": 2, "pomieszczenie": "lazienka", "gdy": "tak" } },
+      { "id": "odpady", "tresc": "Czy zostały rzeczy lub śmieci po najemcach?", "typ": "tak_nie" },
+      { "id": "pietro", "tresc": "Piętro i winda", "typ": "tekst" },
+      { "id": "woda_prad", "tresc": "Dostęp do wody i prądu", "typ": "tak_nie" },
+      { "id": "zdjecia", "tresc": "Zdjęcia od klienta", "typ": "tak_nie" }
+    ],
+    "sprzatanie_biur": [
+      { "id": "godziny", "tresc": "W jakich godzinach można pracować?", "typ": "tekst" },
+      { "id": "klucze", "tresc": "Klucze, alarm i wejście do budynku", "typ": "tekst" },
+      { "id": "liczba_osob", "tresc": "Ile osób pracuje w biurze?", "typ": "liczba", "jednostka": "osób" },
+      { "id": "srodki_higieniczne", "tresc": "Kto kupuje papier, ręczniki i mydło?", "typ": "wybor", "opcje": ["Klient", "My, doliczamy do ceny"] },
+      { "id": "sprzet_chemia", "tresc": "Czyj sprzęt i chemia?", "typ": "wybor", "opcje": ["Nasze", "Klienta", "Część klienta"] },
+      { "id": "zdjecia", "tresc": "Zdjęcia od klienta", "typ": "tak_nie" }
+    ],
+    "okna": [
+      { "id": "okna_dostep", "tresc": "Czy któreś okna są trudno dostępne (wysoko, nieotwierane, za meblami)?", "typ": "tak_nie" },
+      { "id": "okna_rolety", "tresc": "Czy myć też rolety, żaluzje lub moskitiery?", "typ": "tak_nie" },
+      { "id": "zachlapania", "tresc": "Czy na szybach są farba, klej lub naklejki po remoncie?", "typ": "tak_nie" },
+      { "id": "pietro", "tresc": "Piętro i winda", "typ": "tekst" },
+      { "id": "zdjecia", "tresc": "Zdjęcia od klienta", "typ": "tak_nie" }
+    ],
+    "tapicerka": [
+      { "id": "tkanina", "tresc": "Z czego jest tapicerka?", "typ": "wybor", "opcje": ["Tkanina", "Welur lub mikrofibra", "Skóra lub ekoskóra", "Nie wiadomo"] },
+      { "id": "plamy", "tresc": "Czy są trudne plamy (mocz, wino, krew, tłuszcz)?", "typ": "tak_nie" },
+      { "id": "zwierzeta", "tresc": "Czy w domu są zwierzęta?", "typ": "tak_nie" },
+      { "id": "zdjecia", "tresc": "Zdjęcia od klienta", "typ": "tak_nie" }
+    ],
+    "dywany": [
+      { "id": "dywan_rodzaj", "tresc": "Jaki to dywan?", "typ": "wybor", "opcje": ["Syntetyczny", "Wełniany", "Ręcznie tkany lub jedwabny", "Nie wiadomo"] },
+      { "id": "plamy", "tresc": "Czy są trudne plamy (mocz, wino, krew, tłuszcz)?", "typ": "tak_nie" },
+      { "id": "zwierzeta", "tresc": "Czy w domu są zwierzęta?", "typ": "tak_nie" },
+      { "id": "meble_do_przesuniecia", "tresc": "Czy na wykładzinie stoją meble do przesunięcia?", "typ": "tak_nie" },
+      { "id": "zdjecia", "tresc": "Zdjęcia od klienta", "typ": "tak_nie" }
+    ],
+    "mycie_posadzek": [
+      { "id": "posadzka_rodzaj", "tresc": "Jaka to posadzka?", "typ": "wybor", "opcje": ["Beton lub żywica", "Płytki lub gres", "PCV lub linoleum", "Kamień lub lastryko", "Inna"] },
+      { "id": "posadzka_wolna", "tresc": "Czy posadzka będzie wolna (bez towaru, regałów, maszyn)?", "typ": "tak_nie" },
+      { "id": "godziny", "tresc": "W jakich godzinach można pracować?", "typ": "tekst" },
+      { "id": "pietro", "tresc": "Piętro i winda", "typ": "tekst" },
+      { "id": "woda_prad", "tresc": "Dostęp do wody i prądu", "typ": "tak_nie" },
+      { "id": "zdjecia", "tresc": "Zdjęcia od klienta", "typ": "tak_nie" }
+    ],
+    "doczyszczanie": [
+      { "id": "posadzka_rodzaj", "tresc": "Jaka to posadzka?", "typ": "wybor", "opcje": ["Beton lub żywica", "Płytki lub gres", "PCV lub linoleum", "Kamień lub lastryko", "Inna"] },
+      { "id": "powloka", "tresc": "Czy na posadzce jest stara powłoka (wosk, akryl, polimer)?", "typ": "tak_nie" },
+      { "id": "zachlapania", "tresc": "Czy na posadzce są zachlapania farbą lub klejem?", "typ": "tak_nie" },
+      { "id": "zabezpieczenie", "tresc": "Czy zabezpieczyć posadzkę powłoką po doczyszczeniu?", "typ": "tak_nie" },
+      { "id": "posadzka_wolna", "tresc": "Czy posadzka będzie wolna (bez mebli, towaru, maszyn)?", "typ": "tak_nie" },
+      { "id": "woda_prad", "tresc": "Dostęp do wody i prądu", "typ": "tak_nie" },
+      { "id": "zdjecia", "tresc": "Zdjęcia od klienta", "typ": "tak_nie" }
+    ],
+    "mycie_kostki": [
+      { "id": "kostka_mech", "tresc": "Czy w fugach jest mech lub trawa?", "typ": "tak_nie" },
+      { "id": "kostka_olej", "tresc": "Czy są plamy oleju (np. pod autem)?", "typ": "tak_nie" },
+      { "id": "kostka_impregnacja", "tresc": "Czy zaimpregnować kostkę po myciu?", "typ": "wybor", "opcje": ["Nie", "Bezbarwnie", "Z efektem mokrej kostki"] },
+      { "id": "oslony", "tresc": "Czy obok stoją auta, rośliny lub okna do osłonięcia?", "typ": "tak_nie" },
+      { "id": "woda_prad", "tresc": "Dostęp do wody i prądu", "typ": "tak_nie" },
+      { "id": "zdjecia", "tresc": "Zdjęcia od klienta", "typ": "tak_nie" }
+    ],
+    "mycie_elewacji": [
+      { "id": "elewacja_rodzaj", "tresc": "Jaka to elewacja?", "typ": "wybor", "opcje": ["Tynk", "Cegła lub klinkier", "Siding lub płyty", "Kamień", "Inna"] },
+      { "id": "elewacja_brud", "tresc": "Co jest na elewacji?", "typ": "wybor", "opcje": ["Kurz i osady", "Glony, mech, pleśń", "Sadza, smog, graffiti"] },
+      { "id": "elewacja_ocieplenie", "tresc": "Czy elewacja jest ocieplona (styropian, wełna)?", "typ": "tak_nie" },
+      { "id": "elewacja_kondygnacje", "tresc": "Ile kondygnacji ma budynek (z parterem)?", "typ": "liczba", "jednostka": "kond." },
+      { "id": "oslony", "tresc": "Czy obok stoją auta, rośliny lub okna do osłonięcia?", "typ": "tak_nie" },
+      { "id": "woda_prad", "tresc": "Dostęp do wody i prądu", "typ": "tak_nie" },
+      { "id": "zdjecia", "tresc": "Zdjęcia od klienta", "typ": "tak_nie" }
+    ],
+    "sprzatanie_firm": [
+      { "id": "posadzka_rodzaj", "tresc": "Jaka to posadzka?", "typ": "wybor", "opcje": ["Beton lub żywica", "Płytki lub gres", "PCV lub linoleum", "Kamień lub lastryko", "Inna"] },
+      { "id": "posadzka_wolna", "tresc": "Czy posadzka będzie wolna (bez towaru, palet, maszyn)?", "typ": "tak_nie" },
+      { "id": "regaly", "tresc": "Czy sprzątać też regały lub konstrukcje powyżej 2 m?", "typ": "tak_nie" },
+      { "id": "bhp", "tresc": "Czy obowiązuje szkolenie BHP, przepustki lub ruch wózków?", "typ": "tak_nie" },
+      { "id": "godziny", "tresc": "W jakich godzinach można pracować?", "typ": "tekst" },
+      { "id": "woda_prad", "tresc": "Dostęp do wody i prądu", "typ": "tak_nie" },
+      { "id": "zdjecia", "tresc": "Zdjęcia od klienta", "typ": "tak_nie" }
+    ]
+  },
+  "zdjecia": {
+    "mieszkanie_standard": {
+      "podpowiedz": "Poproś o zdjęcia łazienki i kuchni – łatwiej ocenić stan.",
+      "prosba": "Dzień dobry! Żeby dokładnie wycenić sprzątanie, proszę o kilka zdjęć z telefonu: łazienka (wanna lub prysznic, umywalka, WC) i kuchnia (blat, płyta, zlew). Dziękuję!"
+    },
+    "mieszkanie_gruntowne": {
+      "podpowiedz": "Poproś o zdjęcia kuchni, łazienki i najbardziej zabrudzonych miejsc.",
+      "prosba": "Dzień dobry! Żeby dokładnie wycenić sprzątanie, proszę o kilka zdjęć z telefonu: kuchnia (okap, płyta, płytki nad blatem), łazienka (kabina, fugi, armatura) i miejsca, które wymagają najwięcej pracy. Dziękuję!"
+    },
+    "mieszkanie_po_remoncie": {
+      "podpowiedz": "Poproś o zdjęcia każdego pomieszczenia i zachlapań z bliska.",
+      "prosba": "Dzień dobry! Żeby dokładnie wycenić sprzątanie po remoncie, proszę o zdjęcia z telefonu: każde pomieszczenie z widokiem na podłogę i okna oraz z bliska zachlapania farbą, klejem lub fugą, jeśli są. Dziękuję!"
+    },
+    "mieszkanie_po_wynajmie": {
+      "podpowiedz": "Poproś o zdjęcia kuchni, łazienki i podłóg – widać, co zostawili najemcy.",
+      "prosba": "Dzień dobry! Żeby dokładnie wycenić sprzątanie, proszę o kilka zdjęć z telefonu: kuchnia (okap, płyta, szafki), łazienka (kabina, fugi, armatura) i podłogi w pokojach. Dziękuję!"
+    },
+    "sprzatanie_biur": {
+      "podpowiedz": "Poproś o zdjęcia toalet, kuchni socjalnej i podłóg.",
+      "prosba": "Dzień dobry! Żeby dokładnie wycenić sprzątanie biura, proszę o kilka zdjęć z telefonu: toalety, kuchnia socjalna oraz podłogi w pokojach i na korytarzu. Dziękuję!"
+    },
+    "okna": {
+      "podpowiedz": "Poproś o zdjęcie każdego rodzaju okna od środka.",
+      "prosba": "Dzień dobry! Żeby dokładnie wycenić mycie okien, proszę o zdjęcia z telefonu: każdy rodzaj okna od środka, w całości z parapetem, i okna trudno dostępne. Dziękuję!"
+    },
+    "tapicerka": {
+      "podpowiedz": "Poproś o zdjęcia mebli, plam z bliska i metki z tkaniną.",
+      "prosba": "Dzień dobry! Żeby dokładnie wycenić pranie tapicerki, proszę o zdjęcia z telefonu: każdy mebel w całości, plamy z bliska i metkę z opisem tkaniny (zwykle pod siedziskiem). Dziękuję!"
+    },
+    "dywany": {
+      "podpowiedz": "Poproś o zdjęcia dywanu, plam i metki od spodu.",
+      "prosba": "Dzień dobry! Żeby dokładnie wycenić pranie, proszę o zdjęcia z telefonu: dywan lub wykładzina w całości, plamy z bliska i metka od spodu (skład i wymiary). Dziękuję!"
+    },
+    "mycie_posadzek": {
+      "podpowiedz": "Poproś o zdjęcia całej powierzchni i posadzki z bliska.",
+      "prosba": "Dzień dobry! Żeby dokładnie wycenić mycie posadzki, proszę o zdjęcia z telefonu: cała powierzchnia z kilku stron, posadzka z bliska i miejsca najbardziej zabrudzone. Dziękuję!"
+    },
+    "doczyszczanie": {
+      "podpowiedz": "Poproś o zdjęcia posadzki i fug z bliska – widać brud i powłokę.",
+      "prosba": "Dzień dobry! Żeby dokładnie wycenić doczyszczanie, proszę o zdjęcia z telefonu: cała powierzchnia, posadzka i fugi z bliska oraz plamy i przebarwienia. Dziękuję!"
+    },
+    "mycie_kostki": {
+      "podpowiedz": "Poproś o zdjęcia całej powierzchni i fug z bliska.",
+      "prosba": "Dzień dobry! Żeby dokładnie wycenić mycie kostki, proszę o zdjęcia z telefonu: cała powierzchnia z kilku stron, fugi z bliska i plamy, jeśli są. Dziękuję!"
+    },
+    "mycie_elewacji": {
+      "podpowiedz": "Poproś o zdjęcie każdej ściany budynku i zabrudzeń z bliska.",
+      "prosba": "Dzień dobry! Żeby dokładnie wycenić mycie elewacji, proszę o zdjęcia z telefonu: każda ściana budynku w całości i zabrudzenia z bliska. Dziękuję!"
+    },
+    "sprzatanie_firm": {
+      "podpowiedz": "Poproś o zdjęcia hali, posadzki z bliska i regałów.",
+      "prosba": "Dzień dobry! Żeby dokładnie wycenić sprzątanie hali, proszę o zdjęcia z telefonu: hala z kilku stron, posadzka z bliska, regały i miejsca najbardziej zabrudzone. Dziękuję!"
+    }
+  }
+}
