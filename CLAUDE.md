@@ -26,7 +26,7 @@ Na razie repo zawiera dane (`data/`), materiały źródłowe (`research/`), skry
 - Sprawdzian środowiska (w Git Bash): `bash .claude/scripts/doctor/doctor.sh`. `WYNIK: OK` = można startować (stan z 2026-10-23: OK, bez uwag). Pluginy projektu: `dev-browser` w zakresie projektu, `figma` na koncie właściciela.
 - Dostosowania do tego repo: `.gitattributes` wymusza LF w `*.sh` (przy `core.autocrlf=true` Git Bash nie czyta CRLF), `.gitignore` przepuszcza wzorce `.env*.example`, a ścieżki hooków Stop w `.claude/settings.json` są w cudzysłowie, bo katalog projektu ma spacje. Po `/sync-template` sprawdź, czy cudzysłowy zostały.
 - `claude` nie ma w PATH. Polecenia `claude plugin …` uruchamia się CLI dołączonym do aplikacji desktop: `%LOCALAPPDATA%\Claude-Data\<profil>\claude-code\<wersja>\<hash>\claude.exe`.
-- Autopilota (`Workflow({ scriptPath: ".claude/workflows/dev-autopilot-wf.js", … })`) uruchamia się w tym interaktywnym CLI. Sesja w zakładce Code aplikacji desktop nie ma narzędzia `Workflow` (sprawdzone 2026-10-24).
+- Autopilota (`Workflow({ scriptPath: ".claude/workflows/dev-autopilot-wf.js", … })`) uruchamia się w tym interaktywnym CLI, w osobnym oknie PowerShell (`Start-Process powershell …`), bo w panelu terminala aplikacji klawisze nie docierają do CLI. Sesja w zakładce Code aplikacji desktop nie ma narzędzia `Workflow` (sprawdzone 2026-10-24).
 - `agent-browser` (npm global, od 2026-10-24) ma w `%APPDATA%\npm` dodatkowo `agent-browser.exe`: twarde dowiązanie do `node_modules\agent-browser\bin\agent-browser-win32-x64.exe`. Skrypty szablonu wołają go przez `spawnSync` bez powłoki, a to na Windows nie widzi skrótów `.cmd`. Po `npm update -g agent-browser` dowiązanie trzeba utworzyć od nowa, bo zostaje przy starej binarce.
 
 ## Przepływ danych
