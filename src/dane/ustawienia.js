@@ -3,7 +3,8 @@
 
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
 import { sprawdzStatusVat } from '../silnik/vat.js'
-import { jestObiektem, POLA_FIRMY } from './ksztalt.js'
+import { jestLiczba, jestObiektem, jestWarunkiem, POLA_FIRMY } from './ksztalt.js'
+import { jestStatusemVat } from './magazyn.js'
 import { bladEmaila, bladLiczby, bladNip, bladTelefonu, bladTempa } from './walidacja.js'
 
 /** @typedef {import('./magazyn.js').Magazyn} Magazyn */
@@ -36,8 +37,12 @@ export const GRANICE_KOSZTOW = Object.freeze({
   koszt_firmy_zl_km: { min: 0, max: 20 },
 })
 const DLUGOSC_POL_FIRMY = Object.freeze({ nazwa: 120, telefon: 30, email: 254, nip: 20 })
-const WALIDATORY_FIRMY = Object.freeze({ telefon: bladTelefonu, email: bladEmaila, nip: bladNip })
-const POLA_DOJAZDU = /** @type {const} */ (['klient_zl_km', 'darmowy_promien_km', 'koszt_firmy_zl_km'])
+/** Walidatory pol firmy (kod bledu albo null); nazwa nie ma walidatora poza dlugoscia. */
+export const WALIDATORY_FIRMY = Object.freeze({ telefon: bladTelefonu, email: bladEmaila, nip: bladNip })
+export const POLA_DOJAZDU = /** @type {const} */ (['klient_zl_km', 'darmowy_promien_km', 'koszt_firmy_zl_km'])
+/** Pola firmy potrzebne w ofercie dla klienta: puste daja ostrzezenie w formularzu i znacznik „ustawienia domyślne – uzupełnij”. */
+export const POLA_WYMAGANE_W_OFERCIE = Object.freeze(/** @type {const} */ (['nazwa', 'telefon']))
+const PLIK_DOMYSLNYCH = 'data/domyslne.json'
 const POLA_ZMIANY = ['wojewodztwoId', 'statusVat', 'firma', 'tempo', 'koszty', 'przypomnienieKopiiDni', 'kreatorZakonczony']
 const IDENTYFIKATOR = /^[a-z][a-z0-9_-]{0,39}$/
 
@@ -199,21 +204,38 @@ function zastosujZmiane(ustawienia, zmiana) {
   }
 }
 
+/** @param {unknown} x @returns {boolean} `{ waznosc_dni, warunki[] }` z data/domyslne.json */
+const jestOferta = (x) => jestObiektem(x) && jestLiczba(x.waznosc_dni) && Array.isArray(x.warunki) && x.warunki.every(jestWarunkiem)
+
+/**
+ * Jedyny straznik ksztaltu data/domyslne.json (dane z granicy: fetch): wszystkie pola typu Domyslne.
+ * @param {unknown} x
+ * @returns {x is Domyslne}
+ */
+export function jestDomyslnymi(x) {
+  return jestObiektem(x) && jestStatusemVat(x.status_vat) && jestLiczba(x.stawka_vat_proc) && jestLiczba(x.tempo)
+    && (x.wojewodztwo === null || typeof x.wojewodztwo === 'string') && jestOferta(x.oferta)
+    && jestObiektem(x.szybka_wycena) && typeof x.szybka_wycena.zastrzezenie === 'string'
+}
+
+/**
+ * data/domyslne.json przez `pobierz` (fetch z limitem czasu w app.js, plik z dysku w testach).
+ * @param {(sciezka: string) => Promise<unknown>} pobierz
+ * @returns {Promise<Domyslne>} plik o zlym ksztalcie daje BladKatalogu `zly_format`
+ */
+export async function wczytajDomyslne(pobierz) {
+  const dane = await pobierz(PLIK_DOMYSLNYCH)
+  if (!jestDomyslnymi(dane)) throw new BladKatalogu('zly_format', `Nieprawidłowy format ${PLIK_DOMYSLNYCH}`)
+  return dane
+}
+
 /**
  * Ustawienia nowej firmy albo firmy, ktora pominela kreator: status VAT i wojewodztwo z data/domyslne.json, reszta pusta.
  * @param {Domyslne} domyslne
  * @returns {Ustawienia}
  */
 export function ustawieniaDomyslne(domyslne) {
-  if (!jestObiektem(domyslne) || !(domyslne.wojewodztwo === null || typeof domyslne.wojewodztwo === 'string')) {
-    throw new BladKatalogu('zly_format', 'data/domyslne.json: brak pola wojewodztwo')
-  }
-  try {
-    sprawdzStatusVat(domyslne.status_vat)
-  } catch (blad) {
-    if (blad instanceof BladWejscia) throw new BladKatalogu('zly_format', 'data/domyslne.json: nieznany status_vat', { cause: blad })
-    throw blad
-  }
+  if (!jestDomyslnymi(domyslne)) throw new BladKatalogu('zly_format', `Nieprawidłowy format ${PLIK_DOMYSLNYCH}`)
   return {
     wojewodztwoId: domyslne.wojewodztwo,
     statusVat: domyslne.status_vat,
@@ -229,6 +251,7 @@ export function ustawieniaDomyslne(domyslne) {
 
 /**
  * Braki dla znacznika „ustawienia domyślne – uzupełnij” (R24): wojewodztwo niewybrane, firma bez nazwy albo telefonu.
+ * Po zakonczonym kreatorze `wojewodztwoId: null` to swiadomie wybrana srednia krajowa, a nie brak.
  * @param {Ustawienia | null} ustawienia
  * @returns {BrakUstawien[]}
  */
@@ -236,8 +259,8 @@ export function brakujeUstawien(ustawienia) {
   if (!ustawienia) return ['wojewodztwo', 'firma']
   /** @type {BrakUstawien[]} */
   const braki = []
-  if (ustawienia.wojewodztwoId === null) braki.push('wojewodztwo')
-  if (ustawienia.firma.nazwa.trim() === '' || ustawienia.firma.telefon.trim() === '') braki.push('firma')
+  if (ustawienia.wojewodztwoId === null && !ustawienia.kreatorZakonczony) braki.push('wojewodztwo')
+  if (POLA_WYMAGANE_W_OFERCIE.some((pole) => ustawienia.firma[pole].trim() === '')) braki.push('firma')
   return braki
 }
 

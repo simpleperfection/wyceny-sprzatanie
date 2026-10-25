@@ -2,6 +2,7 @@
 // „Połącz” / „Zastąp” i czestotliwosc przypomnien o kopii (R23). Przed kreatorem ustawien karta przypomnien jest ukryta.
 
 import { dniOdKopii, odczytajKopie, oznaczKopie, podsumowanieKopii, utworzKopie, wczytajKopie } from '../dane/kopia.js'
+import { wczytajStan } from '../dane/magazyn.js'
 import { DNI_PRZYPOMNIENIA_KOPII, zapiszUstawienia } from '../dane/ustawienia.js'
 import { h, ikona } from '../ui/h.js'
 import { chipy, przycisk } from '../ui/komponenty/formularz.js'
@@ -9,12 +10,11 @@ import { baner, karta, naglowek } from '../ui/komponenty/uklad.js'
 import { pobierzPlik, wybierzPlik } from '../ui/plik.js'
 import { sciezka } from '../ui/trasy.js'
 import {
-  etykietyPodsumowania, jestBledemPliku, PLIKI_KOPII, tekstBleduWczytania, tekstOstatniejKopii, tekstWczytania,
+  czyPytacOTryb, etykietyPodsumowania, jestBledemPliku, PLIKI_KOPII, tekstBleduWczytania, tekstOstatniejKopii, tekstWczytania,
 } from './kopia-teksty.js'
-import { tekstBleduZapisu, wczytajStan } from './ustawienia.js'
+import { tekstBleduZapisu } from './teksty-bledow.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
-/** @typedef {import('../ui/router.js').Kontekst} Kontekst */
 /** @typedef {import('../dane/magazyn.js').Stan} Stan */
 /** @typedef {import('../dane/kopia.js').TrybWczytania} TrybWczytania */
 
@@ -106,7 +106,7 @@ export const widokKopii = {
 
     /** @param {string} [fokus] selektor elementu, ktory ma dostac fokus po przerysowaniu */
     function rysuj(fokus) {
-      const stan = wczytajStan(kontekst)
+      const stan = wczytajStan(magazyn)
       tresc.replaceChildren(
         baner({ rodzaj: 'info', tekst: BANER_INFORMACJI }),
         komunikat,
@@ -119,7 +119,7 @@ export const widokKopii = {
     function handleZapis() {
       try {
         const teraz = new Date()
-        const plik = utworzKopie(wczytajStan(kontekst), teraz)
+        const plik = utworzKopie(wczytajStan(magazyn), teraz)
         pobierzPlik(plik.nazwaPliku, plik.tresc, 'application/json')
         oznaczKopie(magazyn, teraz)
         pokaz('sukces', `Kopia zapisana: ${plik.nazwaPliku}`)
@@ -138,9 +138,7 @@ export const widokKopii = {
         const tekst = await wybierzPlik(PLIKI_KOPII)
         if (tekst === null || !czyAktualne()) return
         const { stan: zPliku } = odczytajKopie(tekst)
-        const obecny = wczytajStan(kontekst)
-        const czyPytac = obecny.wyceny.length > 0 || obecny.ustawienia !== null
-        const tryb = czyPytac ? await zapytajOTryb((dialog) => { otwartyDialog = dialog }) : 'zastap'
+        const tryb = czyPytacOTryb(wczytajStan(magazyn)) ? await zapytajOTryb((dialog) => { otwartyDialog = dialog }) : 'zastap'
         otwartyDialog = null
         if (tryb === null || !czyAktualne()) return
         wczytajKopie(magazyn, zPliku, tryb)

@@ -1,6 +1,8 @@
 // Formatowanie liczb, kwot, czasu i dat po polsku (Intl `pl-PL`) oraz odmiana liczebnikow i nazw wojewodztw.
 // Tysiace grupuje twarda spacja takze przy liczbach czterocyfrowych (`useGrouping: 'always'`), jak na makietach.
 
+import { jestData } from '../dane/ksztalt.js'
+
 const JEZYK = 'pl-PL'
 const NBSP = ' '
 const MINUT_W_GODZINIE = 60
@@ -11,6 +13,7 @@ const ODSTEPY = /[\s  ]/g
 const formatZl = new Intl.NumberFormat(JEZYK, { maximumFractionDigits: 0, useGrouping: 'always' })
 const formatZlGr = new Intl.NumberFormat(JEZYK, { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: 'always' })
 const formatM2 = new Intl.NumberFormat(JEZYK, { maximumFractionDigits: 2, useGrouping: 'always' })
+const formatLiczby = new Intl.NumberFormat(JEZYK, { maximumFractionDigits: 2, useGrouping: false })
 const formatTempa = new Intl.NumberFormat(JEZYK, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const formatProcentu = new Intl.NumberFormat(JEZYK, { style: 'percent', maximumFractionDigits: 0, signDisplay: 'exceptZero' })
 const formatDaty = new Intl.DateTimeFormat(JEZYK, { day: 'numeric', month: 'long', year: 'numeric' })
@@ -44,6 +47,25 @@ function liczbaNieujemna(x) {
   const wartosc = liczba(x)
   if (wartosc < 0) throw new BladFormatu('ujemna', `Oczekiwano liczby nieujemnej, jest ${wartosc}`)
   return wartosc
+}
+
+/** @param {number} x @returns {string} liczba w polu albo w tekscie: „4,5”, „1,15”, „3” (do 2 miejsc po przecinku) */
+export const tekstLiczby = (x) => formatLiczby.format(liczba(x))
+
+/**
+ * Jeden komunikat granic pola liczbowego dla formularzy i licznikow.
+ * @param {{ min: number, max: number }} granice max = Infinity: liczba bez gornej granicy
+ * @returns {string} „Wpisz liczbę od 0,5 do 3.” albo „Wpisz liczbę co najmniej 1.”
+ */
+export function bladZakresu({ min, max }) {
+  if (max === Number.POSITIVE_INFINITY) return `Wpisz liczbę co najmniej ${tekstLiczby(min)}.`
+  return `Wpisz liczbę od ${tekstLiczby(min)} do ${tekstLiczby(max)}.`
+}
+
+/** @param {unknown} dzis @returns {Date} poprawna data; inna wartosc daje BladFormatu `zla_data` */
+export function sprawdzDate(dzis) {
+  if (!jestData(dzis)) throw new BladFormatu('zla_data', `Oczekiwano poprawnej daty, jest ${String(dzis)}`)
+  return dzis
 }
 
 /** @param {number} kwota @returns {string} „1 235 zł” (zaokraglenie do zlotowki) */

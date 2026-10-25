@@ -1,7 +1,7 @@
 // Komponenty formularza z makiet wariantu B: pole z bledem pod spodem, licznik − / wartosc / +, chipy pojedynczego
 // wyboru, przelacznik i przycisk. Kazdy zwraca element DOM; zmiany wartosci zglasza przez `naZmiane`.
 
-import { parsujLiczbe } from '../format.js'
+import { bladZakresu, parsujLiczbe, tekstLiczby } from '../format.js'
 import { h, ikona } from '../h.js'
 
 /** @typedef {import('../ikony.js').NazwaIkony} NazwaIkony */
@@ -62,14 +62,6 @@ export function pole(opcje) {
 
 /** @param {number} x */
 const zaokraglij = (x) => Math.round(x * CYFRY_KROKU) / CYFRY_KROKU
-/** @param {number} x */
-const tekstLiczby = (x) => String(x).replace('.', ',')
-
-/** @param {number} min @param {number} max */
-function bladZakresu(min, max) {
-  return Number.isFinite(max) ? `Wpisz liczbę od ${tekstLiczby(min)} do ${tekstLiczby(max)}.` : `Wpisz liczbę co najmniej ${tekstLiczby(min)}.`
-}
-
 /** @param {OpcjeLicznika} opcje @returns {HTMLDivElement} karta z etykieta, wartoscia do wpisania i przyciskami − / + */
 export function licznik(opcje) {
   const { id, etykieta, min = 0, max = Number.POSITIVE_INFINITY, krok = 1, jednostka, naZmiane } = opcje
@@ -117,7 +109,7 @@ export function licznik(opcje) {
   function handleWpis() {
     dopasujSzerokosc()
     const liczba = parsujLiczbe(wejscie.value)
-    if (liczba === null || liczba < min || liczba > max) return pokazBlad(bladZakresu(min, max))
+    if (liczba === null || liczba < min || liczba > max) return pokazBlad(bladZakresu({ min, max }))
     pokazBlad(null)
     wartosc = liczba
     odswiezPrzyciski()

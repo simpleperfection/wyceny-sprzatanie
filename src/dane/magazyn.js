@@ -55,8 +55,12 @@ export class BladMagazynu extends Error {
 /** @param {unknown} x */
 const jestDataIsoLubNull = (x) => x === null || jestDataIso(x)
 
-/** Status VAT sprawdza silnik (jedno zrodlo listy statusow); odmowa silnika znaczy „nie status”. @param {unknown} x */
-function jestStatusemVat(x) {
+/**
+ * Status VAT sprawdza silnik (jedno zrodlo listy statusow); odmowa silnika znaczy „nie status”.
+ * @param {unknown} x
+ * @returns {x is StatusVat}
+ */
+export function jestStatusemVat(x) {
   try {
     sprawdzStatusVat(x)
     return true
@@ -197,4 +201,15 @@ export function utworzMagazyn(storage = globalThis.localStorage, opcje = {}) {
   }
 
   return { wczytaj, zmien, zapiszCalosc: zapisz, naZmiane, wyczysc: () => storage.removeItem(KLUCZ_MAGAZYNU) }
+}
+
+/**
+ * Stan do pokazania albo zmiany: uszkodzony albo nowszy stan daje BladMagazynu z kodem z wczytania (ekran bledu routera).
+ * @param {Magazyn} magazyn
+ * @returns {Stan}
+ */
+export function wczytajStan(magazyn) {
+  const wynik = magazyn.wczytaj()
+  if (!('stan' in wynik)) throw new BladMagazynu(wynik.blad, 'Zapisanych danych nie da się odczytać')
+  return wynik.stan
 }

@@ -2,12 +2,16 @@
 // Do tego mieszkanie wzorcowe 50 m² (cena i czas normowy z silnika) dla kart „Rynek i VAT” i „Tempo pracy”.
 
 import { POLA_FIRMY } from '../dane/ksztalt.js'
-import { GRANICE_KOSZTOW } from '../dane/ustawienia.js'
-import { bladEmaila, bladNip, bladTelefonu, GRANICE_TEMPA } from '../dane/walidacja.js'
+import { GRANICE_KOSZTOW, POLA_DOJAZDU, POLA_WYMAGANE_W_OFERCIE, WALIDATORY_FIRMY } from '../dane/ustawienia.js'
+import { GRANICE_TEMPA } from '../dane/walidacja.js'
 import { wycenUsluge } from '../silnik/cena.js'
 import { zBrudem } from '../silnik/czas.js'
 import { ukladMieszkania } from '../silnik/uklad.js'
-import { parsujLiczbe } from '../ui/format.js'
+import { bladZakresu, parsujLiczbe } from '../ui/format.js'
+import { TEKSTY_BLEDOW } from './teksty-bledow.js'
+
+/** Wspolny format liczb i tekst granic pola (src/ui/format.js); eksport dla sekcji ustawien. */
+export { bladZakresu, tekstLiczby } from '../ui/format.js'
 
 /** @typedef {import('../dane/ustawienia.js').ZmianaUstawien} ZmianaUstawien */
 /** @typedef {import('../dane/ustawienia.js').ZmianaKosztow} ZmianaKosztow */
@@ -23,25 +27,10 @@ import { parsujLiczbe } from '../ui/format.js'
  * @typedef {{ min: number, max: number }} Granice
  */
 
-export const TEKSTY_BLEDOW = Object.freeze({
-  telefon: 'Wpisz 9 cyfr numeru telefonu.',
-  email: 'Wpisz poprawny adres e-mail.',
-  nip: 'NIP ma 10 cyfr i poprawną sumę kontrolną.',
-})
 /** Nazwa firmy i telefon sa potrzebne dopiero w ofercie, wiec pusta wartosc to ostrzezenie, a nie blad. */
 const OSTRZEZENIE_OFERTY = 'Potrzebne w ofercie dla klienta.'
-const POLA_DO_OFERTY = ['nazwa', 'telefon']
-const WALIDATORY_FIRMY = Object.freeze({ telefon: bladTelefonu, email: bladEmaila, nip: bladNip })
-const POLA_DOJAZDU = /** @type {const} */ (['klient_zl_km', 'darmowy_promien_km', 'koszt_firmy_zl_km'])
 const USLUGA_WZORCOWA = 'mieszkanie_standard'
 export const METRAZ_WZORCOWY = 50
-const formatLiczby = new Intl.NumberFormat('pl-PL', { maximumFractionDigits: 2, useGrouping: false })
-
-/** @param {number} x @returns {string} „4,5”, „1,15”, „3” */
-export const tekstLiczby = (x) => formatLiczby.format(x)
-
-/** @param {Granice} granice @returns {string} „Wpisz liczbę od 0,5 do 3.” */
-export const bladZakresu = ({ min, max }) => `Wpisz liczbę od ${tekstLiczby(min)} do ${tekstLiczby(max)}.`
 
 /**
  * Liczba z pola: pusty tekst = null (wraca wartosc domyslna z data/ceny.json), poza granicami albo nie liczba = blad.
@@ -61,7 +50,7 @@ function dodajFirme(pola, wynik) {
   for (const klucz of POLA_FIRMY) {
     const tekst = pola[klucz]?.trim()
     if (tekst === undefined) continue
-    if (tekst === '' && POLA_DO_OFERTY.includes(klucz)) wynik.ostrzezenia[klucz] = OSTRZEZENIE_OFERTY
+    if (tekst === '' && POLA_WYMAGANE_W_OFERCIE.some((pole) => pole === klucz)) wynik.ostrzezenia[klucz] = OSTRZEZENIE_OFERTY
     const kod = klucz === 'nazwa' || tekst === '' ? null : WALIDATORY_FIRMY[klucz](tekst)
     if (kod) wynik.bledy[klucz] = TEKSTY_BLEDOW[kod]
     else firma[klucz] = tekst

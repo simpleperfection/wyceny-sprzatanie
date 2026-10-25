@@ -1,7 +1,7 @@
 // Start aplikacji: wczytanie danych referencyjnych (data/*.json), magazyn stanu i router widokow w <main id="aplikacja">.
 
-import { jestObiektem } from './dane/ksztalt.js'
 import { utworzMagazyn } from './dane/magazyn.js'
+import { wczytajDomyslne } from './dane/ustawienia.js'
 import { zarejestrujServiceWorker } from './pwa/rejestracja.js'
 import { BladKatalogu } from './silnik/bledy.js'
 import { wczytajKatalog } from './silnik/katalog.js'
@@ -15,12 +15,10 @@ import { pokazRatunek } from './widoki/ratunek.js'
 
 /** @typedef {import('./dane/magazyn.js').Magazyn} Magazyn */
 /** @typedef {import('./dane/magazyn.js').WynikWczytania} WynikWczytania */
-/** @typedef {import('./dane/ustawienia.js').Domyslne} Domyslne */
 /** @typedef {import('./ui/router.js').Widok} Widok */
 /** @typedef {import('./ui/router.js').Widoki} Widoki */
 
 const LIMIT_POBIERANIA_MS = 10000
-const PLIK_DOMYSLNYCH = 'data/domyslne.json'
 /** Trasy dostepne przed pierwszymi ustawieniami (R24): sam kreator i przywracanie kopii danych. */
 const TRASY_PRZED_USTAWIENIAMI = new Set(['kreatorStartowy', 'kopia'])
 const BLAD_DANYCH = 'Nie udało się wczytać danych aplikacji. Sprawdź połączenie z internetem i odśwież stronę.'
@@ -35,19 +33,6 @@ async function pobierzJson(sciezka) {
   const odpowiedz = await fetch(sciezka, { signal: AbortSignal.timeout(LIMIT_POBIERANIA_MS) })
   if (!odpowiedz.ok) throw new BladKatalogu('brak_pliku', `${sciezka}: HTTP ${odpowiedz.status}`)
   return odpowiedz.json()
-}
-
-/** Pola data/domyslne.json czytane przez widoki i warstwe danych. @param {unknown} x @returns {x is Domyslne} */
-function jestDomyslnymi(x) {
-  return jestObiektem(x) && typeof x.status_vat === 'string' && typeof x.stawka_vat_proc === 'number' && typeof x.tempo === 'number'
-    && (x.wojewodztwo === null || typeof x.wojewodztwo === 'string') && jestObiektem(x.oferta) && jestObiektem(x.szybka_wycena)
-}
-
-/** @returns {Promise<Domyslne>} */
-async function wczytajDomyslne() {
-  const dane = await pobierzJson(PLIK_DOMYSLNYCH)
-  if (!jestDomyslnymi(dane)) throw new BladKatalogu('zly_format', `Nieprawidłowy format ${PLIK_DOMYSLNYCH}`)
-  return dane
 }
 
 /**
@@ -115,7 +100,7 @@ async function uruchom(kontener) {
   }
   kontener.replaceChildren(h('p', { class: 'tresc ladowanie', role: 'status' }, 'Wczytywanie danych…'))
   try {
-    const [katalog, domyslne] = await Promise.all([wczytajKatalog(pobierzJson), wczytajDomyslne()])
+    const [katalog, domyslne] = await Promise.all([wczytajKatalog(pobierzJson), wczytajDomyslne(pobierzJson)])
     const router = uruchomRouter(kontener, zKreatoremStartowym(WIDOKI), { katalog, domyslne, magazyn })
     magazyn.naZmiane(() => ('stan' in magazyn.wczytaj() ? router.odswiez() : location.reload()))
   } catch (blad) {

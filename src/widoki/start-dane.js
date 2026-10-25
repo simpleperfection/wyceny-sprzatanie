@@ -1,11 +1,16 @@
 // Dane ekranu startowego i listy wycen (czyste funkcje, bez DOM): zadania „do zrobienia”, podsumowanie miesiaca
 // z realna stawka z wykonan, opis tempa oraz kwota i adres wiersza wyceny.
 
+import { dzienLokalny, miesiacLokalny } from '../dane/ksztalt.js'
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
 import { kosztZlecenia } from '../silnik/koszt.js'
 import { opisTempa } from '../silnik/tempo.js'
 import { sprawdzStatusVat, zCenyRecznej } from '../silnik/vat.js'
+import { sprawdzDate } from '../ui/format.js'
 import { sciezka } from '../ui/trasy.js'
+
+/** Zla data dnia to BladFormatu `zla_data` ze wspolnego straznika sprawdzDate (src/ui/format.js); nazwa dla wywolujacych start-dane. */
+export { BladFormatu as BladDaty } from '../ui/format.js'
 
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
 /** @typedef {import('../dane/wyceny.js').MigawkaWyniku} MigawkaWyniku */
@@ -28,29 +33,6 @@ const JEZYK = 'pl-PL'
 /** Termin klienta zaczyna sie od dnia RRRR-MM-DD (pole daty albo daty i godziny). */
 const DZIEN_TERMINU = /^(\d{4}-\d{2}-\d{2})/
 const formatMiesiaca = new Intl.DateTimeFormat(JEZYK, { month: 'long' })
-
-/** Data spoza `Date` albo niepoprawna. */
-export class BladDaty extends Error {
-  /** @param {unknown} wartosc */
-  constructor(wartosc) {
-    super(`Oczekiwano poprawnej daty, jest ${String(wartosc)}`)
-    this.name = 'BladDaty'
-    this.kod = 'zla_data'
-  }
-}
-
-/** @param {unknown} dzis @returns {Date} */
-function sprawdzDate(dzis) {
-  if (!(dzis instanceof Date) || Number.isNaN(dzis.getTime())) throw new BladDaty(dzis)
-  return dzis
-}
-
-/** @param {number} n */
-const dwieCyfry = (n) => String(n).padStart(2, '0')
-/** Miesiac RRRR-MM w czasie lokalnym (jak numeracja wycen). @param {Date} data */
-const miesiacLokalny = (data) => `${data.getFullYear()}-${dwieCyfry(data.getMonth() + 1)}`
-/** @param {Date} data */
-const dzienLokalny = (data) => `${miesiacLokalny(data)}-${dwieCyfry(data.getDate())}`
 
 /** Przyjete zlecenie czeka na czas pracy: bez terminu, z terminem do dzis albo z terminem, ktorego dnia nie da sie odczytac. */
 function czyCzekaNaCzas(/** @type {string | null} */ termin, /** @type {string} */ dzis) {

@@ -6,7 +6,7 @@ import { BladMagazynu } from '../dane/magazyn.js'
 import { BladFormatu } from '../ui/format.js'
 import { BladPliku } from '../ui/plik.js'
 import {
-  etykietyPodsumowania, jestBledemPliku, nazwaSurowegoPliku, tekstBleduWczytania, tekstOstatniejKopii, tekstWczytania,
+  czyPytacOTryb, etykietyPodsumowania, jestBledemPliku, nazwaSurowegoPliku, tekstBleduWczytania, tekstOstatniejKopii, tekstWczytania,
 } from './kopia-teksty.js'
 
 describe('tekstBleduWczytania', () => {
@@ -100,5 +100,22 @@ describe('nazwaSurowegoPliku', () => {
 
   it('niepoprawna data daje BladFormatu', () => {
     assert.throws(() => nazwaSurowegoPliku(new Date('x')), (blad) => blad instanceof BladFormatu && blad.kod === 'zla_data')
+  })
+})
+
+describe('czyPytacOTryb', () => {
+  const USTAWIENIA = /** @type {any} */ ({ wojewodztwoId: null })
+  const WYCENA = /** @type {any} */ ({ id: 'w1' })
+
+  it('jedna wycena bez ustawień → pyta o Połącz/Zastąp', () => {
+    assert.equal(czyPytacOTryb({ wyceny: [WYCENA], ustawienia: null }), true)
+  })
+
+  it('ustawienia bez wycen → pyta o Połącz/Zastąp', () => {
+    assert.equal(czyPytacOTryb({ wyceny: [], ustawienia: USTAWIENIA }), true)
+  })
+
+  it('bez wycen i bez ustawień → nie pyta (kopia od razu zastępuje pustą aplikację)', () => {
+    assert.equal(czyPytacOTryb({ wyceny: [], ustawienia: null }), false)
   })
 })

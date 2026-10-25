@@ -1,8 +1,8 @@
 // Kopia zapasowa (R23): plik JSON z calym stanem, odczyt pliku z walidacja jak dane z zewnatrz, wczytanie trybem „polacz”
 // albo „zastap” i regula przypomnienia o kopii. Bez DOM: pobranie i odczyt pliku robi widok kopii.
 
-import { jestObiektem, maKrotkieTeksty } from './ksztalt.js'
-import { BladMagazynu, WERSJA_SCHEMATU, zaktualizujStan } from './magazyn.js'
+import { dzienLokalny, jestData, jestObiektem, maKrotkieTeksty } from './ksztalt.js'
+import { WERSJA_SCHEMATU, wczytajStan, zaktualizujStan } from './magazyn.js'
 import { BladUstawien, DNI_PRZYPOMNIENIA_KOPII, sprawdzUstawienia } from './ustawienia.js'
 import { jestWycena, MAKS_WYCEN, nieaktualnaPoWyslaniu } from './wyceny.js'
 
@@ -64,19 +64,8 @@ function sprawdzStanKopii(stan) {
 
 /** @param {unknown} teraz @returns {Date} */
 function sprawdzDate(teraz) {
-  if (!(teraz instanceof Date) || Number.isNaN(teraz.getTime())) throw new BladKopii('data', 'Data musi być poprawnym obiektem Date')
+  if (!jestData(teraz)) throw new BladKopii('data', 'Data musi być poprawnym obiektem Date')
   return teraz
-}
-
-/** Dzien RRRR-MM-DD w czasie lokalnym (jak numeracja wycen). @param {Date} data */
-const dzienLokalny = (data) =>
-  `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`
-
-/** @param {Magazyn} magazyn @returns {Stan} */
-function stanMagazynu(magazyn) {
-  const wynik = magazyn.wczytaj()
-  if (!('stan' in wynik)) throw new BladMagazynu(wynik.blad, 'Zapisanych danych nie da się odczytać')
-  return wynik.stan
 }
 
 /**
@@ -101,7 +90,7 @@ export function utworzKopie(stan, teraz) {
  */
 export function oznaczKopie(magazyn, teraz) {
   sprawdzDate(teraz)
-  const stan = stanMagazynu(magazyn)
+  const stan = wczytajStan(magazyn)
   const oznaczony = { ...stan, kopia: { ...stan.kopia, ostatnia: teraz.toISOString() } }
   magazyn.zapiszCalosc(oznaczony)
   return oznaczony
@@ -206,7 +195,7 @@ function polaczStany(lokalny, zPliku) {
  */
 export function wczytajKopie(magazyn, stanZPliku, tryb) {
   if (tryb !== 'polacz' && tryb !== 'zastap') throw new BladKopii('tryb', `Nieznany tryb wczytania kopii: ${tryb}`)
-  const nowy = tryb === 'zastap' ? stanZPliku : polaczStany(stanMagazynu(magazyn), stanZPliku)
+  const nowy = tryb === 'zastap' ? stanZPliku : polaczStany(wczytajStan(magazyn), stanZPliku)
   if (nowy.wyceny.length > MAKS_WYCEN) throw new BladKopii('za_duzo_wycen', `Po połączeniu byłoby ponad ${MAKS_WYCEN} wycen`)
   magazyn.zapiszCalosc(nowy)
   return nowy

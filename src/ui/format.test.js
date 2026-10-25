@@ -3,6 +3,7 @@ import { describe, it } from 'node:test'
 
 import {
   BladFormatu,
+  bladZakresu,
   czas,
   data,
   dataDnia,
@@ -13,6 +14,8 @@ import {
   odmiana,
   parsujLiczbe,
   procent,
+  sprawdzDate,
+  tekstLiczby,
   tempo,
   zl,
   zlGr,
@@ -118,5 +121,30 @@ describe('parsujLiczbe', () => {
     assert.equal(parsujLiczbe(''), null)
     assert.equal(parsujLiczbe('12a'), null)
     assert.equal(parsujLiczbe('1,2,3'), null)
+  })
+})
+
+describe('tekstLiczby, bladZakresu i sprawdzDate', () => {
+  it('tekstLiczby: przecinek dziesiętny, najwyżej 2 miejsca, bez grupowania tysięcy', () => {
+    assert.equal(tekstLiczby(1.15), '1,15')
+    assert.equal(tekstLiczby(0.1 + 0.2), '0,3')
+    assert.equal(tekstLiczby(1500), '1500')
+  })
+
+  it('tekstLiczby odrzuca NaN', () => {
+    assert.throws(() => tekstLiczby(Number.NaN), bladFormatu('nie_liczba'))
+  })
+
+  it('bladZakresu z górną granicą i bez niej', () => {
+    assert.equal(bladZakresu({ min: 0.5, max: 3 }), 'Wpisz liczbę od 0,5 do 3.')
+    assert.equal(bladZakresu({ min: 1, max: Number.POSITIVE_INFINITY }), 'Wpisz liczbę co najmniej 1.')
+  })
+
+  it('sprawdzDate oddaje poprawną datę, a zła data i tekst dają BladFormatu zla_data', () => {
+    const dzis = new Date(2026, 9, 25)
+
+    assert.equal(sprawdzDate(dzis), dzis)
+    assert.throws(() => sprawdzDate(new Date('x')), bladFormatu('zla_data'))
+    assert.throws(() => sprawdzDate('2026-10-25'), bladFormatu('zla_data'))
   })
 })

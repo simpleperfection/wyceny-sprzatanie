@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { describe, it, mock } from 'node:test'
 
 import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
-import { BladMagazynu, KLUCZ_MAGAZYNU, utworzMagazyn, WERSJA_SCHEMATU, zaktualizujStan } from './magazyn.js'
+import { BladMagazynu, jestStatusemVat, KLUCZ_MAGAZYNU, utworzMagazyn, WERSJA_SCHEMATU, wczytajStan, zaktualizujStan } from './magazyn.js'
 
 const TERAZ = '2026-10-24T08:30:00.000Z'
 const PUSTY_STAN = {
@@ -269,5 +269,27 @@ describe('wczytaj: pozostałe warunki kształtu ustawień i stanu', () => {
       storage.setItem(KLUCZ_MAGAZYNU, surowe)
       assert.deepEqual(magazyn.wczytaj(), { blad: 'uszkodzony', surowe }, JSON.stringify(zmiana))
     }
+  })
+})
+
+describe('wczytajStan', () => {
+  it('poprawny magazyn → sam stan', () => {
+    const { magazyn } = magazynTestowy()
+
+    assert.deepEqual(wczytajStan(magazyn), PUSTY_STAN)
+  })
+
+  it('uszkodzony JSON → BladMagazynu z kodem uszkodzony', () => {
+    const storage = new PamiecMagazynu()
+    storage.setItem(KLUCZ_MAGAZYNU, '{"wersja":1,')
+    const { magazyn } = magazynTestowy(storage)
+
+    assert.throws(() => wczytajStan(magazyn), { name: BladMagazynu.name, kod: 'uszkodzony', message: 'Zapisanych danych nie da się odczytać' })
+  })
+})
+
+describe('jestStatusemVat', () => {
+  it('czynny i zwolniony → true; tekst ze spacją, inny status i liczba → false', () => {
+    assert.deepEqual(['czynny', 'zwolniony', 'czynny ', 'ryczalt', 1].map(jestStatusemVat), [true, true, false, false, false])
   })
 })

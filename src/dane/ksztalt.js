@@ -28,6 +28,16 @@ export function maWartosci(x, czyWartosc) {
 /** @param {unknown} x @returns {boolean} warunek oferty `{ id, tresc, tylko_szybka }` */
 export const jestWarunkiem = (x) => jestObiektem(x) && typeof x.id === 'string' && typeof x.tresc === 'string' && typeof x.tylko_szybka === 'boolean'
 
+/** @param {unknown} x @returns {x is Date} jedyny straznik poprawnego obiektu Date (dzien dzisiejszy w danych i widokach) */
+export const jestData = (x) => x instanceof Date && !Number.isNaN(x.getTime())
+
+/** @param {number} n */
+const dwieCyfry = (n) => String(n).padStart(2, '0')
+/** Miesiac RRRR-MM w czasie lokalnym (jak numeracja wycen). @param {Date} data @returns {string} */
+export const miesiacLokalny = (data) => `${data.getFullYear()}-${dwieCyfry(data.getMonth() + 1)}`
+/** Dzien RRRR-MM-DD w czasie lokalnym: nazwy plikow kopii i terminy „Do zrobienia”. @param {Date} data @returns {string} */
+export const dzienLokalny = (data) => `${miesiacLokalny(data)}-${dwieCyfry(data.getDate())}`
+
 /** @param {unknown} data @returns {data is string} istniejacy dzien w postaci RRRR-MM-DD */
 export function jestDniem(data) {
   if (typeof data !== 'string' || !DZIEN.test(data)) return false

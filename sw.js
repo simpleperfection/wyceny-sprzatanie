@@ -1,5 +1,7 @@
-// Service worker aplikacji (R28): siec najpierw z limitem 4 s, potem pamiec podreczna; po pierwszym uruchomieniu online
-// aplikacja dziala offline. Klasyczny skrypt (bez importow modulow), poza typecheck. Zakres = katalog aplikacji.
+// Service worker aplikacji (R28): nawigacja i data/*.json najpierw z sieci (limit 4 s), potem z pamieci podrecznej;
+// niezmienne pliki aplikacji (src/, fonty/, ikony/, manifest) od razu z pamieci, odswiezane w tle (stale-while-revalidate).
+// Nowe pliki aplikacji wymusza zmiana WERSJA_CACHE. Po pierwszym uruchomieniu online aplikacja dziala offline.
+// Klasyczny skrypt (bez importow modulow), poza typecheck. Zakres = katalog aplikacji.
 
 const WERSJA_CACHE = 'wyceny-v1'
 const LIMIT_SIECI_MS = 4000
@@ -8,6 +10,8 @@ const LIMIT_ZAPISU_W_TLE_MS = 30000
 const MAKS_ZASOBOW = 300
 const KOMUNIKAT_ZASOBOW = 'zapisz-zasoby'
 const STRONA_ZAPASOWA = 'index.html'
+/** Dane referencyjne (ceny, normy, stawki) maja byc swieze, wiec ida najpierw z sieci jak nawigacja. */
+const KATALOG_DANYCH = 'data/'
 // Tylko pliki, ktore istnieja; kolejne fazy dopisuja swoje (np. oferta.html).
 const PLIKI_STARTOWE = [
   './',
@@ -52,14 +56,34 @@ async function zapisana(cache, zadanie) {
   return odpowiedz ?? (czyNawigacja ? cache.match(STRONA_ZAPASOWA) : undefined)
 }
 
-/** @param {FetchEvent} zdarzenie @returns {Promise<Response>} */
-async function siecPotemCache(zdarzenie) {
+/** @param {Request} zadanie @returns {boolean} nawigacja albo plik z data/ */
+function czyNajpierwSiec(zadanie) {
+  if (zadanie.mode === 'navigate') return true
+  return new URL(zadanie.url).pathname.startsWith(new URL(KATALOG_DANYCH, self.location.href).pathname)
+}
+
+/** @param {FetchEvent} zdarzenie @param {Cache} cache @returns {Promise<Response>} odpowiedz sieci; poprawna trafia do cache w tle */
+function zSieci(zdarzenie, cache) {
   const zadanie = zdarzenie.request
-  const cache = await caches.open(WERSJA_CACHE)
-  const siec = fetch(zadanie).then((odpowiedz) => {
+  return fetch(zadanie).then((odpowiedz) => {
     if (czyDoZapisu(odpowiedz)) zdarzenie.waitUntil(cache.put(zadanie, odpowiedz.clone()).catch((blad) => zglos('sw_zapis', blad)))
     return odpowiedz
   })
+}
+
+/** Niezmienny plik aplikacji: od razu z cache i odswiezenie w tle; bez wpisu w cache czeka na siec. @param {FetchEvent} zdarzenie @param {Cache} cache */
+async function cachePotemSiec(zdarzenie, cache) {
+  const zCache = await cache.match(zdarzenie.request)
+  const siec = zSieci(zdarzenie, cache)
+  if (!zCache) return siec
+  zdarzenie.waitUntil(siec.catch((blad) => zglos('sw_odswiezenie', blad)))
+  return zCache
+}
+
+/** @param {FetchEvent} zdarzenie @param {Cache} cache @returns {Promise<Response>} */
+async function siecPotemCache(zdarzenie, cache) {
+  const zadanie = zdarzenie.request
+  const siec = zSieci(zdarzenie, cache)
   try {
     return await zLimitem(siec, LIMIT_SIECI_MS)
   } catch (blad) {
@@ -98,7 +122,8 @@ self.addEventListener('activate', (zdarzenie) => {
 self.addEventListener('fetch', (zdarzenie) => {
   const { request } = zdarzenie
   if (request.method !== 'GET' || !czyTenSamOrigin(request.url)) return
-  zdarzenie.respondWith(siecPotemCache(zdarzenie))
+  zdarzenie.respondWith(caches.open(WERSJA_CACHE)
+    .then((cache) => (czyNajpierwSiec(request) ? siecPotemCache(zdarzenie, cache) : cachePotemSiec(zdarzenie, cache))))
 })
 
 self.addEventListener('message', (zdarzenie) => {

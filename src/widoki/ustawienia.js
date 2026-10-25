@@ -2,47 +2,23 @@
 // „Koszty zlecenia (szacunki do zmiany)” i wiersz „Kopia danych”; kazda zmiana zapisuje sie od razu z komunikatem „Zapisano”.
 
 import { dniOdKopii } from '../dane/kopia.js'
-import { BladMagazynu } from '../dane/magazyn.js'
-import { BladUstawien, ustawieniaDomyslne, zapiszUstawienia } from '../dane/ustawienia.js'
+import { wczytajStan } from '../dane/magazyn.js'
+import { ustawieniaDomyslne, zapiszUstawienia } from '../dane/ustawienia.js'
 import { dniTemu } from '../ui/format.js'
 import { h } from '../ui/h.js'
 import { baner, dolnyPasek, karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
 import { sciezka } from '../ui/trasy.js'
-import { TEKSTY_BLEDOW } from './ustawienia-formularz.js'
 import { kartaFirmy, kartaKosztow, kartaRynku } from './ustawienia-sekcje.js'
 import { kartaTempa } from './ustawienia-tempo.js'
+import { tekstBleduZapisu } from './teksty-bledow.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
-/** @typedef {import('../ui/router.js').Kontekst} Kontekst */
 /** @typedef {import('../dane/magazyn.js').Stan} Stan */
 /** @typedef {import('../dane/ustawienia.js').ZmianaUstawien} ZmianaUstawien */
 /** @typedef {import('./ustawienia-sekcje.js').DaneSekcji} DaneSekcji */
 
 const CZAS_KOMUNIKATU_MS = 3000
 const BRAK_KOPII = 'brak kopii'
-const BLAD_ZAPISU = 'Nie udało się zapisać zmian. Spróbuj jeszcze raz.'
-const BLAD_PELNEJ_PAMIECI = 'Nie udało się zapisać zmian: brak miejsca w pamięci przeglądarki.'
-const BLAD_DLUGOSCI = 'Ten tekst jest za długi.'
-
-/** @param {Kontekst} kontekst @returns {Stan} uszkodzony stan konczy sie ekranem bledu routera */
-export function wczytajStan(kontekst) {
-  const wynik = kontekst.magazyn.wczytaj()
-  if (!('stan' in wynik)) throw new BladMagazynu(wynik.blad, 'Zapisanych danych nie da się odczytać')
-  return wynik.stan
-}
-
-/**
- * Tekst dla uzytkownika po nieudanym zapisie ustawien; inne bledy niz magazynu i ustawien leca dalej.
- * @param {unknown} blad
- * @returns {string}
- */
-export function tekstBleduZapisu(blad) {
-  if (blad instanceof BladMagazynu) return blad.kod === 'pelny' ? BLAD_PELNEJ_PAMIECI : BLAD_ZAPISU
-  if (!(blad instanceof BladUstawien)) throw blad
-  const { kod } = blad
-  if (kod === 'telefon' || kod === 'email' || kod === 'nip') return TEKSTY_BLEDOW[kod]
-  return kod === 'dlugosc' ? BLAD_DLUGOSCI : BLAD_ZAPISU
-}
 
 /** @param {Stan} stan @param {Date} dzis */
 function kartaKopii(stan, dzis) {
@@ -75,7 +51,7 @@ export const widokUstawien = {
 
     /** @param {string} [fokus] */
     function rysuj(fokus) {
-      const stan = wczytajStan(kontekst)
+      const stan = wczytajStan(magazyn)
       /** @type {DaneSekcji} */
       const dane = { ustawienia: stan.ustawienia ?? ustawieniaDomyslne(domyslne), katalog, domyslne, wyceny: stan.wyceny, zapisz }
       tresc.replaceChildren(kartaFirmy(dane), kartaRynku(dane), kartaTempa(dane), kartaKosztow(dane), kartaKopii(stan, new Date()))

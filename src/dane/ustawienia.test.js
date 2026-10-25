@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict'
-import { describe, it } from 'node:test'
+import { describe, it, mock } from 'node:test'
 
 import { czytajJson, katalogTestowy } from '../../tests/pomocnicze.js'
 import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
 import { BladKatalogu } from '../silnik/bledy.js'
 import { KLUCZ_MAGAZYNU, utworzMagazyn } from './magazyn.js'
 import {
-  BladUstawien, brakujeUstawien, pominKreator, scalKoszty, sprawdzUstawienia, ustawieniaDomyslne, zapiszUstawienia,
+  BladUstawien, brakujeUstawien, jestDomyslnymi, pominKreator, POLA_WYMAGANE_W_OFERCIE, scalKoszty, sprawdzUstawienia,
+  ustawieniaDomyslne, wczytajDomyslne, zapiszUstawienia,
 } from './ustawienia.js'
 
 const DOMYSLNE = {
@@ -230,5 +231,62 @@ describe('sprawdzUstawienia', () => {
     assert.throws(() => sprawdzUstawienia({ ...ustawienia, tempo: { reczne: 0 } }), bladUstawien('zakres', 'tempo.reczne'))
     assert.throws(() => sprawdzUstawienia({ ...ustawienia, przypomnienieKopiiDni: 3 }), bladUstawien('wartosc', 'przypomnienieKopiiDni'))
     assert.throws(() => sprawdzUstawienia({ ...ustawienia, wojewodztwoId: '<b>' }), bladUstawien('wartosc', 'wojewodztwoId'))
+  })
+})
+
+describe('jestDomyslnymi i wczytajDomyslne', () => {
+  it('data/domyslne.json → true', async () => {
+    assert.equal(jestDomyslnymi(await czytajJson('data/domyslne.json')), true)
+  })
+
+  it('brak tempo, zły status VAT, warunki jako obiekt, brak zastrzeżenia, waznosc_dni jako tekst → false', () => {
+    const { tempo: _tempo, ...bezTempa } = DOMYSLNE
+    const zle = [
+      bezTempa,
+      { ...DOMYSLNE, status_vat: 'czynny ' },
+      { ...DOMYSLNE, oferta: { waznosc_dni: 14, warunki: { id: 'odwolanie' } } },
+      { ...DOMYSLNE, oferta: { waznosc_dni: '14', warunki: [] } },
+      { ...DOMYSLNE, oferta: { waznosc_dni: 14, warunki: [{ id: 'x', tresc: 'Treść' }] } },
+      { ...DOMYSLNE, szybka_wycena: {} },
+      { ...DOMYSLNE, wojewodztwo: undefined },
+      null,
+    ]
+
+    assert.deepEqual(zle.map(jestDomyslnymi), zle.map(() => false))
+  })
+
+  it('wczytajDomyslne pobiera data/domyslne.json i oddaje poprawny plik', async () => {
+    const pobierz = mock.fn(async () => DOMYSLNE)
+
+    const wynik = await wczytajDomyslne(pobierz)
+
+    assert.equal(wynik, DOMYSLNE)
+    assert.deepEqual(pobierz.mock.calls[0].arguments, ['data/domyslne.json'])
+  })
+
+  it('wczytajDomyslne: plik bez tempo i oferty → BladKatalogu zly_format', async () => {
+    await assert.rejects(wczytajDomyslne(async () => ({ status_vat: 'zwolniony' })), { name: BladKatalogu.name, kod: 'zly_format' })
+  })
+
+  it('ustawieniaDomyslne używa tego samego strażnika: warunki jako obiekt → BladKatalogu zly_format', () => {
+    assert.throws(() => ustawieniaDomyslne({ ...DOMYSLNE, oferta: { waznosc_dni: 14, warunki: {} } }), { name: BladKatalogu.name, kod: 'zly_format' })
+  })
+})
+
+describe('brakujeUstawien po zakończonym kreatorze', () => {
+  it('średnia krajowa wybrana w kreatorze (wojewodztwoId null, kreatorZakonczony) nie jest brakiem', () => {
+    const poKreatorze = {
+      ...ustawieniaDomyslne(DOMYSLNE), kreatorZakonczony: true, firma: { nazwa: 'Firma Test', telefon: '600 123 456', email: '', nip: '' },
+    }
+
+    assert.deepEqual(brakujeUstawien(poKreatorze), [])
+    assert.deepEqual(brakujeUstawien({ ...poKreatorze, kreatorZakonczony: false }), ['wojewodztwo'])
+  })
+
+  it('pola wymagane w ofercie to nazwa i telefon; pusta nazwa daje brak firmy', () => {
+    const pelne = { ...ustawieniaDomyslne(DOMYSLNE), wojewodztwoId: 'mazowieckie', firma: { nazwa: ' ', telefon: '600 123 456', email: '', nip: '' } }
+
+    assert.deepEqual(POLA_WYMAGANE_W_OFERCIE, ['nazwa', 'telefon'])
+    assert.deepEqual(brakujeUstawien(pelne), ['firma'])
   })
 })

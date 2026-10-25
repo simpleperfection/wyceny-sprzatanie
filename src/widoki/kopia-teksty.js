@@ -2,10 +2,10 @@
 // komunikat po wczytaniu i nazwa pliku z surowymi danymi. Bez DOM, zeby dalo sie je sprawdzic testem w Node.
 
 import { BladKopii } from '../dane/kopia.js'
-import { jestDataIso, jestObiektem } from '../dane/ksztalt.js'
+import { dzienLokalny, jestDataIso, jestObiektem } from '../dane/ksztalt.js'
 import { BladMagazynu } from '../dane/magazyn.js'
 import { MAKS_WYCEN } from '../dane/wyceny.js'
-import { BladFormatu, data, dniTemu, FORMY, odmiana } from '../ui/format.js'
+import { data, dniTemu, FORMY, odmiana, sprawdzDate } from '../ui/format.js'
 import { BladPliku, MAKS_ROZMIAR_PLIKU } from '../ui/plik.js'
 
 /** @typedef {import('../dane/magazyn.js').Stan} Stan */
@@ -85,7 +85,14 @@ export function tekstWczytania(tekst, stanZPliku) {
 
 /** @param {Date} dzis @returns {string} `wyceny-surowe-RRRR-MM-DD.txt` (dzien lokalny, jak nazwa pliku kopii) */
 export function nazwaSurowegoPliku(dzis) {
-  if (!(dzis instanceof Date) || Number.isNaN(dzis.getTime())) throw new BladFormatu('zla_data', `Nieprawidłowa data: ${String(dzis)}`)
-  const dzien = `${dzis.getFullYear()}-${String(dzis.getMonth() + 1).padStart(2, '0')}-${String(dzis.getDate()).padStart(2, '0')}`
-  return `wyceny-surowe-${dzien}.txt`
+  return `wyceny-surowe-${dzienLokalny(sprawdzDate(dzis))}.txt`
+}
+
+/**
+ * Wczytanie kopii pyta o „Połącz” / „Zastąp”, gdy w aplikacji sa wyceny albo ustawienia; pusta aplikacja od razu je zastepuje.
+ * @param {Pick<Stan, 'wyceny' | 'ustawienia'>} stan obecny stan aplikacji
+ * @returns {boolean}
+ */
+export function czyPytacOTryb(stan) {
+  return stan.wyceny.length > 0 || stan.ustawienia !== null
 }

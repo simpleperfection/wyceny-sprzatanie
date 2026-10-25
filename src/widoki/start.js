@@ -3,7 +3,7 @@
 // pierwsze uruchomienie — stan pusty.
 
 import { czyPrzypomniecOKopii, dniOdKopii } from '../dane/kopia.js'
-import { BladMagazynu } from '../dane/magazyn.js'
+import { wczytajStan } from '../dane/magazyn.js'
 import { brakujeUstawien, scalKoszty } from '../dane/ustawienia.js'
 import { czyPokazacInstrukcjeIos, srodowiskoPrzegladarki, zamknijInstrukcjeIos } from '../pwa/rejestracja.js'
 import { tempoDoWyceny } from '../silnik/tempo.js'
@@ -13,7 +13,7 @@ import { baner, dolnyPasek, karta, naglowek, wiersz } from '../ui/komponenty/ukl
 import { pigulkaStatusu } from '../ui/statusy.js'
 import { sciezka } from '../ui/trasy.js'
 import { adresWyceny, doZrobienia, inicjal, kwotaWyceny, nazwaMiesiaca, podsumowanieMiesiaca, wierszTempa } from './start-dane.js'
-import { tekstBleduZapisu } from './ustawienia.js'
+import { tekstBleduZapisu } from './teksty-bledow.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../ui/router.js').Kontekst} Kontekst */
@@ -25,13 +25,6 @@ const PUSTY_START = 'Nie masz jeszcze wycen. Zacznij od szybkiej wyceny przez te
 const BEZ_KOPII = 'Nie masz jeszcze kopii danych. Dane są tylko w tej przeglądarce.'
 const ZOSTAJE = 'zostaje średnio'
 const INSTRUKCJA_IOS = 'Na iPhonie dodaj aplikację do ekranu początkowego: Udostępnij → Do ekranu początkowego. Dane z Safari nie przechodzą do aplikacji na ekranie początkowym, więc zrób to przed pierwszą wyceną.'
-
-/** @param {Kontekst} kontekst @returns {Stan} uszkodzony stan konczy sie ekranem bledu routera */
-function stanAplikacji(kontekst) {
-  const wynik = kontekst.magazyn.wczytaj()
-  if (!('stan' in wynik)) throw new BladMagazynu(wynik.blad, 'Zapisanych danych nie da się odczytać')
-  return wynik.stan
-}
 
 /** @param {string} adres @param {'bolt' | 'file-text'} nazwaIkony @param {string} tytul @param {string} opis @param {boolean} czyGlowny */
 function kafel(adres, nazwaIkony, tytul, opis, czyGlowny) {
@@ -140,7 +133,7 @@ function trescStartu(stan, kontekst, dzis) {
 /** @type {Widok} */
 export const widokStartu = {
   render(kontener, { kontekst }) {
-    const stan = stanAplikacji(kontekst)
+    const stan = wczytajStan(kontekst.magazyn)
     const dzis = new Date()
     const nazwaFirmy = stan.ustawienia?.firma.nazwa.trim() ?? ''
     kontener.append(

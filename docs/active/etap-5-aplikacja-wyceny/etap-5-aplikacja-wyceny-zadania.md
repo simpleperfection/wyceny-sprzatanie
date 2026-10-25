@@ -191,10 +191,10 @@ Zależy od: Faza 2
 - [x] Test: [Unit] `dopasuj('#/wycena/abc/oferta', TRASY)` → `{ nazwa: 'oferta', parametry: { id: 'abc' } }`; `#/kreator/zakres?wycena=x` daje krok i zapytanie; `#/nic` → null
 - [x] Test: [Unit] `zl(1234.5)` → „1 235 zł” z twardą spacją; `czas(315)` → „5 h 15 min”; `tempo(1.18)` → „1,18×”
 - [x] Test: [Unit] `miejscownikWojewodztwa('kujawsko-pomorskie')` → „kujawsko-pomorskim”; `dniTemu` dla 0, 1 i 9 dni
-- [ ] Test: [E2E] `szkielet-nawigacja` — ustaw okno 360×800, otwórz http://localhost:5174/, wstrzyknij przez `agent-browser eval` treść `e2e/stany/ustawienia-mazowieckie.json` do `localStorage['wyceny-sprzatanie:stan']`, przeładuj, kliknij „Wyceny”, „Firma”, „+”, potem otwórz `#/zly-adres`, zrób screenshot → nagłówki ekranów zmieniają się, arkusz „+” ma dwie opcje, zły adres pokazuje „Nie ma takiego ekranu.”, konsola bez błędów, `document.fonts.check('16px "Source Sans 3"')` zwraca true
-- [ ] Weryfikacja: `node --test src/ui/format.test.js src/ui/router.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
-- [ ] Weryfikacja: `grep -rn "innerHTML" src/` nie zwraca wyników
+- [x] Test: [E2E] `szkielet-nawigacja` — ustaw okno 360×800, otwórz http://localhost:5174/, wstrzyknij przez `agent-browser eval` treść `e2e/stany/ustawienia-mazowieckie.json` do `localStorage['wyceny-sprzatanie:stan']`, przeładuj, kliknij „Wyceny”, „Firma”, „+”, potem otwórz `#/zly-adres`, zrób screenshot → nagłówki ekranów zmieniają się, arkusz „+” ma dwie opcje, zły adres pokazuje „Nie ma takiego ekranu.”, konsola bez błędów, `document.fonts.check('16px "Source Sans 3"')` zwraca true
+- [x] Weryfikacja: `node --test src/ui/format.test.js src/ui/router.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `grep -rn "innerHTML" src/` nie zwraca wyników
 
 ### IU-10: Ekran startowy i lista wycen (feature-builder-ui)
 
@@ -209,9 +209,9 @@ Zależy od: Faza 2
 - [x] Test: [Unit] `doZrobienia` dla wycen do wysłania, przyjętej z terminem jutro i przyjętej z terminem wczoraj daje „Wyślij ofertę” i jedno „Wpisz czas pracy”
 - [x] Test: [Unit] `podsumowanieMiesiaca` liczy wyceny z bieżącego miesiąca bez szkiców i średnią realną stawkę z wykonań
 - [x] Test: [Unit] `e2e/stany/wyceny-do-zrobienia.json` wczytuje się przez `odczytajKopie`-zgodny kształt stanu v1 (magazyn bez błędu)
-- [ ] Test: [E2E] `ekran-startowy-zadania` — okno 360×800, wstrzyknij `e2e/stany/wyceny-do-zrobienia.json` do `localStorage['wyceny-sprzatanie:stan']`, otwórz http://localhost:5174/#/start, zrób screenshot, kliknij wiersz „Wyślij ofertę”, wróć, kliknij „Wyceny” → karta „Do zrobienia 2” z „Wyślij ofertę” i „Wpisz czas pracy”, baner „Nie masz jeszcze kopii danych…”, wiersz otwiera `#/wycena/<id>`, lista wycen ma trzy pozycje z pigułkami „Do wysłania”, „Wysłana”, „Przyjęta”
-- [ ] Weryfikacja: `node --test src/widoki/start-dane.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Test: [E2E] `ekran-startowy-zadania` — okno 360×800, wstrzyknij `e2e/stany/wyceny-do-zrobienia.json` do `localStorage['wyceny-sprzatanie:stan']`, otwórz http://localhost:5174/#/start, zrób screenshot, kliknij wiersz „Wyślij ofertę”, wróć, kliknij „Wyceny” → karta „Do zrobienia 2” z „Wyślij ofertę” i „Wpisz czas pracy”, baner „Nie masz jeszcze kopii danych…”, wiersz otwiera `#/wycena/<id>`, lista wycen ma trzy pozycje z pigułkami „Do wysłania”, „Wysłana”, „Przyjęta”
+- [x] Weryfikacja: `node --test src/widoki/start-dane.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-11: Ustawienia firmy i kreator pierwszego uruchomienia (feature-builder-ui)
 
@@ -225,10 +225,10 @@ Zależy od: Faza 2
 - [x] Test (unit): `src/widoki/ustawienia-formularz.test.js`
 - [x] Test: [Unit] formularz z telefonem „600-123-456” i NIP-em pustym daje patch bez błędów; chemia „4,5” → 4.5; chemia „-1” → błąd zakresu
 - [x] Test: [Unit] tempo „3,5” daje błąd „Wpisz liczbę od 0,5 do 3.”
-- [ ] Test: [E2E] `kreator-ustawien` — okno 360×800, wyczyść localStorage, otwórz http://localhost:5174/, przejdź kreator: województwo „mazowieckie”, „Czynny podatnik VAT”, nazwa „Firma Test”, telefon „600 123 456”, tempo bez zmian, „Gotowe”; potem otwórz „Firma” → start bez banera „Ustawienia domyślne – uzupełnij”, w ustawieniach „Czynny podatnik VAT” zaznaczony i „1,3× normy rynkowej”
-- [ ] Test: [E2E] `kreator-ustawien-pominiety` — wyczyść localStorage, otwórz http://localhost:5174/, kliknij „Pomiń” → start z banerem „Ustawienia domyślne – uzupełnij”, a „Uzupełnij” otwiera `#/ustawienia`
-- [ ] Weryfikacja: `node --test src/widoki/ustawienia-formularz.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Test: [E2E] `kreator-ustawien` — okno 360×800, wyczyść localStorage, otwórz http://localhost:5174/, przejdź kreator: województwo „mazowieckie”, „Czynny podatnik VAT”, nazwa „Firma Test”, telefon „600 123 456”, tempo bez zmian, „Gotowe”; potem otwórz „Firma” → start bez banera „Ustawienia domyślne – uzupełnij”, w ustawieniach „Czynny podatnik VAT” zaznaczony i „1,3× normy rynkowej”
+- [x] Test: [E2E] `kreator-ustawien-pominiety` — wyczyść localStorage, otwórz http://localhost:5174/, kliknij „Pomiń” → start z banerem „Ustawienia domyślne – uzupełnij”, a „Uzupełnij” otwiera `#/ustawienia`
+- [x] Weryfikacja: `node --test src/widoki/ustawienia-formularz.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-12: Ekran kopii zapasowej i ekran ratunkowy (feature-builder-ui)
 
@@ -237,10 +237,10 @@ Zależy od: Faza 2
 - [x] Stwórz: `src/ui/plik.js`
 - [x] Modyfikuj: `src/widoki/indeks.js`
 - [x] Modyfikuj: `src/app.js`
-- [ ] Test: [E2E] `kopia-eksport` — okno 360×800, wstrzyknij `e2e/stany/wyceny-do-zrobienia.json`, otwórz http://localhost:5174/#/kopia, kliknij „Zapisz kopię”, wróć na start → baner „Kopia zapisana: wyceny-kopia-<dzisiejsza data>.json”, na starcie brak banera przypomnienia o kopii
-- [ ] Test: [E2E] `ekran-ratunkowy` — wstrzyknij do `localStorage['wyceny-sprzatanie:stan']` tekst `{zepsute`, otwórz http://localhost:5174/ → ekran „Nie udało się odczytać danych zapisanych w przeglądarce.” z trzema przyciskami
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
-- [ ] Weryfikacja: `npm test` przechodzi
+- [x] Test: [E2E] `kopia-eksport` — okno 360×800, wstrzyknij `e2e/stany/wyceny-do-zrobienia.json`, otwórz http://localhost:5174/#/kopia, kliknij „Zapisz kopię”, wróć na start → baner „Kopia zapisana: wyceny-kopia-<dzisiejsza data>.json”, na starcie brak banera przypomnienia o kopii
+- [x] Test: [E2E] `ekran-ratunkowy` — wstrzyknij do `localStorage['wyceny-sprzatanie:stan']` tekst `{zepsute`, otwórz http://localhost:5174/ → ekran „Nie udało się odczytać danych zapisanych w przeglądarce.” z trzema przyciskami
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `npm test` przechodzi
 
 ### IU-13: PWA: manifest, service worker, ikony zastępcze i instrukcja dla iPhone'a (feature-builder-ui)
 
@@ -258,10 +258,14 @@ Zależy od: Faza 2
 - [x] Modyfikuj: `src/widoki/start.js`
 - [x] Test (unit): `src/pwa/rejestracja.test.js`
 - [x] Test: [Unit] `czyPokazacInstrukcjeIos` dla Safari na iPhonie poza trybem aplikacji → true; w trybie standalone, na Androidzie i po zamknięciu → false
-- [ ] Test: [E2E] `pwa-manifest` — otwórz http://localhost:5174/, przeładuj, sprawdź przez `agent-browser eval` `navigator.serviceWorker.controller !== null` i `fetch('manifest.webmanifest').then(r => r.json())` → service worker kontroluje stronę, manifest ma `short_name` „Wyceny” i trzy ikony
-- [ ] Weryfikacja: `node --test src/pwa/rejestracja.test.js` przechodzi
-- [ ] Weryfikacja: `node scripts/ikony-zastepcze.mjs` tworzy cztery pliki PNG w `ikony/`
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Test: [E2E] `pwa-manifest` — otwórz http://localhost:5174/, przeładuj, sprawdź przez `agent-browser eval` `navigator.serviceWorker.controller !== null` i `fetch('manifest.webmanifest').then(r => r.json())` → service worker kontroluje stronę, manifest ma `short_name` „Wyceny” i trzy ikony
+- [x] Weryfikacja: `node --test src/pwa/rejestracja.test.js` przechodzi
+- [x] Weryfikacja: `node scripts/ikony-zastepcze.mjs` tworzy cztery pliki PNG w `ikony/`
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+
+## Do poprawy po review fazy 3
+
+Zamkniete cyklem fix: 12 pozycji — pelna tresc findingow i uzasadnienia w `review-faza-3.md`.
 
 ## Operator checklist faza 3
 
@@ -272,6 +276,10 @@ Zależy od: Faza 2
 - [ ] [Manual] import pliku kopii z systemowego okna wyboru plików na Androidzie i iPhonie (połącz i zastąp) (IU-12)
 - [ ] [Manual] Chrome DevTools → Network „Offline” → aplikacja otwiera się i liczy wycenę z danych w cache (IU-13)
 - [ ] [Manual] instalacja na ekranie początkowym Androida i iPhone'a; ikona zastępcza widoczna (IU-13)
+- [ ] Operator: Plan zakłada hosting na GitHub Pages repo `simpleperfection/wyceny-sprzatanie`, czyli adres projektowy pod originem `simpleperfection.github.io`. Ten origin dzielą wszystkie strony Pages tego konta. `localStorage['wyceny-sprzatanie:stan']` z danymi klientów (nazwiska, telefony, adresy, NIP firmy) oraz Cache Storage service workera są dostępne dla każdej innej strony Pages właściciela. Taka strona może też wysłać do `sw.js` komunikat `zapisz-zasoby`, bo handler `message` nie sprawdza `zdarzenie.source`. Scenariusz: XSS albo złośliwa zależność w innym repo właściciela na github.io → odczyt i podmiana danych wszystkich wycen. Wymiana nagłówków (`frame-ancestors`, `X-Frame-Options`) też nie jest możliwa na Pages, bo meta CSP ich nie obsługuje. Decyzja operatora w etapie 6, który rozstrzyga adres publikacji: własna (sub)domena dla aplikacji albo osobne konto lub organizacja tylko z tą aplikacją. Kodu fazy to nie blokuje. — Operator action: zdecydować w etapie 6 o adresie publikacji: własna (sub)domena albo osobne konto lub organizacja GitHub tylko z tą aplikacją
+- [ ] Operator: [Manual] ekran-startowy: visual review — Operator action: otwórz visual-diff/ekran-startowy-figma.png obok visual-diff/ekran-startowy-actual.png (viewport: 768×1839; zrzut zrobiony jako 384×920 przy deviceScaleFactor 2, bo makieta to eksport 2x ekranu 360 px; stan e2e/stany/wyceny-do-zrobienia.json, trasa #/start). Kolory różnią się celowo (tokeny wariantu B z SPEC.md). Układ sekcji jest zgodny: nagłówek, dwa kafle wyceny, karta miesiąca z tempem, „Do zrobienia”, baner kopii, dolne menu.
+- [ ] Operator: [Manual] ustawienia-firmy: visual review — Operator action: otwórz visual-diff/ustawienia-firmy-figma.png obok visual-diff/ustawienia-firmy-actual.png (viewport: 768×2579; zrzut 384×920 przy skali 2 z --full, stan e2e/stany/ustawienia-mazowieckie.json, trasa #/ustawienia). Dolne menu w połowie zrzutu to artefakt zrzutu całej strony: menu ma position fixed i zostaje na dole okna 920 px. To nie jest defekt.
+- [ ] Operator: [Manual] kopia-zapasowa: visual review — Operator action: otwórz visual-diff/kopia-zapasowa-figma.png obok visual-diff/kopia-zapasowa-actual.png (viewport: 768×1839; zrzut 384×920 przy skali 2, stan e2e/stany/wyceny-do-zrobienia.json, trasa #/kopia). Do oceny: pigułka „0 zleceń” liczy tylko wyceny wykonane (kopia-teksty.js:60, `wykonan`), więc przy jednej wycenie „Przyjęta” pokazuje 0. W makiecie liczba zleceń (7) jest równa liczbie przyjętych na starcie.
 
 ## Faza 4 — Kreator dokładnej wyceny
 

@@ -1,12 +1,13 @@
 // Kreator pierwszego uruchomienia (`#/ustawienia/start`, R24): sekcje ustawien firmy po jednej z paskiem postepu
 // (Województwo, VAT, Firma, Tempo). Wybory trzyma szkic, a „Gotowe” zapisuje je razem; „Pomiń” zostawia wartosci domyslne.
 
+import { wczytajStan } from '../dane/magazyn.js'
 import { pominKreator, ustawieniaDomyslne, zapiszUstawienia } from '../dane/ustawienia.js'
 import { h } from '../ui/h.js'
 import { przycisk } from '../ui/komponenty/formularz.js'
 import { baner, karta, naglowek, pasekPostepu } from '../ui/komponenty/uklad.js'
 import { sciezka } from '../ui/trasy.js'
-import { tekstBleduZapisu, wczytajStan } from './ustawienia.js'
+import { tekstBleduZapisu } from './teksty-bledow.js'
 import { kartaFirmy, trescVat, trescWojewodztwa } from './ustawienia-sekcje.js'
 import { kartaTempa } from './ustawienia-tempo.js'
 
@@ -43,7 +44,7 @@ function scalSzkic(szkic, zmiana) {
 export const widokKreatoraStartowego = {
   render(kontener, { kontekst }) {
     const { magazyn, katalog, domyslne, nawiguj } = kontekst
-    const stan = wczytajStan(kontekst)
+    const stan = wczytajStan(magazyn)
     const komunikat = h('div', { class: 'kreator-startowy__komunikat', 'aria-live': 'polite' })
     let szkic = stan.ustawienia ?? ustawieniaDomyslne(domyslne)
     let krok = 0

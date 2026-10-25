@@ -1,6 +1,6 @@
 // Lista wszystkich wycen (`#/wyceny`): od ostatnio zmienionej, z numerem, klientem, kwota i pigulka statusu.
 
-import { BladMagazynu } from '../dane/magazyn.js'
+import { wczytajStan } from '../dane/magazyn.js'
 import { listaWycen } from '../dane/wyceny.js'
 import { zl } from '../ui/format.js'
 import { h } from '../ui/h.js'
@@ -35,9 +35,7 @@ function wierszWyceny(w, katalog) {
 /** @type {Widok} */
 export const widokListyWycen = {
   render(kontener, { kontekst }) {
-    const wynik = kontekst.magazyn.wczytaj()
-    if (!('stan' in wynik)) throw new BladMagazynu(wynik.blad, 'Zapisanych danych nie da się odczytać')
-    const wyceny = listaWycen(wynik.stan)
+    const wyceny = listaWycen(wczytajStan(kontekst.magazyn))
     kontener.append(
       naglowek({ tytul: 'Wyceny' }),
       h('div', { class: 'tresc' },
