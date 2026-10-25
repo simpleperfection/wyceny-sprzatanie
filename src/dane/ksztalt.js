@@ -6,7 +6,7 @@ export const POLA_FIRMY = Object.freeze(/** @type {const} */ (['nazwa', 'telefon
 /** Najdluzszy tekst i klucz w zapisanych danych; ta sama granica obowiazuje przy zapisie, w kopii i przy jej odczycie. */
 export const MAKS_DLUGOSC_TEKSTU = 2000
 /** Glebokosc zagniezdzenia danych; stan aplikacji ma kilka poziomow, wiecej znaczy dane spoza aplikacji. */
-const MAKS_ZAGLEBIENIE = 32
+export const MAKS_ZAGLEBIENIE = 32
 const DZIEN = /^\d{4}-\d{2}-\d{2}$/
 
 /** @param {unknown} x @returns {x is Record<string, unknown>} */

@@ -3,7 +3,8 @@
 // Straznik jestWycena jest jedynym opisem zapisanej wyceny: uzywa go zapis tutaj i kopia zapasowa (eksport i odczyt pliku).
 
 import {
-  jestDataIso, jestDniem, jestListaTekstow, jestLiczba, jestObiektem, jestTekstemLubNull, jestWarunkiem, MAKS_DLUGOSC_TEKSTU, maKrotkieTeksty,
+  jestDataIso, jestDniem, jestListaTekstow, jestLiczba, jestObiektem, jestTekstemLubNull, jestWarunkiem, MAKS_DLUGOSC_TEKSTU, MAKS_ZAGLEBIENIE,
+  maKrotkieTeksty,
 } from './ksztalt.js'
 
 /** @typedef {import('./magazyn.js').Magazyn} Magazyn */
@@ -134,7 +135,10 @@ export function jestWycena(x) {
 
 /** @param {unknown} dane @param {string} co */
 function sprawdzDlugosc(dane, co) {
-  if (!maKrotkieTeksty(dane)) throw new BladWyceny('dlugosc', `${co}: tekst dłuższy niż ${MAKS_DLUGOSC_TEKSTU} znaków`)
+  if (!maKrotkieTeksty(dane)) {
+    throw new BladWyceny('dlugosc', `${co}: tekst albo klucz dłuższy niż ${MAKS_DLUGOSC_TEKSTU} znaków albo dane zagnieżdżone głębiej niż ` +
+      `${MAKS_ZAGLEBIENIE} poziomy`)
+  }
 }
 
 /** @param {unknown} wejscie @returns {asserts wejscie is WejscieWyceny} */
@@ -194,8 +198,11 @@ function wymagajWyniku(w) {
 /** Oferta mogla trafic do klienta: status `wyslana` albo data wyslania (po wyslaniu przyjeta lub odrzucona). @param {Wycena} w */
 const poWyslaniu = (w) => w.status === 'wyslana' || w.oferta.wyslana !== null
 
-/** @param {Wycena} w @returns {OfertaWyceny} */
-const nieaktualnaPoWyslaniu = (w) => (poWyslaniu(w) ? { ...w.oferta, nieaktualna: true } : w.oferta)
+/**
+ * Oferta po zmianie ceny, wejscia albo numeru: po wyslaniu nieaktualna, przed wyslaniem bez zmian (tez dla kopii zapasowej).
+ * @param {Wycena} w @returns {OfertaWyceny}
+ */
+export const nieaktualnaPoWyslaniu = (w) => (poWyslaniu(w) ? { ...w.oferta, nieaktualna: true } : w.oferta)
 
 /**
  * Pierwsze wyjscie ze szkicu: kolejny numer miesiaca z licznikNumerow[RRRR-MM] (czas lokalny). Numer raz nadany zostaje.

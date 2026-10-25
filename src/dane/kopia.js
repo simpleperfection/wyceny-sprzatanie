@@ -4,7 +4,7 @@
 import { jestObiektem, maKrotkieTeksty } from './ksztalt.js'
 import { BladMagazynu, WERSJA_SCHEMATU, zaktualizujStan } from './magazyn.js'
 import { BladUstawien, DNI_PRZYPOMNIENIA_KOPII, sprawdzUstawienia } from './ustawienia.js'
-import { jestWycena, MAKS_WYCEN } from './wyceny.js'
+import { jestWycena, MAKS_WYCEN, nieaktualnaPoWyslaniu } from './wyceny.js'
 
 /** @typedef {import('./magazyn.js').Magazyn} Magazyn */
 /** @typedef {import('./magazyn.js').Stan} Stan */
@@ -147,10 +147,13 @@ function maksimumLicznikow(lokalny, zPliku) {
   return Object.fromEntries(miesiace)
 }
 
+/** Wycena z numerem z tego urzadzenia; wyslana oferta z innym numerem staje sie nieaktualna. @param {Wycena} w @param {string} numer */
+const zNumeremUrzadzenia = (w, numer) => (w.numer === numer ? w : { ...w, numer, oferta: nieaktualnaPoWyslaniu(w) })
+
 /**
  * Wyceny z pliku z numerem zajetym przez wycene lokalna (dwa urzadzenia nadaly ten sam numer) dostaja kolejny numer swojego
- * miesiaca z polaczonego licznika; licznik rosnie o nadane numery.
- * @param {Wycena[]} wyceny po polaczeniu @param {Set<Wycena>} lokalne wyceny, ktore zostaly z magazynu
+ * miesiaca z polaczonego licznika; licznik rosnie o nadane numery, a wyslana oferta z nowym numerem staje sie nieaktualna.
+ * @param {Wycena[]} wyceny po polaczeniu @param {Set<Wycena>} lokalne wyceny z numerem z tego urzadzenia (bez zmian)
  * @param {Record<string, number>} licznik @returns {{ wyceny: Wycena[], licznikNumerow: Record<string, number> }}
  */
 function bezPowtorzonychNumerow(wyceny, lokalne, licznik) {
@@ -170,13 +173,14 @@ function bezPowtorzonychNumerow(wyceny, lokalne, licznik) {
       numer = `${licznikNumerow[klucz]}/${miesiac}/${rok}`
     }
     zajete.add(numer)
-    return { ...w, numer }
+    return zNumeremUrzadzenia(w, numer)
   })
   return { wyceny: poNumeracji, licznikNumerow }
 }
 
 /**
- * Wyceny po `id` (wygrywa pozniejsza `zmieniona`, przy rownej lokalna), ustawienia lokalne, licznik numerow = maksimum,
+ * Wyceny po `id` (wygrywa pozniejsza `zmieniona`, przy rownej lokalna), ustawienia lokalne, licznik numerow = maksimum.
+ * Numer nadany juz na tym urzadzeniu zostaje, takze gdy wygrywa wersja z pliku (kolejne polaczenia nie zmieniaja numeru);
  * numer zajety lokalnie dostaje wycena z pliku nowy.
  * @param {Stan} lokalny @param {Stan} zPliku @returns {Stan}
  */
@@ -184,11 +188,13 @@ function polaczStany(lokalny, zPliku) {
   const zPlikuPoId = new Map(zPliku.wyceny.map((w) => [w.id, w]))
   const wyceny = lokalny.wyceny.map((w) => {
     const zPlikuWycena = zPlikuPoId.get(w.id)
-    return zPlikuWycena && Date.parse(zPlikuWycena.zmieniona) > Date.parse(w.zmieniona) ? zPlikuWycena : w
+    if (!zPlikuWycena || Date.parse(zPlikuWycena.zmieniona) <= Date.parse(w.zmieniona)) return w
+    return w.numer === null ? zPlikuWycena : zNumeremUrzadzenia(zPlikuWycena, w.numer)
   })
   const lokalneId = new Set(lokalny.wyceny.map((w) => w.id))
   const nowe = zPliku.wyceny.filter((w) => !lokalneId.has(w.id))
-  const polaczone = bezPowtorzonychNumerow([...wyceny, ...nowe], new Set(lokalny.wyceny),
+  const zNumeremLokalnym = new Set(wyceny.filter((w, i) => w.numer === lokalny.wyceny[i].numer))
+  const polaczone = bezPowtorzonychNumerow([...wyceny, ...nowe], zNumeremLokalnym,
     maksimumLicznikow(lokalny.licznikNumerow, zPliku.licznikNumerow))
   return { ...lokalny, ustawienia: lokalny.ustawienia ?? zPliku.ustawienia, ...polaczone }
 }

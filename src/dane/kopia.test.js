@@ -326,6 +326,21 @@ describe('wczytajKopie polacz: numery wycen z dwóch urządzeń', () => {
     assert.deepEqual(stan.licznikNumerow, { '2026-10': 3 })
   })
 
+  it('dwa kolejne połączenia: zmieniona na laptopie wysłana wycena zostaje przy numerze nadanym na telefonie i jest nieaktualna', () => {
+    const { magazyn } = magazynZeStanem(stanTestowy({ wyceny: [wycenaTestowa('telefon')], licznikNumerow: { '2026-10': 1 } }))
+    const wyslana = { status: 'wyslana', oferta: { zakres: null, warunki: null, waznaDo: null, wyslana: '2026-10-11T09:00:00.000Z', nieaktualna: false } }
+    const zLaptopa = (/** @type {string} */ zmieniona) => stanTestowy({ wyceny: [wycenaTestowa('laptop', { ...wyslana, zmieniona })], licznikNumerow: { '2026-10': 1 } })
+
+    wczytajKopie(magazyn, zLaptopa('2026-10-11T09:00:00.000Z'), 'polacz')
+    wczytajKopie(magazyn, zLaptopa('2026-10-20T09:00:00.000Z'), 'polacz')
+
+    const stan = zapisanyStan(magazyn)
+    assert.deepEqual(stan.wyceny.map((/** @type {any} */ w) => [w.id, w.numer, w.zmieniona, w.oferta.nieaktualna]), [
+      ['telefon', '1/10/2026', '2026-10-10T10:00:00.000Z', false], ['laptop', '2/10/2026', '2026-10-20T09:00:00.000Z', true],
+    ])
+    assert.deepEqual(stan.licznikNumerow, { '2026-10': 2 })
+  })
+
   it('połączenie ponad 5000 wycen → za_duzo_wycen bez zapisu', () => {
     const { magazyn, storage } = magazynZeStanem(stanTestowy({ wyceny: Array.from({ length: 3000 }, (_, i) => szkicTestowy(`l${i}`)) }))
     const przed = storage.getItem(KLUCZ_MAGAZYNU)

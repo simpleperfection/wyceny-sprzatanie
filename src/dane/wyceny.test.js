@@ -370,6 +370,47 @@ describe('dodajWykonanie z identyfikatorem wpisu', () => {
 
     assert.throws(() => dodajWykonanie(magazyn, id, { ...WPIS, id: '' }), bladWyceny('id'))
   })
+
+  it('identyfikator liczbą 42, null albo 2001 znaków → id, bez wpisu', () => {
+    const magazyn = nowyMagazyn()
+    const id = wycenaWStatusie(magazyn, ['do_wyslania', 'przyjeta'])
+
+    assert.throws(() => dodajWykonanie(magazyn, id, { ...WPIS, id: /** @type {never} */ (42) }), bladWyceny('id'))
+    assert.throws(() => dodajWykonanie(magazyn, id, { ...WPIS, id: /** @type {never} */ (null) }), bladWyceny('id'))
+    assert.throws(() => dodajWykonanie(magazyn, id, { ...WPIS, id: 'x'.repeat(2001) }), bladWyceny('id'))
+    assert.deepEqual(zMagazynu(magazyn, id).wykonania, [])
+    assert.equal(zMagazynu(magazyn, id).status, 'przyjeta')
+  })
+})
+
+describe('granice długości tekstów i zagnieżdżenia w szkicu i migawce', () => {
+  it('opis linii migawki 2001 znaków → dlugosc przy zapiszWynik, wynik bez zmian', () => {
+    const magazyn = nowyMagazyn()
+    const id = wycenaWStatusie(magazyn, [])
+    const linie = /** @type {never} */ ([{ opis: 'x'.repeat(2001) }])
+
+    assert.throws(() => zapiszWynik(magazyn, id, migawka({ linie })), bladWyceny('dlugosc'))
+    assert.deepEqual(zMagazynu(magazyn, id).wynik?.linie, [])
+  })
+
+  it('stan szybkiej wyceny 2001 znaków → dlugosc przy utworzSzkic, bez zapisu', () => {
+    const magazyn = nowyMagazyn()
+    const szybka = { stan: 'x'.repeat(2001), od: 200, do: 300, tryb: 'pomieszczenia' }
+
+    assert.throws(() => utworzSzkic(magazyn, { rodzaj: 'szybka', wejscie: WEJSCIE, szybka }), bladWyceny('dlugosc'))
+    assert.deepEqual(stanMagazynu(magazyn).wyceny, [])
+  })
+
+  it('odpowiedzi zagnieżdżone na 33 poziomy → dlugosc z komunikatem o zagnieżdżeniu, bez zapisu', () => {
+    const magazyn = nowyMagazyn()
+    /** @type {Record<string, unknown>} */
+    let odpowiedzi = {}
+    for (let i = 0; i < 33; i++) odpowiedzi = { glebiej: odpowiedzi }
+
+    assert.throws(() => utworzSzkic(magazyn, { rodzaj: 'dokladna', wejscie: WEJSCIE, odpowiedzi }),
+      { ...bladWyceny('dlugosc'), message: /zagnieżdżone głębiej niż 32 poziomy/ })
+    assert.deepEqual(stanMagazynu(magazyn).wyceny, [])
+  })
 })
 
 describe('jestWycena, jestMigawkaWyniku i RODZAJE_WYCENY', () => {
@@ -382,6 +423,22 @@ describe('jestWycena, jestMigawkaWyniku i RODZAJE_WYCENY', () => {
     assert.equal(modulWycen.jestWycena({ ...zapisana, numer: '0/13/2026' }), false)
     assert.equal(modulWycen.jestWycena({ ...zapisana, cenaReczna: -10 }), false)
     assert.equal(modulWycen.jestMigawkaWyniku({ ...migawka(), propozycje: undefined }), false)
+  })
+
+  it('numer 01/10/2026 albo 1/10/26, cena ręczna 0, wykonanie z tempem 0 albo pustym id, adres 201 i termin 41 znaków → false', () => {
+    const magazyn = nowyMagazyn()
+    const zapisana = zMagazynu(magazyn, wycenaWStatusie(magazyn, ['do_wyslania']))
+    const wykonanie = { id: 'wpis-1', data: '2026-10-20', minuty: 240, tempoPlanu: 1.3 }
+    const zWykonaniem = (/** @type {object} */ zmiana) => ({ ...zapisana, wykonania: [{ ...wykonanie, ...zmiana }] })
+
+    assert.equal(modulWycen.jestWycena(zWykonaniem({})), true)
+    assert.equal(modulWycen.jestWycena({ ...zapisana, numer: '01/10/2026' }), false)
+    assert.equal(modulWycen.jestWycena({ ...zapisana, numer: '1/10/26' }), false)
+    assert.equal(modulWycen.jestWycena({ ...zapisana, cenaReczna: 0 }), false)
+    assert.equal(modulWycen.jestWycena(zWykonaniem({ tempoPlanu: 0 })), false)
+    assert.equal(modulWycen.jestWycena(zWykonaniem({ id: '' })), false)
+    assert.equal(modulWycen.jestWycena({ ...zapisana, klient: { ...zapisana.klient, adres: 'x'.repeat(201) } }), false)
+    assert.equal(modulWycen.jestWycena({ ...zapisana, klient: { ...zapisana.klient, termin: 'x'.repeat(41) } }), false)
   })
 
   it('rodzaje wyceny: szybka i dokladna', () => {
