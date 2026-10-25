@@ -1065,3 +1065,789 @@
   gap: 8px;
   align-self: stretch;
 }
+
+/* Kreator dokladnej wyceny: rama kroku i wybor uslugi (src/widoki/kreator-wspolne.js, kreator-usluga.js) */
+.kreator__komunikat:empty {
+  display: none;
+}
+
+.stopka-kreatora {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto;
+  padding: 12px var(--odstep-ekranu) calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--linia-podzial);
+  background: var(--tlo-karta);
+}
+
+.stopka-kreatora .przycisk {
+  flex: 1;
+}
+
+.stopka-kreatora__razem {
+  display: flex;
+  flex-direction: column;
+}
+
+.stopka-kreatora__etykieta {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.stopka-kreatora__kwota {
+  font-size: var(--tekst-tytul-ekranu);
+  font-weight: 700;
+}
+
+.lista-uslug {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.lista-uslug__tytul {
+  margin-bottom: 8px;
+  padding: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.lista-uslug__opcje {
+  overflow: hidden;
+  border: 1px solid var(--linia-podzial);
+  border-radius: var(--promien-karta);
+  background: var(--tlo-karta);
+}
+
+.opcja-uslugi {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--cel-dotyku);
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--linia-podzial);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.lista-uslug__opcje > :last-child {
+  border-bottom: 0;
+}
+
+.opcja-uslugi:hover {
+  background: var(--tlo-strona);
+}
+
+.opcja-uslugi:has(.opcja-uslugi__wejscie:checked) {
+  background: var(--marka-zielen-tlo);
+}
+
+.opcja-uslugi__wejscie {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--marka-zielen);
+  cursor: pointer;
+}
+
+.opcja-uslugi__tresc {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.opcja-uslugi__tytul {
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.opcja-uslugi__opis {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.opcja-uslugi__warianty {
+  padding: 4px 14px 14px 46px;
+  border-bottom: 1px solid var(--linia-podzial);
+  background: var(--marka-zielen-tlo);
+}
+
+.opcja-uslugi__warianty .grupa-chipow__etykieta {
+  font-size: var(--tekst-maly);
+  font-weight: 600;
+  color: var(--tekst-drugi);
+}
+
+.kreator-usluga__notka {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+/* Kreator: krok pomieszczen (src/widoki/kreator-pomieszczenia.js, makieta kreator-pomieszczenia) */
+.lista-pomieszczen {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.karta-pomieszczenia {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--linia-podzial);
+  border-radius: var(--promien-karta);
+  background: var(--tlo-karta);
+  color: var(--tekst-glowny);
+  text-align: left;
+}
+
+button.karta-pomieszczenia {
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+button.karta-pomieszczenia:hover {
+  border-color: var(--linia-obrys);
+}
+
+.karta-pomieszczenia--rozwinieta {
+  gap: 12px;
+  border-color: var(--marka-zielen);
+}
+
+.karta-pomieszczenia__gora {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.karta-pomieszczenia__nazwy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.karta-pomieszczenia__nazwa {
+  font-size: 15px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.karta-pomieszczenia__typ {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.karta-pomieszczenia__metraz {
+  font-size: 15px;
+  color: var(--tekst-drugi);
+  white-space: nowrap;
+}
+
+.karta-pomieszczenia__strzalka {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  color: var(--tekst-trzeci);
+}
+
+.karta-pomieszczenia__brud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.znacznik-brudu {
+  padding: 3px 10px;
+  border-radius: var(--promien-pigulka);
+  background: var(--tlo-miekkie);
+  font-size: var(--tekst-maly);
+  font-weight: 600;
+}
+
+.karta-pomieszczenia__zwin {
+  min-height: var(--cel-dotyku);
+  min-width: var(--cel-dotyku);
+  margin: -10px -4px 0 0;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--marka-zielen);
+  font-size: var(--tekst-podstawowy);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.karta-pomieszczenia__legenda {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.karta-pomieszczenia > .przycisk--tekstowy {
+  align-self: flex-start;
+}
+
+.wiersz-brudu {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.wiersz-brudu__nazwa {
+  min-width: 0;
+  font-size: var(--tekst-podstawowy);
+}
+
+.wiersz-brudu__poziomy {
+  flex: none;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.chip--poziom {
+  justify-content: center;
+  width: 40px;
+  min-height: 40px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+@media (pointer: coarse) {
+  .chip--poziom {
+    width: var(--cel-dotyku);
+    min-height: var(--cel-dotyku);
+  }
+}
+
+.kreator-pomieszczenia__pusto {
+  color: var(--tekst-drugi);
+}
+
+.kreator-pomieszczenia__dodaj .przycisk {
+  padding-inline: 0;
+}
+
+/* Kreator: pozycje i dodatki (src/widoki/kreator-pozycje.js, kreator-dodatki.js; makiety kreator-pozycje, kreator-dodatki) */
+.kreator-pozycje__zmienne,
+.licznik-pozycji {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kreator-pozycje__zmienne:empty {
+  display: none;
+}
+
+.licznik-pozycji {
+  gap: 4px;
+}
+
+.licznik-pozycji__cena,
+.kreator-pozycje__notka {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.licznik-pozycji__cena {
+  padding-inline: 14px;
+}
+
+.wiersz-pozycji {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--cel-dotyku);
+  padding: 12px 0;
+  border-bottom: 1px solid var(--linia-podzial);
+}
+
+.wiersz-pozycji:last-child {
+  border-bottom: 0;
+}
+
+.wiersz-pozycji__tresc {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.wiersz-pozycji__przycisk {
+  min-height: var(--cel-dotyku);
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.wiersz-pozycji__nazwa {
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+span.wiersz-pozycji__nazwa {
+  cursor: inherit;
+}
+
+.wiersz-pozycji__opis {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.wiersz-pozycji__kwota {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.wiersz-pozycji--wylaczona .wiersz-pozycji__nazwa,
+.wiersz-pozycji--wylaczona .wiersz-pozycji__kwota {
+  font-weight: 400;
+  color: var(--tekst-drugi);
+}
+
+.grupa-dodatkow + .grupa-dodatkow {
+  margin-top: 8px;
+}
+
+.grupa-dodatkow__tytul {
+  padding-top: 4px;
+  font-size: var(--tekst-maly);
+  font-weight: 600;
+  color: var(--tekst-drugi);
+}
+
+.karta-dojazdu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wiersz-dojazdu {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--linia-podzial);
+}
+
+.wiersz-dojazdu:last-child {
+  border-bottom: 0;
+}
+
+.wiersz-dojazdu__kwota {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.wiersz-dojazdu--koszt {
+  color: var(--tekst-drugi);
+}
+
+/* Dobor chemii i katalog srodkow (src/widoki/dobor-chemii.js, katalog-chemii.js, karta-produktu.js; makieta dobor-chemii) */
+.dobor-chemii__wstep,
+.dobor-chemii__notka {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.dobor-chemii__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dobor-chemii__dezynfekcja {
+  align-self: flex-start;
+}
+
+.karta-chemii {
+  overflow: hidden;
+  border: 1px solid var(--linia-podzial);
+  border-radius: var(--promien-karta);
+  background: var(--tlo-karta);
+}
+
+.karta-chemii__naglowek {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--linia-podzial);
+  background: var(--tlo-miekkie);
+}
+
+.karta-chemii__tytul {
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.karta-chemii__opis {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.karta-chemii__wiecej {
+  width: 100%;
+  min-height: var(--cel-dotyku);
+  padding: 10px 14px;
+  border: 0;
+  border-top: 1px solid var(--linia-podzial);
+  background: none;
+  color: var(--marka-zielen);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.karta-chemii__wiecej:hover {
+  background: var(--tlo-strona);
+}
+
+.produkt-chemii {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--linia-podzial);
+}
+
+.produkt-chemii:last-child {
+  border-bottom: 0;
+}
+
+.produkt-chemii__gora,
+.produkt-chemii__dol {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.produkt-chemii__dol {
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.produkt-chemii__nazwa {
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.produkt-chemii__dostawca {
+  flex: none;
+  padding: 3px 8px;
+  border-radius: var(--promien-pigulka);
+  background: var(--tlo-miekkie);
+  color: var(--tekst-drugi);
+  font-size: var(--tekst-drobny);
+  font-weight: 600;
+}
+
+.produkt-chemii__przeznaczenie,
+.produkt-chemii__opis,
+.produkt-chemii__brak-karty {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.produkt-chemii__cena {
+  font-weight: 600;
+}
+
+.produkt-chemii__karta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: auto;
+  text-align: right;
+}
+
+/* Cel dotyku 44 px bez powiekszania wiersza: pseudo-element rozszerza obszar klikniecia linku. */
+.produkt-chemii__link {
+  position: relative;
+  color: var(--marka-zielen);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.produkt-chemii__link::after {
+  content: '';
+  position: absolute;
+  inset: -13px -8px;
+}
+
+.produkt-chemii__link:hover {
+  text-decoration: underline;
+}
+
+.produkt-chemii__data {
+  font-size: var(--tekst-drobny);
+  color: var(--tekst-drugi);
+}
+
+/* Podsumowanie wyceny (src/widoki/podsumowanie.js, podsumowanie-karty.js, makieta podsumowanie-wyceny) */
+.podsumowanie__status {
+  display: flex;
+}
+
+.podsumowanie__komunikat:empty,
+.arkusz__komunikat:empty {
+  display: none;
+}
+
+.podsumowanie__opis {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.podsumowanie__notka {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.podsumowanie__akcje {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.podsumowanie__usun {
+  align-self: center;
+  color: var(--blad-tekst);
+}
+
+.karta-ceny__gora {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: -12px 0 -8px;
+}
+
+.karta-ceny__tytul {
+  font-size: var(--tekst-podstawowy);
+  font-weight: 400;
+  color: var(--tekst-drugi);
+}
+
+.karta-ceny__gora .przycisk--tekstowy {
+  font-size: var(--tekst-maly);
+}
+
+.karta-ceny__gora .przycisk--tekstowy .ikona {
+  width: 16px;
+  height: 16px;
+}
+
+.karta-ceny__kwota {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 4px 0;
+}
+
+.karta-ceny__liczba {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.zakreslacz {
+  padding: 0 3px;
+  background: linear-gradient(transparent 55%, var(--zakreslacz-mocny) 55%, var(--zakreslacz-mocny) 90%, transparent 90%);
+}
+
+.karta-ceny .pigulka {
+  font-size: var(--tekst-maly);
+}
+
+.pigulka--rynek-w {
+  background: var(--sukces-tlo);
+  color: var(--sukces-tekst);
+}
+
+.pigulka--rynek-ponizej,
+.pigulka--rynek-powyzej {
+  background: var(--uwaga-tlo);
+  color: var(--uwaga-tekst);
+}
+
+/* Pasek widelek rynku: polozenie elementow z wlasciwosci --pozycja (ustawianej w JS przez CSSOM, bez stylow inline) */
+.wykres-rynku {
+  position: relative;
+  height: 62px;
+}
+
+.wykres-rynku__tor,
+.wykres-rynku__zakres {
+  position: absolute;
+  top: 26px;
+  height: 8px;
+  border-radius: 4px;
+}
+
+.wykres-rynku__tor {
+  left: 0;
+  right: 0;
+  background: var(--tlo-miekkie);
+}
+
+.wykres-rynku__zakres {
+  left: var(--pozycja);
+  right: calc(100% - var(--koniec));
+  background: var(--marka-zielen-wykres);
+}
+
+.wykres-rynku__kreska {
+  position: absolute;
+  top: 18px;
+  left: var(--pozycja);
+  width: 2px;
+  height: 24px;
+  transform: translateX(-1px);
+  background: var(--tekst-drugi);
+}
+
+.wykres-rynku__punkt {
+  position: absolute;
+  top: 20px;
+  left: var(--pozycja);
+  width: 20px;
+  height: 20px;
+  transform: translateX(-50%);
+  border: 3px solid var(--tlo-karta);
+  border-radius: 50%;
+  background: var(--marka-zielen);
+}
+
+.wykres-rynku__mediana,
+.wykres-rynku__cena {
+  position: absolute;
+  left: var(--pozycja);
+  transform: translateX(-50%);
+  font-size: var(--tekst-drobny);
+  white-space: nowrap;
+}
+
+.wykres-rynku__mediana {
+  top: 0;
+  font-weight: 600;
+  color: var(--tekst-drugi);
+}
+
+.wykres-rynku__cena {
+  top: 43px;
+  font-weight: 700;
+  color: var(--marka-zielen-ciemna);
+}
+
+/* Podpis przy brzegu paska wyrownany do brzegu, zeby nie wychodzil poza karte */
+.wykres-rynku__mediana[data-brzeg='lewy'],
+.wykres-rynku__cena[data-brzeg='lewy'] {
+  transform: translateX(-12px);
+}
+
+.wykres-rynku__mediana[data-brzeg='prawy'],
+.wykres-rynku__cena[data-brzeg='prawy'] {
+  transform: translateX(calc(-100% + 12px));
+}
+
+.karta-rynku__zakres {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 8px;
+  margin-top: 6px;
+  font-size: var(--tekst-drobny);
+  color: var(--tekst-drugi);
+}
+
+.karta-rynku__niepelne {
+  flex-basis: 100%;
+}
+
+.karta-zostaje {
+  border-color: var(--sukces-tlo);
+  background: var(--sukces-tlo);
+  color: var(--sukces-tekst);
+}
+
+.karta-zostaje__tytul {
+  font-size: var(--tekst-podstawowy);
+  font-weight: 600;
+}
+
+.karta-zostaje__kwota {
+  font-size: 27px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.karta-zostaje__opis {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: var(--tekst-maly);
+  font-weight: 500;
+}
+
+.karta-zostaje__opis .ikona {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+}
+
+.karta-zostaje .podsumowanie__opis {
+  color: var(--sukces-tekst);
+}
+
+.koszty {
+  margin: 0;
+}
+
+.koszty__wiersz {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--linia-podzial);
+  font-size: var(--tekst-podstawowy);
+}
+
+.koszty__wiersz:last-child {
+  border-bottom: 0;
+}
+
+.koszty__wiersz dd {
+  margin: 0;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.koszty__wiersz--razem,
+.koszty__wiersz--razem dd {
+  font-weight: 700;
+}

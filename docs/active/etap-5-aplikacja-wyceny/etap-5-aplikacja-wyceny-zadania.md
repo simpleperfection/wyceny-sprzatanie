@@ -287,71 +287,71 @@ Zależy od: Faza 3
 
 ### IU-14: Stan kreatora i wybór usługi (feature-builder-fullstack)
 
-- [ ] Stwórz: `src/kreator/stan.js`
-- [ ] Stwórz: `src/widoki/kreator-wspolne.js`
-- [ ] Stwórz: `src/widoki/kreator-usluga.js`
-- [ ] Modyfikuj: `src/widoki/indeks.js`
-- [ ] Test (unit): `src/kreator/stan.test.js`
-- [ ] Test: [Unit] `nowySzkic` dla `mieszkanie_po_remoncie` daje wycenę `szkic` z regułą brudu pył budowlany poziom 2 stosowaną do nowego pomieszczenia
-- [ ] Test: [Unit] `przelicz` dla 4 pomieszczeń układu 50 m² standard w mazowieckim daje migawkę z ceną 250, medianą 250 i widełkami 120–450
-- [ ] Test: [Unit] `bledyKroku('zakres')` dla wyceny bez pomieszczeń zwraca błąd; zmiana usługi czyści pomieszczenia
-- [ ] Test: [Unit] `zmienWejscie` na wycenie wykonanej rzuca `BladWyceny` z kodem `tylko_odczyt`
+- [x] Stwórz: `src/kreator/stan.js`
+- [x] Stwórz: `src/widoki/kreator-wspolne.js`
+- [x] Stwórz: `src/widoki/kreator-usluga.js`
+- [x] Modyfikuj: `src/widoki/indeks.js`
+- [x] Test (unit): `src/kreator/stan.test.js`
+- [x] Test: [Unit] `nowySzkic` dla `mieszkanie_po_remoncie` daje wycenę `szkic` z regułą brudu pył budowlany poziom 2 stosowaną do nowego pomieszczenia
+- [x] Test: [Unit] `przelicz` dla 4 pomieszczeń układu 50 m² standard w mazowieckim daje migawkę z ceną 250, medianą 250 i widełkami 120–450
+- [x] Test: [Unit] `bledyKroku('zakres')` dla wyceny bez pomieszczeń zwraca błąd; zmiana usługi czyści pomieszczenia
+- [x] Test: [Unit] `zmienWejscie` na wycenie wykonanej rzuca `BladWyceny` z kodem `tylko_odczyt`
 - [ ] Weryfikacja: `node --test src/kreator/stan.test.js` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-15: Krok zakresu: pomieszczenia i brud (feature-builder-fullstack)
 
-- [ ] Stwórz: `src/kreator/pomieszczenia.js`
-- [ ] Stwórz: `src/widoki/kreator-pomieszczenia.js`
-- [ ] Modyfikuj: `src/widoki/indeks.js`
-- [ ] Test (unit): `src/kreator/pomieszczenia.test.js`
-- [ ] Test: [Unit] dodanie kuchni i łazienki do wyceny po remoncie ustawia kurz 1 i pył budowlany poziom 2 w obu; nazwa łazienki „Łazienka”
-- [ ] Test: [Unit] `ustawMetraz` z 0 i 1500 zwraca kod błędu, z 12,5 zapisuje 12,5
-- [ ] Test: [Unit] `podsumowanieZakresu` dla układu 50 m² standard daje 50 m² i minuty ze scenariusza kalibracji
+- [x] Stwórz: `src/kreator/pomieszczenia.js`
+- [x] Stwórz: `src/widoki/kreator-pomieszczenia.js`
+- [x] Modyfikuj: `src/widoki/indeks.js`
+- [x] Test (unit): `src/kreator/pomieszczenia.test.js`
+- [x] Test: [Unit] dodanie kuchni i łazienki do wyceny po remoncie ustawia kurz 1 i pył budowlany poziom 2 w obu; nazwa łazienki „Łazienka”
+- [x] Test: [Unit] `ustawMetraz` z 0 i 1500 zwraca kod błędu, z 12,5 zapisuje 12,5
+- [x] Test: [Unit] `podsumowanieZakresu` dla układu 50 m² standard daje 50 m² i minuty ze scenariusza kalibracji
 - [ ] Weryfikacja: `node --test src/kreator/pomieszczenia.test.js` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-16: Kroki zakresu z pozycjami i dodatków z dojazdem (feature-builder-fullstack)
 
-- [ ] Stwórz: `src/kreator/pozycje.js`
-- [ ] Stwórz: `src/widoki/kreator-pozycje.js`
-- [ ] Stwórz: `src/widoki/kreator-dodatki.js`
-- [ ] Modyfikuj: `src/widoki/indeks.js`
-- [ ] Test (unit): `src/kreator/pozycje.test.js`
-- [ ] Test: [Unit] `ustawIlosc` dla okna z 2,5 szt. zwraca błąd, z 4 zapisuje 4; `infoProgu` dla kostki 40 m² daje mnożnik 1,15, a dla 100 m² null
-- [ ] Test: [Unit] `ustawPowierzchnie(40)` z włączonymi myciem i mchem daje obu pozycjom 40 m²; wyłączenie jedynej pozycji głównej zwraca błąd
-- [ ] Test: [Unit] `infoDojazdu(12, domyślne stawki)` daje 4 zł dla klienta (2 km ponad 10 km) i 27,60 zł kosztu (24 km × 1,15 zł); `infoDojazdu(8)` — 0 zł dla klienta
-- [ ] Test: [Unit] `ustawDodatek` z trybem `propozycja` zapisuje dodatek poza ceną; ilość 0 usuwa dodatek
+- [x] Stwórz: `src/kreator/pozycje.js`
+- [x] Stwórz: `src/widoki/kreator-pozycje.js`
+- [x] Stwórz: `src/widoki/kreator-dodatki.js`
+- [x] Modyfikuj: `src/widoki/indeks.js`
+- [x] Test (unit): `src/kreator/pozycje.test.js`
+- [x] Test: [Unit] `ustawIlosc` dla okna z 2,5 szt. zwraca błąd, z 4 zapisuje 4; `infoProgu` dla kostki 40 m² daje mnożnik 1,15, a dla 100 m² null
+- [x] Test: [Unit] `ustawPowierzchnie(40)` z włączonymi myciem i mchem daje obu pozycjom 40 m²; wyłączenie jedynej pozycji głównej zwraca błąd
+- [x] Test: [Unit] `infoDojazdu(12, domyślne stawki)` daje 4 zł dla klienta (2 km ponad 10 km) i 27,60 zł kosztu (24 km × 1,15 zł); `infoDojazdu(8)` — 0 zł dla klienta
+- [x] Test: [Unit] `ustawDodatek` z trybem `propozycja` zapisuje dodatek poza ceną; ilość 0 usuwa dodatek
 - [ ] Test: [E2E] `kreator-okna-minimum` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, otwórz http://localhost:5174/#/kreator/usluga, wybierz „Mycie okien”, „Dalej”, ustaw „Okno 1-skrzydłowe” na 4, „Dalej”, „Dalej”, „Dalej” → podsumowanie z ceną 150 zł i informacją o minimum zlecenia
 - [ ] Weryfikacja: `node --test src/kreator/pozycje.test.js` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-17: Dobór chemii: krok kreatora i katalog (feature-builder-fullstack)
 
-- [ ] Stwórz: `src/silnik/chemia.js`
-- [ ] Stwórz: `src/widoki/karta-produktu.js`
-- [ ] Stwórz: `src/widoki/dobor-chemii.js`
-- [ ] Stwórz: `src/widoki/katalog-chemii.js`
-- [ ] Modyfikuj: `src/widoki/indeks.js`
-- [ ] Test (unit): `src/silnik/chemia.test.js`
-- [ ] Test: [Unit] mieszkanie po remoncie daje kategorie uniwersalny (kurz) i poremontowy (pył budowlany); sierść poziom 1 nie dubluje kategorii uniwersalnej
-- [ ] Test: [Unit] sprzątanie hal z zamiataniem daje notkę „zamiatanie na sucho” bez kategorii; doczyszczanie z usuwaniem farby — notkę o zmywaczu farb
-- [ ] Test: [Unit] dezynfekcja jest w `kategorieDoRecznegoDodania`, a nie w `kategorieDlaWyceny`; produkt Buzil bez pH daje „pH: brak danych”
+- [x] Stwórz: `src/silnik/chemia.js`
+- [x] Stwórz: `src/widoki/karta-produktu.js`
+- [x] Stwórz: `src/widoki/dobor-chemii.js`
+- [x] Stwórz: `src/widoki/katalog-chemii.js`
+- [x] Modyfikuj: `src/widoki/indeks.js`
+- [x] Test (unit): `src/silnik/chemia.test.js`
+- [x] Test: [Unit] mieszkanie po remoncie daje kategorie uniwersalny (kurz) i poremontowy (pył budowlany); sierść poziom 1 nie dubluje kategorii uniwersalnej
+- [x] Test: [Unit] sprzątanie hal z zamiataniem daje notkę „zamiatanie na sucho” bez kategorii; doczyszczanie z usuwaniem farby — notkę o zmywaczu farb
+- [x] Test: [Unit] dezynfekcja jest w `kategorieDoRecznegoDodania`, a nie w `kategorieDlaWyceny`; produkt Buzil bez pH daje „pH: brak danych”
 - [ ] Test: [E2E] `dobor-chemii-po-remoncie` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, utwórz dokładną wycenę „Mieszkanie lub dom – sprzątanie po remoncie” z pokojem 20 m², przejdź do kroku „Chemia”, zrób screenshot, kliknij pierwszą „Karta SDS” → widać kategorię środków poremontowych z produktami, link SDS otwiera nową kartę z adresem z `data/chemia.json`
 - [ ] Weryfikacja: `node --test src/silnik/chemia.test.js` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-18: Podsumowanie wyceny i zapisana wycena (feature-builder-fullstack)
 
-- [ ] Stwórz: `src/kreator/podsumowanie.js`
-- [ ] Stwórz: `src/widoki/podsumowanie.js`
-- [ ] Stwórz: `src/widoki/podsumowanie-karty.js`
-- [ ] Modyfikuj: `src/widoki/indeks.js`
-- [ ] Test (unit): `src/kreator/podsumowanie.test.js`
-- [ ] Test: [Unit] wycena 250 zł, ręczna cena 290 zł: `polozenie: 'w'`, procent „+16%”, `zostaje` rośnie o 40 zł, czas bez zmian
-- [ ] Test: [Unit] czynny VAT przy mieszkaniu: brutto 250, netto 203,25, `zostaje` liczone od netto
-- [ ] Test: [Unit] migawka z `wersjaDanych` starszą niż katalog daje ostrzeżenie „Dane rynkowe zmieniły się…”; cena dokładna 380 zł przy szybkiej 250–300 zł daje ostrzeżenie o widełkach
-- [ ] Test: [Unit] abonament 1× w tygodniu: `abonament` z kwotą miesięczną i liczbą wizyt 4,33
+- [x] Stwórz: `src/kreator/podsumowanie.js`
+- [x] Stwórz: `src/widoki/podsumowanie.js`
+- [x] Stwórz: `src/widoki/podsumowanie-karty.js`
+- [x] Modyfikuj: `src/widoki/indeks.js`
+- [x] Test (unit): `src/kreator/podsumowanie.test.js`
+- [x] Test: [Unit] wycena 250 zł, ręczna cena 290 zł: `polozenie: 'w'`, procent „+16%”, `zostaje` rośnie o 40 zł, czas bez zmian
+- [x] Test: [Unit] czynny VAT przy mieszkaniu: brutto 250, netto 203,25, `zostaje` liczone od netto
+- [x] Test: [Unit] migawka z `wersjaDanych` starszą niż katalog daje ostrzeżenie „Dane rynkowe zmieniły się…”; cena dokładna 380 zł przy szybkiej 250–300 zł daje ostrzeżenie o widełkach
+- [x] Test: [Unit] abonament 1× w tygodniu: `abonament` z kwotą miesięczną i liczbą wizyt 4,33
 - [ ] Test: [E2E] `dokladna-wycena-mieszkania` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, otwórz http://localhost:5174/#/kreator/usluga, wybierz „Mieszkanie lub dom – sprzątanie standardowe”, „Dalej”, dodaj pokój 32, przedpokój 6, kuchnię 8 i łazienkę 4 m², przejdź „Dalej” przez dodatki i chemię, zrób screenshot podsumowania, kliknij „Zapisz”, w arkuszu wpisz klienta „Pani Test” i potwierdź „Zapisz” → cena 250 zł „w widełkach rynku”, „rynek od 120 zł do 450 zł”, karta „Zostaje dla Ciebie” z tempem 1,3×, po zapisie adres `#/wycena/<id>` i numer „1/<miesiąc>/<rok>” w podtytule
 - [ ] Test: [E2E] `podsumowanie-cena-reczna` — w zapisanej wycenie z poprzedniego scenariusza kliknij „Zmień”, wpisz 290 → kwota 290 zł, „Twoja cena 290 (+16%)”, kwota „Zostaje dla Ciebie” większa o 40 zł, „Przywróć cenę z modelu” wraca do 250 zł
 - [ ] Weryfikacja: `node --test src/kreator/podsumowanie.test.js` przechodzi

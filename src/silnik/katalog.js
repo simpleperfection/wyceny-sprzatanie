@@ -43,7 +43,7 @@ const MNOZNIK_PROGU_DOMYSLNY = 1
  *   wojewodztwo: (id: string | null) => Wojewodztwo, rynekKraj: (klucz: string) => { mediana: number, zakres: [number, number] },
  *   normaPomieszczenia: (typ: string) => number,
  *   normaBrudu: (id: string, poziom: number) => number, zestaw: (id: string) => NormaPomieszczenia[],
- *   progMetrazu: (nazwa: string, m2: number) => number, normaPozycji: (klucz: string) => NormaPozycji,
+ *   progMetrazu: (nazwa: string, m2: number) => number, progiMetrazu: (nazwa: string) => readonly Prog[], normaPozycji: (klucz: string) => NormaPozycji,
  *   przygotowanie: (uslugaId: string) => number, przygotowanieMin: number, progiWydajnosciBiura: Prog[],
  *   uslugi: Usluga[], wojewodztwa: Wojewodztwo[], brud: Brud[], poziomy: Poziom[], poziomyBrudu: PoziomBrudu[],
  *   kosztyFirmy: KosztyFirmy, uklady: Uklady, wersjaDanych: { ceny: string, normy: string, rynek: string }
@@ -211,21 +211,25 @@ function znajdz(mapa, klucz, blad) {
   return wartosc
 }
 
-/** @param {Ceny} ceny @returns {Pick<Katalog, 'usluga' | 'pozycja' | 'progMetrazu'> & { czyPozycja: (klucz: string) => boolean }} */
+/** @param {Ceny} ceny @returns {Pick<Katalog, 'usluga' | 'pozycja' | 'progMetrazu' | 'progiMetrazu'> & { czyPozycja: (klucz: string) => boolean }} */
 function indeksyCen(ceny) {
   const uslugi = new Map(ceny.uslugi.map((u) => [u.id, u]))
   const pozycje = new Map(ceny.uslugi.flatMap((u) => (u.pozycje ?? []).map((p) => [`${u.id}.${p.id}`, p])))
   /** @param {string} id */
   const usluga = (id) => znajdz(uslugi, id, () => new BladWejscia('nieznana_usluga', `Nieznana usługa ${id}`))
+  /** @param {string} nazwa @returns {readonly Prog[]} */
+  const progiMetrazu = (nazwa) => {
+    const progi = ceny.progi_metrazu[nazwa]
+    if (!progi) throw new BladKatalogu('brak_progu', `Brak progów metrażu ${nazwa}`)
+    return progi.progi
+  }
   return {
     usluga,
     pozycja: (uslugaId, pozycjaId) => znajdz(pozycje, `${usluga(uslugaId).id}.${pozycjaId}`,
       () => new BladWejscia('nieznana_pozycja', `Nieznana pozycja ${pozycjaId} usługi ${uslugaId}`)),
-    progMetrazu: (nazwa, m2) => {
-      const progi = ceny.progi_metrazu[nazwa]
-      if (!progi) throw new BladKatalogu('brak_progu', `Brak progów metrażu ${nazwa}`)
-      return progi.progi.reduce((mnoznik, prog) => (m2 >= prog.od_m2 ? prog.mnoznik : mnoznik), MNOZNIK_PROGU_DOMYSLNY)
-    },
+    progMetrazu: (nazwa, m2) =>
+      progiMetrazu(nazwa).reduce((mnoznik, prog) => (m2 >= prog.od_m2 ? prog.mnoznik : mnoznik), MNOZNIK_PROGU_DOMYSLNY),
+    progiMetrazu,
     czyPozycja: (klucz) => pozycje.has(klucz),
   }
 }

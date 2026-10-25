@@ -5,9 +5,16 @@ import { h } from '../ui/h.js'
 import { przycisk } from '../ui/komponenty/formularz.js'
 import { dolnyPasek } from '../ui/komponenty/uklad.js'
 import { sciezka } from '../ui/trasy.js'
+import { widokDoboruChemii } from './dobor-chemii.js'
+import { widokKataloguChemii } from './katalog-chemii.js'
 import { widokKopii } from './kopia.js'
+import { widokKreatoraDodatkow } from './kreator-dodatki.js'
+import { widokKreatoraZakresu } from './kreator-pozycje.js'
 import { widokKreatoraStartowego } from './kreator-startowy.js'
+import { widokKreatoraUslugi } from './kreator-usluga.js'
+import { widokKreatora } from './kreator-wspolne.js'
 import { widokListyWycen } from './lista-wycen.js'
+import { widokPodsumowaniaKreatora, widokZapisanejWyceny } from './podsumowanie.js'
 import { widokStartu } from './start.js'
 import { widokUstawien } from './ustawienia.js'
 
@@ -27,6 +34,8 @@ function widokKomunikatu(komunikat) {
   }
 }
 
+const NIE_MA_EKRANU = widokKomunikatu('Nie ma takiego ekranu.')
+
 /** @type {Widoki} */
 export const WIDOKI = Object.freeze({
   start: widokStartu,
@@ -34,6 +43,10 @@ export const WIDOKI = Object.freeze({
   ustawienia: widokUstawien,
   kreatorStartowy: widokKreatoraStartowego,
   kopia: widokKopii,
-  nieZnaleziono: widokKomunikatu('Nie ma takiego ekranu.'),
+  chemia: widokKataloguChemii,
+  kreator: widokKreatora({ usluga: widokKreatoraUslugi, zakres: widokKreatoraZakresu, dodatki: widokKreatoraDodatkow, chemia: widokDoboruChemii,
+    cena: widokPodsumowaniaKreatora }, NIE_MA_EKRANU),
+  wycena: widokZapisanejWyceny,
+  nieZnaleziono: NIE_MA_EKRANU,
   bladEkranu: widokKomunikatu('Nie udało się otworzyć tego ekranu. Wróć na start i spróbuj jeszcze raz.'),
 })

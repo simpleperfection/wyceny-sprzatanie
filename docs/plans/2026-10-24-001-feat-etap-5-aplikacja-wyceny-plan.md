@@ -901,7 +901,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 
 **Zależy od:** Faza 3
 
-- [ ] **IU-14: Stan kreatora i wybór usługi**
+- [x] **IU-14: Stan kreatora i wybór usługi**
 
 **Cel:** Szkic dokładnej wyceny zapisywany na bieżąco, przeliczanie migawki silnikiem i pierwszy krok kreatora: usługa, wariant i województwo.
 
@@ -955,7 +955,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - `node --test src/kreator/stan.test.js` przechodzi
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-15: Krok zakresu: pomieszczenia i brud**
+- [x] **IU-15: Krok zakresu: pomieszczenia i brud**
 
 **Cel:** Lista pomieszczeń z metrażem i poziomami brudu dla usług w trybie pomieszczeń, z czasem normowym na bieżąco.
 
@@ -1005,7 +1005,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - `node --test src/kreator/pomieszczenia.test.js` przechodzi
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-16: Kroki zakresu z pozycjami i dodatków z dojazdem**
+- [x] **IU-16: Kroki zakresu z pozycjami i dodatków z dojazdem**
 
 **Cel:** Ilości i metraże pozycji z dopłatami, progiem metrażu i poziomem brudu oraz krok dodatków (AGD, okna, tapicerka, dywany przy usłudze) z dojazdem.
 
@@ -1061,7 +1061,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - `node --test src/kreator/pozycje.test.js` przechodzi
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-17: Dobór chemii: krok kreatora i katalog**
+- [x] **IU-17: Dobór chemii: krok kreatora i katalog**
 
 **Cel:** Środki z bazy chemii dobrane do brudu i pozycji wyceny z kartą SDS oraz katalog środków z dolnego paska.
 
@@ -1116,7 +1116,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - `node --test src/silnik/chemia.test.js` przechodzi
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-18: Podsumowanie wyceny i zapisana wycena**
+- [x] **IU-18: Podsumowanie wyceny i zapisana wycena**
 
 **Cel:** Cena rynkowa z widełkami, ręczna zmiana ceny, VAT, koszt zlecenia i „zostaje dla Ciebie” na bieżąco, zapis wyceny oraz widok zapisanej wyceny ze zmianą statusu.
 
