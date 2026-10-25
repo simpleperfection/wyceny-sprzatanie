@@ -1,0 +1,33 @@
+{
+  "wersja": 1,
+  "ustawienia": {
+    "wojewodztwoId": "mazowieckie",
+    "statusVat": "zwolniony",
+    "firma": {
+      "nazwa": "Usługi Sprzątające Monika Lis",
+      "telefon": "600 123 456",
+      "email": "",
+      "nip": ""
+    },
+    "tempo": {
+      "reczne": null
+    },
+    "koszty": {
+      "sprzet": {},
+      "dojazd": {}
+    },
+    "zakresy": {},
+    "warunki": null,
+    "przypomnienieKopiiDni": 7,
+    "kreatorZakonczony": true
+  },
+  "wyceny": [],
+  "licznikNumerow": {},
+  "kopia": {
+    "ostatnia": null,
+    "zmianaOd": null
+  },
+  "preferencje": {
+    "iosInstrukcjaZamknieta": false
+  }
+}

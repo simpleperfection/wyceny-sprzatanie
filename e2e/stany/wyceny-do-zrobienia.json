@@ -1,0 +1,300 @@
+{
+  "wersja": 1,
+  "ustawienia": {
+    "wojewodztwoId": "mazowieckie",
+    "statusVat": "zwolniony",
+    "firma": {
+      "nazwa": "Usługi Sprzątające Monika Lis",
+      "telefon": "600 123 456",
+      "email": "",
+      "nip": ""
+    },
+    "tempo": {
+      "reczne": null
+    },
+    "koszty": {
+      "sprzet": {},
+      "dojazd": {}
+    },
+    "zakresy": {},
+    "warunki": null,
+    "przypomnienieKopiiDni": 7,
+    "kreatorZakonczony": true
+  },
+  "wyceny": [
+    {
+      "id": "e2e-wycena-do-wyslania",
+      "numer": "1/10/2026",
+      "utworzona": "2026-10-12T09:00:00.000Z",
+      "zmieniona": "2026-10-12T09:00:00.000Z",
+      "status": "do_wyslania",
+      "rodzaj": "dokladna",
+      "klient": {
+        "nazwa": "Marzena, Bielany",
+        "adres": "",
+        "termin": null
+      },
+      "wejscie": {
+        "uslugaId": "mieszkanie_standard",
+        "wojewodztwoId": "mazowieckie",
+        "pomieszczenia": [
+          {
+            "typ": "pokoj",
+            "m2": 32
+          },
+          {
+            "typ": "przedpokoj",
+            "m2": 6
+          },
+          {
+            "typ": "kuchnia",
+            "m2": 8
+          },
+          {
+            "typ": "lazienka",
+            "m2": 4
+          }
+        ],
+        "dojazdKm": 0
+      },
+      "szybka": null,
+      "odpowiedzi": {},
+      "wynik": {
+        "cena": 250,
+        "netto": 250,
+        "vat": 0,
+        "mediana": 250,
+        "widelki": {
+          "od": 120.0264,
+          "do": 450.09900000000005,
+          "pelne": true
+        },
+        "minutyNormowe": 230.82,
+        "linie": [
+          {
+            "rodzaj": "praca",
+            "klucz": null,
+            "opis": "Mieszkanie lub dom – sprzątanie standardowe",
+            "ilosc": 3.847,
+            "jednostka": "h",
+            "cenaJedn": 65,
+            "cenaBazowa": 65,
+            "mnoznikProgu": 1,
+            "kwota": 250.055,
+            "zakres": null,
+            "minuty": 230.82
+          }
+        ],
+        "propozycje": [],
+        "dojazd": {
+          "km": 0,
+          "kwota": 0
+        },
+        "wojewodztwo": {
+          "id": "mazowieckie",
+          "nazwa": "mazowieckie",
+          "stawka_h": 65,
+          "wsp": 1
+        },
+        "statusVat": "zwolniony",
+        "stawkaVatProc": 23,
+        "podstawaCeny": "brutto",
+        "wizytWMiesiacu": null,
+        "wersjaDanych": {
+          "ceny": "2026-10-23",
+          "normy": "2026-10-23",
+          "rynek": "2026-10-23"
+        }
+      },
+      "cenaReczna": null,
+      "wykonania": [],
+      "oferta": {
+        "zakres": null,
+        "warunki": null,
+        "waznaDo": null,
+        "wyslana": null,
+        "nieaktualna": false
+      }
+    },
+    {
+      "id": "e2e-wycena-wyslana",
+      "numer": "2/10/2026",
+      "utworzona": "2026-10-13T09:00:00.000Z",
+      "zmieniona": "2026-10-13T09:00:00.000Z",
+      "status": "wyslana",
+      "rodzaj": "dokladna",
+      "klient": {
+        "nazwa": "Pan Tomek, Ursus",
+        "adres": "",
+        "termin": null
+      },
+      "wejscie": {
+        "uslugaId": "okna",
+        "wojewodztwoId": "mazowieckie",
+        "pozycje": [
+          {
+            "id": "okno_1",
+            "ilosc": 6
+          }
+        ],
+        "dojazdKm": 0
+      },
+      "szybka": null,
+      "odpowiedzi": {},
+      "wynik": {
+        "cena": 180,
+        "netto": 180,
+        "vat": 0,
+        "mediana": 180,
+        "widelki": {
+          "od": 150,
+          "do": 420,
+          "pelne": true
+        },
+        "minutyNormowe": 120,
+        "linie": [
+          {
+            "rodzaj": "pozycja",
+            "klucz": "okna.okno_1",
+            "opis": "Okno 1-skrzydłowe",
+            "ilosc": 6,
+            "jednostka": "szt",
+            "cenaJedn": 30,
+            "cenaBazowa": 30,
+            "mnoznikProgu": 1,
+            "kwota": 180,
+            "zakres": [
+              60,
+              420
+            ],
+            "minuty": 90
+          }
+        ],
+        "propozycje": [],
+        "dojazd": {
+          "km": 0,
+          "kwota": 0
+        },
+        "wojewodztwo": {
+          "id": "mazowieckie",
+          "nazwa": "mazowieckie",
+          "stawka_h": 65,
+          "wsp": 1
+        },
+        "statusVat": "zwolniony",
+        "stawkaVatProc": 23,
+        "podstawaCeny": "brutto",
+        "wizytWMiesiacu": null,
+        "wersjaDanych": {
+          "ceny": "2026-10-23",
+          "normy": "2026-10-23",
+          "rynek": "2026-10-23"
+        }
+      },
+      "cenaReczna": null,
+      "wykonania": [],
+      "oferta": {
+        "zakres": null,
+        "warunki": null,
+        "waznaDo": null,
+        "wyslana": "2026-10-13T10:00:00.000Z",
+        "nieaktualna": false
+      }
+    },
+    {
+      "id": "e2e-wycena-przyjeta",
+      "numer": "3/10/2026",
+      "utworzona": "2026-10-14T09:00:00.000Z",
+      "zmieniona": "2026-10-14T09:00:00.000Z",
+      "status": "przyjeta",
+      "rodzaj": "dokladna",
+      "klient": {
+        "nazwa": "Gabinet na Żoliborzu",
+        "adres": "",
+        "termin": null
+      },
+      "wejscie": {
+        "uslugaId": "tapicerka",
+        "wojewodztwoId": "mazowieckie",
+        "pozycje": [
+          {
+            "id": "kanapa_3",
+            "ilosc": 1
+          }
+        ],
+        "dojazdKm": 0
+      },
+      "szybka": null,
+      "odpowiedzi": {},
+      "wynik": {
+        "cena": 150,
+        "netto": 150,
+        "vat": 0,
+        "mediana": 150,
+        "widelki": {
+          "od": 150,
+          "do": 240,
+          "pelne": true
+        },
+        "minutyNormowe": 90,
+        "linie": [
+          {
+            "rodzaj": "pozycja",
+            "klucz": "tapicerka.kanapa_3",
+            "opis": "Kanapa 3-osobowa",
+            "ilosc": 1,
+            "jednostka": "szt",
+            "cenaJedn": 150,
+            "cenaBazowa": 150,
+            "mnoznikProgu": 1,
+            "kwota": 150,
+            "zakres": [
+              60,
+              240
+            ],
+            "minuty": 60
+          }
+        ],
+        "propozycje": [],
+        "dojazd": {
+          "km": 0,
+          "kwota": 0
+        },
+        "wojewodztwo": {
+          "id": "mazowieckie",
+          "nazwa": "mazowieckie",
+          "stawka_h": 65,
+          "wsp": 1
+        },
+        "statusVat": "zwolniony",
+        "stawkaVatProc": 23,
+        "podstawaCeny": "brutto",
+        "wizytWMiesiacu": null,
+        "wersjaDanych": {
+          "ceny": "2026-10-23",
+          "normy": "2026-10-23",
+          "rynek": "2026-10-23"
+        }
+      },
+      "cenaReczna": null,
+      "wykonania": [],
+      "oferta": {
+        "zakres": null,
+        "warunki": null,
+        "waznaDo": null,
+        "wyslana": "2026-10-14T10:00:00.000Z",
+        "nieaktualna": false
+      }
+    }
+  ],
+  "licznikNumerow": {
+    "2026-10": 3
+  },
+  "kopia": {
+    "ostatnia": null,
+    "zmianaOd": "2026-10-12T09:00:00.000Z"
+  },
+  "preferencje": {
+    "iosInstrukcjaZamknieta": false
+  }
+}

@@ -170,27 +170,27 @@ Zależy od: Faza 2
 
 ### IU-9: Szkielet aplikacji: strona, router, komponenty i style (feature-builder-ui)
 
-- [ ] Stwórz: `index.html`
-- [ ] Stwórz: `src/app.js`
-- [ ] Stwórz: `src/ui/router.js`
-- [ ] Stwórz: `src/ui/trasy.js`
-- [ ] Stwórz: `src/widoki/indeks.js`
-- [ ] Stwórz: `src/ui/h.js`
-- [ ] Stwórz: `src/ui/format.js`
-- [ ] Stwórz: `src/ui/ikony.js`
-- [ ] Stwórz: `src/ui/komponenty/formularz.js`
-- [ ] Stwórz: `src/ui/komponenty/uklad.js`
-- [ ] Stwórz: `src/style/tokeny.css`
-- [ ] Stwórz: `src/style/baza.css`
-- [ ] Stwórz: `src/style/komponenty.css`
-- [ ] Stwórz: `fonty/source-sans-3-latin-wght.woff2`
-- [ ] Stwórz: `fonty/source-sans-3-latin-ext-wght.woff2`
-- [ ] Stwórz: `fonty/OFL.txt`
-- [ ] Test (unit): `src/ui/format.test.js`
-- [ ] Test (unit): `src/ui/router.test.js`
-- [ ] Test: [Unit] `dopasuj('#/wycena/abc/oferta', TRASY)` → `{ nazwa: 'oferta', parametry: { id: 'abc' } }`; `#/kreator/zakres?wycena=x` daje krok i zapytanie; `#/nic` → null
-- [ ] Test: [Unit] `zl(1234.5)` → „1 235 zł” z twardą spacją; `czas(315)` → „5 h 15 min”; `tempo(1.18)` → „1,18×”
-- [ ] Test: [Unit] `miejscownikWojewodztwa('kujawsko-pomorskie')` → „kujawsko-pomorskim”; `dniTemu` dla 0, 1 i 9 dni
+- [x] Stwórz: `index.html`
+- [x] Stwórz: `src/app.js`
+- [x] Stwórz: `src/ui/router.js`
+- [x] Stwórz: `src/ui/trasy.js`
+- [x] Stwórz: `src/widoki/indeks.js`
+- [x] Stwórz: `src/ui/h.js`
+- [x] Stwórz: `src/ui/format.js`
+- [x] Stwórz: `src/ui/ikony.js`
+- [x] Stwórz: `src/ui/komponenty/formularz.js`
+- [x] Stwórz: `src/ui/komponenty/uklad.js`
+- [x] Stwórz: `src/style/tokeny.css`
+- [x] Stwórz: `src/style/baza.css`
+- [x] Stwórz: `src/style/komponenty.css`
+- [x] Stwórz: `fonty/source-sans-3-latin-wght.woff2`
+- [x] Stwórz: `fonty/source-sans-3-latin-ext-wght.woff2`
+- [x] Stwórz: `fonty/OFL.txt`
+- [x] Test (unit): `src/ui/format.test.js`
+- [x] Test (unit): `src/ui/router.test.js`
+- [x] Test: [Unit] `dopasuj('#/wycena/abc/oferta', TRASY)` → `{ nazwa: 'oferta', parametry: { id: 'abc' } }`; `#/kreator/zakres?wycena=x` daje krok i zapytanie; `#/nic` → null
+- [x] Test: [Unit] `zl(1234.5)` → „1 235 zł” z twardą spacją; `czas(315)` → „5 h 15 min”; `tempo(1.18)` → „1,18×”
+- [x] Test: [Unit] `miejscownikWojewodztwa('kujawsko-pomorskie')` → „kujawsko-pomorskim”; `dniTemu` dla 0, 1 i 9 dni
 - [ ] Test: [E2E] `szkielet-nawigacja` — ustaw okno 360×800, otwórz http://localhost:5174/, wstrzyknij przez `agent-browser eval` treść `e2e/stany/ustawienia-mazowieckie.json` do `localStorage['wyceny-sprzatanie:stan']`, przeładuj, kliknij „Wyceny”, „Firma”, „+”, potem otwórz `#/zly-adres`, zrób screenshot → nagłówki ekranów zmieniają się, arkusz „+” ma dwie opcje, zły adres pokazuje „Nie ma takiego ekranu.”, konsola bez błędów, `document.fonts.check('16px "Source Sans 3"')` zwraca true
 - [ ] Weryfikacja: `node --test src/ui/format.test.js src/ui/router.test.js` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
@@ -198,33 +198,33 @@ Zależy od: Faza 2
 
 ### IU-10: Ekran startowy i lista wycen (feature-builder-ui)
 
-- [ ] Stwórz: `src/widoki/start.js`
-- [ ] Stwórz: `src/widoki/lista-wycen.js`
-- [ ] Stwórz: `src/widoki/start-dane.js`
-- [ ] Stwórz: `src/ui/statusy.js`
-- [ ] Modyfikuj: `src/widoki/indeks.js`
-- [ ] Stwórz: `e2e/stany/ustawienia-mazowieckie.json`
-- [ ] Stwórz: `e2e/stany/wyceny-do-zrobienia.json`
-- [ ] Test (unit): `src/widoki/start-dane.test.js`
-- [ ] Test: [Unit] `doZrobienia` dla wycen do wysłania, przyjętej z terminem jutro i przyjętej z terminem wczoraj daje „Wyślij ofertę” i jedno „Wpisz czas pracy”
-- [ ] Test: [Unit] `podsumowanieMiesiaca` liczy wyceny z bieżącego miesiąca bez szkiców i średnią realną stawkę z wykonań
-- [ ] Test: [Unit] `e2e/stany/wyceny-do-zrobienia.json` wczytuje się przez `odczytajKopie`-zgodny kształt stanu v1 (magazyn bez błędu)
+- [x] Stwórz: `src/widoki/start.js`
+- [x] Stwórz: `src/widoki/lista-wycen.js`
+- [x] Stwórz: `src/widoki/start-dane.js`
+- [x] Stwórz: `src/ui/statusy.js`
+- [x] Modyfikuj: `src/widoki/indeks.js`
+- [x] Stwórz: `e2e/stany/ustawienia-mazowieckie.json`
+- [x] Stwórz: `e2e/stany/wyceny-do-zrobienia.json`
+- [x] Test (unit): `src/widoki/start-dane.test.js`
+- [x] Test: [Unit] `doZrobienia` dla wycen do wysłania, przyjętej z terminem jutro i przyjętej z terminem wczoraj daje „Wyślij ofertę” i jedno „Wpisz czas pracy”
+- [x] Test: [Unit] `podsumowanieMiesiaca` liczy wyceny z bieżącego miesiąca bez szkiców i średnią realną stawkę z wykonań
+- [x] Test: [Unit] `e2e/stany/wyceny-do-zrobienia.json` wczytuje się przez `odczytajKopie`-zgodny kształt stanu v1 (magazyn bez błędu)
 - [ ] Test: [E2E] `ekran-startowy-zadania` — okno 360×800, wstrzyknij `e2e/stany/wyceny-do-zrobienia.json` do `localStorage['wyceny-sprzatanie:stan']`, otwórz http://localhost:5174/#/start, zrób screenshot, kliknij wiersz „Wyślij ofertę”, wróć, kliknij „Wyceny” → karta „Do zrobienia 2” z „Wyślij ofertę” i „Wpisz czas pracy”, baner „Nie masz jeszcze kopii danych…”, wiersz otwiera `#/wycena/<id>`, lista wycen ma trzy pozycje z pigułkami „Do wysłania”, „Wysłana”, „Przyjęta”
 - [ ] Weryfikacja: `node --test src/widoki/start-dane.test.js` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-11: Ustawienia firmy i kreator pierwszego uruchomienia (feature-builder-ui)
 
-- [ ] Stwórz: `src/widoki/ustawienia.js`
-- [ ] Stwórz: `src/widoki/ustawienia-sekcje.js`
-- [ ] Stwórz: `src/widoki/ustawienia-tempo.js`
-- [ ] Stwórz: `src/widoki/kreator-startowy.js`
-- [ ] Stwórz: `src/widoki/ustawienia-formularz.js`
-- [ ] Modyfikuj: `src/widoki/indeks.js`
-- [ ] Modyfikuj: `src/app.js`
-- [ ] Test (unit): `src/widoki/ustawienia-formularz.test.js`
-- [ ] Test: [Unit] formularz z telefonem „600-123-456” i NIP-em pustym daje patch bez błędów; chemia „4,5” → 4.5; chemia „-1” → błąd zakresu
-- [ ] Test: [Unit] tempo „3,5” daje błąd „Wpisz liczbę od 0,5 do 3.”
+- [x] Stwórz: `src/widoki/ustawienia.js`
+- [x] Stwórz: `src/widoki/ustawienia-sekcje.js`
+- [x] Stwórz: `src/widoki/ustawienia-tempo.js`
+- [x] Stwórz: `src/widoki/kreator-startowy.js`
+- [x] Stwórz: `src/widoki/ustawienia-formularz.js`
+- [x] Modyfikuj: `src/widoki/indeks.js`
+- [x] Modyfikuj: `src/app.js`
+- [x] Test (unit): `src/widoki/ustawienia-formularz.test.js`
+- [x] Test: [Unit] formularz z telefonem „600-123-456” i NIP-em pustym daje patch bez błędów; chemia „4,5” → 4.5; chemia „-1” → błąd zakresu
+- [x] Test: [Unit] tempo „3,5” daje błąd „Wpisz liczbę od 0,5 do 3.”
 - [ ] Test: [E2E] `kreator-ustawien` — okno 360×800, wyczyść localStorage, otwórz http://localhost:5174/, przejdź kreator: województwo „mazowieckie”, „Czynny podatnik VAT”, nazwa „Firma Test”, telefon „600 123 456”, tempo bez zmian, „Gotowe”; potem otwórz „Firma” → start bez banera „Ustawienia domyślne – uzupełnij”, w ustawieniach „Czynny podatnik VAT” zaznaczony i „1,3× normy rynkowej”
 - [ ] Test: [E2E] `kreator-ustawien-pominiety` — wyczyść localStorage, otwórz http://localhost:5174/, kliknij „Pomiń” → start z banerem „Ustawienia domyślne – uzupełnij”, a „Uzupełnij” otwiera `#/ustawienia`
 - [ ] Weryfikacja: `node --test src/widoki/ustawienia-formularz.test.js` przechodzi
@@ -232,11 +232,11 @@ Zależy od: Faza 2
 
 ### IU-12: Ekran kopii zapasowej i ekran ratunkowy (feature-builder-ui)
 
-- [ ] Stwórz: `src/widoki/kopia.js`
-- [ ] Stwórz: `src/widoki/ratunek.js`
-- [ ] Stwórz: `src/ui/plik.js`
-- [ ] Modyfikuj: `src/widoki/indeks.js`
-- [ ] Modyfikuj: `src/app.js`
+- [x] Stwórz: `src/widoki/kopia.js`
+- [x] Stwórz: `src/widoki/ratunek.js`
+- [x] Stwórz: `src/ui/plik.js`
+- [x] Modyfikuj: `src/widoki/indeks.js`
+- [x] Modyfikuj: `src/app.js`
 - [ ] Test: [E2E] `kopia-eksport` — okno 360×800, wstrzyknij `e2e/stany/wyceny-do-zrobienia.json`, otwórz http://localhost:5174/#/kopia, kliknij „Zapisz kopię”, wróć na start → baner „Kopia zapisana: wyceny-kopia-<dzisiejsza data>.json”, na starcie brak banera przypomnienia o kopii
 - [ ] Test: [E2E] `ekran-ratunkowy` — wstrzyknij do `localStorage['wyceny-sprzatanie:stan']` tekst `{zepsute`, otwórz http://localhost:5174/ → ekran „Nie udało się odczytać danych zapisanych w przeglądarce.” z trzema przyciskami
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
@@ -244,20 +244,20 @@ Zależy od: Faza 2
 
 ### IU-13: PWA: manifest, service worker, ikony zastępcze i instrukcja dla iPhone'a (feature-builder-ui)
 
-- [ ] Stwórz: `manifest.webmanifest`
-- [ ] Stwórz: `sw.js`
-- [ ] Stwórz: `src/pwa/rejestracja.js`
-- [ ] Stwórz: `scripts/ikony-zastepcze.mjs`
-- [ ] Stwórz: `ikony/ikona.svg`
-- [ ] Stwórz: `ikony/ikona-192.png`
-- [ ] Stwórz: `ikony/ikona-512.png`
-- [ ] Stwórz: `ikony/ikona-maskable-512.png`
-- [ ] Stwórz: `ikony/apple-touch-icon.png`
-- [ ] Modyfikuj: `index.html`
-- [ ] Modyfikuj: `src/app.js`
-- [ ] Modyfikuj: `src/widoki/start.js`
-- [ ] Test (unit): `src/pwa/rejestracja.test.js`
-- [ ] Test: [Unit] `czyPokazacInstrukcjeIos` dla Safari na iPhonie poza trybem aplikacji → true; w trybie standalone, na Androidzie i po zamknięciu → false
+- [x] Stwórz: `manifest.webmanifest`
+- [x] Stwórz: `sw.js`
+- [x] Stwórz: `src/pwa/rejestracja.js`
+- [x] Stwórz: `scripts/ikony-zastepcze.mjs`
+- [x] Stwórz: `ikony/ikona.svg`
+- [x] Stwórz: `ikony/ikona-192.png`
+- [x] Stwórz: `ikony/ikona-512.png`
+- [x] Stwórz: `ikony/ikona-maskable-512.png`
+- [x] Stwórz: `ikony/apple-touch-icon.png`
+- [x] Modyfikuj: `index.html`
+- [x] Modyfikuj: `src/app.js`
+- [x] Modyfikuj: `src/widoki/start.js`
+- [x] Test (unit): `src/pwa/rejestracja.test.js`
+- [x] Test: [Unit] `czyPokazacInstrukcjeIos` dla Safari na iPhonie poza trybem aplikacji → true; w trybie standalone, na Androidzie i po zamknięciu → false
 - [ ] Test: [E2E] `pwa-manifest` — otwórz http://localhost:5174/, przeładuj, sprawdź przez `agent-browser eval` `navigator.serviceWorker.controller !== null` i `fetch('manifest.webmanifest').then(r => r.json())` → service worker kontroluje stronę, manifest ma `short_name` „Wyceny” i trzy ikony
 - [ ] Weryfikacja: `node --test src/pwa/rejestracja.test.js` przechodzi
 - [ ] Weryfikacja: `node scripts/ikony-zastepcze.mjs` tworzy cztery pliki PNG w `ikony/`

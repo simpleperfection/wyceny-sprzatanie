@@ -588,7 +588,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 
 **Zależy od:** Faza 2
 
-- [ ] **IU-9: Szkielet aplikacji: strona, router, komponenty i style**
+- [x] **IU-9: Szkielet aplikacji: strona, router, komponenty i style**
 
 **Cel:** `index.html` z modułem startowym, router hash, helper DOM, formatowanie, ikony, wspólne komponenty i style z tokenami wariantu B.
 
@@ -662,7 +662,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 **Operator checklist:**
 - [ ] Właściciel sprawdza na telefonie dolny pasek, nagłówek i komponenty formularza wobec makiet (kolory wariantu B)
 
-- [ ] **IU-10: Ekran startowy i lista wycen**
+- [x] **IU-10: Ekran startowy i lista wycen**
 
 **Cel:** Start z kaflami wycen, podsumowaniem miesiąca, listą „do zrobienia”, przypomnieniem o kopii i znacznikiem ustawień domyślnych oraz lista wszystkich wycen.
 
@@ -722,7 +722,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 **Operator checklist:**
 - [ ] Właściciel porównuje start na telefonie z makietą `ekran-startowy` (układ, teksty, statusy)
 
-- [ ] **IU-11: Ustawienia firmy i kreator pierwszego uruchomienia**
+- [x] **IU-11: Ustawienia firmy i kreator pierwszego uruchomienia**
 
 **Cel:** Ekran ustawień (województwo, VAT, dane firmy, tempo, szacunki kosztów) i kreator pierwszego uruchomienia z możliwością pominięcia.
 
@@ -784,7 +784,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 **Operator checklist:**
 - [ ] Właściciel przechodzi kreator na telefonie i porównuje ustawienia z makietą `ustawienia-firmy`
 
-- [ ] **IU-12: Ekran kopii zapasowej i ekran ratunkowy**
+- [x] **IU-12: Ekran kopii zapasowej i ekran ratunkowy**
 
 **Cel:** Eksport danych do pliku, import z potwierdzeniem „połącz” albo „zastąp” i ekran ratunkowy przy uszkodzonych danych w przeglądarce.
 
@@ -840,7 +840,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 **Operator checklist:**
 - [ ] Właściciel zapisuje kopię na telefonie i wczytuje ją na komputerze (opcja „Połącz”)
 
-- [ ] **IU-13: PWA: manifest, service worker, ikony zastępcze i instrukcja dla iPhone'a**
+- [x] **IU-13: PWA: manifest, service worker, ikony zastępcze i instrukcja dla iPhone'a**
 
 **Cel:** Instalacja na ekranie początkowym, działanie offline po pierwszym uruchomieniu i ostrzeżenie dla iPhone'a o osobnych danych Safari i aplikacji z ekranu początkowego.
 
