@@ -1,6 +1,9 @@
-// Service worker aplikacji (R28): nawigacja i data/*.json najpierw z sieci (limit 4 s), potem z pamieci podrecznej;
-// niezmienne pliki aplikacji (src/, fonty/, ikony/, manifest) od razu z pamieci, odswiezane w tle (stale-while-revalidate).
-// Nowe pliki aplikacji wymusza zmiana WERSJA_CACHE. Po pierwszym uruchomieniu online aplikacja dziala offline.
+// Service worker aplikacji (R28): nawigacja (index.html) najpierw z sieci (limit 4 s), potem z pamieci podrecznej;
+// wszystkie pliki poza nawigacja (src/, data/, style/, fonty/, ikony/, manifest) od razu z pamieci, odswiezane w tle
+// (stale-while-revalidate). Moduly src/ i data/*.json odswiezaja sie tym samym trybem, wiec nowa wersja kodu i danych
+// dziala razem od nastepnego uruchomienia, bez startu starego kodu z nowymi danymi.
+// Zmiana WERSJA_CACHE (np. po zmianie PLIKI_STARTOWE) instaluje nowego workera, ktory kasuje stary cache.
+// Po pierwszym uruchomieniu online aplikacja dziala offline.
 // Klasyczny skrypt (bez importow modulow), poza typecheck. Zakres = katalog aplikacji.
 
 const WERSJA_CACHE = 'wyceny-v1'
@@ -10,8 +13,6 @@ const LIMIT_ZAPISU_W_TLE_MS = 30000
 const MAKS_ZASOBOW = 300
 const KOMUNIKAT_ZASOBOW = 'zapisz-zasoby'
 const STRONA_ZAPASOWA = 'index.html'
-/** Dane referencyjne (ceny, normy, stawki) maja byc swieze, wiec ida najpierw z sieci jak nawigacja. */
-const KATALOG_DANYCH = 'data/'
 // Tylko pliki, ktore istnieja; kolejne fazy dopisuja swoje (np. oferta.html).
 const PLIKI_STARTOWE = [
   './',
@@ -56,12 +57,6 @@ async function zapisana(cache, zadanie) {
   return odpowiedz ?? (czyNawigacja ? cache.match(STRONA_ZAPASOWA) : undefined)
 }
 
-/** @param {Request} zadanie @returns {boolean} nawigacja albo plik z data/ */
-function czyNajpierwSiec(zadanie) {
-  if (zadanie.mode === 'navigate') return true
-  return new URL(zadanie.url).pathname.startsWith(new URL(KATALOG_DANYCH, self.location.href).pathname)
-}
-
 /** @param {FetchEvent} zdarzenie @param {Cache} cache @returns {Promise<Response>} odpowiedz sieci; poprawna trafia do cache w tle */
 function zSieci(zdarzenie, cache) {
   const zadanie = zdarzenie.request
@@ -71,7 +66,7 @@ function zSieci(zdarzenie, cache) {
   })
 }
 
-/** Niezmienny plik aplikacji: od razu z cache i odswiezenie w tle; bez wpisu w cache czeka na siec. @param {FetchEvent} zdarzenie @param {Cache} cache */
+/** Plik aplikacji albo danych: od razu z cache i odswiezenie w tle; bez wpisu w cache czeka na siec. @param {FetchEvent} zdarzenie @param {Cache} cache */
 async function cachePotemSiec(zdarzenie, cache) {
   const zCache = await cache.match(zdarzenie.request)
   const siec = zSieci(zdarzenie, cache)
@@ -123,7 +118,7 @@ self.addEventListener('fetch', (zdarzenie) => {
   const { request } = zdarzenie
   if (request.method !== 'GET' || !czyTenSamOrigin(request.url)) return
   zdarzenie.respondWith(caches.open(WERSJA_CACHE)
-    .then((cache) => (czyNajpierwSiec(request) ? siecPotemCache(zdarzenie, cache) : cachePotemSiec(zdarzenie, cache))))
+    .then((cache) => (request.mode === 'navigate' ? siecPotemCache(zdarzenie, cache) : cachePotemSiec(zdarzenie, cache))))
 })
 
 self.addEventListener('message', (zdarzenie) => {

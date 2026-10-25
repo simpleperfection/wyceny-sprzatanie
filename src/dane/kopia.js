@@ -62,8 +62,12 @@ function sprawdzStanKopii(stan) {
   sprawdzUstawieniaKopii(stan.ustawienia)
 }
 
-/** @param {unknown} teraz @returns {Date} */
-function sprawdzDate(teraz) {
+/**
+ * Straznik daty warstwy danych kopii: rzuca BladKopii('data'), bo wywolujacy kopii lapia tylko BladKopii. Wspolny jest
+ * predykat jestData (src/dane/ksztalt.js); sprawdzDate z src/ui/format.js rzuca BladFormatu i sluzy widokom.
+ * @param {unknown} teraz @returns {Date}
+ */
+function sprawdzDateKopii(teraz) {
   if (!jestData(teraz)) throw new BladKopii('data', 'Data musi być poprawnym obiektem Date')
   return teraz
 }
@@ -75,7 +79,7 @@ function sprawdzDate(teraz) {
  * @returns {PlikKopii}
  */
 export function utworzKopie(stan, teraz) {
-  sprawdzDate(teraz)
+  sprawdzDateKopii(teraz)
   const wynik = zaktualizujStan(stan)
   if (!('stan' in wynik)) throw new BladKopii(wynik.blad, 'Stanu do kopii nie da się odczytać')
   sprawdzStanKopii(wynik.stan)
@@ -89,7 +93,7 @@ export function utworzKopie(stan, teraz) {
  * @returns {Stan}
  */
 export function oznaczKopie(magazyn, teraz) {
-  sprawdzDate(teraz)
+  sprawdzDateKopii(teraz)
   const stan = wczytajStan(magazyn)
   const oznaczony = { ...stan, kopia: { ...stan.kopia, ostatnia: teraz.toISOString() } }
   magazyn.zapiszCalosc(oznaczony)
@@ -214,7 +218,7 @@ function dniKalendarzowe(od, dzis) {
  * @returns {number | null}
  */
 export function dniOdKopii(stan, dzis) {
-  sprawdzDate(dzis)
+  sprawdzDateKopii(dzis)
   return stan.kopia.ostatnia === null ? null : dniKalendarzowe(new Date(stan.kopia.ostatnia), dzis)
 }
 
@@ -225,7 +229,7 @@ export function dniOdKopii(stan, dzis) {
  * @returns {boolean}
  */
 export function czyPrzypomniecOKopii(stan, dzis) {
-  sprawdzDate(dzis)
+  sprawdzDateKopii(dzis)
   const zapisane = stan.wyceny.filter((w) => w.status !== 'szkic')
   if (zapisane.length === 0) return false
   const prog = stan.ustawienia?.przypomnienieKopiiDni ?? DNI_PRZYPOMNIENIA_KOPII[0]

@@ -6,8 +6,9 @@ import { czytajJson, katalogTestowy } from '../../tests/pomocnicze.js'
 import { odczytajKopie } from '../dane/kopia.js'
 import { KLUCZ_MAGAZYNU, utworzMagazyn } from '../dane/magazyn.js'
 import { brakujeUstawien, scalKoszty } from '../dane/ustawienia.js'
+import { BladFormatu } from '../ui/format.js'
 import {
-  adresWyceny, BladDaty, doZrobienia, inicjal, kwotaWyceny, nazwaMiesiaca, podsumowanieMiesiaca, wierszTempa,
+  adresWyceny, doZrobienia, inicjal, kwotaWyceny, nazwaMiesiaca, podsumowanieMiesiaca, wierszTempa,
 } from './start-dane.js'
 
 /** @typedef {import('./start-dane.js').DaneKosztow} DaneKosztow */
@@ -83,8 +84,8 @@ describe('doZrobienia', () => {
     assert.equal(zadania[2]?.tytul, 'Dokończ wycenę')
   })
 
-  it('bez daty dnia rzuca BladDaty', () => {
-    assert.throws(() => doZrobienia([], new Date('nie data')), (blad) => blad instanceof BladDaty && blad.kod === 'zla_data')
+  it('bez daty dnia rzuca BladFormatu', () => {
+    assert.throws(() => doZrobienia([], new Date('nie data')), (blad) => blad instanceof BladFormatu && blad.kod === 'zla_data')
   })
 })
 
@@ -130,8 +131,8 @@ describe('podsumowanieMiesiaca', () => {
     assert.deepEqual(podsumowanieMiesiaca(wyceny, DZIS, dane), { wycen: 1, przyjetych: 1, stawka: null, pominiete: 1 })
   })
 
-  it('bez daty dnia rzuca BladDaty', () => {
-    assert.throws(() => podsumowanieMiesiaca([], /** @type {any} */ ('2026-10-25'), dane), BladDaty)
+  it('bez daty dnia rzuca BladFormatu', () => {
+    assert.throws(() => podsumowanieMiesiaca([], /** @type {any} */ ('2026-10-25'), dane), BladFormatu)
   })
 })
 
@@ -150,7 +151,7 @@ describe('wierszTempa', () => {
 describe('nazwaMiesiaca, kwotaWyceny, adresWyceny, inicjal', () => {
   it('miesiąc wielką literą w mianowniku', () => {
     assert.equal(nazwaMiesiaca(DZIS), 'Październik')
-    assert.throws(() => nazwaMiesiaca(new Date(Number.NaN)), BladDaty)
+    assert.throws(() => nazwaMiesiaca(new Date(Number.NaN)), BladFormatu)
   })
 
   it('kwota: ręczna wygrywa z migawką, szkic bez ceny daje null', () => {

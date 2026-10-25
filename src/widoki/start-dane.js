@@ -9,9 +9,6 @@ import { sprawdzStatusVat, zCenyRecznej } from '../silnik/vat.js'
 import { sprawdzDate } from '../ui/format.js'
 import { sciezka } from '../ui/trasy.js'
 
-/** Zla data dnia to BladFormatu `zla_data` ze wspolnego straznika sprawdzDate (src/ui/format.js); nazwa dla wywolujacych start-dane. */
-export { BladFormatu as BladDaty } from '../ui/format.js'
-
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
 /** @typedef {import('../dane/wyceny.js').MigawkaWyniku} MigawkaWyniku */
 /** @typedef {import('../dane/wyceny.js').Wykonanie} Wykonanie */

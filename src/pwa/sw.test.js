@@ -79,7 +79,7 @@ async function pobierz(obsluga, zadanie) {
   return odpowiedzSw
 }
 
-describe('sw.js: najpierw sieć (nawigacja i data/*.json)', () => {
+describe('sw.js: najpierw sieć (nawigacja)', () => {
   it('sieć odrzuca TypeError, a w cache jest index.html → nawigacja na ./#/start dostaje index.html', async () => {
     const { obslugi, cache } = uruchomSw(async () => { throw new TypeError('Failed to fetch') })
     await cache.put('index.html', odpowiedz(200, '<!doctype html>'))
@@ -89,6 +89,18 @@ describe('sw.js: najpierw sieć (nawigacja i data/*.json)', () => {
     assert.equal(wynik?.tresc, '<!doctype html>')
   })
 
+  it('świeży index.html z sieci wygrywa z wpisem w cache przy nawigacji', async () => {
+    const { obslugi, cache } = uruchomSw(async () => odpowiedz(200, 'nowa strona'))
+    await cache.put('index.html', odpowiedz(200, 'stara strona'))
+
+    const wynik = await pobierz(obslugi.fetch, { url: `${KATALOG}index.html`, mode: 'navigate' })
+
+    assert.equal(wynik?.tresc, 'nowa strona')
+    assert.equal((await cache.match(`${KATALOG}index.html`))?.tresc, 'nowa strona')
+  })
+})
+
+describe('sw.js: pliki aplikacji i danych od razu z cache (stale-while-revalidate)', () => {
   it('odpowiedź 200 basic z sieci trafia do cache pod adresem żądania', async () => {
     const { obslugi, cache } = uruchomSw(async () => odpowiedz(200, '{"wersja":1}'))
 
@@ -110,17 +122,16 @@ describe('sw.js: najpierw sieć (nawigacja i data/*.json)', () => {
     assert.equal(cache.wpisy.size, 0)
   })
 
-  it('świeży plik z sieci wygrywa z wpisem w cache dla data/*.json', async () => {
+  it('data/*.json idzie tym trybem co moduły: stara wersja z cache, nowa w cache na następne uruchomienie', async () => {
     const { obslugi, cache } = uruchomSw(async () => odpowiedz(200, 'nowe'))
     await cache.put('data/ceny.json', odpowiedz(200, 'stare'))
 
     const wynik = await pobierz(obslugi.fetch, { url: `${KATALOG}data/ceny.json` })
 
-    assert.equal(wynik?.tresc, 'nowe')
+    assert.equal(wynik?.tresc, 'stare')
+    assert.equal((await cache.match(`${KATALOG}data/ceny.json`))?.tresc, 'nowe')
   })
-})
 
-describe('sw.js: pliki aplikacji od razu z cache (stale-while-revalidate)', () => {
   it('moduł z cache wraca bez czekania na sieć, a odświeżona wersja trafia do cache w tle', async () => {
     const { obslugi, cache, fetch } = uruchomSw(async () => odpowiedz(200, 'nowy modul'))
     await cache.put('src/app.js', odpowiedz(200, 'stary modul'))
