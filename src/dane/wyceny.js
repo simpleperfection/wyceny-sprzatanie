@@ -110,7 +110,8 @@ function jestOferta(x) {
 }
 
 /**
- * Migawka wyniku do zapisu i z pliku kopii: kwoty nieujemne, dodatni czas normowy, liczba wizyt null albo dodatnia (abonament 4,33).
+ * Migawka wyniku do zapisu i z pliku kopii: kwoty nieujemne, dodatni czas normowy, liczba wizyt null albo dodatnia (abonament 4,33);
+ * minimum (gdy jest) nieujemne, czyMinimum (gdy jest) boolean.
  * @param {unknown} x
  * @returns {x is MigawkaWyniku}
  */
@@ -118,7 +119,8 @@ export function jestMigawkaWyniku(x) {
   return jestObiektem(x) && POLA_KWOT.every((p) => jestNieujemna(x[p])) && jestLiczba(x.mediana) && jestLiczba(x.stawkaVatProc) &&
     jestDodatnia(x.minutyNormowe) && (x.wizytWMiesiacu === null || jestDodatnia(x.wizytWMiesiacu)) && Array.isArray(x.linie) &&
     Array.isArray(x.propozycje) && jestObiektem(x.widelki) && jestObiektem(x.dojazd) && jestObiektem(x.wojewodztwo) &&
-    typeof x.statusVat === 'string' && typeof x.podstawaCeny === 'string' && jestObiektem(x.wersjaDanych)
+    typeof x.statusVat === 'string' && typeof x.podstawaCeny === 'string' && jestObiektem(x.wersjaDanych) &&
+    (x.minimum === undefined || jestNieujemna(x.minimum)) && (x.czyMinimum === undefined || typeof x.czyMinimum === 'boolean')
 }
 
 /**
@@ -279,7 +281,7 @@ export function utworzSzkic(magazyn, dane, opcje = {}) {
 export function zapiszWejscie(magazyn, id, wejscie, opcje = {}) {
   sprawdzWejscie(wejscie)
   const { wynik } = opcje
-  if (wynik) sprawdzWynik(wynik)
+  if (wynik !== undefined && wynik !== null) sprawdzWynik(wynik)
   return zmienWycene(magazyn, id, opcje, (w) => {
     tylkoDoOdczytu(w)
     const zWejsciem = { ...w, wejscie, oferta: nieaktualnaPoWyslaniu(w) }

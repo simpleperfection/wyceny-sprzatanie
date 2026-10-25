@@ -425,6 +425,23 @@ describe('jestWycena, jestMigawkaWyniku i RODZAJE_WYCENY', () => {
     assert.equal(modulWycen.jestMigawkaWyniku({ ...migawka(), propozycje: undefined }), false)
   })
 
+  it('minimum tekstem, ujemne albo nieskończone przy czyMinimum true → false; czyMinimum nie boolean → false; poprawne minimum → true', () => {
+    assert.equal(modulWycen.jestMigawkaWyniku(migawka({ minimum: 'abc', czyMinimum: true })), false)
+    assert.equal(modulWycen.jestMigawkaWyniku(migawka({ minimum: -50, czyMinimum: true })), false)
+    assert.equal(modulWycen.jestMigawkaWyniku(migawka({ minimum: 1e309, czyMinimum: true })), false)
+    assert.equal(modulWycen.jestMigawkaWyniku(migawka({ minimum: 300, czyMinimum: 'tak' })), false)
+    assert.equal(modulWycen.jestMigawkaWyniku(migawka({ minimum: 300, czyMinimum: true })), true)
+  })
+
+  it('zapiszWynik z minimum tekstem, ujemnym albo nieskończonym: BladWyceny wynik', () => {
+    const magazyn = nowyMagazyn()
+    const id = wycenaWStatusie(magazyn, ['do_wyslania'])
+
+    assert.throws(() => zapiszWynik(magazyn, id, migawka({ minimum: 'abc', czyMinimum: true })), bladWyceny('wynik'))
+    assert.throws(() => zapiszWynik(magazyn, id, migawka({ minimum: -50, czyMinimum: true })), bladWyceny('wynik'))
+    assert.throws(() => zapiszWynik(magazyn, id, migawka({ minimum: 1e309, czyMinimum: true })), bladWyceny('wynik'))
+  })
+
   it('numer 01/10/2026 albo 1/10/26, cena ręczna 0, wykonanie z tempem 0 albo pustym id, adres 201 i termin 41 znaków → false', () => {
     const magazyn = nowyMagazyn()
     const zapisana = zMagazynu(magazyn, wycenaWStatusie(magazyn, ['do_wyslania']))
@@ -478,6 +495,17 @@ describe('zapiszWejscie z wynikiem', () => {
 
     assert.throws(() => zapiszWejscie(magazyn, id, WEJSCIE, { wynik: null }), bladWyceny('pusty_zakres'))
     assert.throws(() => zapiszWejscie(magazyn, id, WEJSCIE, { wynik: migawka({ cena: -1 }) }), bladWyceny('wynik'))
+    assert.deepEqual(stanMagazynu(magazyn), przed)
+  })
+
+  it('wynik false, 0 albo pusty tekst: BladWyceny wynik; nic się nie zapisuje', () => {
+    const magazyn = nowyMagazyn()
+    const { id } = utworzSzkic(magazyn, { rodzaj: 'dokladna', wejscie: WEJSCIE }, PAZDZIERNIK)
+    const przed = stanMagazynu(magazyn)
+
+    assert.throws(() => zapiszWejscie(magazyn, id, WEJSCIE, { wynik: /** @type {never} */ (false) }), bladWyceny('wynik'))
+    assert.throws(() => zapiszWejscie(magazyn, id, WEJSCIE, { wynik: /** @type {never} */ (0) }), bladWyceny('wynik'))
+    assert.throws(() => zapiszWejscie(magazyn, id, WEJSCIE, { wynik: /** @type {never} */ ('') }), bladWyceny('wynik'))
     assert.deepEqual(stanMagazynu(magazyn), przed)
   })
 })

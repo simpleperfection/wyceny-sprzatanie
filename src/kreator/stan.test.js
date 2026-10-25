@@ -166,18 +166,6 @@ describe('przelicz', () => {
     assert.deepEqual([migawka.cena, migawka.netto, migawka.vat, migawka.stawkaVatProc], [250, 203.25, 46.75, 23])
   })
 
-  it('czynny podatnik przy podstawie netto (posadzki): VAT 23% na górze kwoty modelu', () => {
-    const kontekst = kontekstFirmy('czynny')
-    const wejscie = { uslugaId: 'mycie_posadzek', wojewodztwoId: 'mazowieckie', pozycje: [{ id: 'mycie_maszynowe', ilosc: 1000 }] }
-
-    const migawka = przelicz({ wejscie }, kontekst)
-
-    const model = migawka.linie.reduce((suma, l) => suma + l.kwota, 0)
-    assert.equal(migawka.podstawaCeny, 'netto')
-    assert.equal(migawka.cena, Math.round(Math.max(300, model) * 1.23))
-    assert.ok(migawka.vat > 0)
-  })
-
   it('czynny podatnik przy podstawie netto (posadzki 1000 m²): brutto 1550, netto 1260,16, VAT 289,84', () => {
     const kontekst = kontekstFirmy('czynny')
     const wejscie = { uslugaId: 'mycie_posadzek', wojewodztwoId: 'mazowieckie', pozycje: [{ id: 'mycie_maszynowe', ilosc: 1000 }], dojazdKm: 0 }

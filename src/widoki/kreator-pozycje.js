@@ -136,9 +136,21 @@ export const widokKreatoraPozycji = {
     /** @param {(w: WejscieWyceny) => WejscieWyceny} fn @param {HTMLElement} pole licznik z bledem pod spodem */
     function zapiszLicznik(fn, pole) {
       const blad = zapisz(fn)
-      if (blad !== null && blad !== BLAD_ILOSCI) return pokazBlad(blad)
+      if (blad !== null && blad !== BLAD_ILOSCI) return cofnijLiczniki(pole, blad)
       ustawBlad(pole, blad)
       if (blad === null) rysujZmienne()
+    }
+
+    /**
+     * Odmowa zapisu (np. pusty zakres wyceny z numerem): licznik ma juz nowa wartosc, wiec krok rysuje sie od nowa z zapisanej wyceny.
+     * @param {HTMLElement} pole licznik, ktory dostaje z powrotem fokus @param {string} blad
+     */
+    function cofnijLiczniki(pole, blad) {
+      const id = pole.querySelector('input')?.id
+      rysuj()
+      const element = id ? kontener.querySelector(`#${CSS.escape(id)}`) : null
+      if (element instanceof HTMLElement) element.focus()
+      pokazBlad(blad)
     }
 
     /** @param {string} pozycjaId @param {boolean} czyWlaczona */

@@ -137,8 +137,9 @@ export function bledyKroku(krok, wycena, katalog) {
 
 /**
  * Zmiana wejscia szkicu albo zapisanej wyceny: `fn` dostaje swieze wejscie, wynik zapisuje sie razem z przeliczeniem w jednym
- * zapisie magazynu (jeden odczyt stanu na zmiane). Pusty zakres czysci migawke szkicu (silnik nie wycenia pustego zakresu),
- * a wycena z numerem go odmawia (BladWyceny `pusty_zakres`). Wszystko synchronicznie, bez await miedzy odczytem a zapisem.
+ * zapisie magazynu (jeden zapis i dwa odczyty stanu na zmiane: wczytajStan tutaj i magazyn.zmien w zapiszWejscie). Pusty zakres
+ * czysci migawke szkicu (silnik nie wycenia pustego zakresu), a wycena z numerem go odmawia (BladWyceny `pusty_zakres`).
+ * Wszystko synchronicznie, bez await miedzy odczytem a zapisem.
  * @param {DaneAplikacji} kontekst @param {string} id @param {(wejscie: WejscieWyceny) => WejscieWyceny} fn
  * @returns {Wycena} wycena po zapisie
  */

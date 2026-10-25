@@ -87,7 +87,7 @@ export function kwotaJednostki(kwota) {
 export const nazwaJednostki = (jednostka) => NAZWY_JEDNOSTEK[jednostka] ?? jednostka
 
 /** @param {number} metraz @returns {string} „50 m²” */
-export const m2 =(metraz) => `${formatM2.format(liczba(metraz))}${NBSP}m²`
+export const m2 = (metraz) => `${formatM2.format(liczba(metraz))}${NBSP}m²`
 
 /** @param {number} stosunek tempo jako stosunek do normy @returns {string} „1,18×” */
 export const tempo = (stosunek) => `${formatTempa.format(liczba(stosunek))}×`
