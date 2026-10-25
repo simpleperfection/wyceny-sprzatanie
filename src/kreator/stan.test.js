@@ -9,7 +9,7 @@ import { BladWyceny, dodajWykonanie, utworzSzkic, wycena, zmienStatus } from '..
 import { BladWejscia } from '../silnik/bledy.js'
 import { ukladMieszkania } from '../silnik/uklad.js'
 import {
-  brudNowegoPomieszczenia, bledyKroku, czyZmianaCzysciZakres, KROKI_KREATORA, nowySzkic, podpowiedzCeny, przelicz, zmienWejscie, zmienWybor,
+  brudNowegoPomieszczenia, bledyKroku, czyZmianaCzysciZakres, KROKI_KREATORA, nowySzkic, przelicz, zmienWejscie, zmienWybor,
 } from './stan.js'
 
 /** @typedef {import('../silnik/katalog.js').Katalog} Katalog */
@@ -17,6 +17,28 @@ import {
 /** @typedef {import('../ui/router.js').DaneAplikacji} DaneAplikacji */
 
 const KURZ_1 = { id: 'kurz', poziom: 1 }
+
+/** Pamiec magazynu, ktora liczy odczyty i zapisy klucza stanu (koszt zmiany wejscia). */
+class LicznikMagazynu extends PamiecMagazynu {
+  odczyty = 0
+  zapisy = 0
+  zeruj() {
+    this.odczyty = 0
+    this.zapisy = 0
+  }
+
+  /** @param {string} klucz */
+  getItem(klucz) {
+    this.odczyty += 1
+    return super.getItem(klucz)
+  }
+
+  /** @param {string} klucz @param {string} wartosc */
+  setItem(klucz, wartosc) {
+    this.zapisy += 1
+    super.setItem(klucz, wartosc)
+  }
+}
 
 /** @type {Katalog} */
 let katalog
@@ -156,6 +178,15 @@ describe('przelicz', () => {
     assert.ok(migawka.vat > 0)
   })
 
+  it('czynny podatnik przy podstawie netto (posadzki 1000 m²): brutto 1550, netto 1260,16, VAT 289,84', () => {
+    const kontekst = kontekstFirmy('czynny')
+    const wejscie = { uslugaId: 'mycie_posadzek', wojewodztwoId: 'mazowieckie', pozycje: [{ id: 'mycie_maszynowe', ilosc: 1000 }], dojazdKm: 0 }
+
+    const migawka = przelicz({ wejscie }, kontekst)
+
+    assert.deepEqual([migawka.cena, migawka.netto, migawka.vat, migawka.podstawaCeny], [1550, 1260.16, 289.84, 'netto'])
+  })
+
   it('pusty zakres daje BladWejscia z silnika', () => {
     const kontekst = kontekstFirmy()
 
@@ -205,6 +236,34 @@ describe('zmienWejscie i zmienWybor', () => {
     assert.equal(zapisana(kontekst, id).wejscie.pomieszczenia, undefined)
   })
 
+  it('zmiana usługi zostawia tylko dodatki z listy nowej usługi; usługa bez dodatków nie dolicza starej dopłaty', () => {
+    const kontekst = kontekstFirmy()
+    const { id } = nowySzkic(kontekst, { uslugaId: 'mieszkanie_standard', wojewodztwoId: 'mazowieckie' })
+    zmienWejscie(kontekst, id, (wejscie) => ({ ...wejscie, pomieszczenia: mieszkanie50(), dodatki: [
+      { uslugaId: 'okna', pozycjaId: 'okno_1', ilosc: 2, tryb: 'w_cenie' },
+      { uslugaId: 'tapicerka', pozycjaId: 'kanapa_3', ilosc: 1, tryb: 'w_cenie' },
+    ] }))
+
+    const biura = zmienWybor(kontekst, id, { uslugaId: 'sprzatanie_biur', wojewodztwoId: 'mazowieckie' })
+    const okna = zmienWybor(kontekst, id, { uslugaId: 'okna', wojewodztwoId: 'mazowieckie' })
+    const poOknach = zmienWejscie(kontekst, id, (wejscie) => ({ ...wejscie, pozycje: [{ id: 'okno_1', ilosc: 4 }] }))
+
+    assert.deepEqual(biura.wejscie.dodatki, [{ uslugaId: 'okna', pozycjaId: 'okno_1', ilosc: 2, tryb: 'w_cenie' }])
+    assert.deepEqual(okna.wejscie.dodatki, [])
+    assert.deepEqual(poOknach.wynik?.linie.map((l) => l.rodzaj), ['pozycja'])
+  })
+
+  it('same dodatki spoza listy nowej usługi wymagają potwierdzenia; dodatki, które zostają, nie', () => {
+    const kontekst = kontekstFirmy()
+    const { id } = nowySzkic(kontekst, { uslugaId: 'mieszkanie_standard', wojewodztwoId: 'mazowieckie' })
+    const zDodatkiem = zmienWejscie(kontekst, id, (wejscie) => ({ ...wejscie,
+      dodatki: [{ uslugaId: 'tapicerka', pozycjaId: 'kanapa_3', ilosc: 1, tryb: 'propozycja' }] }))
+
+    assert.equal(czyZmianaCzysciZakres(zDodatkiem, 'okna', katalog), true)
+    assert.equal(czyZmianaCzysciZakres(zDodatkiem, 'sprzatanie_biur', katalog), true)
+    assert.equal(czyZmianaCzysciZakres(zDodatkiem, 'mieszkanie_po_remoncie', katalog), false)
+  })
+
   it('ta sama usługa w innym województwie zostawia pomieszczenia i przelicza cenę stawką województwa', () => {
     const kontekst = kontekstFirmy()
     const { id } = nowySzkic(kontekst, { uslugaId: 'mieszkanie_standard', wojewodztwoId: 'mazowieckie' })
@@ -230,36 +289,47 @@ describe('zmienWejscie i zmienWybor', () => {
     assert.equal(zapisana(kontekst, id).wejscie.pomieszczenia?.length, 4)
   })
 
+  it('usunięcie całego zakresu szkicu czyści migawkę wyniku (nie da się zapisać starej ceny)', () => {
+    const kontekst = kontekstFirmy()
+    const { id } = nowySzkic(kontekst, { uslugaId: 'okna', wojewodztwoId: 'mazowieckie' })
+    zmienWejscie(kontekst, id, (wejscie) => ({ ...wejscie, pozycje: [{ id: 'okno_1', ilosc: 4 }] }))
+
+    const po = zmienWejscie(kontekst, id, (wejscie) => ({ ...wejscie, pozycje: [{ id: 'okno_1', ilosc: 0 }] }))
+
+    assert.equal(po.wynik, null)
+    assert.equal(zapisana(kontekst, id).wynik, null)
+    assert.deepEqual(zapisana(kontekst, id).wejscie.pozycje, [{ id: 'okno_1', ilosc: 0 }])
+  })
+
+  it('wycena z numerem nie przyjmuje pustego zakresu: BladWyceny pusty_zakres, wejście i cena bez zmian', () => {
+    const kontekst = kontekstFirmy()
+    const { id } = nowySzkic(kontekst, { uslugaId: 'mieszkanie_standard', wojewodztwoId: 'mazowieckie' })
+    zmienWejscie(kontekst, id, (wejscie) => ({ ...wejscie, pomieszczenia: mieszkanie50() }))
+    zmienStatus(kontekst.magazyn, id, 'do_wyslania')
+
+    assert.throws(() => zmienWejscie(kontekst, id, (wejscie) => ({ ...wejscie, pomieszczenia: [] })), bladWyceny('pusty_zakres'))
+    assert.equal(zapisana(kontekst, id).wejscie.pomieszczenia?.length, 4)
+    assert.equal(zapisana(kontekst, id).wynik?.cena, 250)
+  })
+
+  it('jedna zmiana wejścia to jeden zapis stanu i dwa odczyty magazynu (wejście i migawka razem)', () => {
+    const pamiec = new LicznikMagazynu()
+    const magazyn = utworzMagazyn(pamiec, { loguj: () => {}, poprosOTrwalosc: () => true })
+    zapiszUstawienia(magazyn, { wojewodztwoId: 'mazowieckie', statusVat: 'zwolniony' }, domyslne)
+    const kontekst = { katalog, domyslne, magazyn }
+    const { id } = nowySzkic(kontekst, { uslugaId: 'mieszkanie_standard', wojewodztwoId: 'mazowieckie' })
+    pamiec.zeruj()
+
+    const po = zmienWejscie(kontekst, id, (wejscie) => ({ ...wejscie, pomieszczenia: mieszkanie50() }))
+
+    assert.equal(po.wynik?.cena, 250)
+    assert.deepEqual([pamiec.zapisy, pamiec.odczyty], [1, 2])
+  })
+
   it('nieznana wycena daje BladWyceny brak_wyceny', () => {
     const kontekst = kontekstFirmy()
     utworzSzkic(kontekst.magazyn, { rodzaj: 'dokladna', wejscie: { uslugaId: 'okna' } })
 
     assert.throws(() => zmienWejscie(kontekst, 'nie-ma', (w) => w), bladWyceny('brak_wyceny'))
-  })
-})
-
-describe('podpowiedzCeny', () => {
-  it('mieszkanie standard: 50 m² ok. 250 zł w mazowieckim; po remoncie: cena za m² z 50 m²', () => {
-    const standard = podpowiedzCeny(katalog, 'mieszkanie_standard', 'mazowieckie')
-    const poRemoncie = podpowiedzCeny(katalog, 'mieszkanie_po_remoncie', 'mazowieckie')
-
-    assert.equal(standard.rodzaj, 'metraz')
-    assert.ok(standard.rodzaj === 'metraz' && Math.round(standard.kwota) === 250 && standard.m2 === 50)
-    assert.equal(poRemoncie.rodzaj, 'za_m2')
-    assert.ok(poRemoncie.rodzaj === 'za_m2')
-    assertBlisko(poRemoncie.kwota, 11.75, 0.05)
-  })
-
-  it('biura: warianty; usługi z pozycjami: najtańsza pozycja główna × wsp województwa za jednostkę', () => {
-    assert.deepEqual(podpowiedzCeny(katalog, 'sprzatanie_biur', 'mazowieckie'), { rodzaj: 'warianty' })
-    assert.deepEqual(podpowiedzCeny(katalog, 'okna', 'mazowieckie'), { rodzaj: 'od', kwota: 30, jednostka: 'szt' })
-    const posadzki = podpowiedzCeny(katalog, 'mycie_posadzek', 'pomorskie')
-    assert.ok(posadzki.rodzaj === 'od')
-    assert.equal(posadzki.jednostka, 'm2')
-    assertBlisko(posadzki.kwota, 1.8 * 1.13)
-  })
-
-  it('nieznana usługa daje BladWejscia', () => {
-    assert.throws(() => podpowiedzCeny(katalog, 'pranie_firan', null), bladWejscia('nieznana_usluga'))
   })
 })

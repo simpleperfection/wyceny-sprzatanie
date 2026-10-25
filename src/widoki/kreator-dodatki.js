@@ -6,12 +6,11 @@
 import { wczytajStan } from '../dane/magazyn.js'
 import { scalKoszty } from '../dane/ustawienia.js'
 import { infoDojazdu, MAKS_DOJAZDU_KM, MAKS_ILOSCI, ustawDodatek, ustawDojazd, wycenaDodatku } from '../kreator/pozycje.js'
-import { bladZakresu, tekstLiczby, zl } from '../ui/format.js'
+import { bladZakresu, kwotaJednostki, nazwaJednostki, tekstLiczby, zl } from '../ui/format.js'
 import { h } from '../ui/h.js'
 import { licznik, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
 import { arkusz, karta } from '../ui/komponenty/uklad.js'
-import { BLAD_ILOSCI, kwotaJednostki, nazwaJednostki, wycenaKroku, zapisKroku } from './kreator-pozycje.js'
-import { adresKroku, ramaKroku } from './kreator-wspolne.js'
+import { adresKroku, BLAD_ILOSCI, odswiezStopke, ramaKroku, wycenaKroku, zapisKroku } from './kreator-wspolne.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
@@ -121,12 +120,6 @@ export const widokKreatoraDodatkow = {
       return wynik
     }
 
-    function odswiezStopke() {
-      const nowa = rama([]).elementy.at(-1)
-      const stara = kontener.querySelector('.stopka-kreatora')
-      if (stara && nowa) stara.replaceWith(nowa)
-    }
-
     /** @param {PozycjaDodatku} d @param {number} ilosc @param {DodatekWyceny['tryb']} tryb @returns {string | null} */
     const zapiszDodatek = (d, ilosc, tryb) => zapisz((w) => ustawDodatek(w, d.usluga.id, d.pozycja.id, ilosc, tryb, katalog))
 
@@ -172,7 +165,7 @@ export const widokKreatoraDodatkow = {
       ustawBlad(pole, blad)
       if (blad !== null) return
       dojazd.replaceChildren(...wierszeDojazdu(km, stawki))
-      odswiezStopke()
+      odswiezStopke(kontener, rama)
     }
 
     function kartaDojazdu() {

@@ -1,6 +1,8 @@
 // Widoki aplikacji: nazwa trasy (TRASY w src/ui/trasy.js) → modul widoku. Importy statyczne, bez import(), zeby
 // service worker (IU-13) mial cala aplikacje w cache po pierwszym uruchomieniu. Kolejne jednostki dopisuja tu swoje widoki.
 
+import { wczytajStan } from '../dane/magazyn.js'
+import { wycena as znajdzWycene } from '../dane/wyceny.js'
 import { h } from '../ui/h.js'
 import { przycisk } from '../ui/komponenty/formularz.js'
 import { dolnyPasek } from '../ui/komponenty/uklad.js'
@@ -9,7 +11,8 @@ import { widokDoboruChemii } from './dobor-chemii.js'
 import { widokKataloguChemii } from './katalog-chemii.js'
 import { widokKopii } from './kopia.js'
 import { widokKreatoraDodatkow } from './kreator-dodatki.js'
-import { widokKreatoraZakresu } from './kreator-pozycje.js'
+import { widokKreatoraPomieszczen } from './kreator-pomieszczenia.js'
+import { widokKreatoraPozycji } from './kreator-pozycje.js'
 import { widokKreatoraStartowego } from './kreator-startowy.js'
 import { widokKreatoraUslugi } from './kreator-usluga.js'
 import { widokKreatora } from './kreator-wspolne.js'
@@ -35,6 +38,16 @@ function widokKomunikatu(komunikat) {
 }
 
 const NIE_MA_EKRANU = widokKomunikatu('Nie ma takiego ekranu.')
+
+/** @type {Widok} widok trasy `#/kreator/zakres`: uslugi w trybie pozycji — krok pozycji, pozostale (i brak wyceny) — krok pomieszczen */
+const widokKreatoraZakresu = {
+  render(kontener, argumenty) {
+    const id = argumenty.zapytanie.wycena ?? null
+    const wycena = id === null ? null : znajdzWycene(wczytajStan(argumenty.kontekst.magazyn), id)
+    const czyPozycje = wycena !== null && argumenty.kontekst.katalog.usluga(wycena.wejscie.uslugaId).tryb === 'pozycje'
+    return (czyPozycje ? widokKreatoraPozycji : widokKreatoraPomieszczen).render(kontener, argumenty)
+  },
+}
 
 /** @type {Widoki} */
 export const WIDOKI = Object.freeze({

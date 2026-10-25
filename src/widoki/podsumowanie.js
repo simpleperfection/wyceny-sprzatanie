@@ -14,8 +14,7 @@ import { pole, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
 import { arkusz, baner, dialogPotwierdzenia, naglowek, pasekPostepu } from '../ui/komponenty/uklad.js'
 import { ETYKIETY_STATUSOW, pigulkaStatusu } from '../ui/statusy.js'
 import { sciezka } from '../ui/trasy.js'
-import { wycenaKroku } from './kreator-pozycje.js'
-import { adresKroku, zglosBladKreatora } from './kreator-wspolne.js'
+import { adresKroku, wycenaKroku, zglosBladKreatora } from './kreator-wspolne.js'
 import { banery, kartaCeny, kartaKosztow, kartaRynku, kartaZostaje, notkaPropozycji, otworzEdycjeCeny } from './podsumowanie-karty.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */

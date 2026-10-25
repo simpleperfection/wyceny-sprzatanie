@@ -1,9 +1,9 @@
 // Katalog srodkow z dolnego paska (`#/chemia`): wszystkie kategorie z liczba srodkow, a po wybraniu (`?kategoria=<id>`) — produkty
-// kategorii. Do tego wspolne wczytanie data/chemia.json dla katalogu i kroku chemii kreatora: leniwie przy pierwszym wejsciu,
-// z limitem czasu, pamietane do konca sesji strony (service worker trzyma plik w cache, wiec dziala tez offline).
+// kategorii. Do tego stan wczytywania i bledu bazy chemii (src/dane/chemia.js) wspolny dla katalogu i kroku chemii kreatora.
 
+import { chemiaAplikacji } from '../dane/chemia.js'
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
-import { dostawcyZProduktami, produktyKategorii, wczytajChemie } from '../silnik/chemia.js'
+import { dostawcyZProduktami, produktyKategorii } from '../silnik/chemia.js'
 import { odmiana } from '../ui/format.js'
 import { h } from '../ui/h.js'
 import { baner, dolnyPasek, karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
@@ -13,31 +13,11 @@ import { kartaKategorii } from './karta-produktu.js'
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../silnik/chemia.js').Chemia} Chemia */
 
-const LIMIT_POBIERANIA_MS = 10000
 const FORMY_SRODKA = /** @type {const} */ (['środek', 'środki', 'środków'])
 const WCZYTYWANIE = 'Wczytywanie środków…'
 const BLAD_POLACZENIA = 'Nie udało się wczytać bazy środków. Sprawdź połączenie z internetem i spróbuj jeszcze raz.'
 const BLAD_DANYCH = 'Baza środków jest niepełna. Odśwież stronę, a jeśli to nie pomoże, zajrzyj tu później.'
 const NIE_MA_KATEGORII = 'Nie ma takiej kategorii środków.'
-
-/** @type {Promise<Chemia> | null} */
-let wczytywanie = null
-
-/** @param {string} plik @returns {Promise<unknown>} plik z serwera aplikacji (adres wzgledny) z limitem czasu */
-async function pobierzJson(plik) {
-  const odpowiedz = await fetch(plik, { signal: AbortSignal.timeout(LIMIT_POBIERANIA_MS) })
-  if (!odpowiedz.ok) throw new BladKatalogu('brak_pliku', `${plik}: HTTP ${odpowiedz.status}`)
-  return odpowiedz.json()
-}
-
-/** Baza chemii wczytana raz na sesje strony; po bledzie nastepne wywolanie probuje od nowa. @returns {Promise<Chemia>} */
-export function chemiaAplikacji() {
-  wczytywanie ??= wczytajChemie(pobierzJson).catch((blad) => {
-    wczytywanie = null
-    throw blad
-  })
-  return wczytywanie
-}
 
 /**
  * Brak sieci albo przekroczony limit czasu to oczekiwany stan (bez zgloszenia); bledne albo niepelne dane sa zglaszane.

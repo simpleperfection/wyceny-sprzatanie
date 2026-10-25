@@ -4,11 +4,10 @@
 // (src/kreator/podsumowanie.js); ten modul tylko rysuje. Polozenie na pasku idzie przez wlasciwosc CSS (CSP bez stylow inline).
 
 import { GRANICE_CENY_RECZNEJ, przywrocCeneModelu, ustawCeneReczna } from '../kreator/podsumowanie.js'
-import { bladZakresu, czas, parsujLiczbe, procent, tekstLiczby, zl } from '../ui/format.js'
+import { bladZakresu, czas, kwotaJednostki, parsujLiczbe, procent, tekstLiczby, zl } from '../ui/format.js'
 import { h, ikona } from '../ui/h.js'
 import { pole, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
 import { arkusz, baner, karta } from '../ui/komponenty/uklad.js'
-import { kwotaJednostki } from './kreator-pozycje.js'
 
 /** @typedef {import('../ui/router.js').DaneAplikacji} DaneAplikacji */
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
@@ -50,6 +49,9 @@ function opisCeny(cena) {
   return rozbicie ? `sprzątanie ${zl(rozbicie.uslugi)} + dojazd ${zl(rozbicie.dojazd)} · ${vat}` : vat
 }
 
+/** @param {number} minimum minimum zlecenia dla klienta @returns {string} */
+const tekstMinimum = (minimum) => `Cena podniesiona do minimum zlecenia: ${zl(minimum)}.`
+
 /** @param {Podsumowanie['abonament']} abonament @param {number} kwota @returns {HTMLElement | null} */
 const miesiecznie = (abonament, kwota) => (abonament
   ? h('p', { class: 'podsumowanie__opis liczba' }, `miesięcznie (${tekstLiczby(abonament.wizyt)} wizyt): ${zl(kwota)}`) : null)
@@ -68,7 +70,8 @@ export function kartaCeny({ cena, rynek, abonament }, naZmien) {
       abonament ? h('span', { class: 'podsumowanie__opis' }, 'za wizytę') : null,
       h('span', { class: ['pigulka', `pigulka--rynek-${rynek.polozenie}`] }, ZNACZNIKI[rynek.polozenie])),
     miesiecznie(abonament, abonament?.miesiecznie ?? 0),
-    h('p', { class: 'podsumowanie__opis' }, opisCeny(cena)))
+    h('p', { class: 'podsumowanie__opis' }, opisCeny(cena)),
+    cena.minimum === null ? null : h('p', { class: 'podsumowanie__opis', 'data-pole': 'minimum' }, tekstMinimum(cena.minimum)))
 }
 
 /** @param {number} ulamek polozenie na pasku (0–1) @returns {string} np. „42%” */

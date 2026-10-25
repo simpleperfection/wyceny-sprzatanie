@@ -20,6 +20,7 @@ import {
   zl,
   zlGr,
 } from './format.js'
+import * as modulFormatu from './format.js'
 
 const NBSP = ' '
 
@@ -146,5 +147,18 @@ describe('tekstLiczby, bladZakresu i sprawdzDate', () => {
     assert.equal(sprawdzDate(dzis), dzis)
     assert.throws(() => sprawdzDate(new Date('x')), bladFormatu('zla_data'))
     assert.throws(() => sprawdzDate('2026-10-25'), bladFormatu('zla_data'))
+  })
+})
+
+describe('kwotaJednostki i nazwaJednostki', () => {
+  it('pełne złote bez groszy, inaczej z groszami; zaokrąglenie do grosza; NaN daje BladFormatu', () => {
+    assert.equal(modulFormatu.kwotaJednostki(30), '30 zł')
+    assert.equal(modulFormatu.kwotaJednostki(7.5), '7,50 zł')
+    assert.equal(modulFormatu.kwotaJednostki(2.034), '2,03 zł')
+    assert.throws(() => modulFormatu.kwotaJednostki(Number.NaN), BladFormatu)
+  })
+
+  it('m2 → „m²”, szt → „szt.”, inna jednostka z danych bez zmian', () => {
+    assert.deepEqual(['m2', 'szt', 'mb'].map(modulFormatu.nazwaJednostki), ['m²', 'szt.', 'mb'])
   })
 })

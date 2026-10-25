@@ -18,6 +18,7 @@ const MNOZNIK_PROGU_DOMYSLNY = 1
  *   dodatki?: string[], warianty?: Wariant[], pozycje?: Pozycja[], progi?: string, poziomy_brudu?: boolean,
  *   tylko_dodatek?: boolean, rynek_odniesienie?: string }} Usluga
  * @typedef {{ od_m2: number, mnoznik: number }} Prog
+ * @typedef {{ od: number, do: number | null, mnoznik: number }} ProgMetrazu do: od_m2 nastepnego progu w danych (null przy ostatnim)
  * @typedef {{ poziom: number, nazwa: string, mnoznik: number }} PoziomBrudu
  * @typedef {{ praca?: { stawka_brutto_h: number, narzut_pracodawcy: number, koszt_h: number }, chemia_h: { wartosc: number },
  *   sprzet: Record<string, { nazwa: string, koszt_h: number } | string>,
@@ -43,7 +44,7 @@ const MNOZNIK_PROGU_DOMYSLNY = 1
  *   wojewodztwo: (id: string | null) => Wojewodztwo, rynekKraj: (klucz: string) => { mediana: number, zakres: [number, number] },
  *   normaPomieszczenia: (typ: string) => number,
  *   normaBrudu: (id: string, poziom: number) => number, zestaw: (id: string) => NormaPomieszczenia[],
- *   progMetrazu: (nazwa: string, m2: number) => number, progiMetrazu: (nazwa: string) => readonly Prog[], normaPozycji: (klucz: string) => NormaPozycji,
+ *   progMetrazu: (nazwa: string, m2: number) => number, progDlaMetrazu: (nazwa: string, m2: number) => ProgMetrazu | null, normaPozycji: (klucz: string) => NormaPozycji,
  *   przygotowanie: (uslugaId: string) => number, przygotowanieMin: number, progiWydajnosciBiura: Prog[],
  *   uslugi: Usluga[], wojewodztwa: Wojewodztwo[], brud: Brud[], poziomy: Poziom[], poziomyBrudu: PoziomBrudu[],
  *   kosztyFirmy: KosztyFirmy, uklady: Uklady, wersjaDanych: { ceny: string, normy: string, rynek: string }
@@ -211,25 +212,29 @@ function znajdz(mapa, klucz, blad) {
   return wartosc
 }
 
-/** @param {Ceny} ceny @returns {Pick<Katalog, 'usluga' | 'pozycja' | 'progMetrazu' | 'progiMetrazu'> & { czyPozycja: (klucz: string) => boolean }} */
+/** @param {Ceny} ceny @returns {Pick<Katalog, 'usluga' | 'pozycja' | 'progMetrazu' | 'progDlaMetrazu'> & { czyPozycja: (klucz: string) => boolean }} */
 function indeksyCen(ceny) {
   const uslugi = new Map(ceny.uslugi.map((u) => [u.id, u]))
   const pozycje = new Map(ceny.uslugi.flatMap((u) => (u.pozycje ?? []).map((p) => [`${u.id}.${p.id}`, p])))
   /** @param {string} id */
   const usluga = (id) => znajdz(uslugi, id, () => new BladWejscia('nieznana_usluga', `Nieznana usługa ${id}`))
-  /** @param {string} nazwa @returns {readonly Prog[]} */
-  const progiMetrazu = (nazwa) => {
-    const progi = ceny.progi_metrazu[nazwa]
+  /**
+   * Prog metrazu: ostatni w kolejnosci danych z od_m2 ≤ m²; jedna regula dla mnoznika ceny i banera progu w kreatorze.
+   * @param {string} nazwa @param {number} m2 @returns {ProgMetrazu | null} null, gdy zaden prog nie pasuje (mnoznik domyslny)
+   */
+  const progDlaMetrazu = (nazwa, m2) => {
+    const progi = ceny.progi_metrazu[nazwa]?.progi
     if (!progi) throw new BladKatalogu('brak_progu', `Brak progów metrażu ${nazwa}`)
-    return progi.progi
+    const indeks = progi.findLastIndex((p) => m2 >= p.od_m2)
+    const prog = progi[indeks]
+    return prog ? { od: prog.od_m2, do: progi[indeks + 1]?.od_m2 ?? null, mnoznik: prog.mnoznik } : null
   }
   return {
     usluga,
     pozycja: (uslugaId, pozycjaId) => znajdz(pozycje, `${usluga(uslugaId).id}.${pozycjaId}`,
       () => new BladWejscia('nieznana_pozycja', `Nieznana pozycja ${pozycjaId} usługi ${uslugaId}`)),
-    progMetrazu: (nazwa, m2) =>
-      progiMetrazu(nazwa).reduce((mnoznik, prog) => (m2 >= prog.od_m2 ? prog.mnoznik : mnoznik), MNOZNIK_PROGU_DOMYSLNY),
-    progiMetrazu,
+    progMetrazu: (nazwa, m2) => progDlaMetrazu(nazwa, m2)?.mnoznik ?? MNOZNIK_PROGU_DOMYSLNY,
+    progDlaMetrazu,
     czyPozycja: (klucz) => pozycje.has(klucz),
   }
 }

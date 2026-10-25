@@ -445,3 +445,64 @@ describe('jestWycena, jestMigawkaWyniku i RODZAJE_WYCENY', () => {
     assert.deepEqual(modulWycen.RODZAJE_WYCENY, ['szybka', 'dokladna'])
   })
 })
+
+describe('dozwolonePrzejscia i czyAbonament', () => {
+  it('do wysłania: wysłanie i decyzja klienta; wykonana bez przejść; nieznany status bez przejść', () => {
+    assert.deepEqual(modulWycen.dozwolonePrzejscia('do_wyslania'), ['wyslana', 'przyjeta', 'odrzucona'])
+    assert.deepEqual(modulWycen.dozwolonePrzejscia('wykonana'), [])
+    assert.deepEqual(modulWycen.dozwolonePrzejscia(/** @type {any} */ ('archiwalna')), [])
+  })
+
+  it('abonament to więcej niż 1 wizyta w miesiącu; null i 1 wizyta to zlecenie jednorazowe', () => {
+    assert.deepEqual([4.33, 1, null].map((wizytWMiesiacu) => modulWycen.czyAbonament({ wizytWMiesiacu })), [true, false, false])
+  })
+})
+
+describe('zapiszWejscie z wynikiem', () => {
+  it('wejście i migawka w jednym zapisie; wynik null czyści migawkę szkicu', () => {
+    const magazyn = nowyMagazyn()
+    const { id } = utworzSzkic(magazyn, { rodzaj: 'dokladna', wejscie: WEJSCIE }, PAZDZIERNIK)
+
+    zapiszWejscie(magazyn, id, { ...WEJSCIE, dojazdKm: 3 }, { wynik: migawka({ cena: 270 }) })
+    const zWynikiem = zMagazynu(magazyn, id)
+    zapiszWejscie(magazyn, id, { ...WEJSCIE, pomieszczenia: [] }, { wynik: null })
+
+    assert.deepEqual([zWynikiem.wejscie.dojazdKm, zWynikiem.wynik?.cena], [3, 270])
+    assert.equal(zMagazynu(magazyn, id).wynik, null)
+  })
+
+  it('wycena z numerem i wynik null: BladWyceny pusty_zakres; zła migawka: BladWyceny wynik; nic się nie zapisuje', () => {
+    const magazyn = nowyMagazyn()
+    const id = wycenaWStatusie(magazyn, ['do_wyslania'])
+    const przed = stanMagazynu(magazyn)
+
+    assert.throws(() => zapiszWejscie(magazyn, id, WEJSCIE, { wynik: null }), bladWyceny('pusty_zakres'))
+    assert.throws(() => zapiszWejscie(magazyn, id, WEJSCIE, { wynik: migawka({ cena: -1 }) }), bladWyceny('wynik'))
+    assert.deepEqual(stanMagazynu(magazyn), przed)
+  })
+})
+
+describe('zapiszCeneReczna', () => {
+  it('cena ręczna i powrót do modelu; po wysłaniu inna kwota unieważnia ofertę, ta sama nie', () => {
+    const magazyn = nowyMagazyn()
+    const id = wycenaWStatusie(magazyn, ['do_wyslania', 'wyslana'])
+
+    modulWycen.zapiszCeneReczna(magazyn, id, 250)
+    const taSama = zMagazynu(magazyn, id)
+    modulWycen.zapiszCeneReczna(magazyn, id, 300)
+
+    assert.deepEqual([taSama.cenaReczna, taSama.oferta.nieaktualna], [250, false])
+    assert.deepEqual([zMagazynu(magazyn, id).cenaReczna, zMagazynu(magazyn, id).oferta.nieaktualna], [300, true])
+  })
+
+  it('kwota niedodatnia: cena_reczna; szkic bez wyniku: brak_wyniku; wykonana: tylko_odczyt', () => {
+    const magazyn = nowyMagazyn()
+    const { id: szkic } = utworzSzkic(magazyn, { rodzaj: 'dokladna', wejscie: WEJSCIE }, PAZDZIERNIK)
+    const wykonana = wycenaWStatusie(magazyn, ['do_wyslania', 'przyjeta'])
+    dodajWykonanie(magazyn, wykonana, { data: '2026-10-20', minuty: 200, tempoPlanu: 1.3 })
+
+    assert.throws(() => modulWycen.zapiszCeneReczna(magazyn, szkic, 0), bladWyceny('cena_reczna'))
+    assert.throws(() => modulWycen.zapiszCeneReczna(magazyn, szkic, 300), bladWyceny('brak_wyniku'))
+    assert.throws(() => modulWycen.zapiszCeneReczna(magazyn, wykonana, 300), bladWyceny('tylko_odczyt'))
+  })
+})

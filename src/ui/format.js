@@ -6,6 +6,9 @@ import { jestData } from '../dane/ksztalt.js'
 const JEZYK = 'pl-PL'
 const NBSP = ' '
 const MINUT_W_GODZINIE = 60
+const GROSZE_W_ZLOTYM = 100
+/** @type {Readonly<Record<string, string>>} */
+const NAZWY_JEDNOSTEK = Object.freeze({ m2: 'm²', szt: 'szt.' })
 const DZIEN_ISO = /^(\d{4})-(\d{2})-(\d{2})$/
 const LICZBA_DODATNIA = /^\d+(\.\d+)?$/
 const ODSTEPY = /[\s  ]/g
@@ -74,8 +77,17 @@ export const zl = (kwota) => `${formatZl.format(liczba(kwota))}${NBSP}zł`
 /** @param {number} kwota @returns {string} „1,15 zł” */
 export const zlGr = (kwota) => `${formatZlGr.format(liczba(kwota))}${NBSP}zł`
 
+/** @param {number} kwota cena za jednostke @returns {string} „30 zł” albo „7,50 zł” (grosze tylko, gdy sa) */
+export function kwotaJednostki(kwota) {
+  const wGroszach = Math.round(liczba(kwota) * GROSZE_W_ZLOTYM) / GROSZE_W_ZLOTYM
+  return Number.isInteger(wGroszach) ? zl(wGroszach) : zlGr(wGroszach)
+}
+
+/** @param {string} jednostka jednostka pozycji z data/ceny.json @returns {string} „m²”, „szt.” albo jednostka z danych */
+export const nazwaJednostki = (jednostka) => NAZWY_JEDNOSTEK[jednostka] ?? jednostka
+
 /** @param {number} metraz @returns {string} „50 m²” */
-export const m2 = (metraz) => `${formatM2.format(liczba(metraz))}${NBSP}m²`
+export const m2 =(metraz) => `${formatM2.format(liczba(metraz))}${NBSP}m²`
 
 /** @param {number} stosunek tempo jako stosunek do normy @returns {string} „1,18×” */
 export const tempo = (stosunek) => `${formatTempa.format(liczba(stosunek))}×`

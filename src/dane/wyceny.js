@@ -35,7 +35,8 @@ export const MAKS_WYCEN = 5000
  * @typedef {{ cena: number, netto: number, vat: number, mediana: number, widelki: WidelkiRynku, minutyNormowe: number,
  *   linie: LiniaWyceny[], propozycje: Propozycja[], dojazd: { km: number, kwota: number }, wojewodztwo: WojewodztwoMigawki,
  *   statusVat: StatusVat, stawkaVatProc: number, podstawaCeny: string, wizytWMiesiacu: number | null,
- *   wersjaDanych: { ceny: string, normy: string, rynek: string } }} MigawkaWyniku wynik z chwili wyceny; abonament: za wizyte
+ *   wersjaDanych: { ceny: string, normy: string, rynek: string }, minimum?: number, czyMinimum?: boolean }} MigawkaWyniku wynik z chwili
+ *   wyceny; abonament: za wizyte; minimum zlecenia uslugi (kwota modelu) i czy podnioslo cene (brak w migawkach sprzed fazy 4)
  * @typedef {{ id: string, data: string, minuty: number, tempoPlanu: number }} Wykonanie data RRRR-MM-DD
  * @typedef {Omit<Wykonanie, 'id'> & { id?: string }} NoweWykonanie id nadaje ekran przy otwarciu (ponowny zapis tego wpisu nic nie zmienia)
  * @typedef {{ zakres: ZakresUslugi | null, warunki: WarunekOferty[] | null, waznaDo: string | null, wyslana: string | null,
@@ -46,6 +47,7 @@ export const MAKS_WYCEN = 5000
  * @typedef {{ rodzaj: RodzajWyceny, wejscie: WejscieWyceny, klient?: Partial<KlientWyceny>, szybka?: SzybkaWyceny | null,
  *   odpowiedzi?: Record<string, unknown> }} NowySzkic
  * @typedef {{ teraz?: () => Date }} OpcjeWycen zegar (do testow)
+ * @typedef {OpcjeWycen & { wynik?: MigawkaWyniku | null }} OpcjeWejscia wynik: przeliczenie zapisywane razem z wejsciem (null = pusty zakres)
  * @typedef {{ wycena: Wycena, licznikNumerow?: Record<string, number> }} ZmianaWyceny
  */
 
@@ -181,8 +183,8 @@ function sprawdzWynik(wynik) {
   sprawdzDlugosc(wynik, 'Migawka wyniku')
 }
 
-/** @param {MigawkaWyniku} wynik */
-const czyAbonament = (wynik) => wynik.wizytWMiesiacu !== null && wynik.wizytWMiesiacu > WIZYT_ZLECENIA_JEDNORAZOWEGO
+/** Abonament (wiecej niz 1 wizyta w miesiacu); zrodlo reguly dla wykonan i podsumowania. @param {Pick<MigawkaWyniku, 'wizytWMiesiacu'>} wynik */
+export const czyAbonament = (wynik) => wynik.wizytWMiesiacu !== null && wynik.wizytWMiesiacu > WIZYT_ZLECENIA_JEDNORAZOWEGO
 
 /** @param {Wycena} w */
 function tylkoDoOdczytu(w) {
@@ -194,6 +196,12 @@ function wymagajWyniku(w) {
   if (w.wynik === null) throw new BladWyceny('brak_wyniku', `Wycena ${w.id} nie ma policzonej ceny`)
   return w.wynik
 }
+
+/**
+ * Statusy, do ktorych wolno przejsc z danego (PRZEJSCIA); zrodlo akcji wyceny w podsumowaniu.
+ * @param {StatusWyceny} status @returns {readonly StatusWyceny[]}
+ */
+export const dozwolonePrzejscia = (status) => PRZEJSCIA[status] ?? []
 
 /** Oferta mogla trafic do klienta: status `wyslana` albo data wyslania (po wyslaniu przyjeta lub odrzucona). @param {Wycena} w */
 const poWyslaniu = (w) => w.status === 'wyslana' || w.oferta.wyslana !== null
@@ -262,15 +270,22 @@ export function utworzSzkic(magazyn, dane, opcje = {}) {
 }
 
 /**
- * Nowe wejscie wyceny; po wyslaniu oferta staje sie nieaktualna, wykonana jest tylko do odczytu.
- * @param {Magazyn} magazyn @param {string} id @param {WejscieWyceny} wejscie @param {OpcjeWycen} [opcje]
+ * Nowe wejscie wyceny, z `opcje.wynik` razem z przeliczeniem w jednym zapisie; po wyslaniu oferta staje sie nieaktualna,
+ * wykonana jest tylko do odczytu. Wynik null (pusty zakres) czysci migawke szkicu; wycena z numerem musi miec zakres
+ * (BladWyceny `pusty_zakres`), bo poza szkicem zawsze ma wynik.
+ * @param {Magazyn} magazyn @param {string} id @param {WejscieWyceny} wejscie @param {OpcjeWejscia} [opcje]
  * @returns {Stan}
  */
 export function zapiszWejscie(magazyn, id, wejscie, opcje = {}) {
   sprawdzWejscie(wejscie)
+  const { wynik } = opcje
+  if (wynik) sprawdzWynik(wynik)
   return zmienWycene(magazyn, id, opcje, (w) => {
     tylkoDoOdczytu(w)
-    return { wycena: { ...w, wejscie, oferta: nieaktualnaPoWyslaniu(w) } }
+    const zWejsciem = { ...w, wejscie, oferta: nieaktualnaPoWyslaniu(w) }
+    if (wynik === undefined) return { wycena: zWejsciem }
+    if (wynik === null && w.status !== 'szkic') throw new BladWyceny('pusty_zakres', `Wycena ${w.numer ?? id} musi mieć zakres`)
+    return { wycena: { ...zWejsciem, wynik } }
   })
 }
 
@@ -285,6 +300,21 @@ export function zapiszWynik(magazyn, id, wynik, opcje = {}) {
     tylkoDoOdczytu(w)
     const oferta = w.wynik?.cena === wynik.cena ? w.oferta : nieaktualnaPoWyslaniu(w)
     return { wycena: { ...w, wynik, oferta } }
+  })
+}
+
+/**
+ * Cena reczna dla klienta (null = cena z modelu); zmiana kwoty dla klienta po wyslaniu oznacza oferte jako nieaktualna.
+ * @param {Magazyn} magazyn @param {string} id @param {number | null} cenaReczna dodatnia albo null @param {OpcjeWycen} [opcje]
+ * @returns {Stan}
+ */
+export function zapiszCeneReczna(magazyn, id, cenaReczna, opcje = {}) {
+  if (cenaReczna !== null && !jestDodatnia(cenaReczna)) throw new BladWyceny('cena_reczna', `Cena ręczna musi być dodatnia, jest ${cenaReczna}`)
+  return zmienWycene(magazyn, id, opcje, (w) => {
+    tylkoDoOdczytu(w)
+    const { cena } = wymagajWyniku(w)
+    const czyInnaKwota = (w.cenaReczna ?? cena) !== (cenaReczna ?? cena)
+    return { wycena: { ...w, cenaReczna, oferta: czyInnaKwota ? nieaktualnaPoWyslaniu(w) : w.oferta } }
   })
 }
 
@@ -312,7 +342,7 @@ export function zapiszWycene(magazyn, id, dane = {}, opcje = {}) {
 export function zmienStatus(magazyn, id, nowy, opcje = {}) {
   if (!STATUSY_WYCENY.includes(nowy)) throw new BladWyceny('status', `Nieznany status wyceny: ${nowy}`)
   return zmienWycene(magazyn, id, opcje, (w, stan, teraz) => {
-    if (!PRZEJSCIA[w.status].includes(nowy)) throw new BladWyceny('przejscie', `Niedozwolone przejście ${w.status} → ${nowy}`)
+    if (!dozwolonePrzejscia(w.status).includes(nowy)) throw new BladWyceny('przejscie', `Niedozwolone przejście ${w.status} → ${nowy}`)
     if (w.status !== 'szkic') return { wycena: { ...w, status: nowy } }
     wymagajWyniku(w)
     return zNumerem({ ...w, status: nowy }, stan.licznikNumerow, teraz)

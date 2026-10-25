@@ -119,6 +119,48 @@ describe('widokPodsumowania', () => {
     assert.equal(widokPodsumowania({ ...jednorazowe, wynik: przelicz(jednorazowe, kontekst) }, kontekst).abonament, null)
   })
 
+  it('cena 100 zł jest poniżej widełek (−60% od mediany), 500 zł powyżej; cena modelu 250 zł pod szybką 300–350 zł — poza widełkami', () => {
+    const kontekst = kontekstFirmy()
+    const w = mieszkanie(kontekst)
+    const zSzybka = { ...w, szybka: { stan: 'mieszkanie', od: 300, do: 350, tryb: 'pomieszczenia' } }
+
+    const ponizej = widokPodsumowania(ustawCeneReczna(kontekst, w.id, 100), kontekst)
+    const powyzej = widokPodsumowania(ustawCeneReczna(kontekst, w.id, 500), kontekst)
+
+    assert.deepEqual([ponizej.rynek.polozenie, ponizej.rynek.od, ponizej.rynek.do], ['ponizej', 120, 450])
+    assert.equal(procent(ponizej.rynek.procent), procent(-0.6))
+    assertBlisko(ponizej.rynek.procent, -0.6)
+    assert.equal(powyzej.rynek.polozenie, 'powyzej')
+    assert.deepEqual(widokPodsumowania(zSzybka, kontekst).ostrzezenia, [{ rodzaj: 'poza_szybka', od: 300, do: 350 }])
+  })
+
+  it('czynny VAT przy podstawie netto (posadzki 1000 m², dojazd 24 km): widełki i dojazd z VAT, chemia na m², szorowarka', () => {
+    const kontekst = kontekstFirmy('czynny')
+    const { id } = nowySzkic(kontekst, { uslugaId: 'mycie_posadzek', wojewodztwoId: 'mazowieckie' })
+    const w = zmienWejscie(kontekst, id, (wejscie) => ({ ...wejscie, pozycje: [{ id: 'mycie_maszynowe', ilosc: 1000 }], dojazdKm: 24 }))
+
+    const widok = widokPodsumowania(w, kontekst)
+
+    assert.deepEqual(widok.cena.rozbicie, { uslugi: 1550, dojazd: 34 })
+    assert.deepEqual([widok.rynek.od, widok.rynek.do], [551, 8644])
+    assert.deepEqual(widok.koszty.find((k) => k.rodzaj === 'chemia'), { rodzaj: 'chemia', kwota: 50, chemiaH: null })
+    assert.deepEqual(widok.koszty.filter((k) => k.rodzaj === 'sprzet').map((k) => k.rodzaj === 'sprzet' && k.nazwa),
+      ['Szorowarka (jednotarczowa lub z odsysaniem)'])
+  })
+
+  it('4 okna za 120 zł podniesione do minimum zlecenia 150 zł: cena 150 i informacja o minimum; cena ręczna bez niej', () => {
+    const kontekst = kontekstFirmy()
+    const { id } = nowySzkic(kontekst, { uslugaId: 'okna', wojewodztwoId: 'mazowieckie' })
+    const w = zmienWejscie(kontekst, id, (wejscie) => ({ ...wejscie, pozycje: [{ id: 'okno_1', ilosc: 4 }] }))
+
+    const widok = widokPodsumowania(w, kontekst)
+
+    assert.deepEqual([widok.cena.brutto, widok.cena.minimum], [150, 150])
+    assert.deepEqual([w.wynik?.minimum, w.wynik?.czyMinimum], [150, true])
+    assert.equal(widokPodsumowania(ustawCeneReczna(kontekst, id, 170), kontekst).cena.minimum, null)
+    assert.equal(widokPodsumowania(mieszkanie(kontekst), kontekst).cena.minimum, null)
+  })
+
   it('szkic bez migawki wyniku daje BladWyceny brak_wyniku', () => {
     const kontekst = kontekstFirmy()
     const szkic = nowySzkic(kontekst, { uslugaId: 'mieszkanie_standard', wojewodztwoId: 'mazowieckie' })
@@ -164,6 +206,21 @@ describe('ustawCeneReczna i przywrocCeneModelu', () => {
     const po = ustawCeneReczna(kontekst, id, 300)
 
     assert.equal(po.oferta.nieaktualna, true)
+  })
+
+  it('po wysłaniu ta sama kwota (250 zł = cena modelu) nie unieważnia oferty, a powrót do modelu po 300 zł unieważnia', () => {
+    const kontekst = kontekstFirmy()
+    const { id } = mieszkanie(kontekst)
+    zapiszWycene(kontekst.magazyn, id)
+    zmienStatus(kontekst.magazyn, id, 'wyslana')
+
+    const taSama = ustawCeneReczna(kontekst, id, 250)
+    ustawCeneReczna(kontekst, id, 300)
+    kontekst.magazyn.zmien((stan) => ({ ...stan, wyceny: stan.wyceny.map((x) => (x.id === id ? { ...x, oferta: { ...x.oferta, nieaktualna: false } } : x)) }))
+    const przywrocona = przywrocCeneModelu(kontekst, id)
+
+    assert.equal(taSama.oferta.nieaktualna, false)
+    assert.equal(przywrocona.oferta.nieaktualna, true)
   })
 })
 

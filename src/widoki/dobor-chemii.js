@@ -11,8 +11,7 @@ import { h } from '../ui/h.js'
 import { przycisk } from '../ui/komponenty/formularz.js'
 import { kartaKategorii } from './karta-produktu.js'
 import { poChemii } from './katalog-chemii.js'
-import { wycenaKroku, zapisKroku } from './kreator-pozycje.js'
-import { adresKroku, ramaKroku } from './kreator-wspolne.js'
+import { adresKroku, ramaKroku, wycenaKroku, zapisKroku } from './kreator-wspolne.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */

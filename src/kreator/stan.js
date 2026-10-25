@@ -3,15 +3,15 @@
 
 import { wczytajStan } from '../dane/magazyn.js'
 import { scalKoszty, ustawieniaDomyslne } from '../dane/ustawienia.js'
-import { BladWyceny, utworzSzkic, wycena as znajdzWycene, zapiszWejscie, zapiszWynik } from '../dane/wyceny.js'
+import { BladWyceny, utworzSzkic, wycena as znajdzWycene, zapiszWejscie } from '../dane/wyceny.js'
 import { BladWejscia } from '../silnik/bledy.js'
 import { wycenUsluge } from '../silnik/cena.js'
 import { zBrudem } from '../silnik/czas.js'
-import { ukladMieszkania } from '../silnik/uklad.js'
 import { cenaDlaKlienta } from '../silnik/vat.js'
 import { widelkiRynku } from '../silnik/widelki.js'
 
 /** @typedef {import('../ui/router.js').DaneAplikacji} DaneAplikacji */
+/** @typedef {import('../dane/magazyn.js').Ustawienia} Ustawienia */
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
 /** @typedef {import('../dane/wyceny.js').MigawkaWyniku} MigawkaWyniku */
 /** @typedef {import('../silnik/cena.js').WejscieWyceny} WejscieWyceny */
@@ -22,8 +22,6 @@ import { widelkiRynku } from '../silnik/widelki.js'
  * @typedef {typeof KROKI_KREATORA[number]['id']} KrokKreatora
  * @typedef {{ uslugaId: string, wariantId?: string | null, wojewodztwoId: string | null }} WyborUslugi pierwszy krok kreatora
  * @typedef {'pusty_zakres' | 'brak_wariantu'} BladKroku
- * @typedef {{ rodzaj: 'metraz', m2: number, kwota: number } | { rodzaj: 'za_m2', kwota: number } | { rodzaj: 'warianty' }
- *   | { rodzaj: 'od', kwota: number, jednostka: string }} PodpowiedzCeny podpowiedz ceny uslugi na liscie wyboru
  */
 
 /** Kroki kreatora dokladnej wyceny; zrodlo stalej dla widokow kreatora i paska postepu. */
@@ -34,12 +32,8 @@ export const KROKI_KREATORA = Object.freeze(/** @type {const} */ ([
   { id: 'chemia', etykieta: 'Chemia' },
   { id: 'cena', etykieta: 'Cena' },
 ]))
-/** Metraz mieszkania w podpowiedzi ceny uslug z pomieszczeniami (jak mieszkanie wzorcowe w ustawieniach). */
-export const METRAZ_PODPOWIEDZI = 50
 /** Kurz na poziomie 1 jest w normie (0 min/m²), wiec nowe pomieszczenie ma go od razu, bez doplaty czasu. */
 const BRUD_NOWEGO_POMIESZCZENIA = Object.freeze({ id: 'kurz', poziom: 1 })
-/** Punkty rynku z przyrostkiem `_m2` w data/rynek.json to cena za metr (np. po_remoncie_m2), a nie cena calego zlecenia. */
-const PRZYROSTEK_RYNKU_ZA_M2 = '_m2'
 const JEDNOSTKA_M2 = 'm2'
 
 /** Usluga m² z progami (posadzki, doczyszczanie, kostka, elewacja, hale): jedna powierzchnia i przelaczniki pozycji. @param {Usluga} usluga */
@@ -101,15 +95,13 @@ export function nowySzkic(kontekst, wybor) {
 }
 
 /**
- * Migawka wyniku z biezacymi danymi: cena silnika, widelki rynku i cena dla klienta wg statusu VAT firmy i podstawy ceny uslugi.
- * Mediana to cena modelu dla klienta (R5: cena proponowana = mediana wojewodztwa z modelu). Koszt zlecenia liczy podsumowanie.
- * @param {Pick<Wycena, 'wejscie'>} wycena @param {DaneAplikacji} kontekst
+ * Migawka wyniku z biezacymi danymi i ustawieniami firmy (null = domyslne).
+ * @param {WejscieWyceny} wejscie @param {DaneAplikacji} kontekst @param {Ustawienia | null} zapisane
  * @returns {MigawkaWyniku}
  */
-export function przelicz(wycena, kontekst) {
-  const { katalog, domyslne, magazyn } = kontekst
-  const { wejscie } = wycena
-  const ustawienia = wczytajStan(magazyn).ustawienia ?? ustawieniaDomyslne(domyslne)
+function migawkaWyniku(wejscie, kontekst, zapisane) {
+  const { katalog, domyslne } = kontekst
+  const ustawienia = zapisane ?? ustawieniaDomyslne(domyslne)
   const wynik = wycenUsluge(wejscie, katalog, { stawkiDojazdu: scalKoszty(katalog.kosztyFirmy, ustawienia).dojazd })
   const stawkaVatProc = domyslne.stawka_vat_proc
   const cena = cenaDlaKlienta({ kwota: wynik.cena, podstawaCeny: wynik.podstawaCeny, statusVat: ustawienia.statusVat, stawkaVatProc })
@@ -118,9 +110,17 @@ export function przelicz(wycena, kontekst) {
     cena: cena.brutto, netto: cena.netto, vat: cena.vat, mediana: cena.brutto, widelki: widelkiRynku(wynik, wejscie, katalog),
     minutyNormowe: wynik.minutyNormowe, linie: wynik.linie, propozycje: wynik.propozycje, dojazd: wynik.dojazd,
     wojewodztwo: { id, nazwa, stawka_h, wsp }, statusVat: ustawienia.statusVat, stawkaVatProc, podstawaCeny: wynik.podstawaCeny,
-    wizytWMiesiacu: wynik.wizytWMiesiacu, wersjaDanych: { ...katalog.wersjaDanych },
+    wizytWMiesiacu: wynik.wizytWMiesiacu, wersjaDanych: { ...katalog.wersjaDanych }, minimum: wynik.minimum, czyMinimum: wynik.czyMinimum,
   }
 }
+
+/**
+ * Migawka wyniku z biezacymi danymi: cena silnika, widelki rynku i cena dla klienta wg statusu VAT firmy i podstawy ceny uslugi.
+ * Mediana to cena modelu dla klienta (R5: cena proponowana = mediana wojewodztwa z modelu). Koszt zlecenia liczy podsumowanie.
+ * @param {Pick<Wycena, 'wejscie'>} wycena @param {DaneAplikacji} kontekst
+ * @returns {MigawkaWyniku}
+ */
+export const przelicz = (wycena, kontekst) => migawkaWyniku(wycena.wejscie, kontekst, wczytajStan(kontekst.magazyn).ustawienia)
 
 /**
  * Bledy blokujace „Dalej” w kroku: zakres wymaga co najmniej jednego pomieszczenia albo pozycji z iloscia > 0.
@@ -136,63 +136,54 @@ export function bledyKroku(krok, wycena, katalog) {
 }
 
 /**
- * Zmiana wejscia szkicu albo zapisanej wyceny: `fn` dostaje swieze wejscie, wynik zapisuje sie razem z przeliczeniem.
- * Pusty zakres zapisuje samo wejscie (silnik nie wycenia pustego zakresu). Wszystko synchronicznie, bez await miedzy odczytem a zapisem.
+ * Zmiana wejscia szkicu albo zapisanej wyceny: `fn` dostaje swieze wejscie, wynik zapisuje sie razem z przeliczeniem w jednym
+ * zapisie magazynu (jeden odczyt stanu na zmiane). Pusty zakres czysci migawke szkicu (silnik nie wycenia pustego zakresu),
+ * a wycena z numerem go odmawia (BladWyceny `pusty_zakres`). Wszystko synchronicznie, bez await miedzy odczytem a zapisem.
  * @param {DaneAplikacji} kontekst @param {string} id @param {(wejscie: WejscieWyceny) => WejscieWyceny} fn
  * @returns {Wycena} wycena po zapisie
  */
 export function zmienWejscie(kontekst, id, fn) {
   const { magazyn, katalog } = kontekst
-  const obecna = znajdzWycene(wczytajStan(magazyn), id)
+  const stan = wczytajStan(magazyn)
+  const obecna = znajdzWycene(stan, id)
   if (!obecna) throw new BladWyceny('brak_wyceny', `Nie ma wyceny ${id}`)
   if (obecna.status === 'wykonana') throw new BladWyceny('tylko_odczyt', `Wycena ${obecna.numer ?? id} jest wykonana`)
   const wejscie = fn(obecna.wejscie)
   katalog.usluga(wejscie.uslugaId)
-  const wynik = czyPustyZakres(wejscie) ? null : przelicz({ wejscie }, kontekst)
-  zapiszWejscie(magazyn, id, wejscie)
-  const stan = wynik === null ? wczytajStan(magazyn) : zapiszWynik(magazyn, id, wynik)
-  const zapisana = znajdzWycene(stan, id)
+  const wynik = czyPustyZakres(wejscie) ? null : migawkaWyniku(wejscie, kontekst, stan.ustawienia)
+  const zapisana = znajdzWycene(zapiszWejscie(magazyn, id, wejscie, { wynik }), id)
   if (!zapisana) throw new BladWyceny('brak_wyceny', `Nie ma wyceny ${id}`)
   return zapisana
 }
 
 /**
- * Czy zmiana uslugi wyczysci wpisany zakres (wtedy widok pyta o potwierdzenie).
- * @param {Pick<Wycena, 'wejscie'>} wycena @param {string} uslugaId
+ * Dodatki, ktore zostaja po zmianie uslugi: tylko z uslug z listy `dodatki` nowej uslugi (krok dodatkow pokazuje tylko te).
+ * @param {WejscieWyceny} wejscie @param {Usluga} nowaUsluga
  */
-export const czyZmianaCzysciZakres = (wycena, uslugaId) => wycena.wejscie.uslugaId !== uslugaId && !czyPustyZakres(wycena.wejscie)
+const dodatkiNowejUslugi = (wejscie, nowaUsluga) => (wejscie.dodatki ?? []).filter((d) => (nowaUsluga.dodatki ?? []).includes(d.uslugaId))
 
 /**
- * Nowy wybor z pierwszego kroku w istniejacej wycenie: inna usluga czysci pomieszczenia i pozycje (dodatki i dojazd zostaja),
- * ta sama zmienia tylko wariant i wojewodztwo.
+ * Czy zmiana uslugi wyczysci wpisany zakres albo dodatki spoza listy nowej uslugi (wtedy widok pyta o potwierdzenie).
+ * @param {Pick<Wycena, 'wejscie'>} wycena @param {string} uslugaId @param {Katalog} katalog
+ */
+export function czyZmianaCzysciZakres(wycena, uslugaId, katalog) {
+  const { wejscie } = wycena
+  if (wejscie.uslugaId === uslugaId) return false
+  if (!czyPustyZakres(wejscie)) return true
+  return dodatkiNowejUslugi(wejscie, katalog.usluga(uslugaId)).length !== (wejscie.dodatki ?? []).length
+}
+
+/**
+ * Nowy wybor z pierwszego kroku w istniejacej wycenie: inna usluga czysci pomieszczenia, pozycje i dodatki spoza swojej listy
+ * `dodatki` (dojazd zostaje), ta sama zmienia tylko wariant i wojewodztwo.
  * @param {DaneAplikacji} kontekst @param {string} id @param {WyborUslugi} wybor
  * @returns {Wycena}
  */
 export function zmienWybor(kontekst, id, wybor) {
-  const { wariantId, wojewodztwoId } = sprawdzWybor(wybor, kontekst.katalog)
+  const { usluga, wariantId, wojewodztwoId } = sprawdzWybor(wybor, kontekst.katalog)
   return zmienWejscie(kontekst, id, (wejscie) => {
     if (wejscie.uslugaId === wybor.uslugaId) return { ...wejscie, wariantId, wojewodztwoId }
-    const { dodatki = [], dojazdKm = 0 } = wejscie
-    return { ...wejscieStartowe(wybor, kontekst.katalog), dodatki, dojazdKm }
+    return { ...wejscieStartowe(wybor, kontekst.katalog), dodatki: dodatkiNowejUslugi(wejscie, usluga), dojazdKm: wejscie.dojazdKm ?? 0 }
   })
 }
 
-/**
- * Podpowiedz ceny na liscie uslug: mieszkanie 50 m² (uklad typowy, brud domyslny) albo cena za m² z 50 m², biura — warianty,
- * uslugi z pozycjami — najnizsza cena pozycji glownej × wsp wojewodztwa za jednostke. Kwoty modelu, przed VAT na gorze.
- * @param {Katalog} katalog @param {string} uslugaId @param {string | null} wojewodztwoId
- * @returns {PodpowiedzCeny}
- */
-export function podpowiedzCeny(katalog, uslugaId, wojewodztwoId) {
-  const usluga = katalog.usluga(uslugaId)
-  if ((usluga.warianty ?? []).length > 0) return { rodzaj: 'warianty' }
-  if (usluga.tryb === 'pozycje') {
-    const [najtansza] = pozycjeGlowne(usluga).sort((a, b) => a.cena - b.cena)
-    if (!najtansza) throw new BladWejscia('brak_pozycji', `Usługa ${usluga.id} nie ma pozycji głównej`)
-    return { rodzaj: 'od', kwota: najtansza.cena * katalog.wojewodztwo(wojewodztwoId).wsp, jednostka: najtansza.jednostka }
-  }
-  const pomieszczenia = zBrudem(ukladMieszkania(METRAZ_PODPOWIEDZI, {}, katalog.uklady), usluga.brud_domyslny)
-  const { cena } = wycenUsluge({ uslugaId: usluga.id, wojewodztwoId, pomieszczenia }, katalog)
-  if (usluga.rynek_odniesienie?.endsWith(PRZYROSTEK_RYNKU_ZA_M2)) return { rodzaj: 'za_m2', kwota: cena / METRAZ_PODPOWIEDZI }
-  return { rodzaj: 'metraz', m2: METRAZ_PODPOWIEDZI, kwota: cena }
-}

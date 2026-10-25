@@ -3,6 +3,8 @@
 // z src/kreator/stan.js. Usluga m² z progami ma jedna powierzchnie: wszystkie wlaczone pozycje maja te sama ilosc m².
 
 import { BladWejscia } from '../silnik/bledy.js'
+import { dojazdKlienta, linieDodatku, TRYBY_DODATKU } from '../silnik/cena.js'
+import { dojazdFirmy } from '../silnik/koszt.js'
 import { czyPozycjeZPowierzchnia, pozycjeGlowne } from './stan.js'
 
 /** @typedef {import('../silnik/cena.js').WejscieWyceny} WejscieWyceny */
@@ -11,20 +13,16 @@ import { czyPozycjeZPowierzchnia, pozycjeGlowne } from './stan.js'
 /** @typedef {import('../silnik/katalog.js').Usluga} Usluga */
 /** @typedef {import('../silnik/katalog.js').Pozycja} Pozycja */
 /**
- * @typedef {{ od: number, do: number | null, mnoznik: number }} InfoProgu do: poczatek nastepnego progu (null przy ostatnim)
+ * @typedef {import('../silnik/katalog.js').ProgMetrazu} InfoProgu do: poczatek nastepnego progu (null przy ostatnim)
  * @typedef {{ kwotaKlienta: number, kmPonad: number, kosztFirmy: number, kmRazem: number }} InfoDojazdu
- * @typedef {{ klient_zl_km: number, darmowy_promien_km: number, koszt_firmy_zl_km: number }} StawkiDojazdu
+ * @typedef {import('../silnik/katalog.js').KosztyFirmy['dojazd']} StawkiDojazdu stawki z ustawien (scalKoszty) albo z data/ceny.json
  * @typedef {{ cenaJedn: number, kwota: number }} WycenaDodatku
  */
 
-/** Najwieksza ilosc pozycji, dodatku i powierzchnia w kreatorze (tekst bledu w widoku: „od 0 do 100 000”). */
+/** Najwieksza ilosc pozycji, dodatku i powierzchnia w kreatorze (zrodlo tekstu bledu BLAD_ILOSCI w src/widoki/kreator-wspolne.js). */
 export const MAKS_ILOSCI = 100_000
 /** Najdalszy dojazd w jedna strone (km). */
 export const MAKS_DOJAZDU_KM = 500
-/** Tryby dodatku z innej uslugi: wchodzi do ceny albo jest propozycja w ofercie („Możesz dobrać”). */
-export const TRYBY_DODATKU = Object.freeze(/** @type {const} */ (['w_cenie', 'propozycja']))
-/** Koszt firmy liczy dojazd tam i z powrotem (jak KURSOW_NA_ZLECENIE w src/silnik/koszt.js). */
-const KURSOW_NA_ZLECENIE = 2
 const JEDNOSTKA_SZT = 'szt'
 const MNOZNIK_NEUTRALNY = 1
 
@@ -135,19 +133,14 @@ export function ustawDojazd(wejscie, km) {
 }
 
 /**
- * Prog metrazu powierzchni uslugi (ten sam co w silniku: ostatni prog z od_m2 ≤ m²) do banera „Małe/Duże zlecenie”.
+ * Prog metrazu powierzchni uslugi (katalog.progDlaMetrazu, ten sam co w silniku) do banera „Małe/Duże zlecenie”.
  * @param {Usluga} usluga @param {number} m2 @param {Katalog} katalog
  * @returns {InfoProgu | null} null bez progow, przy pustej powierzchni albo mnozniku 1
  */
 export function infoProgu(usluga, m2, katalog) {
   if (usluga.progi === undefined || !(m2 > 0)) return null
-  const mnoznik = katalog.progMetrazu(usluga.progi, m2)
-  if (mnoznik === MNOZNIK_NEUTRALNY) return null
-  const progi = [...katalog.progiMetrazu(usluga.progi)].sort((a, b) => a.od_m2 - b.od_m2)
-  const indeks = progi.findLastIndex((p) => p.od_m2 <= m2)
-  const prog = progi[indeks]
-  if (!prog) return null
-  return { od: prog.od_m2, do: progi[indeks + 1]?.od_m2 ?? null, mnoznik }
+  const prog = katalog.progDlaMetrazu(usluga.progi, m2)
+  return prog === null || prog.mnoznik === MNOZNIK_NEUTRALNY ? null : prog
 }
 
 /**
@@ -156,10 +149,19 @@ export function infoProgu(usluga, m2, katalog) {
  * @returns {InfoDojazdu}
  */
 export function infoDojazdu(km, stawki) {
-  if (!Number.isFinite(km) || km < 0) throw new BladWejscia('dojazd', `Odległość dojazdu musi być nieujemna, jest ${km}`)
-  const kmPonad = Math.max(0, km - stawki.darmowy_promien_km)
-  const kmRazem = KURSOW_NA_ZLECENIE * km
-  return { kwotaKlienta: kmPonad * stawki.klient_zl_km, kmPonad, kosztFirmy: kmRazem * stawki.koszt_firmy_zl_km, kmRazem }
+  const klient = dojazdKlienta(km, stawki)
+  const firma = dojazdFirmy(km, stawki)
+  return { kwotaKlienta: klient.kwota, kmPonad: Math.max(0, km - stawki.darmowy_promien_km), kosztFirmy: firma.kwota, kmRazem: firma.kmRazem }
+}
+
+/**
+ * Kwota dodatku z linii silnika (linieDodatku): ilosc × cena × wsp, a przy `doliczaj_material` plus material bez wsp.
+ * @param {Pick<DodatekWyceny, 'uslugaId' | 'pozycjaId' | 'ilosc'>} dodatek @param {string | null} wojewodztwoId @param {Katalog} katalog
+ * @returns {WycenaDodatku}
+ */
+export function wycenaDodatku({ uslugaId, pozycjaId, ilosc }, wojewodztwoId, katalog) {
+  const linie = linieDodatku({ uslugaId, pozycja: katalog.pozycja(uslugaId, pozycjaId), ilosc, wsp: katalog.wojewodztwo(wojewodztwoId).wsp })
+  return { cenaJedn: linie[0]?.cenaJedn ?? 0, kwota: linie.reduce((suma, l) => suma + l.kwota, 0) }
 }
 
 /**
@@ -167,18 +169,4 @@ export function infoDojazdu(km, stawki) {
  * @param {Katalog} katalog @param {string} uslugaId @param {string} pozycjaId @param {string | null} wojewodztwoId
  * @returns {number}
  */
-export function cenaZaJednostke(katalog, uslugaId, pozycjaId, wojewodztwoId) {
-  return katalog.pozycja(uslugaId, pozycjaId).cena * katalog.wojewodztwo(wojewodztwoId).wsp
-}
-
-/**
- * Kwota dodatku jak w silniku: ilosc × cena × wsp, a przy `doliczaj_material` plus material bez wsp.
- * @param {Pick<DodatekWyceny, 'uslugaId' | 'pozycjaId' | 'ilosc'>} dodatek @param {string | null} wojewodztwoId @param {Katalog} katalog
- * @returns {WycenaDodatku}
- */
-export function wycenaDodatku({ uslugaId, pozycjaId, ilosc }, wojewodztwoId, katalog) {
-  const pozycja = katalog.pozycja(uslugaId, pozycjaId)
-  const cenaJedn = cenaZaJednostke(katalog, uslugaId, pozycjaId, wojewodztwoId)
-  const material = pozycja.doliczaj_material ? ilosc * (pozycja.koszt_chemii_m2 ?? 0) : 0
-  return { cenaJedn, kwota: ilosc * cenaJedn + material }
-}
+export const cenaZaJednostke = (katalog, uslugaId, pozycjaId, wojewodztwoId) => wycenaDodatku({ uslugaId, pozycjaId, ilosc: 1 }, wojewodztwoId, katalog).cenaJedn

@@ -5,19 +5,19 @@
 import { wczytajStan } from '../dane/magazyn.js'
 import { ustawieniaDomyslne } from '../dane/ustawienia.js'
 import { BladWyceny, wycena as znajdzWycene } from '../dane/wyceny.js'
-import { czyZmianaCzysciZakres, nowySzkic, podpowiedzCeny, zmienWybor } from '../kreator/stan.js'
+import { podpowiedzCeny } from '../kreator/podpowiedzi.js'
+import { czyZmianaCzysciZakres, nowySzkic, zmienWybor } from '../kreator/stan.js'
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
-import { m2, tekstLiczby, zl, zlGr } from '../ui/format.js'
+import { kwotaJednostki, m2, nazwaJednostki, tekstLiczby, zl } from '../ui/format.js'
 import { h } from '../ui/h.js'
 import { chipy, przycisk } from '../ui/komponenty/formularz.js'
-import { arkusz, baner, dialogPotwierdzenia, karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
-import { sciezka } from '../ui/trasy.js'
-import { adresKroku, ramaKroku, zglosBladKreatora } from './kreator-wspolne.js'
+import { arkusz, baner, dialogPotwierdzenia, karta, wiersz } from '../ui/komponenty/uklad.js'
+import { adresKroku, ramaKroku, wycenaKroku, zglosBladKreatora } from './kreator-wspolne.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../ui/router.js').Kontekst} Kontekst */
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
-/** @typedef {import('../kreator/stan.js').PodpowiedzCeny} PodpowiedzCeny */
+/** @typedef {import('../kreator/podpowiedzi.js').PodpowiedzCeny} PodpowiedzCeny */
 /** @typedef {import('../silnik/katalog.js').Usluga} Usluga */
 /** @typedef {{ uslugaId: string | null, wariantId: string | null, wojewodztwoId: string | null }} Wybor */
 
@@ -25,28 +25,19 @@ const NAZWA_POLA_USLUGI = 'kreator-usluga'
 const FOKUS_USLUGI = `input[name="${NAZWA_POLA_USLUGI}"]:checked`
 const FOKUS_WOJEWODZTWA = '[data-pole="wojewodztwo"]'
 const SREDNIA_KRAJOWA = ''
-const GROSZE = 100
-/** @type {Readonly<Record<string, string>>} */
-const JEDNOSTKI = Object.freeze({ m2: 'm²', szt: 'szt.' })
 const GRUPY = Object.freeze([
   { tryb: 'pomieszczenia', tytul: 'Dom i biuro – wycena z pomieszczeń' },
   { tryb: 'pozycje', tytul: 'Wycena z pozycji – ilość lub metraż' },
 ])
-const ZMIANA_USLUGI = 'Zmiana usługi wyczyści wpisane pomieszczenia i pozycje. Zmienić?'
+const ZMIANA_USLUGI = 'Zmiana usługi wyczyści wpisane pomieszczenia i pozycje oraz dodatki, których nowa usługa nie ma. Zmienić?'
 const BRAK_USLUGI = 'Wybierz usługę, żeby przejść dalej.'
-
-/** @param {number} kwota @returns {string} „30 zł” albo „1,80 zł” */
-function kwotaJednostki(kwota) {
-  const wGroszach = Math.round(kwota * GROSZE) / GROSZE
-  return Number.isInteger(wGroszach) ? zl(wGroszach) : zlGr(wGroszach)
-}
 
 /** @param {PodpowiedzCeny} p @returns {string} */
 function tekstPodpowiedzi(p) {
   if (p.rodzaj === 'metraz') return `${m2(p.m2)} ok. ${zl(p.kwota)}`
   if (p.rodzaj === 'za_m2') return `ok. ${kwotaJednostki(p.kwota)}/m²`
   if (p.rodzaj === 'warianty') return 'jednorazowo albo abonament'
-  return `od ${kwotaJednostki(p.kwota)}/${JEDNOSTKI[p.jednostka] ?? p.jednostka}`
+  return `od ${kwotaJednostki(p.kwota)}/${nazwaJednostki(p.jednostka)}`
 }
 
 /** @param {Kontekst} kontekst @param {Usluga} usluga @param {string | null} wojewodztwoId @returns {string | null} */
@@ -64,13 +55,6 @@ function podpowiedz(kontekst, usluga, wojewodztwoId) {
 function wyborPoczatkowy(w, domyslneWojewodztwo) {
   if (!w) return { uslugaId: null, wariantId: null, wojewodztwoId: domyslneWojewodztwo }
   return { uslugaId: w.wejscie.uslugaId, wariantId: w.wejscie.wariantId ?? null, wojewodztwoId: w.wejscie.wojewodztwoId ?? null }
-}
-
-/** @param {HTMLElement} kontener @param {string} tekst @param {{ tekst: string, adres: string }} akcja */
-function pokazKomunikat(kontener, tekst, akcja) {
-  kontener.replaceChildren(
-    naglowek({ tytul: 'Nowa wycena', wstecz: sciezka('start') }),
-    h('div', { class: 'tresc' }, baner({ rodzaj: 'info', tekst }), przycisk({ tekst: akcja.tekst, rodzaj: 'drugi', adres: akcja.adres })))
 }
 
 /**
@@ -104,16 +88,10 @@ function otworzWyborWojewodztwa(kontekst, obecne, naWybor) {
 export const widokKreatoraUslugi = {
   render(kontener, { zapytanie, kontekst }) {
     const { magazyn, katalog, domyslne, nawiguj } = kontekst
-    const stan = wczytajStan(magazyn)
     const id = zapytanie.wycena ?? null
-    const zapisana = id === null ? null : znajdzWycene(stan, id)
-    if (id !== null && !zapisana) {
-      return pokazKomunikat(kontener, 'Nie ma tej wyceny. Mogła zostać usunięta.', { tekst: 'Wróć na start', adres: sciezka('start') })
-    }
-    if (zapisana?.status === 'wykonana') {
-      return pokazKomunikat(kontener, 'Ta wycena jest wykonana – można ją tylko przeglądać.',
-        { tekst: 'Pokaż wycenę', adres: sciezka('wycena', { id: zapisana.id }) })
-    }
+    const zapisana = id === null ? null : wycenaKroku(kontener, zapytanie, kontekst)
+    if (id !== null && !zapisana) return
+    const stan = wczytajStan(magazyn)
     const ustawienia = stan.ustawienia ?? ustawieniaDomyslne(domyslne)
     const komunikat = h('div', { class: 'kreator__komunikat', 'aria-live': 'polite' })
     let wybor = wyborPoczatkowy(zapisana, ustawienia.wojewodztwoId)
@@ -174,7 +152,7 @@ export const widokKreatoraUslugi = {
     }
 
     /**
-     * Zapis wyboru: nowy szkic albo zmiana zapisanej wyceny (inna usluga przy wpisanym zakresie — po potwierdzeniu).
+     * Zapis wyboru: nowy szkic albo zmiana zapisanej wyceny (inna usluga przy wpisanym zakresie albo dodatkach spoza jej listy — po potwierdzeniu).
      * @param {Wybor & { uslugaId: string }} doZapisu
      * @returns {Promise<string | null>} id wyceny albo null, gdy uzytkownik nie potwierdzil zmiany uslugi
      */
@@ -184,7 +162,7 @@ export const widokKreatoraUslugi = {
       if (!obecna) throw new BladWyceny('brak_wyceny', `Nie ma wyceny ${id}`)
       const { uslugaId, wariantId = null, wojewodztwoId = null } = obecna.wejscie
       if (uslugaId === doZapisu.uslugaId && wariantId === doZapisu.wariantId && wojewodztwoId === doZapisu.wojewodztwoId) return id
-      if (czyZmianaCzysciZakres(obecna, doZapisu.uslugaId)) {
+      if (czyZmianaCzysciZakres(obecna, doZapisu.uslugaId, kontekst.katalog)) {
         const czyZmienic = await dialogPotwierdzenia({ tytul: 'Zmienić usługę?', tresc: ZMIANA_USLUGI, potwierdz: 'Zmień usługę' })
         if (!czyZmienic || !czyAktywny) return null
       }

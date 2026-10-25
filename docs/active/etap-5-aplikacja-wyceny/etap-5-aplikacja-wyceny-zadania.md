@@ -296,8 +296,8 @@ Zależy od: Faza 3
 - [x] Test: [Unit] `przelicz` dla 4 pomieszczeń układu 50 m² standard w mazowieckim daje migawkę z ceną 250, medianą 250 i widełkami 120–450
 - [x] Test: [Unit] `bledyKroku('zakres')` dla wyceny bez pomieszczeń zwraca błąd; zmiana usługi czyści pomieszczenia
 - [x] Test: [Unit] `zmienWejscie` na wycenie wykonanej rzuca `BladWyceny` z kodem `tylko_odczyt`
-- [ ] Weryfikacja: `node --test src/kreator/stan.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `node --test src/kreator/stan.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-15: Krok zakresu: pomieszczenia i brud (feature-builder-fullstack)
 
@@ -308,8 +308,8 @@ Zależy od: Faza 3
 - [x] Test: [Unit] dodanie kuchni i łazienki do wyceny po remoncie ustawia kurz 1 i pył budowlany poziom 2 w obu; nazwa łazienki „Łazienka”
 - [x] Test: [Unit] `ustawMetraz` z 0 i 1500 zwraca kod błędu, z 12,5 zapisuje 12,5
 - [x] Test: [Unit] `podsumowanieZakresu` dla układu 50 m² standard daje 50 m² i minuty ze scenariusza kalibracji
-- [ ] Weryfikacja: `node --test src/kreator/pomieszczenia.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `node --test src/kreator/pomieszczenia.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-16: Kroki zakresu z pozycjami i dodatków z dojazdem (feature-builder-fullstack)
 
@@ -322,9 +322,9 @@ Zależy od: Faza 3
 - [x] Test: [Unit] `ustawPowierzchnie(40)` z włączonymi myciem i mchem daje obu pozycjom 40 m²; wyłączenie jedynej pozycji głównej zwraca błąd
 - [x] Test: [Unit] `infoDojazdu(12, domyślne stawki)` daje 4 zł dla klienta (2 km ponad 10 km) i 27,60 zł kosztu (24 km × 1,15 zł); `infoDojazdu(8)` — 0 zł dla klienta
 - [x] Test: [Unit] `ustawDodatek` z trybem `propozycja` zapisuje dodatek poza ceną; ilość 0 usuwa dodatek
-- [ ] Test: [E2E] `kreator-okna-minimum` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, otwórz http://localhost:5174/#/kreator/usluga, wybierz „Mycie okien”, „Dalej”, ustaw „Okno 1-skrzydłowe” na 4, „Dalej”, „Dalej”, „Dalej” → podsumowanie z ceną 150 zł i informacją o minimum zlecenia
-- [ ] Weryfikacja: `node --test src/kreator/pozycje.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Test: [E2E] `kreator-okna-minimum` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, otwórz http://localhost:5174/#/kreator/usluga, wybierz „Mycie okien”, „Dalej”, ustaw „Okno 1-skrzydłowe” na 4, „Dalej”, „Dalej”, „Dalej” → podsumowanie z ceną 150 zł i informacją o minimum zlecenia
+- [x] Weryfikacja: `node --test src/kreator/pozycje.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-17: Dobór chemii: krok kreatora i katalog (feature-builder-fullstack)
 
@@ -337,9 +337,9 @@ Zależy od: Faza 3
 - [x] Test: [Unit] mieszkanie po remoncie daje kategorie uniwersalny (kurz) i poremontowy (pył budowlany); sierść poziom 1 nie dubluje kategorii uniwersalnej
 - [x] Test: [Unit] sprzątanie hal z zamiataniem daje notkę „zamiatanie na sucho” bez kategorii; doczyszczanie z usuwaniem farby — notkę o zmywaczu farb
 - [x] Test: [Unit] dezynfekcja jest w `kategorieDoRecznegoDodania`, a nie w `kategorieDlaWyceny`; produkt Buzil bez pH daje „pH: brak danych”
-- [ ] Test: [E2E] `dobor-chemii-po-remoncie` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, utwórz dokładną wycenę „Mieszkanie lub dom – sprzątanie po remoncie” z pokojem 20 m², przejdź do kroku „Chemia”, zrób screenshot, kliknij pierwszą „Karta SDS” → widać kategorię środków poremontowych z produktami, link SDS otwiera nową kartę z adresem z `data/chemia.json`
-- [ ] Weryfikacja: `node --test src/silnik/chemia.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Test: [E2E] `dobor-chemii-po-remoncie` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, utwórz dokładną wycenę „Mieszkanie lub dom – sprzątanie po remoncie” z pokojem 20 m², przejdź do kroku „Chemia”, zrób screenshot, kliknij pierwszą „Karta SDS” → widać kategorię środków poremontowych z produktami, link SDS otwiera nową kartę z adresem z `data/chemia.json`
+- [x] Weryfikacja: `node --test src/silnik/chemia.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-18: Podsumowanie wyceny i zapisana wycena (feature-builder-fullstack)
 
@@ -352,11 +352,15 @@ Zależy od: Faza 3
 - [x] Test: [Unit] czynny VAT przy mieszkaniu: brutto 250, netto 203,25, `zostaje` liczone od netto
 - [x] Test: [Unit] migawka z `wersjaDanych` starszą niż katalog daje ostrzeżenie „Dane rynkowe zmieniły się…”; cena dokładna 380 zł przy szybkiej 250–300 zł daje ostrzeżenie o widełkach
 - [x] Test: [Unit] abonament 1× w tygodniu: `abonament` z kwotą miesięczną i liczbą wizyt 4,33
-- [ ] Test: [E2E] `dokladna-wycena-mieszkania` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, otwórz http://localhost:5174/#/kreator/usluga, wybierz „Mieszkanie lub dom – sprzątanie standardowe”, „Dalej”, dodaj pokój 32, przedpokój 6, kuchnię 8 i łazienkę 4 m², przejdź „Dalej” przez dodatki i chemię, zrób screenshot podsumowania, kliknij „Zapisz”, w arkuszu wpisz klienta „Pani Test” i potwierdź „Zapisz” → cena 250 zł „w widełkach rynku”, „rynek od 120 zł do 450 zł”, karta „Zostaje dla Ciebie” z tempem 1,3×, po zapisie adres `#/wycena/<id>` i numer „1/<miesiąc>/<rok>” w podtytule
-- [ ] Test: [E2E] `podsumowanie-cena-reczna` — w zapisanej wycenie z poprzedniego scenariusza kliknij „Zmień”, wpisz 290 → kwota 290 zł, „Twoja cena 290 (+16%)”, kwota „Zostaje dla Ciebie” większa o 40 zł, „Przywróć cenę z modelu” wraca do 250 zł
-- [ ] Weryfikacja: `node --test src/kreator/podsumowanie.test.js` przechodzi
-- [ ] Weryfikacja: `npm test` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Test: [E2E] `dokladna-wycena-mieszkania` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, otwórz http://localhost:5174/#/kreator/usluga, wybierz „Mieszkanie lub dom – sprzątanie standardowe”, „Dalej”, dodaj pokój 32, przedpokój 6, kuchnię 8 i łazienkę 4 m², przejdź „Dalej” przez dodatki i chemię, zrób screenshot podsumowania, kliknij „Zapisz”, w arkuszu wpisz klienta „Pani Test” i potwierdź „Zapisz” → cena 250 zł „w widełkach rynku”, „rynek od 120 zł do 450 zł”, karta „Zostaje dla Ciebie” z tempem 1,3×, po zapisie adres `#/wycena/<id>` i numer „1/<miesiąc>/<rok>” w podtytule
+- [x] Test: [E2E] `podsumowanie-cena-reczna` — w zapisanej wycenie z poprzedniego scenariusza kliknij „Zmień”, wpisz 290 → kwota 290 zł, „Twoja cena 290 (+16%)”, kwota „Zostaje dla Ciebie” większa o 40 zł, „Przywróć cenę z modelu” wraca do 250 zł
+- [x] Weryfikacja: `node --test src/kreator/podsumowanie.test.js` przechodzi
+- [x] Weryfikacja: `npm test` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+
+## Do poprawy po review fazy 4
+
+Zamkniete cyklem fix: 21 pozycji — pelna tresc findingow i uzasadnienia w `review-faza-4.md`.
 
 ## Operator checklist faza 4
 

@@ -1,23 +1,21 @@
 // Krok zakresu kreatora dla uslug w trybie pomieszczen (`#/kreator/zakres?wycena=<id>`, makieta kreator-pomieszczenia):
 // karty pomieszczen (zwinieta: nazwa, typ, m², aktywny brud; rozwinieta: nazwa, metraz, poziomy brudu, usuwanie), arkusz typow
 // z zestawu uslugi, chipy wariantu przy biurach, baner po zamianie szybkiej wyceny i stopka z m², czasem z tempem i kwota.
-// Zmiany ida przez src/kreator/pomieszczenia.js i `zmienWejscie`; cene liczy silnik, widok tylko rysuje.
+// Zmiany ida przez src/kreator/pomieszczenia.js i `zapisKroku` (src/widoki/kreator-wspolne.js); cene liczy silnik, widok tylko rysuje.
 
 import { wczytajStan } from '../dane/magazyn.js'
-import { BladWyceny, wycena as znajdzWycene } from '../dane/wyceny.js'
 import {
   dodajPomieszczenie, GRANICE_METRAZU, MAKS_DLUGOSC_NAZWY, opisPrzeniesienia, podsumowanieZakresu, rodzajeBrudu, ustawBrud, ustawMetraz,
   usunPomieszczenie, zmienNazwe,
 } from '../kreator/pomieszczenia.js'
-import { zmienWejscie, zmienWybor } from '../kreator/stan.js'
+import { zmienWybor } from '../kreator/stan.js'
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
 import { tempoDoWyceny } from '../silnik/tempo.js'
-import { czas, m2, odmiana } from '../ui/format.js'
+import { czas, m2, odmiana, tekstLiczby } from '../ui/format.js'
 import { h, ikona } from '../ui/h.js'
 import { chipy, licznik, pole, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
-import { arkusz, baner, karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
-import { sciezka } from '../ui/trasy.js'
-import { adresKroku, ramaKroku, zglosBladKreatora } from './kreator-wspolne.js'
+import { arkusz, baner, karta, wiersz } from '../ui/komponenty/uklad.js'
+import { adresKroku, odswiezStopke, pokazKomunikat, ramaKroku, wycenaKroku, zapisKroku } from './kreator-wspolne.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../silnik/cena.js').WejscieWyceny} WejscieWyceny */
@@ -36,10 +34,9 @@ import { adresKroku, ramaKroku, zglosBladKreatora } from './kreator-wspolne.js'
 
 const LEGENDA = 'Brud: – brak, 1 lekki, 2 średni, 3 silny'
 const PUSTA_LISTA = 'Dodaj pomieszczenia, które sprzątasz.'
-const BLAD_METRAZU = 'Wpisz metraż od 0,5 do 1000 m².'
+const BLAD_METRAZU = `Wpisz metraż od ${tekstLiczby(GRANICE_METRAZU.min)} do ${tekstLiczby(GRANICE_METRAZU.max)} m².`
 const BLAD_NAZWY = `Wpisz nazwę od 1 do ${MAKS_DLUGOSC_NAZWY} znaków.`
 const NIEAKTUALNA = 'Pomieszczenia zmieniły się w innej karcie przeglądarki. Widzisz teraz aktualną listę.'
-const KOD_NIEAKTUALNEJ = 'nieaktualna'
 /** @type {readonly [string, string, string]} */
 const FORMY_LAZIENKI = Object.freeze(['łazienka', 'łazienki', 'łazienek'])
 /** Chipy poziomu brudu: tekst na chipie i nazwa dla czytnika ekranu (jak w legendzie). */
@@ -62,13 +59,6 @@ const poziomBrudu = (p, brudId) => (p.brud ?? []).find((b) => b.id === brudId)?.
 function tekstPrzeniesienia(o) {
   const kuchnia = o.kuchnia ? `, ${o.kuchnia}` : ''
   return `Przeniesione z szybkiej wyceny: ${m2(o.m2)}, ${o.lazienki} ${odmiana(o.lazienki, FORMY_LAZIENKI)}${kuchnia}.`
-}
-
-/** @param {HTMLElement} kontener @param {string} tekst @param {{ tekst: string, adres: string }} akcja */
-function pokazKomunikat(kontener, tekst, akcja) {
-  kontener.replaceChildren(
-    naglowek({ tytul: 'Nowa wycena', wstecz: sciezka('start') }),
-    h('div', { class: 'tresc' }, baner({ rodzaj: 'info', tekst }), przycisk({ tekst: akcja.tekst, rodzaj: 'drugi', adres: akcja.adres })))
 }
 
 /** @param {number} i @param {Brud} brud @param {number} poziom @param {AkcjeKarty['naBrud']} naBrud */
@@ -130,21 +120,15 @@ function kartaRozwinieta(i, p, { katalog, nazwaTypu, czyWszystkieBrudy, akcje })
 export const widokKreatoraPomieszczen = {
   render(kontener, { zapytanie, kontekst }) {
     const { magazyn, katalog, domyslne, nawiguj } = kontekst
-    const stan = wczytajStan(magazyn)
-    const id = zapytanie.wycena ?? null
-    const poczatkowa = id === null ? null : znajdzWycene(stan, id)
-    if (!poczatkowa) return pokazKomunikat(kontener, 'Nie ma tej wyceny. Mogła zostać usunięta.', { tekst: 'Wróć na start', adres: sciezka('start') })
-    if (poczatkowa.status === 'wykonana') {
-      return pokazKomunikat(kontener, 'Ta wycena jest wykonana – można ją tylko przeglądać.',
-        { tekst: 'Pokaż wycenę', adres: sciezka('wycena', { id: poczatkowa.id }) })
-    }
+    const poczatkowa = wycenaKroku(kontener, zapytanie, kontekst)
+    if (!poczatkowa) return
     const usluga = katalog.usluga(poczatkowa.wejscie.uslugaId)
     if (usluga.tryb !== 'pomieszczenia' || !usluga.zestaw_pomieszczen) {
       return pokazKomunikat(kontener, 'Tej usługi nie wycenia się z pomieszczeń.', { tekst: 'Zmień usługę', adres: adresKroku('usluga', poczatkowa.id) })
     }
     const zestaw = katalog.zestaw(usluga.zestaw_pomieszczen)
+    const stan = wczytajStan(magazyn)
     const tempo = tempoDoWyceny(stan.ustawienia, stan.wyceny, usluga.id, domyslne).wartosc
-    const komunikat = h('div', { class: 'kreator__komunikat', 'aria-live': 'polite' })
     let wycena = poczatkowa
     /** @type {number | null} */
     let rozwiniety = null
@@ -152,38 +136,11 @@ export const widokKreatoraPomieszczen = {
 
     /** @param {string} typ */
     const nazwaTypu = (typ) => zestaw.find((n) => n.id === typ)?.nazwa ?? typ
-    /** @param {string} tekst */
-    const pokazBlad = (tekst) => komunikat.replaceChildren(baner({ rodzaj: 'blad', tekst }))
-
-    /** @param {unknown} blad @returns {string} oczekiwany blad wpisu, lista z innej karty (po odswiezeniu) albo blad kreatora */
-    function tekstBledu(blad) {
-      const tekst = blad instanceof BladWejscia ? TEKSTY_BLEDOW_ZAKRESU.get(blad.kod) : undefined
-      if (tekst) return tekst
-      if (!(blad instanceof BladWyceny) || blad.kod !== KOD_NIEAKTUALNEJ) return zglosBladKreatora(blad)
-      const swieza = znajdzWycene(wczytajStan(magazyn), wycena.id)
-      if (swieza) wycena = swieza
-      rozwiniety = null
-      rysuj()
-      return NIEAKTUALNA
-    }
-
-    /**
-     * Zapis zmiany pomieszczen; lista zmieniona w innej karcie (inna niz na ekranie) nie jest nadpisywana.
-     * @param {(w: WejscieWyceny) => WejscieWyceny} fn @returns {string | null} tekst bledu albo null po zapisie
-     */
-    function zapisz(fn) {
-      const naEkranie = JSON.stringify(wycena.wejscie.pomieszczenia ?? [])
-      try {
-        wycena = zmienWejscie(kontekst, wycena.id, (w) => {
-          if (JSON.stringify(w.pomieszczenia ?? []) !== naEkranie) throw new BladWyceny(KOD_NIEAKTUALNEJ, 'Pomieszczenia zmieniły się w innej karcie')
-          return fn(w)
-        })
-        komunikat.replaceChildren()
-        return null
-      } catch (blad) {
-        return tekstBledu(blad)
-      }
-    }
+    const { zapisz, pokazBlad, tekstBledu, komunikat } = zapisKroku({
+      kontekst, wycena: () => wycena, teksty: TEKSTY_BLEDOW_ZAKRESU, nieaktualna: NIEAKTUALNA, naZapis: (w) => { wycena = w },
+      naEkranie: (w) => JSON.stringify(w.pomieszczenia ?? []),
+      naNieaktualnej: (w) => { wycena = w; rozwiniety = null; rysuj() },
+    })
 
     /** @param {string | null} blad @param {() => void} poZapisie */
     const poZmianie = (blad, poZapisie) => (blad === null ? poZapisie() : pokazBlad(blad))
@@ -192,7 +149,7 @@ export const widokKreatoraPomieszczen = {
     const akcje = {
       naRozwin: (i) => { rozwiniety = i; czyWszystkieBrudy = false; rysuj(`[data-pomieszczenie="${i}"] .karta-pomieszczenia__zwin`) },
       naZwin: (i) => { rozwiniety = null; rysuj(`button[data-pomieszczenie="${i}"]`) },
-      naMetraz: (i, wartosc) => poZmianie(zapisz((w) => ustawMetraz(w, i, wartosc)), odswiezStopke),
+      naMetraz: (i, wartosc) => poZmianie(zapisz((w) => ustawMetraz(w, i, wartosc)), () => odswiezStopke(kontener, rama)),
       naNazwe(i, wartosc, elementPola, tytul) {
         const blad = zapisz((w) => zmienNazwe(w, i, wartosc))
         if (blad !== null && blad !== BLAD_NAZWY) return pokazBlad(blad)
@@ -268,12 +225,6 @@ export const widokKreatoraPomieszczen = {
     const handleDalej = () => nawiguj(adresKroku('dodatki', wycena.id))
     /** @param {Node[]} tresc */
     const rama = (tresc) => ramaKroku({ krok: 'zakres', wycena, katalog, tresc, naDalej: handleDalej, opisKwoty: opisStopki() })
-
-    function odswiezStopke() {
-      const nowa = rama([]).elementy.at(-1)
-      const stara = kontener.querySelector('.stopka-kreatora')
-      if (stara && nowa) stara.replaceWith(nowa)
-    }
 
     /** @param {string} [fokus] selektor elementu do fokusu po narysowaniu */
     function rysuj(fokus) {

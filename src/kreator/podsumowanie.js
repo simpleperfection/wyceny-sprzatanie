@@ -1,19 +1,19 @@
 // Podsumowanie dokladnej wyceny (R5, R7, R8, R9, R15): cena dla klienta z modelu albo reczna, polozenie na tle widelek rynku,
 // koszt zlecenia i „zostaje dla Ciebie” z tempem firmy, abonament, propozycje i ostrzezenia. Zapis ceny recznej i przeliczenie
-// migawki ida przez magazyn.zmien i src/dane/wyceny.js; logika bez DOM, widoki (src/widoki/podsumowanie*.js) tylko rysuja.
+// migawki ida przez src/dane/wyceny.js; logika bez DOM, widoki (src/widoki/podsumowanie*.js) tylko rysuja.
 
 import { wczytajStan } from '../dane/magazyn.js'
 import { scalKoszty } from '../dane/ustawienia.js'
-import { BladWyceny, nieaktualnaPoWyslaniu, wycena as znajdzWycene, zapiszWynik } from '../dane/wyceny.js'
+import {
+  BladWyceny, czyAbonament, dozwolonePrzejscia, zapiszCeneReczna, wycena as znajdzWycene, zapiszWynik,
+} from '../dane/wyceny.js'
 import { BladWejscia } from '../silnik/bledy.js'
-import { kosztZlecenia } from '../silnik/koszt.js'
+import { dojazdFirmy, kosztZlecenia } from '../silnik/koszt.js'
 import { tempoDoWyceny } from '../silnik/tempo.js'
-import { sprawdzStatusVat, zCenyRecznej } from '../silnik/vat.js'
-import { infoDojazdu } from './pozycje.js'
+import { cenaDlaKlienta, sprawdzStatusVat, zCenyRecznej } from '../silnik/vat.js'
 import { przelicz } from './stan.js'
 
 /** @typedef {import('../ui/router.js').DaneAplikacji} DaneAplikacji */
-/** @typedef {import('../dane/magazyn.js').Magazyn} Magazyn */
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
 /** @typedef {import('../dane/wyceny.js').MigawkaWyniku} MigawkaWyniku */
 /** @typedef {import('../dane/wyceny.js').StatusWyceny} StatusWyceny */
@@ -25,7 +25,8 @@ import { przelicz } from './stan.js'
 /** @typedef {import('../silnik/vat.js').StatusVat} StatusVat */
 /**
  * @typedef {{ brutto: number, netto: number, vat: number, czyReczna: boolean, statusVat: StatusVat, stawkaVatProc: number,
- *   rozbicie: { uslugi: number, dojazd: number } | null }} CenaPodsumowania rozbicie: tylko przy dojezdzie platnym przez klienta
+ *   rozbicie: { uslugi: number, dojazd: number } | null, minimum: number | null }} CenaPodsumowania rozbicie: tylko przy dojezdzie
+ *   platnym przez klienta; minimum: minimum zlecenia dla klienta, gdy podnioslo cene z modelu (null przy cenie recznej i bez minimum)
  * @typedef {{ mediana: number, od: number, do: number, pelne: boolean, procent: number, polozenie: 'ponizej' | 'w' | 'powyzej' }}
  *   RynekPodsumowania procent: ulamek (0.16 = +16%) ceny wzgledem mediany
  * @typedef {{ kwota: number, naGodzine: number, minutyWlasne: number, tempo: number, zrodloTempa: ZrodloTempa }} ZostajePodsumowania
@@ -41,38 +42,38 @@ import { przelicz } from './stan.js'
 
 /** Cena wpisana recznie: pelne zlote (jak brutto z cenaDlaKlienta) w tych granicach. */
 export const GRANICE_CENY_RECZNEJ = Object.freeze({ min: 1, max: 1_000_000 })
-/** Jak w src/dane/wyceny.js: 1 wizyta (wariant `jednorazowe`) to zlecenie jednorazowe, wiecej — abonament. */
-const WIZYT_ZLECENIA_JEDNORAZOWEGO = 1
-const PROCENT = 100
 const KLUCZE_WERSJI = /** @type {const} */ (['ceny', 'normy', 'rynek'])
-/** Statusy, w ktorych czeka sie na decyzje klienta (przejscia do `przyjeta` i `odrzucona` w src/dane/wyceny.js). */
-const STATUSY_DECYZJI_KLIENTA = new Set(['do_wyslania', 'wyslana'])
+/** Decyzje klienta jako akcje wyceny; pokazywane, gdy przejscie jest dozwolone (dozwolonePrzejscia w src/dane/wyceny.js). */
+const DECYZJE_KLIENTA = /** @type {const} */ (['przyjeta', 'odrzucona'])
 
 /** Migawka w ksztalcie wyniku silnika; kosztZlecenia czyta z niego linie, dojazd, minutyNormowe i wizytWMiesiacu. @param {MigawkaWyniku} m @returns {WynikWyceny} */
 function wynikZMigawki(m) {
-  return { linie: m.linie, propozycje: m.propozycje, cenaUslugi: m.cena - m.dojazd.kwota, minimum: 0, czyMinimum: false, dojazd: m.dojazd,
+  return { linie: m.linie, propozycje: m.propozycje, cenaUslugi: m.cena - m.dojazd.kwota, minimum: m.minimum ?? 0, czyMinimum: m.czyMinimum ?? false,
+    dojazd: m.dojazd,
     cena: m.cena, cenaZaokraglona: m.cena, minutyNormowe: m.minutyNormowe, wizytWMiesiacu: m.wizytWMiesiacu, cenaMiesieczna: null,
     podstawaCeny: m.podstawaCeny }
 }
 
-/** Kwoty modelu (dojazd, widelki) w cenie dla klienta: czynny podatnik przy podstawie netto dolicza VAT na gorze (jak cenaDlaKlienta). @param {MigawkaWyniku} m */
-const mnoznikKlienta = (m) => (m.statusVat === 'czynny' && m.podstawaCeny === 'netto' ? 1 + m.stawkaVatProc / PROCENT : 1)
+/** Kwota modelu (dojazd, widelki, minimum) w cenie dla klienta, wg reguly VAT z cenaDlaKlienta. @param {MigawkaWyniku} m @param {number} kwota */
+const kwotaKlienta = (m, kwota) =>
+  cenaDlaKlienta({ kwota, podstawaCeny: m.podstawaCeny, statusVat: m.statusVat, stawkaVatProc: m.stawkaVatProc }).brutto
 
 /** @param {MigawkaWyniku} m @param {number | null} cenaReczna @returns {CenaPodsumowania} */
 function cenaKlienta(m, cenaReczna) {
   const statusVat = m.statusVat
   sprawdzStatusVat(statusVat)
   const cena = cenaReczna === null ? { brutto: m.cena, netto: m.netto, vat: m.vat } : zCenyRecznej(cenaReczna, statusVat, m.stawkaVatProc)
-  const dojazd = Math.round(m.dojazd.kwota * mnoznikKlienta(m))
+  const dojazd = kwotaKlienta(m, m.dojazd.kwota)
+  const czyMinimum = cenaReczna === null && m.czyMinimum === true && m.minimum !== undefined
   return { ...cena, czyReczna: cenaReczna !== null, statusVat, stawkaVatProc: m.stawkaVatProc,
-    rozbicie: dojazd > 0 ? { uslugi: Math.max(0, cena.brutto - dojazd), dojazd } : null }
+    rozbicie: dojazd > 0 ? { uslugi: Math.max(0, cena.brutto - dojazd), dojazd } : null,
+    minimum: czyMinimum ? kwotaKlienta(m, m.minimum ?? 0) : null }
 }
 
 /** @param {MigawkaWyniku} m @param {number} brutto @returns {RynekPodsumowania} */
 function rynek(m, brutto) {
-  const mnoznik = mnoznikKlienta(m)
-  const od = Math.round(m.widelki.od * mnoznik)
-  const doKwoty = Math.round(m.widelki.do * mnoznik)
+  const od = kwotaKlienta(m, m.widelki.od)
+  const doKwoty = kwotaKlienta(m, m.widelki.do)
   const polozenie = brutto < od ? 'ponizej' : brutto > doKwoty ? 'powyzej' : 'w'
   return { mediana: m.mediana, od, do: doKwoty, pelne: m.widelki.pelne, procent: m.mediana > 0 ? brutto / m.mediana - 1 : 0, polozenie }
 }
@@ -88,7 +89,7 @@ function wierszeKosztow(m, cena, koszt, koszty) {
     { rodzaj: 'cena', kwota: cena.brutto },
     ...(cena.statusVat === 'czynny' ? [{ rodzaj: /** @type {const} */ ('vat'), kwota: cena.vat, stawkaVatProc: cena.stawkaVatProc }] : []),
     { rodzaj: 'chemia', kwota: koszt.chemia, chemiaH: czySzacunekGodzinowy ? koszty.chemia_h.wartosc : null },
-    ...(km > 0 ? [{ rodzaj: /** @type {const} */ ('dojazd'), kwota: koszt.dojazdFirmy.kwota, kmRazem: infoDojazdu(km, koszty.dojazd).kmRazem,
+    ...(km > 0 ? [{ rodzaj: /** @type {const} */ ('dojazd'), kwota: koszt.dojazdFirmy.kwota, kmRazem: dojazdFirmy(km, koszty.dojazd).kmRazem,
       stawka: koszty.dojazd.koszt_firmy_zl_km }] : []),
     ...sprzet,
     { rodzaj: 'zostaje', kwota: koszt.zostaje },
@@ -98,8 +99,8 @@ function wierszeKosztow(m, cena, koszt, koszty) {
 /** @param {MigawkaWyniku} m @param {CenaPodsumowania} cena @param {KosztZlecenia} koszt @returns {AbonamentPodsumowania | null} */
 function abonament(m, cena, koszt) {
   const wizyt = m.wizytWMiesiacu
-  if (wizyt === null || wizyt <= WIZYT_ZLECENIA_JEDNORAZOWEGO) return null
-  return { wizyt, zaWizyte: cena.brutto, miesiecznie: cena.brutto * wizyt, zostajeMiesiecznie: koszt.zostaje * wizyt }
+  if (wizyt === null || !czyAbonament(m) || koszt.miesiecznie === null) return null
+  return { wizyt, zaWizyte: cena.brutto, miesiecznie: cena.brutto * wizyt, zostajeMiesiecznie: koszt.miesiecznie.zostaje }
 }
 
 /** @param {Wycena} w @param {MigawkaWyniku} m @param {number} brutto @param {Katalog} katalog @returns {Ostrzezenie[]} */
@@ -140,27 +141,9 @@ export function widokPodsumowania(w, kontekst) {
   }
 }
 
-/** @param {Wycena | null} w @param {string} id @returns {asserts w is Wycena & { wynik: MigawkaWyniku }} */
-function sprawdzDoZmiany(w, id) {
-  if (!w) throw new BladWyceny('brak_wyceny', `Nie ma wyceny ${id}`)
-  if (w.status === 'wykonana') throw new BladWyceny('tylko_odczyt', `Wycena ${w.numer ?? id} jest wykonana`)
-  if (w.wynik === null) throw new BladWyceny('brak_wyniku', `Wycena ${id} nie ma policzonej ceny`)
-}
-
-/**
- * Zapis ceny recznej na swiezym stanie; zmiana kwoty dla klienta po wyslaniu oznacza oferte jako nieaktualna.
- * @param {Magazyn} magazyn @param {string} id @param {number | null} cenaReczna
- * @returns {Wycena}
- */
-function zapiszCeneReczna(magazyn, id, cenaReczna) {
-  const stan = magazyn.zmien((obecny) => {
-    const w = znajdzWycene(obecny, id)
-    sprawdzDoZmiany(w, id)
-    const czyInnaKwota = (w.cenaReczna ?? w.wynik.cena) !== (cenaReczna ?? w.wynik.cena)
-    const zmieniona = { ...w, cenaReczna, oferta: czyInnaKwota ? nieaktualnaPoWyslaniu(w) : w.oferta, zmieniona: new Date().toISOString() }
-    return { ...obecny, wyceny: obecny.wyceny.map((x) => (x.id === id ? zmieniona : x)) }
-  })
-  const zapisana = znajdzWycene(stan, id)
+/** @param {DaneAplikacji} kontekst @param {string} id @param {number | null} cenaReczna @returns {Wycena} wycena po zapisie */
+function cenaRecznaWyceny(kontekst, id, cenaReczna) {
+  const zapisana = znajdzWycene(zapiszCeneReczna(kontekst.magazyn, id, cenaReczna), id)
   if (!zapisana) throw new BladWyceny('brak_wyceny', `Nie ma wyceny ${id}`)
   return zapisana
 }
@@ -175,32 +158,36 @@ export function ustawCeneReczna(kontekst, id, brutto) {
   if (!(kwota >= GRANICE_CENY_RECZNEJ.min && kwota <= GRANICE_CENY_RECZNEJ.max)) {
     throw new BladWejscia('cena_reczna', `Cena ręczna musi być w przedziale [${GRANICE_CENY_RECZNEJ.min}, ${GRANICE_CENY_RECZNEJ.max}] zł, jest ${brutto}`)
   }
-  return zapiszCeneReczna(kontekst.magazyn, id, kwota)
+  return cenaRecznaWyceny(kontekst, id, kwota)
 }
 
 /** @param {DaneAplikacji} kontekst @param {string} id @returns {Wycena} wycena z cena z modelu */
-export const przywrocCeneModelu = (kontekst, id) => zapiszCeneReczna(kontekst.magazyn, id, null)
+export const przywrocCeneModelu = (kontekst, id) => cenaRecznaWyceny(kontekst, id, null)
 
 /**
- * „Przelicz”: nowa migawka z biezacymi danymi i ustawieniami; stara i nowa cena z modelu do komunikatu.
+ * „Przelicz”: nowa migawka z biezacymi danymi i ustawieniami; stara i nowa cena z modelu do komunikatu. Wycena wykonana
+ * jest tylko do odczytu (BladWyceny `tylko_odczyt` z zapiszWynik).
  * @param {DaneAplikacji} kontekst @param {string} id
  * @returns {{ stara: number, nowa: number, wycena: Wycena }}
  */
 export function przeliczWycene(kontekst, id) {
   const obecna = znajdzWycene(wczytajStan(kontekst.magazyn), id)
-  sprawdzDoZmiany(obecna, id)
+  if (!obecna) throw new BladWyceny('brak_wyceny', `Nie ma wyceny ${id}`)
+  if (obecna.wynik === null) throw new BladWyceny('brak_wyniku', `Wycena ${id} nie ma policzonej ceny`)
+  const stara = obecna.wynik.cena
   const wynik = przelicz(obecna, kontekst)
   const zapisana = znajdzWycene(zapiszWynik(kontekst.magazyn, id, wynik), id)
   if (!zapisana) throw new BladWyceny('brak_wyceny', `Nie ma wyceny ${id}`)
-  return { stara: obecna.wynik.cena, nowa: wynik.cena, wycena: zapisana }
+  return { stara, nowa: wynik.cena, wycena: zapisana }
 }
 
 /**
- * Akcje zapisanej wyceny wg statusu: decyzja klienta przy wycenie do wyslania i wyslanej, wykonana — tylko usuniecie.
+ * Akcje zapisanej wyceny wg statusu: decyzja klienta, gdy przejscie do niej jest dozwolone, wykonana — tylko usuniecie.
  * @param {StatusWyceny} status
  * @returns {AkcjaWyceny[]}
  */
 export function akcjeWyceny(status) {
   if (status === 'wykonana') return ['usun']
-  return STATUSY_DECYZJI_KLIENTA.has(status) ? ['przyjeta', 'odrzucona', 'edytuj', 'usun'] : ['edytuj', 'usun']
+  const przejscia = dozwolonePrzejscia(status)
+  return [...DECYZJE_KLIENTA.filter((d) => przejscia.includes(d)), 'edytuj', 'usun']
 }
