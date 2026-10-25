@@ -112,11 +112,11 @@ describe('odczytajKopie', () => {
   })
 
   it('tekst do 2000 znaków przechodzi, dłuższy i ponad 5000 wycen → uszkodzony', () => {
-    const zNazwa = (/** @type {number} */ n) => stanTestowy({ wyceny: [wycenaTestowa('a', { klient: { nazwa: 'x'.repeat(n), adres: '', termin: null } })] })
+    const zUwagami = (/** @type {number} */ n) => stanTestowy({ wyceny: [wycenaTestowa('a', { odpowiedzi: { uwagi: 'x'.repeat(n) } })] })
     const wiele = Array.from({ length: 5001 }, (_, i) => szkicTestowy(`s${i}`))
 
-    assert.equal(odczytajKopie(plik({ stan: zNazwa(2000) })).stan.wyceny[0].klient.nazwa.length, 2000)
-    assert.throws(() => odczytajKopie(plik({ stan: zNazwa(2001) })), bladKopii('uszkodzony'))
+    assert.equal(odczytajKopie(plik({ stan: zUwagami(2000) })).stan.wyceny[0].odpowiedzi.uwagi, 'x'.repeat(2000))
+    assert.throws(() => odczytajKopie(plik({ stan: zUwagami(2001) })), bladKopii('uszkodzony'))
     assert.throws(() => odczytajKopie(plik({ stan: stanTestowy({ wyceny: wiele }) })), bladKopii('uszkodzony'))
   })
 
@@ -139,7 +139,7 @@ describe('wczytajKopie', () => {
   const zPliku = stanTestowy({
     ustawienia: { ...USTAWIENIA, przypomnienieKopiiDni: 30 },
     wyceny: [wycenaTestowa('a', { zmieniona: '2026-10-15T10:00:00.000Z', numer: '9/10/2026' }),
-      wycenaTestowa('b', { zmieniona: '2026-10-12T10:00:00.000Z', numer: '9/10/2026' }), wycenaTestowa('d')],
+      wycenaTestowa('b', { zmieniona: '2026-10-12T10:00:00.000Z', numer: '9/10/2026' }), wycenaTestowa('d', { numer: '6/10/2026' })],
     licznikNumerow: { '2026-10': 7, '2026-08': 1 },
   })
 
@@ -237,5 +237,101 @@ describe('podsumowanieKopii', () => {
 
     assert.deepEqual(podsumowanieKopii(stan), { wycen: 3, wykonan: 3, czyUstawienia: true })
     assert.deepEqual(podsumowanieKopii(stanTestowy({ ustawienia: null, wyceny: [] })), { wycen: 0, wykonan: 0, czyUstawienia: false })
+  })
+})
+
+describe('utworzKopie: te same granice co odczyt kopii', () => {
+  it('tekst ponad 2000 znaków, ponad 5000 wycen albo wycena złego kształtu → uszkodzony już przy tworzeniu kopii', () => {
+    const dlugiTekst = stanTestowy({ wyceny: [szkicTestowy('a', { odpowiedzi: { uwagi: 'x'.repeat(2500) } })] })
+    const wiele = stanTestowy({ wyceny: Array.from({ length: 5001 }, (_, i) => szkicTestowy(`s${i}`)) })
+    const zlaWycena = stanTestowy({ wyceny: [wycenaTestowa('a', { status: 'zaplacona' })] })
+
+    for (const stan of [dlugiTekst, wiele, zlaWycena]) {
+      assert.throws(() => utworzKopie(stan, TERAZ), bladKopii('uszkodzony'))
+    }
+  })
+})
+
+describe('odczytajKopie: odmowy kształtu wyniku, oferty i części wyceny', () => {
+  it('wynik z ceną tekstem albo bez linii, oferta z nieaktualna tekstem, wejście bez usługi i złe widełki → uszkodzony', () => {
+    const zle = [
+      wycenaTestowa('a', { wynik: { ...MIGAWKA, cena: '250' } }),
+      wycenaTestowa('a', { wynik: { ...MIGAWKA, linie: null } }),
+      wycenaTestowa('a', { oferta: { zakres: null, warunki: null, waznaDo: null, wyslana: null, nieaktualna: 'nie' } }),
+      wycenaTestowa('a', { wejscie: {} }),
+      wycenaTestowa('a', { szybka: { stan: 's', tryb: 't', od: '1', do: 2 } }),
+    ]
+
+    for (const wycena of zle) {
+      assert.throws(() => odczytajKopie(plik({ stan: stanTestowy({ wyceny: [wycena] }) })), bladKopii('uszkodzony'), JSON.stringify(wycena))
+    }
+  })
+
+  it('treść, która nie jest tekstem (42) → zly_plik', () => {
+    assert.throws(() => odczytajKopie(42), bladKopii('zly_plik'))
+  })
+})
+
+describe('odczytajKopie: wartości ustawień i limity wycen jak przy zapisie', () => {
+  it('złe wartości ustawień → uszkodzony, poprawne przechodzą', () => {
+    const zleUstawienia = [
+      { tempo: { reczne: 0 } }, { tempo: { reczne: 99 } }, { przypomnienieKopiiDni: 3 }, { wojewodztwoId: '<b>' },
+      { firma: { ...USTAWIENIA.firma, email: 'nie-email' } }, { koszty: { sprzet: { odkurzacz: 501 }, dojazd: {} } },
+    ]
+
+    assert.deepEqual(odczytajKopie(plik({})).stan.ustawienia, USTAWIENIA)
+    for (const zle of zleUstawienia) {
+      assert.throws(() => odczytajKopie(plik({ stan: stanTestowy({ ustawienia: { ...USTAWIENIA, ...zle } }) })), bladKopii('uszkodzony'),
+        JSON.stringify(zle))
+    }
+  })
+
+  it('klucz kosztu sprzętu __proto__ → uszkodzony', () => {
+    const tresc = plik({ stan: stanTestowy({ ustawienia: { ...USTAWIENIA, koszty: { sprzet: { KLUCZ: 5 }, dojazd: {} } } }) })
+
+    assert.throws(() => odczytajKopie(tresc.replace('"KLUCZ"', '"__proto__"')), bladKopii('uszkodzony'))
+  })
+
+  it('wykonanie 5000 min albo z datą „jutro”, nazwa klienta 121 znaków, licznik ponad 100 000 → uszkodzony', () => {
+    const wykonanie = { id: 'w', data: '2026-10-20', minuty: 240, tempoPlanu: 1.3 }
+    const zleStany = [
+      stanTestowy({ wyceny: [wycenaTestowa('a', { status: 'przyjeta', wykonania: [{ ...wykonanie, minuty: 5000 }] })] }),
+      stanTestowy({ wyceny: [wycenaTestowa('a', { status: 'przyjeta', wykonania: [{ ...wykonanie, data: 'jutro' }] })] }),
+      stanTestowy({ wyceny: [wycenaTestowa('a', { klient: { nazwa: 'x'.repeat(121), adres: '', termin: null } })] }),
+      stanTestowy({ licznikNumerow: { '2026-10': 100_001 } }),
+    ]
+
+    assert.equal(odczytajKopie(plik({ stan: stanTestowy({ wyceny: [wycenaTestowa('a', { status: 'przyjeta', wykonania: [wykonanie] })] }) }))
+      .stan.wyceny[0].wykonania.length, 1)
+    for (const stan of zleStany) assert.throws(() => odczytajKopie(plik({ stan })), bladKopii('uszkodzony'))
+  })
+
+  it('utworzKopie odrzuca ustawienia, których odczyt by nie przyjął', () => {
+    assert.throws(() => utworzKopie(stanTestowy({ ustawienia: { ...USTAWIENIA, tempo: { reczne: 0 } } }), TERAZ), bladKopii('uszkodzony'))
+  })
+})
+
+describe('wczytajKopie polacz: numery wycen z dwóch urządzeń', () => {
+  it('wycena z pliku z numerem zajętym lokalnie dostaje kolejny numer miesiąca, licznik rośnie', () => {
+    const { magazyn } = magazynZeStanem(stanTestowy({ wyceny: [wycenaTestowa('telefon')], licznikNumerow: { '2026-10': 1 } }))
+    const zLaptopa = stanTestowy({ wyceny: [wycenaTestowa('laptop'), wycenaTestowa('laptop2', { numer: '2/10/2026' })],
+      licznikNumerow: { '2026-10': 2 } })
+
+    wczytajKopie(magazyn, zLaptopa, 'polacz')
+
+    const stan = zapisanyStan(magazyn)
+    assert.deepEqual(stan.wyceny.map((/** @type {any} */ w) => [w.id, w.numer]), [
+      ['telefon', '1/10/2026'], ['laptop', '3/10/2026'], ['laptop2', '2/10/2026'],
+    ])
+    assert.deepEqual(stan.licznikNumerow, { '2026-10': 3 })
+  })
+
+  it('połączenie ponad 5000 wycen → za_duzo_wycen bez zapisu', () => {
+    const { magazyn, storage } = magazynZeStanem(stanTestowy({ wyceny: Array.from({ length: 3000 }, (_, i) => szkicTestowy(`l${i}`)) }))
+    const przed = storage.getItem(KLUCZ_MAGAZYNU)
+    const zPliku = stanTestowy({ wyceny: Array.from({ length: 2001 }, (_, i) => szkicTestowy(`p${i}`)) })
+
+    assert.throws(() => wczytajKopie(magazyn, zPliku, 'polacz'), bladKopii('za_duzo_wycen'))
+    assert.equal(storage.getItem(KLUCZ_MAGAZYNU), przed)
   })
 })

@@ -1,11 +1,13 @@
 // Walidacja pol formularzy ustawien firmy (telefon, e-mail, NIP, liczby, tempo). Funkcje zwracaja kod bledu albo null;
 // widoki zamieniaja kod na tekst. Nie mylic z src/silnik/walidacja.js (metraz i ilosc w silniku).
 
+import { GRANICE_STOSUNKU_TEMPA } from '../silnik/tempo.js'
+
 /** @typedef {'telefon' | 'email' | 'nip' | 'liczba' | 'zakres'} KodBleduPola */
 /** @typedef {{ min: number, max: number }} Granice */
 
-/** Tempo jako krotnosc normy rynkowej (R15); zrodlo granic dla ustawien i widoku. */
-export const GRANICE_TEMPA = Object.freeze({ min: 0.5, max: 3 })
+/** Tempo reczne jako krotnosc normy rynkowej (R15): te same granice co tempo liczone ze zlecen (jedno zrodlo w silniku). */
+export const GRANICE_TEMPA = GRANICE_STOSUNKU_TEMPA
 
 const CYFR_TELEFONU = 9
 const PRZEDROSTEK_POLSKI = '+48'

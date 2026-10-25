@@ -1,9 +1,10 @@
 // Kopia zapasowa (R23): plik JSON z calym stanem, odczyt pliku z walidacja jak dane z zewnatrz, wczytanie trybem „polacz”
 // albo „zastap” i regula przypomnienia o kopii. Bez DOM: pobranie i odczyt pliku robi widok kopii.
 
+import { jestObiektem, maKrotkieTeksty } from './ksztalt.js'
 import { BladMagazynu, WERSJA_SCHEMATU, zaktualizujStan } from './magazyn.js'
-import { DNI_PRZYPOMNIENIA_KOPII } from './ustawienia.js'
-import { STATUSY_WYCENY } from './wyceny.js'
+import { BladUstawien, DNI_PRZYPOMNIENIA_KOPII, sprawdzUstawienia } from './ustawienia.js'
+import { jestWycena, MAKS_WYCEN } from './wyceny.js'
 
 /** @typedef {import('./magazyn.js').Magazyn} Magazyn */
 /** @typedef {import('./magazyn.js').Stan} Stan */
@@ -15,15 +16,14 @@ import { STATUSY_WYCENY } from './wyceny.js'
  */
 
 const NAZWA_APLIKACJI = 'wyceny-sprzatanie'
-const MAKS_DLUGOSC_TEKSTU = 2000
-const MAKS_WYCEN = 5000
-/** Glebokosc zagniezdzenia pliku kopii; stan aplikacji ma kilka poziomow, wiecej znaczy plik spoza aplikacji. */
-const MAKS_ZAGLEBIENIE = 32
+/** Najwiekszy licznik numerow w miesiacu; wiecej znaczy plik spoza aplikacji. */
+const MAKS_LICZNIKA_NUMEROW = 100_000
 const MS_DOBY = 86_400_000
-const RODZAJE_WYCENY = ['szybka', 'dokladna']
-const KWOTY_WYNIKU = ['cena', 'netto', 'vat', 'mediana', 'minutyNormowe', 'stawkaVatProc']
 
-/** Bledny plik kopii albo argument: `zly_plik`, `nowsza_wersja`, `uszkodzony`, `tryb`, `data`. */
+/**
+ * Bledny plik kopii albo argument: `zly_plik`, `nowsza_wersja`, `uszkodzony` (takze stan, ktorego kopia nie dalaby sie wczytac),
+ * `za_duzo_wycen` (polaczenie przekroczyloby limit), `tryb`, `data`.
+ */
 export class BladKopii extends Error {
   /**
    * @param {string} kod
@@ -37,66 +37,30 @@ export class BladKopii extends Error {
   }
 }
 
-/** @param {unknown} x @returns {x is Record<string, unknown>} */
-const jestObiektem = (x) => typeof x === 'object' && x !== null && !Array.isArray(x)
-/** @param {unknown} x */
-const jestTekstemLubNull = (x) => x === null || typeof x === 'string'
-/** @param {unknown} x */
-const jestData = (x) => typeof x === 'string' && !Number.isNaN(Date.parse(x))
-/** @param {unknown} x @returns {x is number} */
-const jestLiczba = (x) => typeof x === 'number' && Number.isFinite(x)
-/** @param {unknown} x */
-const jestListaTekstow = (x) => Array.isArray(x) && x.every((t) => typeof t === 'string')
-
-/** Kazdy tekst i klucz do MAKS_DLUGOSC_TEKSTU znakow, zagniezdzenie do MAKS_ZAGLEBIENIE. @param {unknown} x @param {number} [glebokosc] @returns {boolean} */
-function maKrotkieTeksty(x, glebokosc = 0) {
-  if (typeof x === 'string') return x.length <= MAKS_DLUGOSC_TEKSTU
-  if (typeof x !== 'object' || x === null) return true
-  if (glebokosc >= MAKS_ZAGLEBIENIE) return false
-  return Object.entries(x).every(([klucz, w]) => klucz.length <= MAKS_DLUGOSC_TEKSTU && maKrotkieTeksty(w, glebokosc + 1))
-}
-
-/** @param {unknown} x */
-function jestWynikiem(x) {
-  return x === null || (jestObiektem(x) && KWOTY_WYNIKU.every((p) => jestLiczba(x[p])) && Array.isArray(x.linie) &&
-    Array.isArray(x.propozycje) && jestObiektem(x.widelki) && jestObiektem(x.dojazd) && jestObiektem(x.wojewodztwo) &&
-    typeof x.statusVat === 'string' && typeof x.podstawaCeny === 'string' && (x.wizytWMiesiacu === null || jestLiczba(x.wizytWMiesiacu)) &&
-    jestObiektem(x.wersjaDanych))
-}
-
-/** @param {unknown} x */
-const jestWykonaniem = (x) => jestObiektem(x) && typeof x.id === 'string' && typeof x.data === 'string' && jestLiczba(x.minuty) &&
-  jestLiczba(x.tempoPlanu)
-
-/** @param {unknown} x */
-const jestWarunkiem = (x) => jestObiektem(x) && typeof x.id === 'string' && typeof x.tresc === 'string' && typeof x.tylko_szybka === 'boolean'
-
-/** @param {unknown} x */
-function jestOferta(x) {
-  return jestObiektem(x) && (x.zakres === null || (jestObiektem(x.zakres) && jestListaTekstow(x.zakres.wchodzi) &&
-    jestListaTekstow(x.zakres.nie_wchodzi))) && (x.warunki === null || (Array.isArray(x.warunki) && x.warunki.every(jestWarunkiem))) &&
-    jestTekstemLubNull(x.waznaDo) && jestTekstemLubNull(x.wyslana) && typeof x.nieaktualna === 'boolean'
-}
-
-/** @param {unknown} x */
-function jestCzescia(x) {
-  return jestObiektem(x) && jestObiektem(x.klient) && typeof x.klient.nazwa === 'string' && typeof x.klient.adres === 'string' &&
-    jestTekstemLubNull(x.klient.termin) && jestObiektem(x.wejscie) && typeof x.wejscie.uslugaId === 'string' &&
-    (x.szybka === null || (jestObiektem(x.szybka) && typeof x.szybka.stan === 'string' && typeof x.szybka.tryb === 'string' &&
-      jestLiczba(x.szybka.od) && jestLiczba(x.szybka.do))) && jestObiektem(x.odpowiedzi)
-}
-
-/** Ksztalt wyceny z pliku; poza szkicem wycena ma numer i wynik (tak nadaje je wyceny.js). @param {unknown} x */
-function jestWycena(x) {
-  return jestObiektem(x) && typeof x.id === 'string' && x.id !== '' && jestTekstemLubNull(x.numer) && jestData(x.utworzona) &&
-    jestData(x.zmieniona) && STATUSY_WYCENY.some((s) => s === x.status) && RODZAJE_WYCENY.includes(String(x.rodzaj)) &&
-    jestCzescia(x) && jestWynikiem(x.wynik) && (x.cenaReczna === null || jestLiczba(x.cenaReczna)) &&
-    Array.isArray(x.wykonania) && x.wykonania.every(jestWykonaniem) && jestOferta(x.oferta) &&
-    (x.status === 'szkic' || (x.numer !== null && x.wynik !== null))
-}
-
 /** @param {Wycena[]} wyceny */
 const maUnikalneId = (wyceny) => new Set(wyceny.map((w) => w.id)).size === wyceny.length
+
+/** Ustawienia z kopii przechodza te same reguly wartosci co zapis w ustawieniach. @param {Stan['ustawienia']} ustawienia */
+function sprawdzUstawieniaKopii(ustawienia) {
+  if (ustawienia === null) return
+  try {
+    sprawdzUstawienia(ustawienia)
+  } catch (blad) {
+    if (blad instanceof BladUstawien) throw new BladKopii('uszkodzony', `Ustawienia w kopii: ${blad.pole} (${blad.kod})`, { cause: blad })
+    throw blad
+  }
+}
+
+/**
+ * Jedna kontrola stanu dla eksportu i odczytu kopii, zeby aplikacja nie zapisala kopii, ktorej potem nie wczyta.
+ * @param {Stan} stan
+ */
+function sprawdzStanKopii(stan) {
+  if (stan.wyceny.length > MAKS_WYCEN || !maKrotkieTeksty(stan)) throw new BladKopii('uszkodzony', 'Za dużo wycen albo za długi tekst')
+  if (!stan.wyceny.every(jestWycena) || !maUnikalneId(stan.wyceny)) throw new BladKopii('uszkodzony', 'Wyceny mają zły kształt')
+  if (Object.values(stan.licznikNumerow).some((n) => n > MAKS_LICZNIKA_NUMEROW)) throw new BladKopii('uszkodzony', 'Za duży licznik numerów')
+  sprawdzUstawieniaKopii(stan.ustawienia)
+}
 
 /** @param {unknown} teraz @returns {Date} */
 function sprawdzDate(teraz) {
@@ -116,7 +80,8 @@ function stanMagazynu(magazyn) {
 }
 
 /**
- * Plik kopii z calym stanem: `{ aplikacja, wersjaSchematu, utworzona, stan }`.
+ * Plik kopii z calym stanem: `{ aplikacja, wersjaSchematu, utworzona, stan }`. Stan, ktorego odczytajKopie by nie przyjela,
+ * daje BladKopii zamiast pliku.
  * @param {Stan} stan @param {Date} teraz
  * @returns {PlikKopii}
  */
@@ -124,6 +89,7 @@ export function utworzKopie(stan, teraz) {
   sprawdzDate(teraz)
   const wynik = zaktualizujStan(stan)
   if (!('stan' in wynik)) throw new BladKopii(wynik.blad, 'Stanu do kopii nie da się odczytać')
+  sprawdzStanKopii(wynik.stan)
   const tresc = JSON.stringify({ aplikacja: NAZWA_APLIKACJI, wersjaSchematu: WERSJA_SCHEMATU, utworzona: teraz.toISOString(), stan: wynik.stan })
   return { nazwaPliku: `wyceny-kopia-${dzienLokalny(teraz)}.json`, tresc }
 }
@@ -170,7 +136,7 @@ export function odczytajKopie(tekst) {
   }
   const wynik = zaktualizujStan(surowy)
   if (!('stan' in wynik)) throw new BladKopii(wynik.blad, 'Stan w kopii ma zły kształt')
-  if (!wynik.stan.wyceny.every(jestWycena) || !maUnikalneId(wynik.stan.wyceny)) throw new BladKopii('uszkodzony', 'Wyceny w kopii mają zły kształt')
+  sprawdzStanKopii(wynik.stan)
   return { stan: wynik.stan }
 }
 
@@ -181,7 +147,39 @@ function maksimumLicznikow(lokalny, zPliku) {
   return Object.fromEntries(miesiace)
 }
 
-/** Wyceny po `id` (wygrywa pozniejsza `zmieniona`, przy rownej lokalna), ustawienia lokalne, licznik numerow = maksimum. @param {Stan} lokalny @param {Stan} zPliku @returns {Stan} */
+/**
+ * Wyceny z pliku z numerem zajetym przez wycene lokalna (dwa urzadzenia nadaly ten sam numer) dostaja kolejny numer swojego
+ * miesiaca z polaczonego licznika; licznik rosnie o nadane numery.
+ * @param {Wycena[]} wyceny po polaczeniu @param {Set<Wycena>} lokalne wyceny, ktore zostaly z magazynu
+ * @param {Record<string, number>} licznik @returns {{ wyceny: Wycena[], licznikNumerow: Record<string, number> }}
+ */
+function bezPowtorzonychNumerow(wyceny, lokalne, licznik) {
+  const zajete = new Set(wyceny.filter((w) => lokalne.has(w)).map((w) => w.numer))
+  const licznikNumerow = { ...licznik }
+  const poNumeracji = wyceny.map((w) => {
+    if (lokalne.has(w) || w.numer === null) return w
+    if (!zajete.has(w.numer)) {
+      zajete.add(w.numer)
+      return w
+    }
+    const [, miesiac, rok] = w.numer.split('/')
+    const klucz = `${rok}-${miesiac}`
+    let numer = w.numer
+    while (zajete.has(numer)) {
+      licznikNumerow[klucz] = (licznikNumerow[klucz] ?? 0) + 1
+      numer = `${licznikNumerow[klucz]}/${miesiac}/${rok}`
+    }
+    zajete.add(numer)
+    return { ...w, numer }
+  })
+  return { wyceny: poNumeracji, licznikNumerow }
+}
+
+/**
+ * Wyceny po `id` (wygrywa pozniejsza `zmieniona`, przy rownej lokalna), ustawienia lokalne, licznik numerow = maksimum,
+ * numer zajety lokalnie dostaje wycena z pliku nowy.
+ * @param {Stan} lokalny @param {Stan} zPliku @returns {Stan}
+ */
 function polaczStany(lokalny, zPliku) {
   const zPlikuPoId = new Map(zPliku.wyceny.map((w) => [w.id, w]))
   const wyceny = lokalny.wyceny.map((w) => {
@@ -190,8 +188,9 @@ function polaczStany(lokalny, zPliku) {
   })
   const lokalneId = new Set(lokalny.wyceny.map((w) => w.id))
   const nowe = zPliku.wyceny.filter((w) => !lokalneId.has(w.id))
-  return { ...lokalny, ustawienia: lokalny.ustawienia ?? zPliku.ustawienia, wyceny: [...wyceny, ...nowe],
-    licznikNumerow: maksimumLicznikow(lokalny.licznikNumerow, zPliku.licznikNumerow) }
+  const polaczone = bezPowtorzonychNumerow([...wyceny, ...nowe], new Set(lokalny.wyceny),
+    maksimumLicznikow(lokalny.licznikNumerow, zPliku.licznikNumerow))
+  return { ...lokalny, ustawienia: lokalny.ustawienia ?? zPliku.ustawienia, ...polaczone }
 }
 
 /**
@@ -202,6 +201,7 @@ function polaczStany(lokalny, zPliku) {
 export function wczytajKopie(magazyn, stanZPliku, tryb) {
   if (tryb !== 'polacz' && tryb !== 'zastap') throw new BladKopii('tryb', `Nieznany tryb wczytania kopii: ${tryb}`)
   const nowy = tryb === 'zastap' ? stanZPliku : polaczStany(stanMagazynu(magazyn), stanZPliku)
+  if (nowy.wyceny.length > MAKS_WYCEN) throw new BladKopii('za_duzo_wycen', `Po połączeniu byłoby ponad ${MAKS_WYCEN} wycen`)
   magazyn.zapiszCalosc(nowy)
   return nowy
 }

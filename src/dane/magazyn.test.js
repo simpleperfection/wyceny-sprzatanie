@@ -237,3 +237,37 @@ describe('naZmiane', () => {
     assert.equal(callback.mock.callCount(), 0)
   })
 })
+
+describe('wczytaj: pozostałe warunki kształtu ustawień i stanu', () => {
+  const USTAWIENIA = {
+    wojewodztwoId: null, statusVat: 'zwolniony', firma: { nazwa: '', telefon: '', email: '', nip: '' }, tempo: { reczne: null },
+    koszty: { sprzet: {}, dojazd: {} }, zakresy: {}, warunki: null, przypomnienieKopiiDni: 7, kreatorZakonczony: false,
+  }
+
+  it('koszty, zakresy, warunki, przypomnienie i kreator złego typu → uszkodzony', () => {
+    const storage = new PamiecMagazynu()
+    const { magazyn } = magazynTestowy(storage)
+    const zle = [
+      { koszty: { sprzet: 'x', dojazd: {} } }, { zakresy: { okna: { wchodzi: 'mycie' } } }, { warunki: [{ id: 'a' }] },
+      { przypomnienieKopiiDni: 7.5 }, { kreatorZakonczony: 'tak' },
+    ]
+
+    for (const zmiana of zle) {
+      const surowe = JSON.stringify({ ...PUSTY_STAN, ustawienia: { ...USTAWIENIA, ...zmiana } })
+      storage.setItem(KLUCZ_MAGAZYNU, surowe)
+      assert.deepEqual(magazyn.wczytaj(), { blad: 'uszkodzony', surowe }, JSON.stringify(zmiana))
+    }
+  })
+
+  it('miesiąc licznika 2026-13, data kopii „wczoraj” i preferencje bez flagi → uszkodzony', () => {
+    const storage = new PamiecMagazynu()
+    const { magazyn } = magazynTestowy(storage)
+    const zle = [{ licznikNumerow: { '2026-13': 1 } }, { kopia: { ostatnia: 'wczoraj', zmianaOd: null } }, { preferencje: {} }]
+
+    for (const zmiana of zle) {
+      const surowe = JSON.stringify({ ...PUSTY_STAN, ...zmiana })
+      storage.setItem(KLUCZ_MAGAZYNU, surowe)
+      assert.deepEqual(magazyn.wczytaj(), { blad: 'uszkodzony', surowe }, JSON.stringify(zmiana))
+    }
+  })
+})

@@ -154,3 +154,19 @@ describe('opisTempa', () => {
     assert.throws(() => opisTempa({ wartosc: Number.NaN, zrodlo: 'reczne', liczba: 0 }), { name: BladWejscia.name, kod: 'tempo' })
   })
 })
+
+describe('dolna granica stosunku tempa', () => {
+  it('0,4× zapisuje się z liczony: false, 0,5× z liczony: true', () => {
+    const wpisy = wpisyTempa([wycena('okna', 0.4, '2026-10-01'), wycena('okna', 0.5, '2026-10-02')])
+
+    assert.deepEqual(wpisy.map((w) => [w.data, w.liczony]), [['2026-10-02', true], ['2026-10-01', false]])
+  })
+
+  it('wpis 0,3× nie liczy się do mediany: [1,1; 1,2; 1,4; 0,3] → 1,2 z 3 wpisów', () => {
+    const tempo = tempoWlasne(wyceny('okna', [1.1, 1.2, 1.4, 0.3]), 'okna')
+
+    assert.ok(tempo)
+    assertBlisko(tempo.wartosc, 1.2)
+    assert.equal(tempo.liczba, 3)
+  })
+})

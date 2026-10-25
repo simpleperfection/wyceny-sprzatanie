@@ -5,7 +5,9 @@ import { czytajJson, katalogTestowy } from '../../tests/pomocnicze.js'
 import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
 import { BladKatalogu } from '../silnik/bledy.js'
 import { KLUCZ_MAGAZYNU, utworzMagazyn } from './magazyn.js'
-import { BladUstawien, brakujeUstawien, pominKreator, scalKoszty, ustawieniaDomyslne, zapiszUstawienia } from './ustawienia.js'
+import {
+  BladUstawien, brakujeUstawien, pominKreator, scalKoszty, sprawdzUstawienia, ustawieniaDomyslne, zapiszUstawienia,
+} from './ustawienia.js'
 
 const DOMYSLNE = {
   meta: { wersja: 'test' },
@@ -195,5 +197,38 @@ describe('scalKoszty', () => {
     const { kosztyFirmy } = await katalogTestowy()
 
     assert.deepEqual(scalKoszty(kosztyFirmy, null), kosztyFirmy)
+  })
+})
+
+describe('zapiszUstawienia: zakres sprzętu i dojazdu, wartości złego typu', () => {
+  it('odrzuca kodem i polem: sprzęt 501, dojazd 25 zł/km, promień tekstem, telefon liczbą, firma tekstem, sprzęt listą', () => {
+    const { magazyn, storage } = nowyMagazyn()
+    pominKreator(magazyn, DOMYSLNE)
+    const przed = storage.getItem(KLUCZ_MAGAZYNU)
+    /** @type {[object, string, string][]} */
+    const przypadki = [
+      [{ koszty: { sprzet: { szorowarka: 501 } } }, 'zakres', 'koszty.sprzet.szorowarka'],
+      [{ koszty: { dojazd: { klient_zl_km: 25 } } }, 'zakres', 'koszty.dojazd.klient_zl_km'],
+      [{ koszty: { dojazd: { darmowy_promien_km: '10' } } }, 'liczba', 'koszty.dojazd.darmowy_promien_km'],
+      [{ firma: { telefon: 600123456 } }, 'wartosc', 'firma.telefon'],
+      [{ firma: 'Firma' }, 'wartosc', 'firma'],
+      [{ koszty: { sprzet: [] } }, 'wartosc', 'koszty.sprzet'],
+    ]
+
+    for (const [patch, kod, pole] of przypadki) {
+      assert.throws(() => zapiszUstawienia(magazyn, /** @type {never} */ (patch)), bladUstawien(kod, pole), JSON.stringify(patch))
+    }
+    assert.equal(storage.getItem(KLUCZ_MAGAZYNU), przed)
+  })
+})
+
+describe('sprawdzUstawienia', () => {
+  it('ustawienia domyślne przechodzą; tempo 0, przypomnienie co 3 dni i województwo z HTML → BladUstawien', () => {
+    const ustawienia = ustawieniaDomyslne(DOMYSLNE)
+
+    assert.doesNotThrow(() => sprawdzUstawienia(ustawienia))
+    assert.throws(() => sprawdzUstawienia({ ...ustawienia, tempo: { reczne: 0 } }), bladUstawien('zakres', 'tempo.reczne'))
+    assert.throws(() => sprawdzUstawienia({ ...ustawienia, przypomnienieKopiiDni: 3 }), bladUstawien('wartosc', 'przypomnienieKopiiDni'))
+    assert.throws(() => sprawdzUstawienia({ ...ustawienia, wojewodztwoId: '<b>' }), bladUstawien('wartosc', 'wojewodztwoId'))
   })
 })

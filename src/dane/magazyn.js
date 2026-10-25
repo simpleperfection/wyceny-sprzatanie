@@ -3,6 +3,7 @@
 
 import { BladWejscia } from '../silnik/bledy.js'
 import { sprawdzStatusVat } from '../silnik/vat.js'
+import { jestDataIso, jestListaTekstow, jestLiczba, jestObiektem, jestTekstemLubNull, jestWarunkiem, maWartosci, POLA_FIRMY } from './ksztalt.js'
 
 /** @typedef {import('../silnik/vat.js').StatusVat} StatusVat */
 /** @typedef {import('./wyceny.js').Wycena} Wycena */
@@ -51,21 +52,8 @@ export class BladMagazynu extends Error {
   }
 }
 
-/** @param {unknown} x @returns {x is Record<string, unknown>} */
-const jestObiektem = (x) => typeof x === 'object' && x !== null && !Array.isArray(x)
 /** @param {unknown} x */
-const jestTekstemLubNull = (x) => x === null || typeof x === 'string'
-/** @param {unknown} x @returns {x is number} */
-const jestLiczba = (x) => typeof x === 'number' && Number.isFinite(x)
-/** @param {unknown} x */
-const jestListaTekstow = (x) => Array.isArray(x) && x.every((t) => typeof t === 'string')
-/** @param {unknown} x */
-const jestDataIsoLubNull = (x) => x === null || (typeof x === 'string' && !Number.isNaN(Date.parse(x)))
-
-/** @param {unknown} x @param {(wartosc: unknown) => boolean} czyWartosc */
-function maWartosci(x, czyWartosc) {
-  return jestObiektem(x) && Object.values(x).every(czyWartosc)
-}
+const jestDataIsoLubNull = (x) => x === null || jestDataIso(x)
 
 /** Status VAT sprawdza silnik (jedno zrodlo listy statusow); odmowa silnika znaczy „nie status”. @param {unknown} x */
 function jestStatusemVat(x) {
@@ -84,13 +72,10 @@ function jestKosztamiUstawien(x) {
     maWartosci(x.dojazd, jestLiczba)
 }
 
-/** @param {unknown} x */
-const jestWarunkiem = (x) => jestObiektem(x) && typeof x.id === 'string' && typeof x.tresc === 'string' && typeof x.tylko_szybka === 'boolean'
-
 /** Ksztalt ustawien (typy pol); dozwolone wartosci sprawdza zapiszUstawienia w ustawienia.js. @param {unknown} x */
 function jestUstawieniami(x) {
   return jestObiektem(x) && jestTekstemLubNull(x.wojewodztwoId) && jestStatusemVat(x.statusVat) &&
-    jestObiektem(x.firma) && ['nazwa', 'telefon', 'email', 'nip'].every((p) => jestObiektem(x.firma) && typeof x.firma[p] === 'string') &&
+    jestObiektem(x.firma) && POLA_FIRMY.every((p) => jestObiektem(x.firma) && typeof x.firma[p] === 'string') &&
     jestObiektem(x.tempo) && (x.tempo.reczne === null || jestLiczba(x.tempo.reczne)) && jestKosztamiUstawien(x.koszty) &&
     maWartosci(x.zakresy, (z) => jestObiektem(z) && jestListaTekstow(z.wchodzi) && jestListaTekstow(z.nie_wchodzi)) &&
     (x.warunki === null || (Array.isArray(x.warunki) && x.warunki.every(jestWarunkiem))) &&

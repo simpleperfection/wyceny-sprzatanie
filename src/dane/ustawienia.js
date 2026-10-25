@@ -3,6 +3,7 @@
 
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
 import { sprawdzStatusVat } from '../silnik/vat.js'
+import { jestObiektem, POLA_FIRMY } from './ksztalt.js'
 import { bladEmaila, bladLiczby, bladNip, bladTelefonu, bladTempa } from './walidacja.js'
 
 /** @typedef {import('./magazyn.js').Magazyn} Magazyn */
@@ -34,7 +35,6 @@ export const GRANICE_KOSZTOW = Object.freeze({
   darmowy_promien_km: { min: 0, max: 200 },
   koszt_firmy_zl_km: { min: 0, max: 20 },
 })
-const POLA_FIRMY = /** @type {const} */ (['nazwa', 'telefon', 'email', 'nip'])
 const DLUGOSC_POL_FIRMY = Object.freeze({ nazwa: 120, telefon: 30, email: 254, nip: 20 })
 const WALIDATORY_FIRMY = Object.freeze({ telefon: bladTelefonu, email: bladEmaila, nip: bladNip })
 const POLA_DOJAZDU = /** @type {const} */ (['klient_zl_km', 'darmowy_promien_km', 'koszt_firmy_zl_km'])
@@ -55,9 +55,6 @@ export class BladUstawien extends Error {
     this.pole = pole
   }
 }
-
-/** @param {unknown} x @returns {x is Record<string, unknown>} */
-const jestObiektem = (x) => typeof x === 'object' && x !== null && !Array.isArray(x)
 
 /**
  * @param {unknown} x
@@ -143,6 +140,15 @@ function sprawdzZmiane(zmiana) {
     throw new BladUstawien('wartosc', 'przypomnienieKopiiDni')
   }
   if (kreatorZakonczony !== undefined && typeof kreatorZakonczony !== 'boolean') throw new BladUstawien('wartosc', 'kreatorZakonczony')
+}
+
+/**
+ * Pelne ustawienia spoza formularza (plik kopii): te same reguly wartosci co zapis zmiany; zakresy i warunki ma w ksztalcie stanu magazyn.
+ * @param {Ustawienia} ustawienia
+ */
+export function sprawdzUstawienia(ustawienia) {
+  const { zakresy: _zakresy, warunki: _warunki, ...zmiana } = ustawienia
+  sprawdzZmiane(zmiana)
 }
 
 /**

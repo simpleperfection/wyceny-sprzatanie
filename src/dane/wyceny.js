@@ -1,5 +1,10 @@
 // Zapisane wyceny (R29): szkic z wejsciem, migawka wyniku, cykl zycia statusow z numeracja NN/MM/RRRR i wpisy wykonania (R16).
 // Kazda zmiana idzie przez magazyn.zmien: odczyt swiezego stanu, sprawdzenie i zapis w jednym synchronicznym kroku.
+// Straznik jestWycena jest jedynym opisem zapisanej wyceny: uzywa go zapis tutaj i kopia zapasowa (eksport i odczyt pliku).
+
+import {
+  jestDataIso, jestDniem, jestListaTekstow, jestLiczba, jestObiektem, jestTekstemLubNull, jestWarunkiem, MAKS_DLUGOSC_TEKSTU, maKrotkieTeksty,
+} from './ksztalt.js'
 
 /** @typedef {import('./magazyn.js').Magazyn} Magazyn */
 /** @typedef {import('./magazyn.js').Stan} Stan */
@@ -15,10 +20,14 @@
 export const STATUSY_WYCENY = Object.freeze(/** @type {const} */ (['szkic', 'do_wyslania', 'wyslana', 'przyjeta', 'odrzucona', 'wykonana']))
 /** Najdluzsze wykonanie zlecenia w minutach (doba); zrodlo progu dla ekranu zakonczenia zlecenia. */
 export const MAKS_MINUT_WYKONANIA = 1440
+/** Rodzaje wyceny; zrodlo stalej dla zapisu, kopii zapasowej i widokow. */
+export const RODZAJE_WYCENY = Object.freeze(/** @type {const} */ (['szybka', 'dokladna']))
+/** Najwiecej zapisanych wycen (szkice tez); ta sama granica obowiazuje w kopii zapasowej. */
+export const MAKS_WYCEN = 5000
 
 /**
  * @typedef {typeof STATUSY_WYCENY[number]} StatusWyceny
- * @typedef {'szybka' | 'dokladna'} RodzajWyceny
+ * @typedef {typeof RODZAJE_WYCENY[number]} RodzajWyceny
  * @typedef {{ nazwa: string, adres: string, termin: string | null }} KlientWyceny
  * @typedef {{ stan: string, od: number, do: number, tryb: string }} SzybkaWyceny widelki szybkiej wyceny, z ktorej powstala dokladna
  * @typedef {{ id: string | null, nazwa: string, stawka_h: number, wsp: number }} WojewodztwoMigawki id null = srednia krajowa
@@ -27,6 +36,7 @@ export const MAKS_MINUT_WYKONANIA = 1440
  *   statusVat: StatusVat, stawkaVatProc: number, podstawaCeny: string, wizytWMiesiacu: number | null,
  *   wersjaDanych: { ceny: string, normy: string, rynek: string } }} MigawkaWyniku wynik z chwili wyceny; abonament: za wizyte
  * @typedef {{ id: string, data: string, minuty: number, tempoPlanu: number }} Wykonanie data RRRR-MM-DD
+ * @typedef {Omit<Wykonanie, 'id'> & { id?: string }} NoweWykonanie id nadaje ekran przy otwarciu (ponowny zapis tego wpisu nic nie zmienia)
  * @typedef {{ zakres: ZakresUslugi | null, warunki: WarunekOferty[] | null, waznaDo: string | null, wyslana: string | null,
  *   nieaktualna: boolean }} OfertaWyceny
  * @typedef {{ id: string, numer: string | null, utworzona: string, zmieniona: string, status: StatusWyceny, rodzaj: RodzajWyceny,
@@ -47,12 +57,14 @@ const PRZEJSCIA = Object.freeze({
   odrzucona: ['do_wyslania'],
   wykonana: [],
 })
-const RODZAJE_WYCENY = ['szybka', 'dokladna']
 const DLUGOSC_KLIENTA = Object.freeze({ nazwa: 120, adres: 200, termin: 40 })
 const POLA_KLIENTA = /** @type {const} */ (['nazwa', 'adres', 'termin'])
 const POLA_KWOT = /** @type {const} */ (['cena', 'netto', 'vat'])
 const PUSTY_KLIENT = Object.freeze({ nazwa: '', adres: '', termin: null })
-const DZIEN = /^\d{4}-\d{2}-\d{2}$/
+/** Numer `NN/MM/RRRR` nadawany przez zNumerem. */
+const NUMER_WYCENY = /^[1-9]\d*\/(0[1-9]|1[0-2])\/\d{4}$/
+/** Zlecenie jednorazowe ma w migawce null (uslugi bez wariantow) albo 1 wizyte (wariant `jednorazowe` biura); wiecej = abonament. */
+const WIZYT_ZLECENIA_JEDNORAZOWEGO = 1
 
 /** Bledna operacja na wycenie, np. `brak_wyceny`, `przejscie`, `tylko_odczyt`, `minuty`, `wynik`, `brak_wyniku`. */
 export class BladWyceny extends Error {
@@ -67,18 +79,68 @@ export class BladWyceny extends Error {
   }
 }
 
-/** @param {unknown} x @returns {x is Record<string, unknown>} */
-const jestObiektem = (x) => typeof x === 'object' && x !== null && !Array.isArray(x)
-/** @param {unknown} x @returns {x is number} */
-const jestLiczba = (x) => typeof x === 'number' && Number.isFinite(x)
 /** @param {OpcjeWycen} opcje */
 const zegar = ({ teraz = () => new Date() }) => teraz()
+/** @param {unknown} x */
+const jestNieujemna = (x) => jestLiczba(x) && x >= 0
+/** @param {unknown} x */
+const jestDodatnia = (x) => jestLiczba(x) && x > 0
+/** @param {unknown} x */
+const jestMinutamiWykonania = (x) => jestDodatnia(x) && Number(x) <= MAKS_MINUT_WYKONANIA
+/** @param {unknown} x */
+const jestWejsciem = (x) => jestObiektem(x) && typeof x.uslugaId === 'string' && x.uslugaId !== ''
+/** @param {unknown} x widelki szybkiej wyceny albo null */
+const jestSzybka = (x) => x === null || (jestObiektem(x) && typeof x.stan === 'string' && typeof x.tryb === 'string' && jestLiczba(x.od) &&
+  jestLiczba(x.do))
+/** @param {unknown} x zapisany klient: teksty w granicach DLUGOSC_KLIENTA */
+const jestKlientem = (x) => jestObiektem(x) && typeof x.nazwa === 'string' && typeof x.adres === 'string' && jestTekstemLubNull(x.termin) &&
+  POLA_KLIENTA.every((pole) => String(x[pole] ?? '').length <= DLUGOSC_KLIENTA[pole])
+/** @param {unknown} x */
+const jestWykonaniem = (x) => jestObiektem(x) && typeof x.id === 'string' && x.id !== '' && jestDniem(x.data) &&
+  jestMinutamiWykonania(x.minuty) && jestDodatnia(x.tempoPlanu)
+
+/** @param {unknown} x */
+function jestOferta(x) {
+  return jestObiektem(x) && (x.zakres === null || (jestObiektem(x.zakres) && jestListaTekstow(x.zakres.wchodzi) &&
+    jestListaTekstow(x.zakres.nie_wchodzi))) && (x.warunki === null || (Array.isArray(x.warunki) && x.warunki.every(jestWarunkiem))) &&
+    jestTekstemLubNull(x.waznaDo) && jestTekstemLubNull(x.wyslana) && typeof x.nieaktualna === 'boolean'
+}
+
+/**
+ * Migawka wyniku do zapisu i z pliku kopii: kwoty nieujemne, dodatni czas normowy, liczba wizyt null albo dodatnia (abonament 4,33).
+ * @param {unknown} x
+ * @returns {x is MigawkaWyniku}
+ */
+export function jestMigawkaWyniku(x) {
+  return jestObiektem(x) && POLA_KWOT.every((p) => jestNieujemna(x[p])) && jestLiczba(x.mediana) && jestLiczba(x.stawkaVatProc) &&
+    jestDodatnia(x.minutyNormowe) && (x.wizytWMiesiacu === null || jestDodatnia(x.wizytWMiesiacu)) && Array.isArray(x.linie) &&
+    Array.isArray(x.propozycje) && jestObiektem(x.widelki) && jestObiektem(x.dojazd) && jestObiektem(x.wojewodztwo) &&
+    typeof x.statusVat === 'string' && typeof x.podstawaCeny === 'string' && jestObiektem(x.wersjaDanych)
+}
+
+/**
+ * Zapisana wycena (stan magazynu, plik kopii); poza szkicem ma numer i wynik, tak jak nadaja je funkcje tego modulu.
+ * @param {unknown} x
+ * @returns {x is Wycena}
+ */
+export function jestWycena(x) {
+  return jestObiektem(x) && typeof x.id === 'string' && x.id !== '' && (x.numer === null || (typeof x.numer === 'string' &&
+    NUMER_WYCENY.test(x.numer))) && jestDataIso(x.utworzona) && jestDataIso(x.zmieniona) && STATUSY_WYCENY.some((s) => s === x.status) &&
+    RODZAJE_WYCENY.some((r) => r === x.rodzaj) && jestKlientem(x.klient) && jestWejsciem(x.wejscie) && jestSzybka(x.szybka) &&
+    jestObiektem(x.odpowiedzi) && (x.wynik === null || jestMigawkaWyniku(x.wynik)) && (x.cenaReczna === null || jestDodatnia(x.cenaReczna)) &&
+    Array.isArray(x.wykonania) && x.wykonania.every(jestWykonaniem) && jestOferta(x.oferta) &&
+    (x.status === 'szkic' || (x.numer !== null && x.wynik !== null))
+}
+
+/** @param {unknown} dane @param {string} co */
+function sprawdzDlugosc(dane, co) {
+  if (!maKrotkieTeksty(dane)) throw new BladWyceny('dlugosc', `${co}: tekst dłuższy niż ${MAKS_DLUGOSC_TEKSTU} znaków`)
+}
 
 /** @param {unknown} wejscie @returns {asserts wejscie is WejscieWyceny} */
 function sprawdzWejscie(wejscie) {
-  if (!jestObiektem(wejscie) || typeof wejscie.uslugaId !== 'string' || wejscie.uslugaId === '') {
-    throw new BladWyceny('wejscie', 'Wejście wyceny musi mieć uslugaId')
-  }
+  if (!jestWejsciem(wejscie)) throw new BladWyceny('wejscie', 'Wejście wyceny musi mieć uslugaId')
+  sprawdzDlugosc(wejscie, 'Wejście wyceny')
 }
 
 /** @param {unknown} zmiana @returns {Partial<KlientWyceny>} pola przyciete z bialych znakow */
@@ -106,21 +168,17 @@ function klientZeZmiany(zmiana) {
 
 /** @param {unknown} szybka */
 function sprawdzSzybka(szybka) {
-  if (szybka === null) return
-  if (!jestObiektem(szybka) || typeof szybka.stan !== 'string' || typeof szybka.tryb !== 'string' || !jestLiczba(szybka.od) ||
-    !jestLiczba(szybka.do)) throw new BladWyceny('szybka', 'Widełki szybkiej wyceny mają zły kształt')
+  if (!jestSzybka(szybka)) throw new BladWyceny('szybka', 'Widełki szybkiej wyceny mają zły kształt')
 }
 
 /** @param {unknown} wynik @returns {asserts wynik is MigawkaWyniku} */
 function sprawdzWynik(wynik) {
-  if (!jestObiektem(wynik)) throw new BladWyceny('wynik', 'Migawka wyniku musi być obiektem')
-  const zlaKwota = POLA_KWOT.find((p) => !jestLiczba(wynik[p]) || Number(wynik[p]) < 0)
-  if (zlaKwota) throw new BladWyceny('wynik', `Migawka wyniku: ${zlaKwota} musi być nieujemną liczbą`)
-  if (!jestLiczba(wynik.minutyNormowe) || wynik.minutyNormowe <= 0) throw new BladWyceny('wynik', 'Migawka wyniku bez czasu normowego')
-  const wizyt = wynik.wizytWMiesiacu
-  if (wizyt !== null && !(Number.isInteger(wizyt) && Number(wizyt) > 0)) throw new BladWyceny('wynik', 'Migawka wyniku: zła liczba wizyt')
-  if (!Array.isArray(wynik.linie)) throw new BladWyceny('wynik', 'Migawka wyniku bez linii')
+  if (!jestMigawkaWyniku(wynik)) throw new BladWyceny('wynik', 'Migawka wyniku ma zły kształt, ujemną kwotę, zerowy czas albo złą liczbę wizyt')
+  sprawdzDlugosc(wynik, 'Migawka wyniku')
 }
+
+/** @param {MigawkaWyniku} wynik */
+const czyAbonament = (wynik) => wynik.wizytWMiesiacu !== null && wynik.wizytWMiesiacu > WIZYT_ZLECENIA_JEDNORAZOWEGO
 
 /** @param {Wycena} w */
 function tylkoDoOdczytu(w) {
@@ -176,19 +234,23 @@ function zmienWycene(magazyn, id, opcje, fn) {
  * @returns {Wycena}
  */
 export function utworzSzkic(magazyn, dane, opcje = {}) {
-  if (!jestObiektem(dane) || !RODZAJE_WYCENY.includes(String(dane.rodzaj))) throw new BladWyceny('rodzaj', 'Rodzaj wyceny: szybka albo dokladna')
+  if (!jestObiektem(dane) || !RODZAJE_WYCENY.some((r) => r === dane.rodzaj)) throw new BladWyceny('rodzaj', 'Rodzaj wyceny: szybka albo dokladna')
   sprawdzWejscie(dane.wejscie)
   const klient = { ...PUSTY_KLIENT, ...klientZeZmiany(dane.klient ?? {}) }
   const szybka = dane.szybka ?? null
   sprawdzSzybka(szybka)
   const odpowiedzi = dane.odpowiedzi ?? {}
   if (!jestObiektem(odpowiedzi)) throw new BladWyceny('odpowiedzi', 'Odpowiedzi klienta muszą być obiektem')
+  sprawdzDlugosc({ szybka, odpowiedzi }, 'Szkic wyceny')
   const teraz = zegar(opcje).toISOString()
   /** @type {Wycena} */
   const nowa = { id: crypto.randomUUID(), numer: null, utworzona: teraz, zmieniona: teraz, status: 'szkic', rodzaj: dane.rodzaj, klient,
     wejscie: dane.wejscie, szybka, odpowiedzi, wynik: null, cenaReczna: null, wykonania: [],
     oferta: { zakres: null, warunki: null, waznaDo: null, wyslana: null, nieaktualna: false } }
-  magazyn.zmien((stan) => ({ ...stan, wyceny: [...stan.wyceny, nowa] }))
+  magazyn.zmien((stan) => {
+    if (stan.wyceny.length >= MAKS_WYCEN) throw new BladWyceny('limit_wycen', `Można zapisać najwyżej ${MAKS_WYCEN} wycen`)
+    return { ...stan, wyceny: [...stan.wyceny, nowa] }
+  })
   return nowa
 }
 
@@ -250,30 +312,31 @@ export function zmienStatus(magazyn, id, nowy, opcje = {}) {
   })
 }
 
-/** @param {unknown} data @returns {boolean} istniejacy dzien w postaci RRRR-MM-DD */
-function jestDniem(data) {
-  if (typeof data !== 'string' || !DZIEN.test(data)) return false
-  const dzien = new Date(`${data}T00:00:00Z`)
-  return !Number.isNaN(dzien.getTime()) && dzien.toISOString().startsWith(data)
+/** @param {NoweWykonanie} wpis @returns {Wykonanie} */
+function wykonanieZWpisu({ id = crypto.randomUUID(), data, minuty, tempoPlanu }) {
+  if (typeof id !== 'string' || id === '' || id.length > MAKS_DLUGOSC_TEKSTU) throw new BladWyceny('id', 'Identyfikator wpisu musi być tekstem')
+  if (!jestMinutamiWykonania(minuty)) {
+    throw new BladWyceny('minuty', `Czas pracy musi być w przedziale (0, ${MAKS_MINUT_WYKONANIA}] min, jest ${minuty}`)
+  }
+  if (!jestDniem(data)) throw new BladWyceny('data', `Data wykonania musi mieć postać RRRR-MM-DD, jest ${data}`)
+  if (!jestDodatnia(tempoPlanu)) throw new BladWyceny('tempo', `Tempo planu musi być dodatnie, jest ${tempoPlanu}`)
+  return { id, data, minuty, tempoPlanu }
 }
 
 /**
  * Wpis faktycznego czasu przyjetego zlecenia (R16): jednorazowe → `wykonana`, abonament zostaje `przyjeta` i zbiera wizyty.
- * @param {Magazyn} magazyn @param {string} id @param {Omit<Wykonanie, 'id'>} wpis @param {OpcjeWycen} [opcje]
+ * Wpis z `id`, ktory wycena juz ma (podwojne „Zapisz”), niczego nie zmienia i zwraca biezacy stan.
+ * @param {Magazyn} magazyn @param {string} id @param {NoweWykonanie} wpis @param {OpcjeWycen} [opcje]
  * @returns {Stan}
  */
-export function dodajWykonanie(magazyn, id, { data, minuty, tempoPlanu }, opcje = {}) {
-  if (!jestLiczba(minuty) || minuty <= 0 || minuty > MAKS_MINUT_WYKONANIA) {
-    throw new BladWyceny('minuty', `Czas pracy musi być w przedziale (0, ${MAKS_MINUT_WYKONANIA}] min, jest ${minuty}`)
-  }
-  if (!jestDniem(data)) throw new BladWyceny('data', `Data wykonania musi mieć postać RRRR-MM-DD, jest ${data}`)
-  if (!jestLiczba(tempoPlanu) || tempoPlanu <= 0) throw new BladWyceny('tempo', `Tempo planu musi być dodatnie, jest ${tempoPlanu}`)
-  /** @type {Wykonanie} */
-  const wykonanie = { id: crypto.randomUUID(), data, minuty, tempoPlanu }
+export function dodajWykonanie(magazyn, id, wpis, opcje = {}) {
+  const wykonanie = wykonanieZWpisu(wpis)
+  const obecny = magazyn.wczytaj()
+  if ('stan' in obecny && wycena(obecny.stan, id)?.wykonania.some((w) => w.id === wykonanie.id)) return obecny.stan
   return zmienWycene(magazyn, id, opcje, (w) => {
     tylkoDoOdczytu(w)
     if (w.status !== 'przyjeta') throw new BladWyceny('przejscie', `Czas pracy wpisuje się do przyjętej wyceny, ta ma status ${w.status}`)
-    const status = wymagajWyniku(w).wizytWMiesiacu === null ? 'wykonana' : 'przyjeta'
+    const status = czyAbonament(wymagajWyniku(w)) ? 'przyjeta' : 'wykonana'
     return { wycena: { ...w, status, wykonania: [...w.wykonania, wykonanie] } }
   })
 }

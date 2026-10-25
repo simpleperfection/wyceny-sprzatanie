@@ -125,8 +125,8 @@ Zależy od: Faza 1
 - [x] Test: [Unit] `pominKreator` daje status VAT „zwolniony”, tempo ręczne null, województwo null, a `brakujeUstawien` zwraca `['wojewodztwo', 'firma']`
 - [x] Test: [Unit] NIP `5260250274` przechodzi, `5260250275` daje błąd; telefon `600 123 456` i `+48600123456` przechodzą, `12345` daje błąd
 - [x] Test: [Unit] `scalKoszty` nadpisuje `chemia_h` z ustawień i zostawia pozostałe wartości z `data/ceny.json`
-- [ ] Weryfikacja: `node --test src/dane/magazyn.test.js src/dane/ustawienia.test.js src/dane/walidacja.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `node --test src/dane/magazyn.test.js src/dane/ustawienia.test.js src/dane/walidacja.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-7: Wyceny, zlecenia i własne tempo (feature-builder-data)
 
@@ -142,8 +142,8 @@ Zależy od: Faza 1
 - [x] Test: [Unit] wpis 3,5× zapisuje się z `liczony: false` i nie zmienia mediany; z 12 wpisów liczy się 10 najnowszych
 - [x] Test: [Unit] trzy wpisy usługi `okna` i dwa innej usługi: dla `okna` zakres `usluga`, dla innej `wspolne` z pięciu wpisów
 - [x] Test: [Unit] `tempo.reczne = 1,5` wygrywa z tempem z zleceń; `opisTempa` daje „1,18× z 7 zleceń”
-- [ ] Weryfikacja: `node --test src/dane/wyceny.test.js src/silnik/tempo.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `node --test src/dane/wyceny.test.js src/silnik/tempo.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-8: Kopia zapasowa: eksport, import i przypomnienie (feature-builder-data)
 
@@ -156,9 +156,13 @@ Zależy od: Faza 1
 - [x] Test: [Unit] `polacz`: wycena o tym samym `id` z nowszą datą w pliku zastępuje lokalną, starsza zostaje lokalna, nowe dochodzą; licznik numerów bierze maksimum
 - [x] Test: [Unit] `zastap` usuwa wyceny spoza pliku
 - [x] Test: [Unit] przypomnienie: kopia sprzed 8 dni i zmiana po niej → true; ta sama przy `przypomnienieKopiiDni: 14` → false; kopia sprzed 8 dni bez zmian → false; brak kopii i wycena sprzed 7 dni → true; same szkice → false
-- [ ] Weryfikacja: `node --test src/dane/kopia.test.js` przechodzi
-- [ ] Weryfikacja: `npm test` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `node --test src/dane/kopia.test.js` przechodzi
+- [x] Weryfikacja: `npm test` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+
+## Do poprawy po review fazy 2
+
+Zamkniete cyklem fix: 16 pozycji — pelna tresc findingow i uzasadnienia w `review-faza-2.md`.
 
 ## Faza 3 — Szkielet aplikacji, start, ustawienia i kopia
 
