@@ -217,10 +217,11 @@
     {
       "numer": 5,
       "nazwa": "Zlecenia, szybka wycena i pytania do klienta",
-      "execute": "pending",
+      "execute": "done",
       "review": "pending",
       "fix": "none",
-      "otwarteFindingi": []
+      "otwarteFindingi": [],
+      "baza": "db3275d3d69cb299855525b55a019a77ff771a3c"
     },
     {
       "numer": 6,
