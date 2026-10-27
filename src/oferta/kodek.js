@@ -1,6 +1,8 @@
 // Oferta zakodowana w linku bez serwera (R22): fragment `#v1.<base64url(deflate-raw(JSON UTF-8))>`, ktorego przegladarka
 // nie wysyla na serwer. Link moze sfabrykowac kazdy, wiec dekoder ogranicza rozmiar wejscia i wyniku i sprawdza scisle schemat
-// oferty (dozwolone klucze, typy, dlugosci tekstow i list, kwoty skonczone i nieujemne). Bez DOM i bez magazynu.
+// oferty (dozwolone klucze, typy, dlugosci tekstow i list, kwoty skonczone i nieujemne). Bez DOM i bez zapisu w magazynie: z
+// dane/magazyn.js bierze tylko straznik statusu VAT, a z tresc.js liste TRYBY_CENY, wiec strona klienta laduje tez te moduly
+// i ich importy (m.in. dane/wyceny.js, silnik/szybka.js, ui/format.js).
 
 import { GRANICE_OFERTY, jestDniem, jestObiektem, maKlucze, POLA_FIRMY, POLA_ZAKRESU } from '../dane/ksztalt.js'
 import { jestStatusemVat } from '../dane/magazyn.js'
