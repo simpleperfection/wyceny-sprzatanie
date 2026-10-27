@@ -1,9 +1,38 @@
 // Uruchomienie narzedzia bramki z pomiarem czasu i sufitem; typ wyniku bramki wspolny dla wszystkich modulow.
 
 import { spawnSync } from 'node:child_process'
+import { existsSync, readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 
 // Raport ESLint/knip/Strykera na duzym projekcie ma kilka MB JSON.
 const BUFOR_WYJSCIA = 64 * 1024 * 1024
+
+// Windows (wyceny-sprzatanie, 2026-10-27): node_modules/.bin/<narzedzie> to skrypt sh z nakladkami .cmd i .ps1 obok, a `npm`
+// to npm.cmd. spawnSync bez powloki ich nie uruchomi (ENOENT, `.cmd` daje EINVAL), a `shell: true` przepuscilby argumenty
+// (sciezki plikow fazy) przez cmd.exe. Dlatego skrypt pakietu wskazany w nakladce .cmd (cmd-shim npm i pnpm) i npm-cli.js
+// z instalacji Node biegna w tym samym Node co bramki. Na innych systemach polecenie bez zmian.
+const NA_WINDOWS = process.platform === 'win32'
+// `"%_prog%"  "%dp0%\..\typescript\bin\tsc" %*` (npm) albo `node  "%~dp0\..\typescript\bin\tsc" %*` (pnpm).
+const SKRYPT_NAKLADKI = /(?:"%_prog%"|node(?:\.exe)?"?)\s+"%~?dp0%?\\([^"]+)"\s+%\*/
+
+/**
+ * @param {string} bin
+ * @param {string[]} argumenty
+ * @returns {[string, string[]]}
+ */
+function polecenie(bin, argumenty) {
+  if (!NA_WINDOWS) return [bin, argumenty]
+  const skrypt = bin === 'npm' ? join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js') : skryptNakladki(bin)
+  return skrypt && existsSync(skrypt) ? [process.execPath, [skrypt, ...argumenty]] : [bin, argumenty]
+}
+
+/** @param {string} bin @returns {string | null} */
+function skryptNakladki(bin) {
+  const nakladka = `${bin}.cmd`
+  if (!existsSync(nakladka)) return null
+  const m = SKRYPT_NAKLADKI.exec(readFileSync(nakladka, 'utf8'))
+  return m ? join(dirname(bin), m[1]) : null
+}
 
 /** @typedef {{ plik: string | null, linia: number | null, regula: string, opis: string }} Trafienie */
 /**
@@ -21,7 +50,7 @@ const BUFOR_WYJSCIA = 64 * 1024 * 1024
  */
 export function uruchom(bin, argumenty, o) {
   const start = performance.now()
-  const p = spawnSync(bin, argumenty, {
+  const p = spawnSync(...polecenie(bin, argumenty), {
     cwd: o.cwd,
     env: o.env ?? process.env,
     encoding: 'utf8',
