@@ -17,6 +17,7 @@ import { widokKreatoraStartowego } from './kreator-startowy.js'
 import { widokKreatoraUslugi } from './kreator-usluga.js'
 import { widokKreatora } from './kreator-wspolne.js'
 import { widokListyWycen } from './lista-wycen.js'
+import { widokOferty } from './oferta-edycja.js'
 import { widokPodsumowaniaKreatora, widokZapisanejWyceny } from './podsumowanie.js'
 import { widokPytan } from './pytania.js'
 import { widokStartu } from './start.js'
@@ -64,6 +65,7 @@ export const WIDOKI = Object.freeze({
     cena: widokPodsumowaniaKreatora }, NIE_MA_EKRANU),
   wycena: widokZapisanejWyceny,
   zakonczenie: widokZakonczeniaZlecenia,
+  oferta: widokOferty,
   szybka: widokSzybkiejWyceny,
   pytania: widokPytan,
   nieZnaleziono: NIE_MA_EKRANU,

@@ -17,7 +17,9 @@
 /** Nazwa ikony Tabler → atrybuty `d` kolejnych elementow `<path>`. */
 export const IKONY = Object.freeze({
   'alert-triangle': ['M12 9v4', 'M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0', 'M12 16h.01'],
+  'arrow-down': ['M12 5l0 14', 'M18 13l-6 6', 'M6 13l6 6'],
   'arrow-left': ['M5 12l14 0', 'M5 12l6 6', 'M5 12l6 -6'],
+  'arrow-up': ['M12 5l0 14', 'M18 11l-6 -6', 'M6 11l6 -6'],
   'bolt': ['M13 3l0 7l6 0l-8 11l0 -7l-6 0l8 -11'],
   'briefcase': ['M3 9a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2l0 -9', 'M8 7v-2a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v2', 'M12 12l0 .01', 'M3 13a20 20 0 0 0 18 0'],
   'building-store': ['M3 21l18 0', 'M3 7v1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1h-18l2 -4h14l2 4', 'M5 21l0 -10.15', 'M19 21l0 -10.15', 'M9 21v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4'],

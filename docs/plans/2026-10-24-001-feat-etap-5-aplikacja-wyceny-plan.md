@@ -1364,7 +1364,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 
 **Zależy od:** Faza 5
 
-- [ ] **IU-22: Treść oferty, kodowanie linku i nadpisania zakresu i warunków**
+- [x] **IU-22: Treść oferty, kodowanie linku i nadpisania zakresu i warunków**
 
 **Cel:** Oferta z wyceny z białą listą pól, zakresem, warunkami i ważnością, zakodowana w linku bez serwera, oraz zapis nadpisań zakresu i warunków w ustawieniach i w wycenie.
 
@@ -1402,7 +1402,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - `src/dane/kopia.js` (IU-8) — walidacja danych z zewnątrz i kody błędów
 
 **Scenariusze testowe:**
-- [Unit] oferta z wyceny mieszkania z ręczną ceną 290 zł i dojazdem 4 zł: `uslugi[0].kwota` 290, `dojazd` 4, `razem` 294 (od = do)
+- [Unit] oferta z wyceny mieszkania z ręczną ceną 290 zł i dojazdem 4 zł: `uslugi[0].kwota` 290, `dojazd` 4, `razem` 294 (od = do) — korekta z fazy 6: ręczna cena to kwota „razem” z dojazdem (jak `cenaKlienta` w `src/kreator/podsumowanie.js`), więc test podaje ręczną 294 (usługa 290 + dojazd 4), a ręczna 290 daje usługę 286 + dojazd 4
 - [Unit] `JSON.stringify(oferta)` nie zawiera kluczy `zostaje`, `tempo`, `koszt`, `minuty`, `chemia` ani `sprzet` (R21)
 - [Unit] zakres z wyceny wygrywa z ustawieniami, a ustawień z `data/zakresy.json`; warunek `stan_lokalu` jest tylko w ofercie z szybkiej wyceny
 - [Unit] ważność: oferta z 24.10.2026 jest ważna 7.11.2026 i nieważna 8.11.2026
@@ -1416,7 +1416,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - `npm test` przechodzi
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-23: Edycja oferty oraz zakres prac i warunki w ustawieniach**
+- [x] **IU-23: Edycja oferty oraz zakres prac i warunki w ustawieniach**
 
 **Cel:** Ekran przygotowania oferty z wyceny (firma, klient i termin, zakres, dodatki do zaproponowania, warunki, ważność, link i PDF) i sekcje „Zakres prac” i „Warunki oferty” w ustawieniach.
 
@@ -1475,7 +1475,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 **Operator checklist:**
 - [ ] Właściciel przygotowuje ofertę z prawdziwej wyceny, wysyła link do siebie przez SMS i komunikator i otwiera go na drugim telefonie
 
-- [ ] **IU-24: Strona oferty dla klienta i wydruk A4**
+- [x] **IU-24: Strona oferty dla klienta i wydruk A4**
 
 **Cel:** Strona `oferta.html` otwierana z linku bez logowania (oferta ważna, po terminie, uszkodzony link, stara przeglądarka) i wersja do druku A4.
 

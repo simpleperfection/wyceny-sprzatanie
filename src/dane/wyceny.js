@@ -3,9 +3,10 @@
 // Straznik jestWycena jest jedynym opisem zapisanej wyceny: uzywa go zapis tutaj i kopia zapasowa (eksport i odczyt pliku).
 
 import {
-  jestDataIso, jestDniem, jestListaTekstow, jestLiczba, jestObiektem, jestTekstemLubNull, jestWarunkiem, MAKS_DLUGOSC_TEKSTU, MAKS_ZAGLEBIENIE,
-  maKrotkieTeksty,
+  jestDataIso, jestDniem, jestLiczba, jestObiektem, jestTekstemLubNull, jestWarunkamiOferty, jestZakresemOferty, MAKS_DLUGOSC_TEKSTU,
+  MAKS_ZAGLEBIENIE, maKrotkieTeksty,
 } from './ksztalt.js'
+import { warunkiZeZmiany, zakresZeZmiany } from './ustawienia.js'
 import { STANY_SZYBKIEJ, TRYBY_SZYBKIEJ } from '../silnik/szybka.js'
 
 /** @typedef {import('./magazyn.js').Magazyn} Magazyn */
@@ -68,6 +69,7 @@ const DLUGOSC_KLIENTA = Object.freeze({ nazwa: 120, adres: 200, termin: 40 })
 const POLA_KLIENTA = /** @type {const} */ (['nazwa', 'adres', 'termin'])
 const POLA_KWOT = /** @type {const} */ (['cena', 'netto', 'vat'])
 const PUSTY_KLIENT = Object.freeze({ nazwa: '', adres: '', termin: null })
+const POLA_ZMIANY_OFERTY = /** @type {const} */ (['zakres', 'warunki', 'waznaDo', 'klient'])
 /** Numer `NN/MM/RRRR` nadawany przez zNumerem. */
 const NUMER_WYCENY = /^[1-9]\d*\/(0[1-9]|1[0-2])\/\d{4}$/
 /** Zlecenie jednorazowe ma w migawce null (uslugi bez wariantow) albo 1 wizyte (wariant `jednorazowe` biura); wiecej = abonament. */
@@ -111,9 +113,8 @@ const jestWykonaniem = (x) => jestObiektem(x) && typeof x.id === 'string' && x.i
 
 /** @param {unknown} x */
 function jestOferta(x) {
-  return jestObiektem(x) && (x.zakres === null || (jestObiektem(x.zakres) && jestListaTekstow(x.zakres.wchodzi) &&
-    jestListaTekstow(x.zakres.nie_wchodzi))) && (x.warunki === null || (Array.isArray(x.warunki) && x.warunki.every(jestWarunkiem))) &&
-    jestTekstemLubNull(x.waznaDo) && jestTekstemLubNull(x.wyslana) && typeof x.nieaktualna === 'boolean'
+  return jestObiektem(x) && (x.zakres === null || jestZakresemOferty(x.zakres)) && (x.warunki === null || jestWarunkamiOferty(x.warunki)) &&
+    (x.waznaDo === null || jestDniem(x.waznaDo)) && (x.wyslana === null || jestDataIso(x.wyslana)) && typeof x.nieaktualna === 'boolean'
 }
 
 /**
@@ -380,6 +381,66 @@ export function zmienStatus(magazyn, id, nowy, opcje = {}) {
     if (w.status !== 'szkic') return { wycena: { ...w, status: nowy } }
     wymagajWyniku(w)
     return zNumerem({ ...w, status: nowy }, stan.licznikNumerow, teraz)
+  })
+}
+
+/** @param {Wycena} w */
+function wymagajZapisanej(w) {
+  if (w.status === 'szkic') throw new BladWyceny('przejscie', `Ofertę przygotowuje się z zapisanej wyceny, ${w.id} jest szkicem`)
+}
+
+/**
+ * @param {unknown} zmiana
+ * @returns {{ zakres?: ZakresUslugi | null, warunki?: WarunekOferty[] | null, waznaDo?: string | null, klient: Partial<KlientWyceny> }}
+ */
+function zmianaOferty(zmiana) {
+  if (!jestObiektem(zmiana)) throw new BladWyceny('oferta', 'Zmiana oferty musi być obiektem')
+  const nieznane = Object.keys(zmiana).find((klucz) => !POLA_ZMIANY_OFERTY.some((pole) => pole === klucz))
+  if (nieznane !== undefined) throw new BladWyceny('oferta', `Nieznane pole oferty: ${nieznane}`)
+  const { zakres, warunki, waznaDo, klient } = zmiana
+  if (waznaDo !== undefined && waznaDo !== null && !jestDniem(waznaDo)) {
+    throw new BladWyceny('wazna_do', `Data ważności oferty musi mieć postać RRRR-MM-DD, jest ${String(waznaDo)}`)
+  }
+  return {
+    ...(zakres === undefined ? {} : { zakres: zakres === null ? null : zakresZeZmiany(zakres, 'oferta.zakres') }),
+    ...(warunki === undefined ? {} : { warunki: warunki === null ? null : warunkiZeZmiany(warunki, 'oferta.warunki') }),
+    ...(waznaDo === undefined ? {} : { waznaDo }),
+    klient: klient === undefined ? {} : klientZeZmiany(klient),
+  }
+}
+
+/**
+ * Oferta tylko tej wyceny (R19, R20, R18): zakres i warunki (null = wroc do ustawien albo domyslnych), data waznosci RRRR-MM-DD
+ * (null = dzis + oferta.waznosc_dni) i dane klienta. Zly zakres albo warunki daja BladUstawien (te same reguly co w ustawieniach),
+ * szkic i wykonana BladWyceny; zmiana po wyslaniu oznacza oferte jako nieaktualna.
+ * @param {Magazyn} magazyn @param {string} id
+ * @param {{ zakres?: ZakresUslugi | null, warunki?: WarunekOferty[] | null, waznaDo?: string | null, klient?: Partial<KlientWyceny> }} zmiana
+ * @param {OpcjeWycen} [opcje]
+ * @returns {Stan}
+ */
+export function zapiszOferte(magazyn, id, zmiana, opcje = {}) {
+  const { klient, ...pola } = zmianaOferty(zmiana)
+  return zmienWycene(magazyn, id, opcje, (w) => {
+    tylkoDoOdczytu(w)
+    wymagajZapisanej(w)
+    const nowa = { ...w, klient: { ...w.klient, ...klient }, oferta: { ...w.oferta, ...pola } }
+    const czyZmiana = JSON.stringify([nowa.klient, nowa.oferta]) !== JSON.stringify([w.klient, w.oferta])
+    return { wycena: czyZmiana ? { ...nowa, oferta: nieaktualnaPoWyslaniu(nowa) } : w }
+  })
+}
+
+/**
+ * Oferta trafila do klienta (skopiowany albo udostepniony link, otwarta do druku): `do_wyslania` → `wyslana`, data wyslania
+ * = teraz, oferta znow aktualna; przyjeta, odrzucona i juz wyslana zostaja w swoim statusie. Szkic i wykonana daja BladWyceny.
+ * @param {Magazyn} magazyn @param {string} id @param {OpcjeWycen} [opcje]
+ * @returns {Stan}
+ */
+export function oznaczWyslana(magazyn, id, opcje = {}) {
+  return zmienWycene(magazyn, id, opcje, (w, _stan, teraz) => {
+    tylkoDoOdczytu(w)
+    wymagajZapisanej(w)
+    const status = w.status === 'do_wyslania' ? 'wyslana' : w.status
+    return { wycena: { ...w, status, oferta: { ...w.oferta, wyslana: teraz.toISOString(), nieaktualna: false } } }
   })
 }
 

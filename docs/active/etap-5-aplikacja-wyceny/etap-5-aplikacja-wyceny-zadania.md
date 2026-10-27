@@ -445,34 +445,34 @@ Zależy od: Faza 5
 
 ### IU-22: Treść oferty, kodowanie linku i nadpisania zakresu i warunków (feature-builder-data)
 
-- [ ] Stwórz: `src/oferta/tresc.js`
-- [ ] Stwórz: `src/oferta/kodek.js`
-- [ ] Modyfikuj: `src/dane/ustawienia.js`
-- [ ] Modyfikuj: `src/dane/wyceny.js`
-- [ ] Modyfikuj: `sw.js`
-- [ ] Test (unit): `src/oferta/tresc.test.js`
-- [ ] Test (unit): `src/oferta/kodek.test.js`
-- [ ] Test: [Unit] oferta z wyceny mieszkania z ręczną ceną 290 zł i dojazdem 4 zł: `uslugi[0].kwota` 290, `dojazd` 4, `razem` 294 (od = do)
-- [ ] Test: [Unit] `JSON.stringify(oferta)` nie zawiera kluczy `zostaje`, `tempo`, `koszt`, `minuty`, `chemia` ani `sprzet` (R21)
-- [ ] Test: [Unit] zakres z wyceny wygrywa z ustawieniami, a ustawień z `data/zakresy.json`; warunek `stan_lokalu` jest tylko w ofercie z szybkiej wyceny
-- [ ] Test: [Unit] ważność: oferta z 24.10.2026 jest ważna 7.11.2026 i nieważna 8.11.2026
-- [ ] Test: [Unit] `zakodujOferte` → `odkodujOferte` zwraca tę samą ofertę; typowa oferta (fixture z 8 liniami zakresu i 4 warunkami) ma link krótszy niż 2000 znaków
-- [ ] Test: [Unit] fragment obcięty o 10 znaków, `v9.…` i JSON z kluczem spoza schematu albo tekstem 600 znaków dają `ok: false` z powodem `uszkodzony`, `wersja`, `uszkodzony`
-- [ ] Test: [Unit] `sprawdzZakresy` na prawdziwym `data/zakresy.json` zwraca pustą listę
-- [ ] Test: [Unit] `oznaczWyslana` zmienia status z `do_wyslania` na `wyslana` i kasuje `nieaktualna`
+- [x] Stwórz: `src/oferta/tresc.js`
+- [x] Stwórz: `src/oferta/kodek.js`
+- [x] Modyfikuj: `src/dane/ustawienia.js`
+- [x] Modyfikuj: `src/dane/wyceny.js`
+- [x] Modyfikuj: `sw.js`
+- [x] Test (unit): `src/oferta/tresc.test.js`
+- [x] Test (unit): `src/oferta/kodek.test.js`
+- [x] Test: [Unit] oferta z wyceny mieszkania z ręczną ceną 290 zł i dojazdem 4 zł: `uslugi[0].kwota` 290, `dojazd` 4, `razem` 294 (od = do)
+- [x] Test: [Unit] `JSON.stringify(oferta)` nie zawiera kluczy `zostaje`, `tempo`, `koszt`, `minuty`, `chemia` ani `sprzet` (R21)
+- [x] Test: [Unit] zakres z wyceny wygrywa z ustawieniami, a ustawień z `data/zakresy.json`; warunek `stan_lokalu` jest tylko w ofercie z szybkiej wyceny
+- [x] Test: [Unit] ważność: oferta z 24.10.2026 jest ważna 7.11.2026 i nieważna 8.11.2026
+- [x] Test: [Unit] `zakodujOferte` → `odkodujOferte` zwraca tę samą ofertę; typowa oferta (fixture z 8 liniami zakresu i 4 warunkami) ma link krótszy niż 2000 znaków
+- [x] Test: [Unit] fragment obcięty o 10 znaków, `v9.…` i JSON z kluczem spoza schematu albo tekstem 600 znaków dają `ok: false` z powodem `uszkodzony`, `wersja`, `uszkodzony`
+- [x] Test: [Unit] `sprawdzZakresy` na prawdziwym `data/zakresy.json` zwraca pustą listę
+- [x] Test: [Unit] `oznaczWyslana` zmienia status z `do_wyslania` na `wyslana` i kasuje `nieaktualna`
 - [ ] Weryfikacja: `node --test src/oferta/tresc.test.js src/oferta/kodek.test.js` przechodzi
 - [ ] Weryfikacja: `npm test` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-23: Edycja oferty oraz zakres prac i warunki w ustawieniach (feature-builder-ui)
 
-- [ ] Stwórz: `src/widoki/oferta-edycja.js`
-- [ ] Stwórz: `src/widoki/oferta-edycja-sekcje.js`
-- [ ] Stwórz: `src/widoki/edytor-listy.js`
-- [ ] Stwórz: `src/widoki/ustawienia-oferta.js`
-- [ ] Modyfikuj: `src/widoki/ustawienia.js`
-- [ ] Modyfikuj: `src/widoki/podsumowanie.js`
-- [ ] Modyfikuj: `src/widoki/indeks.js`
+- [x] Stwórz: `src/widoki/oferta-edycja.js`
+- [x] Stwórz: `src/widoki/oferta-edycja-sekcje.js`
+- [x] Stwórz: `src/widoki/edytor-listy.js`
+- [x] Stwórz: `src/widoki/ustawienia-oferta.js`
+- [x] Modyfikuj: `src/widoki/ustawienia.js`
+- [x] Modyfikuj: `src/widoki/podsumowanie.js`
+- [x] Modyfikuj: `src/widoki/indeks.js`
 - [ ] Test: [E2E] `oferta-link` — okno 360×800, wstrzyknij `e2e/stany/wyceny-do-zrobienia.json`, otwórz wycenę „Do wysłania”, kliknij „Przygotuj ofertę”, wpisz klienta „Marzena Wróbel”, w „Zakres prac” kliknij „Edytuj” i usuń jeden punkt „W cenie”, kliknij „Kopiuj link”, odczytaj link przez `agent-browser eval "navigator.clipboard.readText()"` i otwórz go w nowej karcie → „Link skopiowany”, status wyceny „Wysłana”, oferta pokazuje „Marzena Wróbel”, nazwę firmy, kwotę i zakres bez usuniętego punktu, a tekst strony nie zawiera „Zostaje”, „tempo” ani „Koszt zlecenia”
 - [ ] Test: [E2E] `oferta-brak-danych-firmy` — wyczyść localStorage, pomiń kreator, utwórz i zapisz wycenę okien, kliknij „Przygotuj ofertę” → baner „Uzupełnij nazwę firmy i telefon…”, „Kopiuj link” nieaktywny
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
@@ -480,13 +480,13 @@ Zależy od: Faza 5
 
 ### IU-24: Strona oferty dla klienta i wydruk A4 (feature-builder-ui)
 
-- [ ] Stwórz: `oferta.html`
-- [ ] Stwórz: `src/oferta-start.js`
-- [ ] Stwórz: `src/widoki/oferta-klient.js`
-- [ ] Stwórz: `src/style/oferta.css`
-- [ ] Stwórz: `src/style/druk.css`
-- [ ] Modyfikuj: `sw.js`
-- [ ] Stwórz: `e2e/stany/oferta-po-terminie.txt`
+- [x] Stwórz: `oferta.html`
+- [x] Stwórz: `src/oferta-start.js`
+- [x] Stwórz: `src/widoki/oferta-klient.js`
+- [x] Stwórz: `src/style/oferta.css`
+- [x] Stwórz: `src/style/druk.css`
+- [x] Modyfikuj: `sw.js`
+- [x] Stwórz: `e2e/stany/oferta-po-terminie.txt`
 - [ ] Test: [E2E] `oferta-po-terminie` — otwórz http://localhost:5174/oferta.html# z treścią `e2e/stany/oferta-po-terminie.txt`, zrób screenshot → baner „Oferta była ważna do 1 października 2026…” nad dokumentem z danymi firmy i kwotą
 - [ ] Test: [E2E] `oferta-uszkodzony-link` — otwórz http://localhost:5174/oferta.html#v1.zepsute → tylko komunikat „Ten link do oferty jest niepełny albo uszkodzony…”, konsola bez nieobsłużonych błędów, `localStorage.length` w eval równe 0
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów

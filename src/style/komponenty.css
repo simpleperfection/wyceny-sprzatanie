@@ -2244,3 +2244,266 @@ p.pytanie__odpowiedz {
 .pytania__stopka .przycisk {
   flex: 1;
 }
+
+/* Edycja oferty i sekcje oferty w ustawieniach (src/widoki/oferta-edycja.js, oferta-edycja-sekcje.js, edytor-listy.js,
+   ustawienia-oferta.js; makiety oferta-edycja, ustawienia-firmy) */
+.karta-oferty {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.karta-oferty > .karta__tytul,
+.karta-oferty__gora .karta__tytul {
+  margin-bottom: 0;
+}
+
+.karta-oferty__gora {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.karta-oferty__gora .przycisk--tekstowy {
+  flex: none;
+  min-height: var(--cel-dotyku);
+  padding-block: 0;
+  font-size: var(--tekst-podstawowy);
+}
+
+.karta-oferty__gora .przycisk--tekstowy .ikona {
+  width: 16px;
+  height: 16px;
+}
+
+.karta-oferty__firma {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.karta-oferty__kontakt,
+.karta-oferty__pusto {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.karta-oferty__podtytul {
+  font-size: var(--tekst-maly);
+  font-weight: 600;
+  color: var(--tekst-drugi);
+}
+
+.karta-oferty__notka {
+  font-size: var(--tekst-drobny);
+  color: var(--tekst-trzeci);
+  text-wrap: pretty;
+}
+
+.karta-oferty__przywroc:empty,
+.karta-oferty__komunikat:empty {
+  display: none;
+}
+
+.karta-oferty > .przycisk--tekstowy,
+.karta-oferty__przywroc .przycisk--tekstowy {
+  align-self: flex-start;
+}
+
+.karta-oferty .wiersz {
+  padding-inline: 0;
+  border-top: 1px solid var(--linia-podzial);
+}
+
+.karta-oferty .wiersz__tresc {
+  flex: none;
+}
+
+.karta-oferty .wiersz__wartosc {
+  flex: 1;
+  font-weight: 700;
+  text-align: right;
+}
+
+.lista-punktow,
+.lista-dodatkow,
+.edytor-listy__lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lista-punktow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lista-punktow__punkt {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-wrap: pretty;
+}
+
+.lista-punktow__znak {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+}
+
+.lista-punktow--w-cenie .lista-punktow__znak {
+  color: var(--marka-zielen);
+}
+
+.lista-punktow--poza-cena {
+  color: var(--tekst-drugi);
+}
+
+.lista-punktow--poza-cena .lista-punktow__znak,
+.lista-punktow--warunek .lista-punktow__znak {
+  color: var(--tekst-trzeci);
+}
+
+.lista-punktow__opis {
+  display: block;
+  font-size: var(--tekst-drobny);
+  color: var(--tekst-trzeci);
+}
+
+.lista-dodatkow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lista-dodatkow__wiersz {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lista-dodatkow__kwota {
+  flex: none;
+  font-weight: 700;
+}
+
+.edytor-listy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.edytor-listy__etykieta {
+  font-size: var(--tekst-maly);
+  font-weight: 600;
+  color: var(--tekst-drugi);
+}
+
+.edytor-listy__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.edytor-listy__wiersz {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.edytor-listy__pole {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--cel-dotyku);
+  padding: 10px 12px;
+  border: 1px solid var(--tekst-trzeci);
+  border-radius: var(--promien-przycisk);
+  background: var(--tlo-karta);
+  font: inherit;
+  font-size: 16px;
+  resize: vertical;
+  field-sizing: content;
+}
+
+.edytor-listy__przyciski {
+  display: flex;
+  flex: none;
+}
+
+.edytor-listy__przycisk {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: var(--cel-dotyku);
+  border: 0;
+  border-radius: var(--promien-przycisk);
+  background: none;
+  color: var(--tekst-drugi);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.edytor-listy__przycisk:hover:not(:disabled) {
+  background: var(--tlo-strona);
+}
+
+.edytor-listy__przycisk:disabled {
+  color: var(--linia-obrys);
+  cursor: not-allowed;
+}
+
+.edytor-listy__przycisk .ikona {
+  width: 18px;
+  height: 18px;
+}
+
+.edytor-listy__dodaj {
+  align-self: flex-start;
+  font-size: var(--tekst-podstawowy);
+}
+
+.oferta-edycja__banery,
+.oferta-edycja__komunikat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.oferta-edycja__banery:empty,
+.oferta-edycja__komunikat:empty {
+  display: none;
+}
+
+.oferta-edycja__link {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+  overflow-wrap: anywhere;
+}
+
+.oferta-edycja__stopka .przycisk:first-child {
+  flex: 0 0 32%;
+}
+
+.oferta-edycja__stopka .przycisk[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ustawienia-oferta__edytory {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Dlugie nazwy uslug: nazwa sie zawija, a stan zakresu („domyślny”, „zmieniony”) zostaje w calosci przy strzalce. */
+.karta-zakresow .wiersz__tresc {
+  flex: 1;
+  min-width: 0;
+}
+
+.karta-zakresow .wiersz__wartosc {
+  flex: none;
+}

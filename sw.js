@@ -1,4 +1,4 @@
-// Service worker aplikacji (R28): nawigacja (index.html) najpierw z sieci (limit 4 s), potem z pamieci podrecznej;
+// Service worker aplikacji (R28): nawigacja (index.html, oferta.html) najpierw z sieci (limit 4 s), potem z pamieci podrecznej;
 // wszystkie pliki poza nawigacja (src/, data/, style/, fonty/, ikony/, manifest) od razu z pamieci, odswiezane w tle
 // (stale-while-revalidate). Moduly src/ i data/*.json odswiezaja sie tym samym trybem, wiec nowa wersja kodu i danych
 // dziala razem od nastepnego uruchomienia, bez startu starego kodu z nowymi danymi.
@@ -13,10 +13,11 @@ const LIMIT_ZAPISU_W_TLE_MS = 30000
 const MAKS_ZASOBOW = 300
 const KOMUNIKAT_ZASOBOW = 'zapisz-zasoby'
 const STRONA_ZAPASOWA = 'index.html'
-// Tylko pliki, ktore istnieja; kolejne fazy dopisuja swoje (np. oferta.html).
+// Tylko pliki, ktore istnieja. oferta.html jest tu dla aplikacji wlasciciela; strona oferty sama workera nie rejestruje.
 const PLIKI_STARTOWE = [
   './',
   'index.html',
+  'oferta.html',
   'manifest.webmanifest',
   'data/ceny.json',
   'data/normy.json',
@@ -24,6 +25,7 @@ const PLIKI_STARTOWE = [
   'data/chemia.json',
   'data/domyslne.json',
   'data/pytania.json',
+  'data/zakresy.json',
 ]
 
 class PrzekroczenieCzasu extends Error {}

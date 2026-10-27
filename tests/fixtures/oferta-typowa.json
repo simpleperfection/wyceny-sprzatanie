@@ -1,0 +1,30 @@
+{
+  "v": 1,
+  "firma": { "nazwa": "Twoja Firma Sprzątająca", "telefon": "500 000 000", "email": "biuro@twojafirma.pl", "nip": "" },
+  "numer": "15/10/2026",
+  "data": "2026-10-24",
+  "waznaDo": "2026-11-07",
+  "klient": { "nazwa": "Anna Kowalska", "adres": "ul. Przykładowa 1, 00-001 Warszawa", "termin": "14 listopada, 9:00" },
+  "uslugi": [{ "opis": "Mieszkanie lub dom – sprzątanie standardowe, 50 m²", "kwota": 290 }],
+  "dojazd": 4,
+  "razem": { "od": 294, "do": 294 },
+  "vat": { "status": "zwolniony", "stawka": 23, "netto": 294, "kwotaVat": 0 },
+  "dodatkiOpcjonalne": [{ "opis": "Mycie okien 1-skrzydłowych (4 szt.)", "kwota": 120 }],
+  "zakres": {
+    "wchodzi": [
+      "Odkurzanie i mycie podłóg",
+      "Kurze na meblach, parapetach i drzwiach",
+      "Łazienka i WC z armaturą i lustrami",
+      "Kuchnia: blaty, fronty szafek, zlew, płyta",
+      "AGD z zewnątrz"
+    ],
+    "nie_wchodzi": ["Wnętrza szafek i AGD", "Mycie okien", "Pranie tapicerki i dywanów"]
+  },
+  "warunki": [
+    "Odwołanie zlecenia jest bezpłatne do 24 godzin przed terminem. Przy późniejszym odwołaniu opłata wynosi 50% ceny.",
+    "Jeśli w umówionym terminie nie będzie dostępu do lokalu, opłata wynosi 50% ceny.",
+    "Przed rozpoczęciem i po zakończeniu pracy robimy zdjęcia sprzątanych miejsc.",
+    "Cena została podana na podstawie opisu lokalu. Ostateczną cenę potwierdzimy po obejrzeniu lokalu lub zdjęć."
+  ],
+  "szybka": false
+}

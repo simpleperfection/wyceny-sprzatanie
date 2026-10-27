@@ -3,7 +3,9 @@
 
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
 import { sprawdzStatusVat } from '../silnik/vat.js'
-import { jestLiczba, jestObiektem, jestWarunkiem, POLA_FIRMY } from './ksztalt.js'
+import {
+  GRANICE_OFERTY, ID_WARUNKU, jestLiczba, jestObiektem, jestWarunkamiOferty, jestWarunkiem, jestZakresemOferty, POLA_FIRMY,
+} from './ksztalt.js'
 import { jestStatusemVat } from './magazyn.js'
 import { bladEmaila, bladLiczby, bladNip, bladTelefonu, bladTempa } from './walidacja.js'
 
@@ -13,6 +15,7 @@ import { bladEmaila, bladLiczby, bladNip, bladTelefonu, bladTempa } from './wali
 /** @typedef {import('./magazyn.js').Firma} Firma */
 /** @typedef {import('./magazyn.js').KosztyUstawien} KosztyUstawien */
 /** @typedef {import('./magazyn.js').WarunekOferty} WarunekOferty */
+/** @typedef {import('./magazyn.js').ZakresUslugi} ZakresUslugi */
 /** @typedef {import('../silnik/katalog.js').KosztyFirmy} KosztyFirmy */
 /** @typedef {import('../silnik/vat.js').StatusVat} StatusVat */
 /**
@@ -45,6 +48,8 @@ export const POLA_WYMAGANE_W_OFERCIE = Object.freeze(/** @type {const} */ (['naz
 const PLIK_DOMYSLNYCH = 'data/domyslne.json'
 const POLA_ZMIANY = ['wojewodztwoId', 'statusVat', 'firma', 'tempo', 'koszty', 'przypomnienieKopiiDni', 'kreatorZakonczony']
 const IDENTYFIKATOR = /^[a-z][a-z0-9_-]{0,39}$/
+const POLA_ZAKRESU = /** @type {const} */ (['wchodzi', 'nie_wchodzi'])
+const POLA_WARUNKU = /** @type {const} */ (['id', 'tresc', 'tylko_szybka'])
 
 /** Bledna zmiana ustawien: `kod` (np. `telefon`, `zakres`, `nieznane_pole`, `brak_ustawien`) i `pole` (np. `firma.telefon`). */
 export class BladUstawien extends Error {
@@ -152,8 +157,62 @@ function sprawdzZmiane(zmiana) {
  * @param {Ustawienia} ustawienia
  */
 export function sprawdzUstawienia(ustawienia) {
-  const { zakresy: _zakresy, warunki: _warunki, ...zmiana } = ustawienia
+  const { zakresy, warunki, ...zmiana } = ustawienia
   sprawdzZmiane(zmiana)
+  if (!jestObiektem(zakresy) || !Object.entries(zakresy).every(([id, z]) => IDENTYFIKATOR.test(id) && jestZakresemOferty(z))) {
+    throw new BladUstawien('wartosc', 'zakresy')
+  }
+  if (warunki !== null && !jestWarunkamiOferty(warunki)) throw new BladUstawien('wartosc', 'warunki')
+}
+
+/**
+ * Punkty listy oferty przyciete z bialych znakow: `wartosc` (nie tekst), `pusty`, `dlugosc` (ponad GRANICE_OFERTY.tekst),
+ * `za_duzo` (ponad GRANICE_OFERTY.lista).
+ * @param {unknown} lista @param {string} pole
+ * @returns {string[]}
+ */
+function punktyZListy(lista, pole) {
+  if (!Array.isArray(lista)) throw new BladUstawien('wartosc', pole)
+  if (lista.length > GRANICE_OFERTY.lista) throw new BladUstawien('za_duzo', pole)
+  return lista.map((punkt, i) => punktOferty(punkt, `${pole}.${i}`))
+}
+
+/** @param {unknown} punkt @param {string} pole @returns {string} tekst przyciety z bialych znakow */
+function punktOferty(punkt, pole) {
+  if (typeof punkt !== 'string') throw new BladUstawien('wartosc', pole)
+  const tekst = punkt.trim()
+  if (tekst === '') throw new BladUstawien('pusty', pole)
+  if (tekst.length > GRANICE_OFERTY.tekst) throw new BladUstawien('dlugosc', pole)
+  return tekst
+}
+
+/**
+ * Zakres `{ wchodzi, nie_wchodzi }` z formularza (ustawienia albo jedna oferta) po walidacji, z przycietymi punktami.
+ * @param {unknown} zakres @param {string} pole sciezka w komunikacie bledu, np. `zakresy.okna`
+ * @returns {ZakresUslugi}
+ */
+export function zakresZeZmiany(zakres, pole) {
+  sprawdzKlucze(zakres, POLA_ZAKRESU, pole)
+  return { wchodzi: punktyZListy(zakres.wchodzi, `${pole}.wchodzi`), nie_wchodzi: punktyZListy(zakres.nie_wchodzi, `${pole}.nie_wchodzi`) }
+}
+
+/**
+ * Warunki oferty z formularza (ustawienia albo jedna oferta) po walidacji: id jak w data/domyslne.json, tresc przycieta,
+ * tylko_szybka boolean, bez powtorzonego id (`powtorzone`).
+ * @param {unknown} warunki @param {string} pole
+ * @returns {WarunekOferty[]}
+ */
+export function warunkiZeZmiany(warunki, pole) {
+  if (!Array.isArray(warunki)) throw new BladUstawien('wartosc', pole)
+  if (warunki.length > GRANICE_OFERTY.lista) throw new BladUstawien('za_duzo', pole)
+  const wynik = warunki.map((w, i) => {
+    sprawdzKlucze(w, POLA_WARUNKU, `${pole}.${i}`)
+    if (typeof w.id !== 'string' || !ID_WARUNKU.test(w.id)) throw new BladUstawien('wartosc', `${pole}.${i}.id`)
+    if (typeof w.tylko_szybka !== 'boolean') throw new BladUstawien('wartosc', `${pole}.${i}.tylko_szybka`)
+    return { id: w.id, tresc: punktOferty(w.tresc, `${pole}.${i}.tresc`), tylko_szybka: w.tylko_szybka }
+  })
+  if (new Set(wynik.map((w) => w.id)).size !== wynik.length) throw new BladUstawien('powtorzone', pole)
+  return wynik
 }
 
 /**
@@ -273,12 +332,47 @@ export function brakujeUstawien(ustawienia) {
  */
 export function zapiszUstawienia(magazyn, zmiana, domyslne) {
   sprawdzZmiane(zmiana)
+  return zmienUstawienia(magazyn, domyslne, (ustawienia) => zastosujZmiane(ustawienia, zmiana))
+}
+
+/**
+ * Zmiana ustawien na swiezym stanie magazynu; bez ustawien w stanie bierze je z `domyslne`, a bez `domyslne` rzuca `brak_ustawien`.
+ * @param {Magazyn} magazyn @param {Domyslne | undefined} domyslne @param {(ustawienia: Ustawienia) => Ustawienia} fn
+ * @returns {Stan}
+ */
+function zmienUstawienia(magazyn, domyslne, fn) {
   const zDomyslnych = domyslne ? ustawieniaDomyslne(domyslne) : null
   return magazyn.zmien((stan) => {
     const baza = stan.ustawienia ?? zDomyslnych
     if (!baza) throw new BladUstawien('brak_ustawien', 'ustawienia')
-    return { ...stan, ustawienia: zastosujZmiane(baza, zmiana) }
+    return { ...stan, ustawienia: fn(baza) }
   })
+}
+
+/**
+ * Zakres prac uslugi „wchodzi / nie wchodzi” zmieniony raz w ustawieniach dla wszystkich ofert tej uslugi (R19); null wraca
+ * do zakresu z data/zakresy.json. Zly zakres daje BladUstawien (zakresZeZmiany) i nic nie zapisuje.
+ * @param {Magazyn} magazyn @param {string} uslugaId @param {ZakresUslugi | null} zakres @param {Domyslne} [domyslne]
+ * @returns {Stan}
+ */
+export function zapiszZakres(magazyn, uslugaId, zakres, domyslne) {
+  if (typeof uslugaId !== 'string' || !IDENTYFIKATOR.test(uslugaId)) throw new BladUstawien('wartosc', 'zakresy')
+  const nowy = zakres === null ? null : zakresZeZmiany(zakres, `zakresy.${uslugaId}`)
+  return zmienUstawienia(magazyn, domyslne, (ustawienia) => {
+    const pozostale = Object.fromEntries(Object.entries(ustawienia.zakresy).filter(([id]) => id !== uslugaId))
+    return { ...ustawienia, zakresy: nowy === null ? pozostale : { ...pozostale, [uslugaId]: nowy } }
+  })
+}
+
+/**
+ * Warunki oferty zmienione raz w ustawieniach (R20); null wraca do warunkow z data/domyslne.json. Zle warunki daja BladUstawien
+ * (warunkiZeZmiany) i nic nie zapisuja.
+ * @param {Magazyn} magazyn @param {WarunekOferty[] | null} warunki @param {Domyslne} [domyslne]
+ * @returns {Stan}
+ */
+export function zapiszWarunki(magazyn, warunki, domyslne) {
+  const nowe = warunki === null ? null : warunkiZeZmiany(warunki, 'warunki')
+  return zmienUstawienia(magazyn, domyslne, (ustawienia) => ({ ...ustawienia, warunki: nowe }))
 }
 
 /**

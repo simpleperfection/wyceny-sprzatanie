@@ -1,6 +1,6 @@
 // Podsumowanie wyceny (makieta podsumowanie-wyceny), dwa tryby: krok `cena` kreatora (`#/kreator/cena?wycena=<id>`) z paskiem
 // postepu i „Zapisz” (arkusz z polem klienta → zapiszWycene: status `do_wyslania`, numer, przejscie do `#/wycena/<id>`) oraz
-// zapisana wycena (`#/wycena/<id>`) z akcjami wg statusu (Edytuj, Klient przyjął, Klient zrezygnował, Usuń wycenę). Oba maja
+// zapisana wycena (`#/wycena/<id>`) z akcjami wg statusu (Przygotuj ofertę, Edytuj, Klient przyjął, Klient zrezygnował, Usuń wycenę). Oba maja
 // te same karty (src/widoki/podsumowanie-karty.js), reczna cene i baner „Przelicz”; wykonana wycena jest tylko do odczytu.
 // Liczy src/kreator/podsumowanie.js, zapisuje src/dane/wyceny.js; widok tylko rysuje.
 
@@ -16,6 +16,7 @@ import { arkusz, baner, dialogPotwierdzenia, karta, naglowek, pasekPostepu } fro
 import { ETYKIETY_STATUSOW, pigulkaStatusu } from '../ui/statusy.js'
 import { sciezka } from '../ui/trasy.js'
 import { adresKroku, wycenaKroku, zglosBladKreatora } from './kreator-wspolne.js'
+import { czyStatusOferty } from './oferta-edycja.js'
 import { banery, kartaCeny, kartaKosztow, kartaRynku, kartaZostaje, notkaPropozycji, otworzEdycjeCeny } from './podsumowanie-karty.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
@@ -90,10 +91,16 @@ function kartaWpisowCzasu(w) {
       `${data(x.data)} · plan ${czas(x.plan)} · fakt ${czas(x.fakt)} (${procent(x.procent)})`))))
 }
 
-/** @param {Wycena} w @param {ObslugaAkcji} obsluga @returns {HTMLElement[]} „Wpisz czas pracy” przy przyjetej, potem akcje wg statusu */
+/**
+ * @param {Wycena} w @param {ObslugaAkcji} obsluga
+ * @returns {HTMLElement[]} „Wpisz czas pracy” przy przyjetej, „Przygotuj ofertę” (glowny przy wycenie do wysłania), potem akcje wg statusu
+ */
 function akcjeZapisanej(w, obsluga) {
   const wpisCzasu = w.status === 'przyjeta' ? [przycisk({ tekst: 'Wpisz czas pracy', adres: sciezka('zakonczenie', { id: w.id }) })] : []
-  return [...wpisCzasu, ...akcjeWyceny(w.status).map((a) => przyciskAkcji(w, a, obsluga))]
+  const oferta = czyStatusOferty(w.status)
+    ? [przycisk({ tekst: 'Przygotuj ofertę', rodzaj: w.status === 'do_wyslania' ? 'glowny' : 'drugi', ikona: 'file-text', adres: sciezka('oferta', { id: w.id }) })]
+    : []
+  return [...wpisCzasu, ...oferta, ...akcjeWyceny(w.status).map((a) => przyciskAkcji(w, a, obsluga))]
 }
 
 /**

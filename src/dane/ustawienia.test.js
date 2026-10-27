@@ -7,7 +7,7 @@ import { BladKatalogu } from '../silnik/bledy.js'
 import { KLUCZ_MAGAZYNU, utworzMagazyn } from './magazyn.js'
 import {
   BladUstawien, brakujeUstawien, jestDomyslnymi, pominKreator, POLA_WYMAGANE_W_OFERCIE, scalKoszty, sprawdzUstawienia,
-  ustawieniaDomyslne, wczytajDomyslne, zapiszUstawienia,
+  ustawieniaDomyslne, wczytajDomyslne, zapiszUstawienia, zapiszWarunki, zapiszZakres,
 } from './ustawienia.js'
 
 const DOMYSLNE = {
@@ -288,5 +288,66 @@ describe('brakujeUstawien po zakończonym kreatorze', () => {
 
     assert.deepEqual(POLA_WYMAGANE_W_OFERCIE, ['nazwa', 'telefon'])
     assert.deepEqual(brakujeUstawien(pelne), ['firma'])
+  })
+})
+
+describe('zapiszZakres i zapiszWarunki', () => {
+  /** @param {ReturnType<typeof nowyMagazyn>['magazyn']} magazyn */
+  const ustawienia = (magazyn) => {
+    const wynik = magazyn.wczytaj()
+    assert.ok('stan' in wynik && wynik.stan.ustawienia)
+    return wynik.stan.ustawienia
+  }
+
+  it('zakres usługi zapisuje się z przyciętymi punktami, null usuwa tylko zakres tej usługi', () => {
+    const { magazyn } = nowyMagazyn()
+    zapiszZakres(magazyn, 'okna', { wchodzi: [' Szyby i ramy '], nie_wchodzi: ['Rolety'] }, DOMYSLNE)
+    zapiszZakres(magazyn, 'tapicerka', { wchodzi: ['Kanapa'], nie_wchodzi: [] })
+    const oba = ustawienia(magazyn).zakresy
+
+    zapiszZakres(magazyn, 'okna', null)
+
+    assert.deepEqual(oba, { okna: { wchodzi: ['Szyby i ramy'], nie_wchodzi: ['Rolety'] }, tapicerka: { wchodzi: ['Kanapa'], nie_wchodzi: [] } })
+    assert.deepEqual(ustawienia(magazyn).zakresy, { tapicerka: { wchodzi: ['Kanapa'], nie_wchodzi: [] } })
+  })
+
+  it('zły zakres → BladUstawien z kodem i polem, bez zapisu', () => {
+    const { magazyn } = nowyMagazyn()
+    pominKreator(magazyn, DOMYSLNE)
+
+    assert.throws(() => zapiszZakres(magazyn, 'okna', { wchodzi: Array(51).fill('Szyby'), nie_wchodzi: [] }), bladUstawien('za_duzo', 'zakresy.okna.wchodzi'))
+    assert.throws(() => zapiszZakres(magazyn, 'okna', { wchodzi: ['a'.repeat(501)], nie_wchodzi: [] }), bladUstawien('dlugosc', 'zakresy.okna.wchodzi.0'))
+    assert.throws(() => zapiszZakres(magazyn, 'okna', /** @type {never} */ ({ wchodzi: [] })), bladUstawien('wartosc', 'zakresy.okna.nie_wchodzi'))
+    assert.throws(() => zapiszZakres(magazyn, '__proto__', { wchodzi: [], nie_wchodzi: [] }), bladUstawien('wartosc', 'zakresy'))
+    assert.deepEqual(ustawienia(magazyn).zakresy, {})
+  })
+
+  it('warunki zapisują się z przyciętą treścią, null wraca do domyślnych; powtórzone id i pusta treść → BladUstawien', () => {
+    const { magazyn } = nowyMagazyn()
+    zapiszWarunki(magazyn, [{ id: 'zaliczka', tresc: ' Bez zaliczki. ', tylko_szybka: false }], DOMYSLNE)
+    const zapisane = ustawienia(magazyn).warunki
+    const dwa = [{ id: 'a', tresc: 'Jeden.', tylko_szybka: false }, { id: 'a', tresc: 'Dwa.', tylko_szybka: true }]
+
+    assert.throws(() => zapiszWarunki(magazyn, dwa), bladUstawien('powtorzone', 'warunki'))
+    assert.throws(() => zapiszWarunki(magazyn, [{ id: 'a', tresc: ' ', tylko_szybka: false }]), bladUstawien('pusty', 'warunki.0.tresc'))
+    zapiszWarunki(magazyn, null)
+
+    assert.deepEqual(zapisane, [{ id: 'zaliczka', tresc: 'Bez zaliczki.', tylko_szybka: false }])
+    assert.equal(ustawienia(magazyn).warunki, null)
+  })
+
+  it('bez ustawień i bez wartości domyślnych → brak_ustawien', () => {
+    const { magazyn } = nowyMagazyn()
+
+    assert.throws(() => zapiszWarunki(magazyn, null), bladUstawien('brak_ustawien', 'ustawienia'))
+  })
+
+  it('sprawdzUstawienia (plik kopii) odrzuca za długi punkt zakresu i warunki z powtórzonym id', () => {
+    const baza = ustawieniaDomyslne(DOMYSLNE)
+    const warunek = { id: 'a', tresc: 'Jeden.', tylko_szybka: false }
+
+    assert.throws(() => sprawdzUstawienia({ ...baza, zakresy: { okna: { wchodzi: ['a'.repeat(501)], nie_wchodzi: [] } } }), bladUstawien('wartosc', 'zakresy'))
+    assert.throws(() => sprawdzUstawienia({ ...baza, warunki: [warunek, warunek] }), bladUstawien('wartosc', 'warunki'))
+    assert.doesNotThrow(() => sprawdzUstawienia({ ...baza, zakresy: { okna: { wchodzi: ['Szyby'], nie_wchodzi: [] } }, warunki: [warunek] }))
   })
 })
