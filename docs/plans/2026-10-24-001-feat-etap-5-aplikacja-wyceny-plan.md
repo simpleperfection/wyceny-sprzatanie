@@ -1299,7 +1299,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - `bash -c "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/kalibracja.ps1"` wypisuje „niezgodności katalogu: 0”
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-21: Ekrany szybkiej wyceny i pytań do klienta**
+- [x] **IU-21: Ekrany szybkiej wyceny i pytań do klienta**
 
 **Cel:** Formularz szybkiej wyceny do rozmowy telefonicznej z wynikiem, gotowym tekstem i przejściem do dokładnej wyceny oraz ekran pytań do klienta dostępny z szybkiej i dokładnej wyceny.
 

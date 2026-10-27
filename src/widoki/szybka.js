@@ -12,7 +12,7 @@ import { MAKS_ILOSCI, ustawDodatek, ustawIlosc } from '../kreator/pozycje.js'
 import { pozycjeGlowne } from '../kreator/stan.js'
 import {
   formularzDomyslny, opcjeUslug, oznaczWyslana, polaUslugi, RODZAJE_MIESZKANIA, wejscieZWyceny, wynikFormularza, zapiszSzybka,
-  zMetrazem, zSzybkiej, zUsluga,
+  zBrudemOdpowiedzi, zMetrazem, zSzybkiej, zUsluga,
 } from '../kreator/szybka.js'
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
 import { STANY_SZYBKIEJ } from '../silnik/szybka.js'
@@ -256,6 +256,14 @@ export const widokSzybkiejWyceny = {
       if (!opcja || opcja.uslugi.includes(formularz.uslugaId)) return rysujPola('[data-pole="usluga"]')
       const [uslugaId = formularz.uslugaId] = opcja.uslugi
       zmien((w) => zUsluga(w, uslugaId, katalog), { czyPola: true, fokus: '[data-pole="usluga"]' })
+      if (Object.keys(formularz.odpowiedzi).length > 0) odswiezBrud(uslugaId)
+    }
+
+    /** Brud z odpowiedzi klienta wg pytan nowej uslugi (zUsluga go czysci), gdy uzytkownik nie zmienil juz uslugi. @param {string} uslugaId */
+    function odswiezBrud(uslugaId) {
+      void pytaniaAplikacji(katalog).then((pytania) => {
+        if (czyAktywny && formularz.uslugaId === uslugaId) zmien((w) => zBrudemOdpowiedzi(w, pytania))
+      }).catch(reportError)
     }
 
     function handlePytania() {

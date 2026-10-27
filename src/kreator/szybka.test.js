@@ -9,7 +9,7 @@ import { BladWyceny, utworzSzkic, wycena, zmienStatus } from '../dane/wyceny.js'
 import { BladWejscia } from '../silnik/bledy.js'
 import {
   dojazdZOdpowiedzi, formularzDomyslny, kontekstSzybkiej, opcjeUslug, oznaczWyslana, polaUslugi, wejscieZWyceny, wynikFormularza,
-  zapiszSzybka, zMetrazem, zSzybkiej, zUsluga,
+  zapiszSzybka, zBrudemOdpowiedzi, zMetrazem, zSzybkiej, zUsluga,
 } from './szybka.js'
 
 /** @typedef {import('../silnik/katalog.js').Katalog} Katalog */
@@ -83,6 +83,22 @@ describe('opcje i pola formularza', () => {
     assert.deepEqual(tapicerka.pozycje.map((p) => [p.id, p.ilosc]), [['kanapa_3', 0], ['kanapa_2', 0], ['naroznik', 0], ['fotel', 0]])
     assert.deepEqual([tapicerka.dodatki, tapicerka.m2], [[], 50])
     assert.deepEqual(zUsluga(zAgd, 'mieszkanie_gruntowne', katalog).dodatki, zAgd.dodatki)
+  })
+
+  it('zmiana usługi czyści brud z odpowiedzi, a zBrudemOdpowiedzi liczy go od nowa wg pytań nowej usługi', () => {
+    const zKotem = { ...mieszkanie50(), odpowiedzi: { zwierzeta: { wartosc: 'tak' } } }
+
+    const poWynajmie = zUsluga(zBrudemOdpowiedzi(zKotem, pytania), 'mieszkanie_po_wynajmie', katalog)
+
+    assert.deepEqual(zBrudemOdpowiedzi(zKotem, pytania).brud, [{ pomieszczenie: 'pokoj', brud: 'siersc', poziom: 1 }])
+    assert.deepEqual(poWynajmie.brud, [])
+    assert.deepEqual(zBrudemOdpowiedzi(poWynajmie, pytania).brud, [])
+    assert.deepEqual(zBrudemOdpowiedzi({ ...poWynajmie, odpowiedzi: { zwierzeta_najemcow: { wartosc: 'tak' } } }, pytania).brud,
+      [{ pomieszczenie: '*', brud: 'siersc', poziom: 2 }])
+  })
+
+  it('zła odpowiedź na pytanie ze skutkiem brudu daje BladWejscia odpowiedz', () => {
+    assert.throws(() => zBrudemOdpowiedzi({ ...mieszkanie50(), odpowiedzi: { zwierzeta: { wartosc: 'kot' } } }, pytania), bladWejscia('odpowiedz'))
   })
 
   it('metraż zmienia domyślną liczbę łazienek, dopóki firma jej nie ustawiła ręcznie', () => {

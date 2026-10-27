@@ -302,6 +302,8 @@ describe('gałęzie walidacji szkicu, klienta i wyniku', () => {
     assert.deepEqual(zMagazynu(magazyn, szkic.id).szybka, szybka)
     assert.throws(() => utworzSzkic(magazyn, { rodzaj: 'szybka', wejscie: WEJSCIE, szybka: /** @type {never} */ ({ ...szybka, do: 'x' }) }),
       bladWyceny('szybka'))
+    assert.throws(() => utworzSzkic(magazyn, { rodzaj: 'szybka', wejscie: WEJSCIE,
+      szybka: /** @type {never} */ ({ ...szybka, brud: [{ pomieszczenie: 'pokoj', brud: 'siersc', poziom: '1' }] }) }), bladWyceny('szybka'))
     assert.throws(() => utworzSzkic(magazyn, { rodzaj: 'szybka', wejscie: WEJSCIE, odpowiedzi: /** @type {never} */ ([]) }), bladWyceny('odpowiedzi'))
   })
 

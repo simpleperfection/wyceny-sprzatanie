@@ -8,7 +8,7 @@ import { BladWyceny, wycena as znajdzWycene } from '../dane/wyceny.js'
 import { BladWejscia } from '../silnik/bledy.js'
 import { opisOdpowiedzi, pytaniaUslugi, zastosujOdpowiedzi } from '../silnik/pytania.js'
 import { zapiszZmianyWyceny } from './stan.js'
-import { dojazdZOdpowiedzi, kontekstSzybkiej, wejscieZWyceny, zapiszSzybka } from './szybka.js'
+import { kontekstSzybkiej, wejscieZWyceny, zapiszSzybka, zSkutkamiOdpowiedzi } from './szybka.js'
 
 /** @typedef {import('../ui/router.js').DaneAplikacji} DaneAplikacji */
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
@@ -87,7 +87,7 @@ function bezSpacji({ wartosc, notatka }) {
  * Zapis odpowiedzi na pytanie (null usuwa odpowiedz). Zla wartosc albo za dluga notatka daje BladWejscia (`odpowiedz`, `notatka`),
  * pytanie spoza listy uslugi — BladWejscia `nieznane_pytanie`. Dokladna wycena: skutek tej odpowiedzi trafia do wejscia razem
  * z odpowiedziami w jednym zapisie (zmiana w innej karcie miedzy odczytem a zapisem daje BladWyceny `nieaktualna`); usuniecie
- * odpowiedzi zostawia wejscie. Szybka: formularz z nowymi odpowiedziami i dojazdem z nich zapisuje zapiszSzybka.
+ * odpowiedzi zostawia wejscie. Szybka: formularz z nowymi odpowiedziami i ich skutkami (dojazd i brud) zapisuje zapiszSzybka.
  * @param {DaneAplikacji} kontekst @param {string} id @param {string} pytanieId @param {Odpowiedz | null} odpowiedz
  * @param {Pytania} pytania
  * @returns {Wycena}
@@ -104,8 +104,7 @@ export function zapiszOdpowiedz(kontekst, id, pytanieId, odpowiedz, pytania) {
   const odpowiedzi = czysta === null ? pozostale : { ...pozostale, [pytanieId]: czysta }
   if (obecna.rodzaj === 'szybka') {
     const formularz = { ...wejscieZWyceny(obecna, katalog), odpowiedzi }
-    const dojazdKm = dojazdZOdpowiedzi(formularz, pytania, kontekstSzybkiej(kontekst, formularz.uslugaId))
-    return zapiszSzybka(kontekst, id, { ...formularz, dojazdKm })
+    return zapiszSzybka(kontekst, id, zSkutkamiOdpowiedzi(formularz, pytania, kontekstSzybkiej(kontekst, formularz.uslugaId)))
   }
   const stawkiDojazdu = scalKoszty(katalog.kosztyFirmy, wczytajStan(magazyn).ustawienia).dojazd
   const wejscie = czysta === null ? undefined

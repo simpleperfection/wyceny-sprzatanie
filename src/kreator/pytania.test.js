@@ -115,6 +115,20 @@ describe('zapiszOdpowiedz i pytaniaWyceny', () => {
     assert.deepEqual([bez.szybka?.od, bez.wejscie.dojazdKm, bez.odpowiedzi], [250, 0, {}])
   })
 
+  it('szybka wycena: „tak” o zwierzętach i 32 km podnoszą widełki o sierść i dojazd (304–364 zł); formularz odtwarza brud', () => {
+    const kontekst = kontekstFirmy()
+    const { id } = zapiszSzybka(kontekst, null, formularzDomyslny(katalog, 'mazowieckie'))
+
+    zapiszOdpowiedz(kontekst, id, 'zwierzeta', { wartosc: 'tak' }, pytania)
+    const z = zapiszOdpowiedz(kontekst, id, 'dojazd', { wartosc: 32 }, pytania)
+    const bez = zapiszOdpowiedz(kontekst, id, 'zwierzeta', null, pytania)
+
+    assert.deepEqual([z.szybka?.od, z.szybka?.do], [304, 364])
+    assert.deepEqual(wejscieZWyceny(z, katalog).brud, [{ pomieszczenie: 'pokoj', brud: 'siersc', poziom: 1 }])
+    assert.deepEqual(z.wejscie.pomieszczenia?.find((p) => p.typ === 'pokoj')?.brud, [{ id: 'siersc', poziom: 1 }])
+    assert.deepEqual([bez.szybka?.od, bez.szybka?.do, bez.szybka?.brud], [294, 344, undefined])
+  })
+
   it('zła wartość, za długa notatka i pytanie spoza usługi dają BladWejscia; nic się nie zapisuje', () => {
     const kontekst = kontekstFirmy()
     const id = dokladna50(kontekst)

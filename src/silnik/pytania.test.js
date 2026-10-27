@@ -2,7 +2,9 @@ import assert from 'node:assert/strict'
 import { before, describe, it } from 'node:test'
 
 import { czytajJson, katalogZDysku } from '../../tests/pomocnicze.js'
-import { opisOdpowiedzi, pytaniaUslugi, RODZAJE_SKUTKOW, sprawdzPytania, TYPY_ODPOWIEDZI, zastosujOdpowiedzi } from './pytania.js'
+import {
+  opisOdpowiedzi, pytaniaUslugi, regulyBrudu, RODZAJE_SKUTKOW, sprawdzPytania, TYPY_ODPOWIEDZI, zastosujOdpowiedzi,
+} from './pytania.js'
 
 /** @typedef {import('./katalog.js').Katalog} Katalog */
 /** @typedef {import('./pytania.js').Pytania} Pytania */
@@ -105,6 +107,25 @@ describe('zastosujOdpowiedzi', () => {
 
   it('zła odpowiedź na pytanie ze skutkiem daje BladWejscia odpowiedz', () => {
     rzucaKod(() => zastosujOdpowiedzi({ uslugaId: 'mieszkanie_standard' }, { dojazd: { wartosc: 'daleko' } }, PYTANIA, katalog), 'odpowiedz')
+  })
+})
+
+describe('regulyBrudu', () => {
+  it('„tak” na pytanie o zwierzęta daje regułę sierści; dojazd i odpowiedź bez skutku nie dają reguł', () => {
+    const odpowiedzi = { zwierzeta: { wartosc: 'tak' }, dojazd: { wartosc: 32 }, sprzet: { wartosc: 'Nasze' } }
+
+    const reguly = regulyBrudu('mieszkanie_standard', odpowiedzi, PYTANIA)
+
+    assert.deepEqual(reguly, [{ pomieszczenie: '*', brud: 'siersc', poziom: 2 }])
+  })
+
+  it('„nie” nie daje reguły', () => {
+    assert.deepEqual(regulyBrudu('mieszkanie_standard', { zwierzeta: { wartosc: 'nie' } }, PYTANIA), [])
+  })
+
+  it('zła odpowiedź na pytanie ze skutkiem brudu daje BladWejscia odpowiedz, usługa bez pytań — nieznana_usluga', () => {
+    rzucaKod(() => regulyBrudu('mieszkanie_standard', { zwierzeta: { wartosc: 'może' } }, PYTANIA), 'odpowiedz')
+    rzucaKod(() => regulyBrudu('dywany', {}, PYTANIA), 'nieznana_usluga')
   })
 })
 

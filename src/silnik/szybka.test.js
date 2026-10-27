@@ -56,6 +56,14 @@ describe('szybkaWycena: usługi z pomieszczeniami', () => {
     assert.deepEqual(wynik.rynek, { od: 120, do: 450, pelne: true })
   })
 
+  it('brud z odpowiedzi klienta (sierść poziom 1 w pokojach) podnosi widełki z 250–300 do 260–320 zł i medianę do 267', () => {
+    const brud = [{ pomieszczenie: 'pokoj', brud: 'siersc', poziom: 1 }]
+
+    const wynik = szybkaWycena({ ...MIESZKANIE_50, stan: 'typowy', brud }, kontekst(katalog))
+
+    assert.deepEqual([wynik.tryb, wynik.od, wynik.do, wynik.mediana], ['widelki', 260, 320, 267])
+  })
+
   it('lekki: „ok. 250 zł” (jedna kwota zaokrąglona do 10 zł)', () => {
     const wynik = szybkaWycena({ ...MIESZKANIE_50, stan: 'lekki' }, kontekst(katalog))
 
@@ -206,6 +214,16 @@ describe('naDokladna', () => {
     assert.deepEqual(wynik.odpowiedzi, odpowiedzi)
     assert.deepEqual(wynik.szybka, { stan: 'mocny', od: 290, do: 360, tryb: 'widelki' })
     assert.equal(wynik.wejscie.wojewodztwoId, 'mazowieckie')
+  })
+
+  it('brud z odpowiedzi zastępuje ten sam rodzaj z brud_domyslny (po wynajmie: tłuszcz 3 zamiast 2) i zostaje w szybka.brud', () => {
+    const brud = [{ pomieszczenie: 'kuchnia', brud: 'tluszcz', poziom: 3 }]
+
+    const wynik = naDokladna({ uslugaId: 'mieszkanie_po_wynajmie', m2: 50, stan: 'typowy', wojewodztwoId: null, brud }, kontekst(katalog))
+
+    assert.deepEqual(wynik.wejscie.pomieszczenia?.find((p) => p.typ === 'kuchnia')?.brud, [{ id: 'tluszcz', poziom: 3 }])
+    assert.deepEqual(wynik.wejscie.pomieszczenia?.find((p) => p.typ === 'lazienka')?.brud, [{ id: 'kamien', poziom: 2 }])
+    assert.deepEqual(wynik.szybka, { stan: 'typowy', od: 400, do: 460, tryb: 'widelki', brud })
   })
 
   it('typowy stan: pomieszczenia bez reguły kurzu, pozycje i dodatki przechodzą do wejścia', () => {

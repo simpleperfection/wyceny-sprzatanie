@@ -32,6 +32,20 @@ export function zBrudem(uklad, reguly) {
 }
 
 /**
+ * Ustawia poziom brudu z regul w pasujacych pomieszczeniach (`*` = kazde): zastepuje ten sam rodzaj brudu zamiast go dopisywac,
+ * np. skutek odpowiedzi klienta wobec `brud_domyslny` uslugi.
+ * @template {PomieszczenieCzasu} T
+ * @param {T[]} pomieszczenia
+ * @param {readonly RegulaBrudu[]} reguly
+ * @returns {T[]}
+ */
+export function zPoziomemBrudu(pomieszczenia, reguly) {
+  return reguly.reduce((wynik, r) => wynik.map((p) => (r.pomieszczenie === REGULA_KAZDE_POMIESZCZENIE || r.pomieszczenie === p.typ
+    ? { ...p, brud: [...(p.brud ?? []).filter((b) => b.id !== r.brud), { id: r.brud, poziom: r.poziom }] }
+    : p)), pomieszczenia)
+}
+
+/**
  * Minuty uslugi z pomieszczeniami = przygotowanie + Σ m² × norma pomieszczenia × mnoznik + Σ m² × norma brudu poziomu.
  * @param {PomieszczenieCzasu[]} pomieszczenia
  * @param {number} mnoznik mnoznik zakresu uslugi (z mnoznikZakresu)

@@ -7,7 +7,7 @@ import { wczytajStan } from '../dane/magazyn.js'
 import { scalKoszty, ustawieniaDomyslne } from '../dane/ustawienia.js'
 import { BladWyceny, utworzSzkic, wycena as znajdzWycene, zmienStatus } from '../dane/wyceny.js'
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
-import { zastosujOdpowiedzi } from '../silnik/pytania.js'
+import { regulyBrudu, zastosujOdpowiedzi } from '../silnik/pytania.js'
 import { naDokladna, STANY_SZYBKIEJ, szybkaWycena } from '../silnik/szybka.js'
 import { tempoDoWyceny } from '../silnik/tempo.js'
 import { domyslneLazienki } from '../silnik/uklad.js'
@@ -27,8 +27,9 @@ import { pozycjeGlowne, zapiszZmianyWyceny } from './stan.js'
 /** @typedef {import('../silnik/szybka.js').StanSzybkiej} StanSzybkiej */
 /**
  * @typedef {WejscieSzybkiej & { m2: number, stan: StanSzybkiej, pozycje: { id: string, ilosc: number }[],
- *   dodatki: import('../silnik/cena.js').DodatekWyceny[], odpowiedzi: Record<string, unknown> }} FormularzSzybkiej
- *   wejscie formularza: zawsze z metrazem i stanem (pola niewidoczne dla uslugi silnik pomija)
+ *   dodatki: import('../silnik/cena.js').DodatekWyceny[], odpowiedzi: Record<string, unknown>,
+ *   brud: import('../silnik/katalog.js').RegulaBrudu[] }} FormularzSzybkiej
+ *   wejscie formularza: zawsze z metrazem, stanem i brudem z odpowiedzi (pola niewidoczne dla uslugi silnik pomija)
  * @typedef {'mieszkanie' | 'biuro' | 'pozycje' | 'ogledziny_pomieszczen' | 'ogledziny_pozycji'} PolaSzybkiej pola formularza uslugi
  * @typedef {{ wartosc: string, etykieta: string, uslugi: string[] }} OpcjaUslugi opcja arkusza „Usługa” (mieszkania jako jedna)
  * @typedef {{ stan: 'wynik', wynik: WynikSzybkiej, wojewodztwo: { id: string | null, nazwa: string } } | { stan: 'pusty' }
@@ -81,14 +82,14 @@ export function polaUslugi(usluga) {
 
 /**
  * Wejscie formularza po wyborze uslugi: metraz, stan i odpowiedzi zostaja; pozycje od zera (tylko uslugi z licznikami pozycji),
- * dodatki AGD tylko przy mieszkaniu.
+ * dodatki AGD tylko przy mieszkaniu. Brud z odpowiedzi znika, bo zalezy od pytan uslugi (zBrudemOdpowiedzi liczy go od nowa).
  * @param {FormularzSzybkiej} wejscie @param {string} uslugaId @param {Katalog} katalog @returns {FormularzSzybkiej}
  */
 export function zUsluga(wejscie, uslugaId, katalog) {
   const usluga = katalog.usluga(uslugaId)
   const pola = polaUslugi(usluga)
   const pozycje = pola === 'pozycje' ? pozycjeGlowne(usluga).map((p) => ({ id: p.id, ilosc: 0 })) : []
-  return { ...wejscie, uslugaId, pozycje, dodatki: pola === 'mieszkanie' ? wejscie.dodatki : [] }
+  return { ...wejscie, uslugaId, pozycje, dodatki: pola === 'mieszkanie' ? wejscie.dodatki : [], brud: [] }
 }
 
 /**
@@ -99,7 +100,7 @@ export function formularzDomyslny(katalog, wojewodztwoId) {
   const [{ wartosc: uslugaId }] = RODZAJE_MIESZKANIA
   return {
     uslugaId, m2: METRAZ_WZORCOWY, lazienki: domyslneLazienki(METRAZ_WZORCOWY, katalog.uklady), kuchnia: 'osobna', stan: STAN_DOMYSLNY,
-    pozycje: [], dodatki: [], dojazdKm: 0, wojewodztwoId: katalog.wojewodztwo(wojewodztwoId).id, odpowiedzi: {},
+    pozycje: [], dodatki: [], dojazdKm: 0, wojewodztwoId: katalog.wojewodztwo(wojewodztwoId).id, odpowiedzi: {}, brud: [],
   }
 }
 
@@ -150,7 +151,7 @@ export function wynikFormularza(kontekst, wejscie) {
 
 /**
  * Formularz z zapisanej szybkiej wyceny (`?wycena=<id>`): metraz i lazienki z pomieszczen, kuchnia z nazwy aneksu, metraz
- * ogledzin z glownej pozycji, stan z widelek; odpowiedzi, dodatki, dojazd i wojewodztwo bez zmian.
+ * ogledzin z glownej pozycji, stan i brud z odpowiedzi z widelek; odpowiedzi, dodatki, dojazd i wojewodztwo bez zmian.
  * @param {Wycena} wycena rodzaj `szybka` (inna daje BladWyceny `rodzaj`) @param {Katalog} katalog
  * @returns {FormularzSzybkiej}
  */
@@ -167,7 +168,7 @@ export function wejscieZWyceny(wycena, katalog) {
     uslugaId: usluga.id, m2, lazienki: pola === 'mieszkanie' || pola === 'ogledziny_pomieszczen' ? opis.lazienki : undefined,
     kuchnia: opis.kuchnia === 'aneks' ? 'aneks' : 'osobna', stan: jestStanem(stan) ? stan : STAN_DOMYSLNY,
     pozycje: pola === 'pozycje' ? pozycje : [], dodatki: wejscie.dodatki ?? [], dojazdKm: wejscie.dojazdKm ?? 0,
-    wojewodztwoId: wejscie.wojewodztwoId ?? null, odpowiedzi: { ...wycena.odpowiedzi },
+    wojewodztwoId: wejscie.wojewodztwoId ?? null, odpowiedzi: { ...wycena.odpowiedzi }, brud: [...(wycena.szybka?.brud ?? [])],
   }
 }
 
@@ -196,6 +197,23 @@ export function dojazdZOdpowiedzi(formularz, pytania, k) {
   const { wejscie } = zastosujOdpowiedzi({ uslugaId: formularz.uslugaId, dojazdKm: 0 }, formularz.odpowiedzi, pytania, k.katalog,
     { stawkiDojazdu: k.koszty.dojazd })
   return wejscie.dojazdKm ?? 0
+}
+
+/**
+ * Formularz z regulami brudu z odpowiedzi klienta wg pytan biezacej uslugi (skutek `brud`, np. sierść przy zwierzetach);
+ * szybka wycena naklada je na uklad typowego lokalu.
+ * @param {FormularzSzybkiej} formularz @param {Pytania} pytania @returns {FormularzSzybkiej}
+ */
+export function zBrudemOdpowiedzi(formularz, pytania) {
+  return { ...formularz, brud: regulyBrudu(formularz.uslugaId, formularz.odpowiedzi, pytania) }
+}
+
+/**
+ * Formularz ze wszystkimi skutkami odpowiedzi klienta: kilometry dojazdu i reguly brudu.
+ * @param {FormularzSzybkiej} formularz @param {Pytania} pytania @param {KontekstSzybkiej} k @returns {FormularzSzybkiej}
+ */
+export function zSkutkamiOdpowiedzi(formularz, pytania, k) {
+  return { ...zBrudemOdpowiedzi(formularz, pytania), dojazdKm: dojazdZOdpowiedzi(formularz, pytania, k) }
 }
 
 /**

@@ -4,7 +4,7 @@
 
 import { BladWejscia } from './bledy.js'
 import { wycenUsluge } from './cena.js'
-import { zBrudem } from './czas.js'
+import { zBrudem, zPoziomemBrudu } from './czas.js'
 import { kosztZlecenia } from './koszt.js'
 import { ukladBiura, ukladMieszkania } from './uklad.js'
 import { cenaDlaKlienta, zCenyRecznej } from './vat.js'
@@ -13,6 +13,7 @@ import { widelkiRynku } from './widelki.js'
 /** @typedef {import('./katalog.js').Katalog} Katalog */
 /** @typedef {import('./katalog.js').KosztyFirmy} KosztyFirmy */
 /** @typedef {import('./katalog.js').Usluga} Usluga */
+/** @typedef {import('./katalog.js').RegulaBrudu} RegulaBrudu */
 /** @typedef {import('./cena.js').WejscieWyceny} WejscieWyceny */
 /** @typedef {import('./cena.js').WynikWyceny} WynikWyceny */
 /** @typedef {import('./cena.js').DodatekWyceny} DodatekWyceny */
@@ -25,7 +26,8 @@ import { widelkiRynku } from './widelki.js'
  * @typedef {'widelki' | 'ok' | 'od'} TrybSzybkiej
  * @typedef {{ uslugaId: string, m2?: number, lazienki?: number, kuchnia?: RodzajKuchni, stan?: StanSzybkiej,
  *   pozycje?: { id: string, ilosc: number }[], dodatki?: DodatekWyceny[], dojazdKm?: number, wojewodztwoId?: string | null,
- *   odpowiedzi?: Record<string, unknown> }} WejscieSzybkiej
+ *   odpowiedzi?: Record<string, unknown>, brud?: RegulaBrudu[] }} WejscieSzybkiej brud: reguly ze skutkow odpowiedzi klienta
+ *   (regulyBrudu z pytania.js), ustawiaja poziom w pasujacych pomieszczeniach ukladu
  * @typedef {{ katalog: Katalog, statusVat: StatusVat, stawkaVatProc: number, tempo: number, koszty: KosztyFirmy, zastrzezenie: string }}
  *   KontekstSzybkiej koszty: koszty_firmy scalone z ustawieniami (stawki dojazdu klienta i firmy), zastrzezenie z data/domyslne.json
  * @typedef {{ tryb: TrybSzybkiej, od: number, do: number }} KwotySzybkiej
@@ -82,13 +84,17 @@ function metraz(wejscie) {
   return m2
 }
 
-/** Uklad typowego lokalu (mieszkanie albo biuro wg zestawu uslugi) z regulami `brud_domyslny`. @param {Usluga} usluga @param {WejscieSzybkiej} wejscie @param {Katalog} katalog */
+/**
+ * Uklad typowego lokalu (mieszkanie albo biuro wg zestawu uslugi) z regulami `brud_domyslny`, potem brud z odpowiedzi klienta
+ * (zastepuje ten sam rodzaj brudu, np. tluszcz poziom 3 zamiast 2 po wynajmie).
+ * @param {Usluga} usluga @param {WejscieSzybkiej} wejscie @param {Katalog} katalog
+ */
 function ukladSzybkiej(usluga, wejscie, katalog) {
   const m2 = metraz(wejscie)
   const uklad = usluga.zestaw_pomieszczen === 'biuro'
     ? ukladBiura(m2, katalog.uklady)
     : ukladMieszkania(m2, { lazienki: wejscie.lazienki, kuchnia: wejscie.kuchnia }, katalog.uklady)
-  return zBrudem(uklad, usluga.brud_domyslny)
+  return zPoziomemBrudu(zBrudem(uklad, usluga.brud_domyslny), wejscie.brud ?? [])
 }
 
 /** @param {PomieszczenieCzasu[]} uklad @param {number} poziom @returns {PomieszczenieCzasu[]} */
@@ -245,17 +251,20 @@ export function szybkaWycena(wejscie, kontekst) {
 /**
  * Zamiana szybkiej wyceny w dokladna: wejscie dolnej granicy (pomieszczenia ukladu z kurzem na dolnym poziomie stanu: lekki
  * i typowy bez reguly, mocny poziom 2; albo pozycje) z dodatkami i dojazdem, te same odpowiedzi klienta i widelki szybkiej
- * wyceny (do ostrzezenia w podsumowaniu, gdy cena dokladna z nich wyjdzie).
+ * wyceny (do ostrzezenia w podsumowaniu, gdy cena dokladna z nich wyjdzie). Reguly brudu z odpowiedzi klienta (gdy sa)
+ * zostaja w `szybka.brud`, zeby formularz szybkiej wyceny odtworzyl je z zapisanego rekordu.
  * @param {WejscieSzybkiej} szybkaWejscie
  * @param {KontekstSzybkiej} kontekst
- * @returns {{ wejscie: WejscieWyceny, odpowiedzi: Record<string, unknown>, szybka: { stan: string, od: number, do: number, tryb: TrybSzybkiej } }}
+ * @returns {{ wejscie: WejscieWyceny, odpowiedzi: Record<string, unknown>,
+ *   szybka: { stan: string, od: number, do: number, tryb: TrybSzybkiej, brud?: RegulaBrudu[] } }}
  */
 export function naDokladna(szybkaWejscie, kontekst) {
   const obliczone = obliczGranice(szybkaWejscie, kontekst)
   const wynik = wynikSzybkiej(obliczone, szybkaWejscie, kontekst)
+  const brud = szybkaWejscie.brud ?? []
   return {
     wejscie: obliczone.dolna.wejscie,
     odpowiedzi: { ...szybkaWejscie.odpowiedzi },
-    szybka: { stan: szybkaWejscie.stan ?? '', od: wynik.od, do: wynik.do, tryb: wynik.tryb },
+    szybka: { stan: szybkaWejscie.stan ?? '', od: wynik.od, do: wynik.do, tryb: wynik.tryb, ...(brud.length > 0 ? { brud: [...brud] } : {}) },
   }
 }

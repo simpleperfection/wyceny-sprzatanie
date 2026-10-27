@@ -3,11 +3,12 @@
 
 import { BladWejscia } from './bledy.js'
 import { dojazdKlienta } from './cena.js'
+import { zPoziomemBrudu } from './czas.js'
 
 /** @typedef {import('./katalog.js').Katalog} Katalog */
 /** @typedef {import('./katalog.js').Usluga} Usluga */
+/** @typedef {import('./katalog.js').RegulaBrudu} RegulaBrudu */
 /** @typedef {import('./cena.js').WejscieWyceny} WejscieWyceny */
-/** @typedef {import('./cena.js').PomieszczenieWyceny} PomieszczenieWyceny */
 /** @typedef {import('./cena.js').StawkiDojazdu} StawkiDojazdu */
 /**
  * @typedef {typeof TYPY_ODPOWIEDZI[number]} TypOdpowiedzi
@@ -88,11 +89,6 @@ export function opisOdpowiedzi(pytanie, odpowiedz) {
   return notatka === '' ? tekst : `${tekst}, ${notatka}`
 }
 
-/** Ustawia brud na poziom w pomieszczeniu (zastepuje ten sam rodzaj brudu). @param {PomieszczenieWyceny} p @param {SkutekBrudu} skutek @returns {PomieszczenieWyceny} */
-function zBrudemSkutku(p, skutek) {
-  return { ...p, brud: [...(p.brud ?? []).filter((b) => b.id !== skutek.brud), { id: skutek.brud, poziom: skutek.poziom }] }
-}
-
 /**
  * @param {WejscieWyceny} wejscie @param {Skutek} skutek @param {Odpowiedz} odpowiedz
  * @param {{ usluga: Usluga, katalog: Katalog, stawki: StawkiDojazdu }} srodowisko
@@ -107,8 +103,7 @@ function zastosujSkutek(wejscie, skutek, odpowiedz, { usluga, katalog, stawki })
   if (usluga.tryb !== 'pomieszczenia' || odpowiedz.wartosc !== skutek.gdy) return null
   katalog.normaBrudu(skutek.brud, skutek.poziom)
   const nazwa = katalog.brud.find((b) => b.id === skutek.brud)?.nazwa ?? skutek.brud
-  const czyPasuje = (/** @type {PomieszczenieWyceny} */ p) => skutek.pomieszczenie === KAZDE_POMIESZCZENIE || skutek.pomieszczenie === p.typ
-  const pomieszczenia = (wejscie.pomieszczenia ?? []).map((p) => (czyPasuje(p) ? zBrudemSkutku(p, skutek) : p))
+  const pomieszczenia = zPoziomemBrudu(wejscie.pomieszczenia ?? [], [skutek])
   const miejsce = MIEJSCA_POMIESZCZEN.get(skutek.pomieszczenie) ?? `w pomieszczeniach: ${skutek.pomieszczenie}`
   return { wejscie: { ...wejscie, pomieszczenia }, opis: `${malaLitera(nazwa)}, poziom ${skutek.poziom} ${miejsce}` }
 }
@@ -139,6 +134,25 @@ export function zastosujOdpowiedzi(wejscie, odpowiedzi, pytania, katalog, opcje 
     skutki.push({ pytanieId: pytanie.id, opis: zastosowany.opis })
   }
   return { wejscie: wynik, skutki }
+}
+
+/**
+ * Reguly brudu ze skutkow odpowiedzi klienta (odpowiedz rowna `gdy`), w kolejnosci pytan uslugi. Szybka wycena naklada je
+ * na uklad typowego lokalu, bo nie ma wlasnych pomieszczen, do ktorych zastosujOdpowiedzi mogloby dopisac brud. Zla odpowiedz
+ * na pytanie ze skutkiem daje BladWejscia `odpowiedz`.
+ * @param {string} uslugaId
+ * @param {Record<string, unknown>} odpowiedzi id pytania → `{ wartosc, notatka? }`
+ * @param {Pytania} pytania
+ * @returns {RegulaBrudu[]}
+ */
+export function regulyBrudu(uslugaId, odpowiedzi, pytania) {
+  return pytaniaUslugi(uslugaId, pytania).flatMap((pytanie) => {
+    const { skutek } = pytanie
+    if (skutek?.rodzaj !== 'brud' || !Object.hasOwn(odpowiedzi, pytanie.id)) return []
+    const odpowiedz = odpowiedzi[pytanie.id]
+    sprawdzOdpowiedz(pytanie, odpowiedz)
+    return odpowiedz.wartosc === skutek.gdy ? [{ pomieszczenie: skutek.pomieszczenie, brud: skutek.brud, poziom: skutek.poziom }] : []
+  })
 }
 
 /** @param {string} miejsce @param {Record<string, unknown>} skutek @param {Record<string, unknown>} pytanie @param {Set<string>} typy @param {Katalog} katalog */

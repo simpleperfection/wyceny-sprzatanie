@@ -14,6 +14,7 @@ import {
 /** @typedef {import('../silnik/cena.js').LiniaWyceny} LiniaWyceny */
 /** @typedef {import('../silnik/cena.js').Propozycja} Propozycja */
 /** @typedef {import('../silnik/cena.js').WejscieWyceny} WejscieWyceny */
+/** @typedef {import('../silnik/katalog.js').RegulaBrudu} RegulaBrudu */
 /** @typedef {import('../silnik/vat.js').StatusVat} StatusVat */
 /** @typedef {import('../silnik/widelki.js').WidelkiRynku} WidelkiRynku */
 
@@ -30,7 +31,8 @@ export const MAKS_WYCEN = 5000
  * @typedef {typeof STATUSY_WYCENY[number]} StatusWyceny
  * @typedef {typeof RODZAJE_WYCENY[number]} RodzajWyceny
  * @typedef {{ nazwa: string, adres: string, termin: string | null }} KlientWyceny
- * @typedef {{ stan: string, od: number, do: number, tryb: string }} SzybkaWyceny widelki szybkiej wyceny, z ktorej powstala dokladna
+ * @typedef {{ stan: string, od: number, do: number, tryb: string, brud?: RegulaBrudu[] }} SzybkaWyceny widelki szybkiej wyceny,
+ *   z ktorej powstala dokladna; brud: reguly ze skutkow odpowiedzi klienta, z ktorych formularz szybkiej wyceny je odtwarza
  * @typedef {{ id: string | null, nazwa: string, stawka_h: number, wsp: number }} WojewodztwoMigawki id null = srednia krajowa
  * @typedef {{ cena: number, netto: number, vat: number, mediana: number, widelki: WidelkiRynku, minutyNormowe: number,
  *   linie: LiniaWyceny[], propozycje: Propozycja[], dojazd: { km: number, kwota: number }, wojewodztwo: WojewodztwoMigawki,
@@ -92,9 +94,11 @@ const jestDodatnia = (x) => jestLiczba(x) && x > 0
 const jestMinutamiWykonania = (x) => jestDodatnia(x) && Number(x) <= MAKS_MINUT_WYKONANIA
 /** @param {unknown} x */
 const jestWejsciem = (x) => jestObiektem(x) && typeof x.uslugaId === 'string' && x.uslugaId !== ''
+/** @param {unknown} x regula brudu `{ pomieszczenie, brud, poziom }` (skutek odpowiedzi klienta) */
+const jestRegulaBrudu = (x) => jestObiektem(x) && typeof x.pomieszczenie === 'string' && typeof x.brud === 'string' && Number.isInteger(x.poziom)
 /** @param {unknown} x widelki szybkiej wyceny albo null */
 const jestSzybka = (x) => x === null || (jestObiektem(x) && typeof x.stan === 'string' && typeof x.tryb === 'string' && jestLiczba(x.od) &&
-  jestLiczba(x.do))
+  jestLiczba(x.do) && (x.brud === undefined || (Array.isArray(x.brud) && x.brud.every(jestRegulaBrudu))))
 /** @param {unknown} x zapisany klient: teksty w granicach DLUGOSC_KLIENTA */
 const jestKlientem = (x) => jestObiektem(x) && typeof x.nazwa === 'string' && typeof x.adres === 'string' && jestTekstemLubNull(x.termin) &&
   POLA_KLIENTA.every((pole) => String(x[pole] ?? '').length <= DLUGOSC_KLIENTA[pole])
