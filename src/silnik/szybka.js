@@ -4,7 +4,7 @@
 
 import { BladWejscia } from './bledy.js'
 import { wycenUsluge } from './cena.js'
-import { zBrudem, zPoziomemBrudu } from './czas.js'
+import { ZESTAW_BIURA, zBrudem, zPoziomemBrudu } from './czas.js'
 import { kosztZlecenia } from './koszt.js'
 import { ukladBiura, ukladMieszkania } from './uklad.js'
 import { cenaDlaKlienta, zCenyRecznej } from './vat.js'
@@ -14,6 +14,7 @@ import { widelkiRynku } from './widelki.js'
 /** @typedef {import('./katalog.js').KosztyFirmy} KosztyFirmy */
 /** @typedef {import('./katalog.js').Usluga} Usluga */
 /** @typedef {import('./katalog.js').RegulaBrudu} RegulaBrudu */
+/** @typedef {import('./katalog.js').RodzajSzybkiej} RodzajSzybkiej */
 /** @typedef {import('./cena.js').WejscieWyceny} WejscieWyceny */
 /** @typedef {import('./cena.js').WynikWyceny} WynikWyceny */
 /** @typedef {import('./cena.js').DodatekWyceny} DodatekWyceny */
@@ -22,8 +23,7 @@ import { widelkiRynku } from './widelki.js'
 /** @typedef {import('./vat.js').StatusVat} StatusVat */
 /**
  * @typedef {typeof STANY_SZYBKIEJ[number]['id']} StanSzybkiej
- * @typedef {'widelki' | 'ogledziny'} RodzajSzybkiej pole `szybka_wycena` uslugi w data/ceny.json
- * @typedef {'widelki' | 'ok' | 'od'} TrybSzybkiej
+ * @typedef {typeof TRYBY_SZYBKIEJ[number]} TrybSzybkiej
  * @typedef {{ uslugaId: string, m2?: number, lazienki?: number, kuchnia?: RodzajKuchni, stan?: StanSzybkiej,
  *   pozycje?: { id: string, ilosc: number }[], dodatki?: DodatekWyceny[], dojazdKm?: number, wojewodztwoId?: string | null,
  *   odpowiedzi?: Record<string, unknown>, brud?: RegulaBrudu[] }} WejscieSzybkiej brud: reguly ze skutkow odpowiedzi klienta
@@ -35,6 +35,9 @@ import { widelkiRynku } from './widelki.js'
  *   zostaje: { od: number, do: number, naGodzine: { od: number, do: number } }, tekst: string }} WynikSzybkiej
  * @typedef {{ wejscie: WejscieWyceny, wynik: WynikWyceny, kwota: number }} Granica kwota: cena modelu z minimum, bez dojazdu klienta
  * @typedef {{ granice: Granica[], dolna: Granica, bazowa: Granica }} GraniceSzybkiej bazowa: poziom 1 (mediana i widelki rynku)
+ * @typedef {{ stan: StanSzybkiej, od: number, do: number, tryb: TrybSzybkiej, brud?: RegulaBrudu[] }} SzybkaWyceny widelki
+ *   szybkiej wyceny zapisane w rekordzie (src/dane/wyceny.js); brud: reguly ze skutkow odpowiedzi klienta, z ktorych formularz
+ *   szybkiej wyceny je odtwarza
  */
 
 /** Spodziewany stan lokalu w szybkiej wycenie; zrodlo stalej dla ekranu szybkiej wyceny. */
@@ -43,6 +46,10 @@ export const STANY_SZYBKIEJ = Object.freeze(/** @type {const} */ ([
   { id: 'typowy', etykieta: 'Typowy' },
   { id: 'mocny', etykieta: 'Mocny' },
 ]))
+/** Stan lokalu, gdy formularz go nie podal (ogledziny i pozycje go nie uzywaja); domyslny na ekranie szybkiej wyceny. */
+export const STAN_DOMYSLNY_SZYBKIEJ = 'typowy'
+/** Postac kwoty szybkiej wyceny: widelki od–do, „ok. X zł” albo „orientacyjnie od”; zrodlo stalej dla zapisu widelek. */
+export const TRYBY_SZYBKIEJ = Object.freeze(/** @type {const} */ (['widelki', 'ok', 'od']))
 
 /** Poziomy reguly `kurz` na `*` dla granic widelek: lekki = jedna kwota, typowy 1–2, mocny 2–3. */
 const POZIOMY_STANU = Object.freeze({ lekki: [1], typowy: [1, 2], mocny: [2, 3] })
@@ -51,7 +58,6 @@ const POZIOM_GORNY_POZYCJI = 2 // gorna granica pozycji: cena × mnoznik poziomu
 const BRUD_STANU = 'kurz'
 const WARIANT_SZYBKIEJ = 'jednorazowe' // biura tylko jednorazowo (R10)
 const ZAOKRAGLENIE_ZL = 10
-const RODZAJE_SZYBKIEJ = /** @type {const} */ (['widelki', 'ogledziny'])
 /** Opis uslugi z pomieszczeniami w tekscie dla klienta: nazwa i rodzaj sprzatania (bez wpisu: nazwa uslugi z danych). */
 const OPISY_POMIESZCZEN = new Map([
   ['mieszkanie_standard', { nazwa: 'Sprzątanie mieszkania', rodzaj: 'standard' }],
@@ -62,12 +68,10 @@ const OPISY_POMIESZCZEN = new Map([
 ])
 const FORMAT_LICZBY = new Intl.NumberFormat('pl-PL', { maximumFractionDigits: 2, useGrouping: 'always' })
 
-/** @param {Usluga} usluga @returns {RodzajSzybkiej} */
+/** @param {Usluga} usluga @returns {RodzajSzybkiej} pole `szybka_wycena` (wartosc sprawdza wczytajKatalog) */
 function rodzajSzybkiej(usluga) {
-  const rodzaj = 'szybka_wycena' in usluga ? usluga.szybka_wycena : undefined
-  const znany = RODZAJE_SZYBKIEJ.find((r) => r === rodzaj)
-  if (!znany) throw new BladWejscia('bez_szybkiej', `Usługa ${usluga.id} nie ma szybkiej wyceny`)
-  return znany
+  if (usluga.szybka_wycena === undefined) throw new BladWejscia('bez_szybkiej', `Usługa ${usluga.id} nie ma szybkiej wyceny`)
+  return usluga.szybka_wycena
 }
 
 /** @param {WejscieSzybkiej} wejscie @returns {readonly number[]} */
@@ -91,7 +95,7 @@ function metraz(wejscie) {
  */
 function ukladSzybkiej(usluga, wejscie, katalog) {
   const m2 = metraz(wejscie)
-  const uklad = usluga.zestaw_pomieszczen === 'biuro'
+  const uklad = usluga.zestaw_pomieszczen === ZESTAW_BIURA
     ? ukladBiura(m2, katalog.uklady)
     : ukladMieszkania(m2, { lazienki: wejscie.lazienki, kuchnia: wejscie.kuchnia }, katalog.uklady)
   return zPoziomemBrudu(zBrudem(uklad, usluga.brud_domyslny), wejscie.brud ?? [])
@@ -255,8 +259,7 @@ export function szybkaWycena(wejscie, kontekst) {
  * zostaja w `szybka.brud`, zeby formularz szybkiej wyceny odtworzyl je z zapisanego rekordu.
  * @param {WejscieSzybkiej} szybkaWejscie
  * @param {KontekstSzybkiej} kontekst
- * @returns {{ wejscie: WejscieWyceny, odpowiedzi: Record<string, unknown>,
- *   szybka: { stan: string, od: number, do: number, tryb: TrybSzybkiej, brud?: RegulaBrudu[] } }}
+ * @returns {{ wejscie: WejscieWyceny, odpowiedzi: Record<string, unknown>, szybka: SzybkaWyceny }}
  */
 export function naDokladna(szybkaWejscie, kontekst) {
   const obliczone = obliczGranice(szybkaWejscie, kontekst)
@@ -265,6 +268,6 @@ export function naDokladna(szybkaWejscie, kontekst) {
   return {
     wejscie: obliczone.dolna.wejscie,
     odpowiedzi: { ...szybkaWejscie.odpowiedzi },
-    szybka: { stan: szybkaWejscie.stan ?? '', od: wynik.od, do: wynik.do, tryb: wynik.tryb, ...(brud.length > 0 ? { brud: [...brud] } : {}) },
+    szybka: { stan: szybkaWejscie.stan ?? STAN_DOMYSLNY_SZYBKIEJ, od: wynik.od, do: wynik.do, tryb: wynik.tryb, ...(brud.length > 0 ? { brud: [...brud] } : {}) },
   }
 }

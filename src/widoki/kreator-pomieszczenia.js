@@ -4,10 +4,12 @@
 // Zmiany ida przez src/kreator/pomieszczenia.js i `zapisKroku` (src/widoki/kreator-wspolne.js); cene liczy silnik, widok tylko rysuje.
 
 import { wczytajStan } from '../dane/magazyn.js'
+import { pytaniaAplikacji } from '../dane/pytania.js'
 import {
   dodajPomieszczenie, GRANICE_METRAZU, MAKS_DLUGOSC_NAZWY, opisPrzeniesienia, podsumowanieZakresu, rodzajeBrudu, ustawBrud, ustawMetraz,
   usunPomieszczenie, zmienNazwe,
 } from '../kreator/pomieszczenia.js'
+import { brudOdpowiedzi } from '../kreator/pytania.js'
 import { zmienWybor } from '../kreator/stan.js'
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
 import { tempoDoWyceny } from '../silnik/tempo.js'
@@ -22,6 +24,7 @@ import { adresKroku, odswiezStopke, pokazKomunikat, ramaKroku, wycenaKroku, zapi
 /** @typedef {import('../silnik/cena.js').PomieszczenieWyceny} PomieszczenieWyceny */
 /** @typedef {import('../silnik/katalog.js').Katalog} Katalog */
 /** @typedef {import('../silnik/katalog.js').Brud} Brud */
+/** @typedef {import('../silnik/pytania.js').Pytania} Pytania */
 /** @typedef {import('../kreator/pomieszczenia.js').OpisPrzeniesienia} OpisPrzeniesienia */
 /**
  * @typedef {{ naRozwin: (i: number) => void, naZwin: (i: number) => void, naMetraz: (i: number, m2: number) => void,
@@ -133,6 +136,9 @@ export const widokKreatoraPomieszczen = {
     /** @type {number | null} */
     let rozwiniety = null
     let czyWszystkieBrudy = false
+    /** @type {Pytania | null} pytania do brudu z odpowiedzi klienta w nowym pomieszczeniu (wczytane w tle; bez nich sam brud uslugi) */
+    let pytania = null
+    void pytaniaAplikacji(katalog).then((wczytane) => { pytania = wczytane }).catch(reportError)
 
     /** @param {string} typ */
     const nazwaTypu = (typ) => zestaw.find((n) => n.id === typ)?.nazwa ?? typ
@@ -163,7 +169,8 @@ export const widokKreatoraPomieszczen = {
 
     /** @param {string} typ */
     function handleDodaj(typ) {
-      poZmianie(zapisz((w) => dodajPomieszczenie(w, typ, katalog)), () => {
+      const zOdpowiedzi = (/** @type {WejscieWyceny} */ w) => (pytania ? brudOdpowiedzi({ wejscie: w, odpowiedzi: wycena.odpowiedzi }, pytania) : [])
+      poZmianie(zapisz((w) => dodajPomieszczenie(w, typ, katalog, { brudOdpowiedzi: zOdpowiedzi(w) })), () => {
         rozwiniety = (wycena.wejscie.pomieszczenia ?? []).length - 1
         czyWszystkieBrudy = false
         rysuj(`#metraz-${rozwiniety}`)

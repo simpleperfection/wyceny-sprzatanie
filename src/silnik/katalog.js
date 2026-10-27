@@ -7,16 +7,19 @@ const PLIKI = { ceny: 'data/ceny.json', normy: 'data/normy.json', rynek: 'data/r
 const NAZWA_SREDNIEJ_KRAJOWEJ = 'średnia krajowa'
 const WSP_KRAJOWY = 1
 const MNOZNIK_PROGU_DOMYSLNY = 1
+/** Pole `szybka_wycena` uslugi w data/ceny.json: widelki ze stanu albo „orientacyjnie od” po ogledzinach; zrodlo stalej dla szybkiej wyceny. */
+export const RODZAJE_SZYBKIEJ = Object.freeze(/** @type {const} */ (['widelki', 'ogledziny']))
 
 /**
  * @typedef {{ pomieszczenie: string, brud: string, poziom: number }} RegulaBrudu
+ * @typedef {typeof RODZAJE_SZYBKIEJ[number]} RodzajSzybkiej bez pola usluga wchodzi do szybkiej wyceny tylko jako dodatek
  * @typedef {{ id: string, nazwa: string, wizyt_w_miesiacu: number, mnoznik_zakresu: number }} Wariant
  * @typedef {{ id: string, nazwa: string, jednostka: string, cena: number, zakres: number[] | null, typ?: 'doplata',
  *   sprzet?: string, koszt_chemii_m2?: number, koszt_chemii_szt?: number, doliczaj_material?: boolean }} Pozycja
  * @typedef {{ id: string, nazwa: string, grupa: string, tryb: 'pomieszczenia' | 'pozycje', podstawa_ceny: string,
  *   minimum_zl?: number, zestaw_pomieszczen?: string, mnoznik_zakresu?: number, brud_domyslny?: RegulaBrudu[],
  *   dodatki?: string[], warianty?: Wariant[], pozycje?: Pozycja[], progi?: string, poziomy_brudu?: boolean,
- *   tylko_dodatek?: boolean, rynek_odniesienie?: string }} Usluga
+ *   tylko_dodatek?: boolean, rynek_odniesienie?: string, szybka_wycena?: RodzajSzybkiej }} Usluga
  * @typedef {{ od_m2: number, mnoznik: number }} Prog
  * @typedef {{ od: number, do: number | null, mnoznik: number }} ProgMetrazu do: od_m2 nastepnego progu w danych (null przy ostatnim)
  * @typedef {{ poziom: number, nazwa: string, mnoznik: number }} PoziomBrudu
@@ -113,7 +116,7 @@ function jestPozycja(x) {
     brakAlbo(x.koszt_chemii_szt, jestLiczba) && brakAlbo(x.sprzet, jestTekstem)
 }
 
-/** Pola uslugi czytane przez silnik (tryb, minimum, mnoznik zakresu, warianty, pozycje, progi, rynek). @param {unknown} x */
+/** Pola uslugi czytane przez silnik (tryb, minimum, mnoznik zakresu, warianty, pozycje, progi, rynek, szybka wycena). @param {unknown} x */
 function jestUsluga(x) {
   const czyWariant = (/** @type {unknown} */ w) => maTeksty(w, ['id', 'nazwa']) && maLiczby(w, ['wizyt_w_miesiacu', 'mnoznik_zakresu'])
   const czyRegulaBrudu = (/** @type {unknown} */ r) => maTeksty(r, ['pomieszczenie', 'brud']) && maLiczby(r, ['poziom'])
@@ -121,7 +124,7 @@ function jestUsluga(x) {
     brakAlbo(x.minimum_zl, jestLiczba) && brakAlbo(x.mnoznik_zakresu, jestLiczba) && brakAlbo(x.zestaw_pomieszczen, jestTekstem) &&
     brakAlbo(x.progi, jestTekstem) && brakAlbo(x.rynek_odniesienie, jestTekstem) &&
     brakAlbo(x.pozycje, (p) => jestTablica(p, jestPozycja)) && brakAlbo(x.warianty, (w) => jestTablica(w, czyWariant)) &&
-    brakAlbo(x.brud_domyslny, (b) => jestTablica(b, czyRegulaBrudu))
+    brakAlbo(x.brud_domyslny, (b) => jestTablica(b, czyRegulaBrudu)) && brakAlbo(x.szybka_wycena, (r) => RODZAJE_SZYBKIEJ.some((z) => z === r))
 }
 
 /**

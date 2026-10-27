@@ -3,7 +3,8 @@ import { before, describe, it } from 'node:test'
 
 import { czytajJson, katalogZDysku } from '../../tests/pomocnicze.js'
 import {
-  opisOdpowiedzi, pytaniaUslugi, regulyBrudu, RODZAJE_SKUTKOW, sprawdzPytania, TYPY_ODPOWIEDZI, zastosujOdpowiedzi,
+  bezSkutkuBrudu, czySkutekWWejsciu, ODPOWIEDZI_TAK_NIE, opisOdpowiedzi, pytaniaUslugi, regulyBrudu, RODZAJE_SKUTKOW, sprawdzPytania,
+  TYPY_ODPOWIEDZI, zastosujOdpowiedzi,
 } from './pytania.js'
 
 /** @typedef {import('./katalog.js').Katalog} Katalog */
@@ -165,5 +166,92 @@ describe('sprawdzPytania', () => {
 
   it('plik bez listy wspolne daje jeden błąd kształtu', () => {
     assert.deepEqual(sprawdzPytania({ uslugi: {} }, katalog), ['Plik pytań musi mieć listę wspolne i obiekt uslugi'])
+  })
+})
+
+describe('sprawdzPytania: odmowy pojedynczych reguł', () => {
+  /** @type {Katalog} */ let katalog
+  before(async () => {
+    katalog = await katalogZDysku()
+  })
+
+  const MIEJSCE = 'uslugi.mieszkanie_standard[0] (zwierzeta)'
+  const SKUTEK = { rodzaj: 'brud', brud: 'siersc', poziom: 1, pomieszczenie: 'pokoj', gdy: 'tak' }
+  /** @type {[string, Record<string, unknown>, string[]][]} */
+  const przypadki = [
+    ['poziom brudu poza 1–3', { ...ZWIERZETA, skutek: { ...SKUTEK, poziom: 4 } }, [`${MIEJSCE}: poziom brudu 4 poza 1–3`]],
+    ['poziom brudu ułamkowy', { ...ZWIERZETA, skutek: { ...SKUTEK, poziom: 1.5 } }, [`${MIEJSCE}: poziom brudu 1.5 poza 1–3`]],
+    ['nieznane pomieszczenie', { ...ZWIERZETA, skutek: { ...SKUTEK, pomieszczenie: 'garaz' } }, [`${MIEJSCE}: nieznane pomieszczenie garaz`]],
+    ['skutek brud przy liczbie', { ...ZWIERZETA, typ: 'liczba', skutek: SKUTEK }, [`${MIEJSCE}: skutek brud przy typie liczba`]],
+    ['skutek brud przy tekście', { ...ZWIERZETA, typ: 'tekst', skutek: SKUTEK }, [`${MIEJSCE}: skutek brud przy typie tekst`]],
+    ['warunek gdy spoza odpowiedzi tak/nie', { ...ZWIERZETA, skutek: { ...SKUTEK, gdy: 'moze' } },
+      [`${MIEJSCE}: warunek skutku moze nie jest możliwą odpowiedzią`]],
+    ['warunek gdy spoza opcji wyboru', { ...ZWIERZETA, typ: 'wybor', opcje: ['Kot', 'Pies'], skutek: { ...SKUTEK, gdy: 'Chomik' } },
+      [`${MIEJSCE}: warunek skutku Chomik nie jest możliwą odpowiedzią`]],
+    ['puste opcje wyboru', { ...ZWIERZETA, typ: 'wybor', opcje: [], skutek: undefined }, [`${MIEJSCE}: puste opcje`]],
+    ['opcja wyboru ze spacji', { ...ZWIERZETA, typ: 'wybor', opcje: ['Kot', ' '], skutek: undefined }, [`${MIEJSCE}: puste opcje`]],
+    ['nieznany typ odpowiedzi', { ...ZWIERZETA, typ: 'data', skutek: undefined }, [`${MIEJSCE}: nieznany typ data`]],
+    ['nieznany rodzaj skutku', { ...ZWIERZETA, skutek: { rodzaj: 'czas' } }, [`${MIEJSCE}: nieznany rodzaj skutku`]],
+    ['skutek nie jest obiektem', { ...ZWIERZETA, skutek: 'brud' }, [`${MIEJSCE}: nieznany rodzaj skutku`]],
+    ['puste id', { ...ZWIERZETA, id: ' ' }, ['uslugi.mieszkanie_standard[0] ( ): puste id']],
+  ]
+  for (const [regula, pytanie, bledy] of przypadki) {
+    it(`${regula} → ${bledy.join('; ')}`, async () => {
+      const pytania = await zmienionePytania((p) => { p.uslugi.mieszkanie_standard?.splice(0, 1, /** @type {Pytanie} */ (pytanie)) })
+
+      assert.deepEqual(sprawdzPytania(pytania, katalog), bledy)
+    })
+  }
+
+  it('pytanie wspólne, które nie jest obiektem, i lista usługi, która nie jest tablicą', async () => {
+    const pytania = await zmienionePytania((p) => {
+      p.wspolne.splice(0, 1, /** @type {Pytanie} */ (/** @type {unknown} */ ('dojazd')))
+      p.uslugi.okna = /** @type {Pytanie[]} */ (/** @type {unknown} */ ({ id: 'okna' }))
+    })
+
+    assert.deepEqual(sprawdzPytania(pytania, katalog), ['wspolne[0]: pytanie musi być obiektem', 'uslugi.okna: lista pytań musi być tablicą'])
+  })
+
+  it('zdjęcia: nie-obiekt, nieznana usługa i pusta podpowiedź albo prośba', async () => {
+    const lista = await zmienionePytania((p) => { p.zdjecia = /** @type {never} */ ([]) })
+    const zle = await zmienionePytania((p) => {
+      p.zdjecia = { jachty: { podpowiedz: 'Maszt', prosba: 'Zdjęcie masztu' }, okna: { podpowiedz: ' ', prosba: 'Zdjęcie okien' } }
+    })
+
+    assert.deepEqual(sprawdzPytania(lista, katalog), ['zdjecia: musi być obiektem'])
+    assert.deepEqual(sprawdzPytania(zle, katalog), ['zdjecia.jachty: nieznana usługa', 'zdjecia.okna: pusta podpowiedź albo prośba'])
+  })
+})
+
+describe('skutek odpowiedzi w wejściu', () => {
+  const SIERSC_POKOJ = /** @type {const} */ ({ rodzaj: 'brud', brud: 'siersc', poziom: 1, pomieszczenie: 'pokoj', gdy: 'tak' })
+  const WEJSCIE = { uslugaId: 'mieszkanie_standard', dojazdKm: 12, pomieszczenia: [
+    { typ: 'pokoj', m2: 15, brud: [{ id: 'kurz', poziom: 1 }, { id: 'siersc', poziom: 1 }] },
+    { typ: 'pokoj', m2: 15, brud: [{ id: 'kurz', poziom: 1 }, { id: 'siersc', poziom: 2 }] },
+    { typ: 'kuchnia', m2: 8, brud: [{ id: 'siersc', poziom: 1 }] },
+  ] }
+
+  it('odpowiedzi tak/nie z jednego źródła', () => {
+    assert.deepEqual(ODPOWIEDZI_TAK_NIE, ['tak', 'nie'])
+  })
+
+  it('czySkutekWWejsciu: dojazd równy odpowiedzi i sierść 1 w pokoju są; inne km, sierść tylko w kuchni albo na poziomie 2 — nie', () => {
+    const bezPokoju1 = { ...WEJSCIE, pomieszczenia: WEJSCIE.pomieszczenia.slice(1) }
+
+    assert.equal(czySkutekWWejsciu(WEJSCIE, { rodzaj: 'dojazd_km' }, { wartosc: 12 }), true)
+    assert.equal(czySkutekWWejsciu(WEJSCIE, { rodzaj: 'dojazd_km' }, { wartosc: 32 }), false)
+    assert.equal(czySkutekWWejsciu(WEJSCIE, SIERSC_POKOJ, { wartosc: 'tak' }), true)
+    assert.equal(czySkutekWWejsciu(bezPokoju1, SIERSC_POKOJ, { wartosc: 'tak' }), false)
+  })
+
+  it('bezSkutkuBrudu: pokój z poziomem skutku traci sierść (albo wraca poziom domyślny), pokój z poziomem 2 i kuchnia zostają', () => {
+    const bezDomyslnego = bezSkutkuBrudu(WEJSCIE, SIERSC_POKOJ, () => [{ id: 'kurz', poziom: 1 }])
+    const zDomyslnym = bezSkutkuBrudu(WEJSCIE, SIERSC_POKOJ, () => [{ id: 'siersc', poziom: 3 }])
+
+    assert.deepEqual(bezDomyslnego.pomieszczenia?.map((p) => p.brud), [
+      [{ id: 'kurz', poziom: 1 }], [{ id: 'kurz', poziom: 1 }, { id: 'siersc', poziom: 2 }], [{ id: 'siersc', poziom: 1 }],
+    ])
+    assert.deepEqual(zDomyslnym.pomieszczenia?.[0]?.brud, [{ id: 'kurz', poziom: 1 }, { id: 'siersc', poziom: 3 }])
+    assert.equal(zDomyslnym.dojazdKm, 12)
   })
 })

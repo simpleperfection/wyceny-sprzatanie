@@ -13,7 +13,8 @@ import { sprawdzIlosc, sprawdzMetraz } from './walidacja.js'
 /** @typedef {{ id: string, ilosc: number }} IloscPozycji */
 /** @typedef {{ uslugaId: string, pozycjaId: string, ilosc: number }} IloscDodatku */
 
-const ZESTAW_BIURA = 'biuro'
+/** Zestaw pomieszczen biura (zestawy_pomieszczen w data/normy.json, progi_wydajnosci.biuro); zrodlo stalej dla ukladu szybkiej wyceny. */
+export const ZESTAW_BIURA = 'biuro'
 const MNOZNIK_NEUTRALNY = 1
 const REGULA_KAZDE_POMIESZCZENIE = '*'
 

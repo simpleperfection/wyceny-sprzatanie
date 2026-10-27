@@ -115,6 +115,18 @@ describe('wczytajKatalog: kontrole danych', () => {
     })
   }
 
+  it('szybka_wycena usługi: ogledziny trafia do katalogu, nieznana wartość (telefon) → BladKatalogu zly_format', async () => {
+    const dobre = await daneTestowe()
+    dobre.ceny.uslugi[0].szybka_wycena = 'ogledziny'
+    const zle = await daneTestowe()
+    zle.ceny.uslugi[0].szybka_wycena = 'telefon'
+
+    const katalog = await katalogZDanych(dobre)
+
+    assert.equal(katalog.usluga(dobre.ceny.uslugi[0].id).szybka_wycena, 'ogledziny')
+    await assert.rejects(katalogZDanych(zle), bladKatalogu('zly_format'))
+  })
+
   it('pola, których silnik nie czyta (koszty_firmy.praca, dojazd.zakres_rynkowy), nie są wymagane', async () => {
     const dane = await daneTestowe()
     delete dane.ceny.koszty_firmy.praca

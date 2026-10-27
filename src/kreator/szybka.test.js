@@ -3,10 +3,10 @@ import { before, describe, it } from 'node:test'
 
 import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
 import { czytajJson, katalogZDysku } from '../../tests/pomocnicze.js'
-import { utworzMagazyn } from '../dane/magazyn.js'
+import { BladMagazynu, utworzMagazyn } from '../dane/magazyn.js'
 import { wczytajDomyslne, zapiszUstawienia } from '../dane/ustawienia.js'
 import { BladWyceny, utworzSzkic, wycena, zmienStatus } from '../dane/wyceny.js'
-import { BladWejscia } from '../silnik/bledy.js'
+import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
 import {
   dojazdZOdpowiedzi, formularzDomyslny, kontekstSzybkiej, opcjeUslug, oznaczWyslana, polaUslugi, wejscieZWyceny, wynikFormularza,
   zapiszSzybka, zBrudemOdpowiedzi, zMetrazem, zSzybkiej, zUsluga,
@@ -239,5 +239,41 @@ describe('zSzybkiej', () => {
 
     assert.throws(() => zSzybkiej(kontekst, szybka, pytania), bladWyceny('rodzaj'))
     assert.throws(() => zSzybkiej(kontekst, { id: 'nie-ma' }, pytania), bladWyceny('brak_wyceny'))
+  })
+})
+
+describe('wynikFormularza: gałęzie błędów', () => {
+  it('ujemna liczba łazienek → błąd metrazu z BladWejscia lazienki', () => {
+    const stan = wynikFormularza(kontekstFirmy(), { ...mieszkanie50(), lazienki: -1 })
+
+    assert.ok(stan.stan === 'blad')
+    assert.equal(stan.kod, 'metraz')
+    assert.ok(stan.blad instanceof BladWejscia && stan.blad.kod === 'lazienki')
+  })
+
+  it('inny BladWejscia (nieznany stan lokalu) → błąd liczenia z tym błędem', () => {
+    const stan = wynikFormularza(kontekstFirmy(), { ...mieszkanie50(), stan: /** @type {never} */ ('brudny') })
+
+    assert.ok(stan.stan === 'blad')
+    assert.equal(stan.kod, 'liczenie')
+    assert.ok(stan.blad instanceof BladWejscia && stan.blad.kod === 'stan')
+  })
+
+  it('BladKatalogu (tempo w data/domyslne.json nie jest dodatnie) → błąd liczenia z tym błędem', () => {
+    const kontekst = kontekstFirmy()
+
+    const stan = wynikFormularza({ ...kontekst, domyslne: { ...kontekst.domyslne, tempo: 0 } }, mieszkanie50())
+
+    assert.ok(stan.stan === 'blad')
+    assert.equal(stan.kod, 'liczenie')
+    assert.ok(stan.blad instanceof BladKatalogu && stan.blad.kod === 'zly_format')
+  })
+
+  it('błąd spoza silnika (nieczytelny magazyn) leci dalej jako BladMagazynu', () => {
+    const kontekst = kontekstFirmy()
+    const magazyn = Object.create(kontekst.magazyn)
+    magazyn.wczytaj = () => ({ blad: 'uszkodzony' })
+
+    assert.throws(() => wynikFormularza({ ...kontekst, magazyn }, mieszkanie50()), (b) => b instanceof BladMagazynu)
   })
 })

@@ -11,7 +11,7 @@ import { ukladMieszkania } from '../silnik/uklad.js'
 import { procent, tempo } from '../ui/format.js'
 import { kosztPrzyTempie } from './podsumowanie.js'
 import { nowySzkic, zmienWejscie } from './stan.js'
-import { czasStartowy, historiaPlanuIFaktu, infoTempa, poprawnyCzas, widokZakonczenia } from './zakonczenie.js'
+import { czasStartowy, historiaPlanuIFaktu, infoTempa, planZakonczenia, poprawnyCzas, widokZakonczenia } from './zakonczenie.js'
 
 /** @typedef {import('../silnik/katalog.js').Katalog} Katalog */
 /** @typedef {import('../dane/ustawienia.js').Domyslne} Domyslne */
@@ -247,5 +247,62 @@ describe('dodajWykonanie z id nadanym przez ekran', () => {
     const stan = dodajWykonanie(kontekst.magazyn, w.id, wpis)
 
     assert.deepEqual([wycena(stan, w.id)?.status, wycena(stan, w.id)?.wykonania.length], ['przyjeta', 1])
+  })
+})
+
+describe('realna stawka i koszt przy tempie: wartości dosłowne', () => {
+  const DOKLADNOSC_ZL = 1e-3
+  /** @param {unknown} b */
+  const brakWyniku = (b) => b instanceof BladWyceny && b.kod === 'brak_wyniku'
+
+  it('fakt 330 min mieszkania 50 m²: zostaje 234,612 zł, 42,657 zł/h; plan (tempo 1,3) 46,912 zł/h', () => {
+    const kontekst = kontekstFirmy()
+
+    const widok = widokZakonczenia(przyjeteMieszkanie(kontekst), 330, kontekst)
+
+    assertBlisko(widok.zostaje, 234.612, DOKLADNOSC_ZL)
+    assertBlisko(widok.stawka, 42.657, DOKLADNOSC_ZL)
+    assertBlisko(widok.stawkaPlanu, 46.912, DOKLADNOSC_ZL)
+  })
+
+  it('kosztPrzyTempie przy tempie 1,3: 46,912 zł/h; cena ręczna 400 zł podnosi to, co zostaje, o różnicę ceny', () => {
+    const kontekst = kontekstFirmy()
+    const w = przyjeteMieszkanie(kontekst)
+
+    const zModelu = kosztPrzyTempie(w, kontekst, 1.3)
+    const zReczna = kosztPrzyTempie({ ...w, cenaReczna: 400 }, kontekst, 1.3)
+
+    assertBlisko(zModelu.zostajeNaGodzine, 46.912, DOKLADNOSC_ZL)
+    assertBlisko(zReczna.zostaje - zModelu.zostaje, 400 - (w.wynik?.cena ?? Number.NaN), DOKLADNOSC_ZL)
+  })
+
+  it('kosztPrzyTempie, widokZakonczenia i planZakonczenia bez migawki wyniku dają BladWyceny brak_wyniku', () => {
+    const kontekst = kontekstFirmy()
+    const bezWyniku = { ...przyjeteMieszkanie(kontekst), wynik: null }
+
+    assert.throws(() => kosztPrzyTempie(bezWyniku, kontekst, 1.3), brakWyniku)
+    assert.throws(() => widokZakonczenia(bezWyniku, 330, kontekst), brakWyniku)
+    assert.throws(() => planZakonczenia(bezWyniku, kontekst), brakWyniku)
+  })
+})
+
+describe('planZakonczenia: dane ekranu liczone raz', () => {
+  it('plan 300 min i stawka planu z tempa 1,3; widok z gotowym planem nie czyta magazynu i daje ten sam wynik', () => {
+    const kontekst = kontekstFirmy()
+    const w = przyjeteMieszkanie(kontekst)
+    const plan = planZakonczenia(w, kontekst)
+    let odczyty = 0
+    const magazyn = Object.create(kontekst.magazyn)
+    magazyn.wczytaj = () => {
+      odczyty += 1
+      return kontekst.magazyn.wczytaj()
+    }
+
+    const widok = widokZakonczenia(w, 330, { ...kontekst, magazyn }, plan)
+
+    assert.deepEqual([plan.plan, plan.przed.wartosc, plan.przed.zrodlo], [300, 1.3, 'domyslne'])
+    assertBlisko(plan.stawkaPlanu, 46.912, 1e-3)
+    assert.equal(odczyty, 0)
+    assert.deepEqual(widok, widokZakonczenia(w, 330, kontekst))
   })
 })

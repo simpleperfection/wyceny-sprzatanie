@@ -10,6 +10,7 @@ import { zPoziomemBrudu } from './czas.js'
 /** @typedef {import('./katalog.js').RegulaBrudu} RegulaBrudu */
 /** @typedef {import('./cena.js').WejscieWyceny} WejscieWyceny */
 /** @typedef {import('./cena.js').StawkiDojazdu} StawkiDojazdu */
+/** @typedef {import('./czas.js').BrudPomieszczenia} BrudPomieszczenia */
 /**
  * @typedef {typeof TYPY_ODPOWIEDZI[number]} TypOdpowiedzi
  * @typedef {{ rodzaj: 'brud', brud: string, poziom: number, pomieszczenie: string, gdy: string }} SkutekBrudu gdy: „tak” albo opcja
@@ -26,8 +27,10 @@ export const RODZAJE_SKUTKOW = Object.freeze(/** @type {const} */ (['brud', 'doj
 /** Typy odpowiedzi na pytania do klienta; zrodlo stalej dla ekranu pytan. */
 export const TYPY_ODPOWIEDZI = Object.freeze(/** @type {const} */ (['tak_nie', 'wybor', 'liczba', 'tekst']))
 
+/** Odpowiedzi na pytanie `tak_nie` (wartosc zapisu); zrodlo stalej dla ekranu pytan. */
+export const ODPOWIEDZI_TAK_NIE = Object.freeze(/** @type {const} */ (['tak', 'nie']))
+
 const MAKS_DLUGOSC_TEKSTU = 200 // notatka i odpowiedz tekstowa
-const ODPOWIEDZI_TAK_NIE = ['tak', 'nie']
 const KAZDE_POMIESZCZENIE = '*'
 const MIEJSCA_POMIESZCZEN = new Map([
   [KAZDE_POMIESZCZENIE, 'we wszystkich pomieszczeniach'], ['pokoj', 'w pokojach'], ['przedpokoj', 'w przedpokoju'],
@@ -42,6 +45,10 @@ const jestObiektem = (x) => typeof x === 'object' && x !== null && !Array.isArra
 const jestNiepustymTekstem = (x) => typeof x === 'string' && x.trim() !== ''
 /** @param {string} tekst */
 const malaLitera = (tekst) => tekst.charAt(0).toLocaleLowerCase('pl-PL') + tekst.slice(1)
+/** @param {SkutekBrudu} skutek @param {{ typ: string }} pomieszczenie */
+const czyPasuje = (skutek, pomieszczenie) => skutek.pomieszczenie === KAZDE_POMIESZCZENIE || skutek.pomieszczenie === pomieszczenie.typ
+/** @param {SkutekBrudu} skutek @param {{ brud?: BrudPomieszczenia[] }} pomieszczenie */
+const maPoziomSkutku = (skutek, pomieszczenie) => (pomieszczenie.brud ?? []).some((b) => b.id === skutek.brud && b.poziom === skutek.poziom)
 
 /**
  * Pytania uslugi: wspolne, potem pytania uslugi (kolejnosc z pliku).
@@ -57,7 +64,7 @@ export function pytaniaUslugi(uslugaId, pytania) {
 
 /** @param {Pytanie} pytanie @param {unknown} wartosc */
 function czyWartoscPasuje(pytanie, wartosc) {
-  if (pytanie.typ === 'tak_nie') return typeof wartosc === 'string' && ODPOWIEDZI_TAK_NIE.includes(wartosc)
+  if (pytanie.typ === 'tak_nie') return typeof wartosc === 'string' && ODPOWIEDZI_TAK_NIE.some((o) => o === wartosc)
   if (pytanie.typ === 'wybor') return typeof wartosc === 'string' && (pytanie.opcje ?? []).includes(wartosc)
   if (pytanie.typ === 'liczba') return typeof wartosc === 'number' && Number.isFinite(wartosc) && wartosc >= 0
   return jestNiepustymTekstem(wartosc) && wartosc.length <= MAKS_DLUGOSC_TEKSTU
@@ -155,6 +162,35 @@ export function regulyBrudu(uslugaId, odpowiedzi, pytania) {
   })
 }
 
+/**
+ * Czy skutek odpowiedzi jest w wejsciu wyceny: kilometry dojazdu rowne odpowiedzi albo brud skutku na jego poziomie w co najmniej
+ * jednym pasujacym pomieszczeniu (reczna zmiana w kreatorze albo pomieszczenie bez skutku go zdejmuja).
+ * @param {WejscieWyceny} wejscie @param {Skutek} skutek @param {Odpowiedz} odpowiedz
+ * @returns {boolean}
+ */
+export function czySkutekWWejsciu(wejscie, skutek, odpowiedz) {
+  if (skutek.rodzaj === 'dojazd_km') return (wejscie.dojazdKm ?? 0) === odpowiedz.wartosc
+  return (wejscie.pomieszczenia ?? []).some((p) => czyPasuje(skutek, p) && maPoziomSkutku(skutek, p))
+}
+
+/**
+ * Wejscie bez brudu skutku odpowiedzi, ktora przestala go uruchamiac (np. „tak” → „nie”): w pasujacych pomieszczeniach, w ktorych
+ * brud wciaz ma poziom skutku, wraca poziom nowego pomieszczenia z `domyslny` (np. `brud_domyslny` uslugi) albo brud znika.
+ * Pomieszczenia z poziomem zmienionym recznie zostaja.
+ * @param {WejscieWyceny} wejscie @param {SkutekBrudu} skutek
+ * @param {(typ: string) => BrudPomieszczenia[]} domyslny brud nowego pomieszczenia danego typu
+ * @returns {WejscieWyceny}
+ */
+export function bezSkutkuBrudu(wejscie, skutek, domyslny) {
+  const pomieszczenia = (wejscie.pomieszczenia ?? []).map((p) => {
+    if (!czyPasuje(skutek, p) || !maPoziomSkutku(skutek, p)) return p
+    const zwykly = domyslny(p.typ).find((b) => b.id === skutek.brud)
+    const brud = p.brud ?? []
+    return { ...p, brud: zwykly ? brud.map((b) => (b.id === skutek.brud ? { ...zwykly } : b)) : brud.filter((b) => b.id !== skutek.brud) }
+  })
+  return { ...wejscie, pomieszczenia }
+}
+
 /** @param {string} miejsce @param {Record<string, unknown>} skutek @param {Record<string, unknown>} pytanie @param {Set<string>} typy @param {Katalog} katalog */
 function bledySkutkuBrudu(miejsce, skutek, pytanie, typy, katalog) {
   const bledy = []
@@ -167,7 +203,7 @@ function bledySkutkuBrudu(miejsce, skutek, pytanie, typy, katalog) {
   if (typeof skutek.pomieszczenie !== 'string' || (skutek.pomieszczenie !== KAZDE_POMIESZCZENIE && !typy.has(skutek.pomieszczenie))) {
     bledy.push(`${miejsce}: nieznane pomieszczenie ${String(skutek.pomieszczenie)}`)
   }
-  const dozwolone = pytanie.typ === 'tak_nie' ? ODPOWIEDZI_TAK_NIE : pytanie.typ === 'wybor' && Array.isArray(pytanie.opcje) ? pytanie.opcje : null
+  const dozwolone = pytanie.typ === 'tak_nie' ? [...ODPOWIEDZI_TAK_NIE] : pytanie.typ === 'wybor' && Array.isArray(pytanie.opcje) ? pytanie.opcje : null
   if (!dozwolone) bledy.push(`${miejsce}: skutek brud przy typie ${String(pytanie.typ)}`)
   else if (!dozwolone.includes(skutek.gdy)) bledy.push(`${miejsce}: warunek skutku ${String(skutek.gdy)} nie jest możliwą odpowiedzią`)
   return bledy

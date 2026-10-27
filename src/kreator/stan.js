@@ -1,12 +1,9 @@
 // Stan kreatora dokladnej wyceny (R25, R29): szkic zapisywany na biezaco, przeliczenie migawki silnikiem (R5) i reguly krokow.
 // Logika bez DOM; zapisy ida przez src/dane/wyceny.js, ceny przez src/silnik/. Widoki kreatora (src/widoki/kreator-*.js) tylko rysuja.
 
-import { maKrotkieTeksty } from '../dane/ksztalt.js'
 import { wczytajStan } from '../dane/magazyn.js'
 import { scalKoszty, ustawieniaDomyslne } from '../dane/ustawienia.js'
-import {
-  BladWyceny, jestWycena, nieaktualnaPoWyslaniu, utworzSzkic, wycena as znajdzWycene, zapiszWejscie,
-} from '../dane/wyceny.js'
+import { BladWyceny, utworzSzkic, wycena as znajdzWycene, zapiszPolaWyceny, zapiszWejscie } from '../dane/wyceny.js'
 import { BladWejscia } from '../silnik/bledy.js'
 import { wycenUsluge } from '../silnik/cena.js'
 import { zBrudem } from '../silnik/czas.js'
@@ -18,7 +15,7 @@ import { widelkiRynku } from '../silnik/widelki.js'
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
 /** @typedef {import('../dane/wyceny.js').MigawkaWyniku} MigawkaWyniku */
 /** @typedef {import('../dane/wyceny.js').RodzajWyceny} RodzajWyceny */
-/** @typedef {import('../dane/wyceny.js').SzybkaWyceny} SzybkaWyceny */
+/** @typedef {import('../silnik/szybka.js').SzybkaWyceny} SzybkaWyceny */
 /** @typedef {import('../silnik/cena.js').WejscieWyceny} WejscieWyceny */
 /** @typedef {import('../silnik/czas.js').BrudPomieszczenia} BrudPomieszczenia */
 /** @typedef {import('../silnik/katalog.js').Katalog} Katalog */
@@ -166,29 +163,18 @@ export function zmienWejscie(kontekst, id, fn) {
 
 /**
  * Zmiana pol wyceny poza samym wejsciem (zamiana szybkiej wyceny w dokladna, widelki szybkiej, odpowiedzi klienta) w jednym
- * zapisie magazynu na swiezym stanie: `fn` dostaje swieza wycene i moze rzucic (nic sie nie zapisuje). Nowe wejscie liczy sie
- * od nowa jak w zmienWejscie (pusty zakres czysci migawke szkicu, wycena z numerem go odmawia), a po wyslaniu oznacza oferte
- * jako nieaktualna; wykonana jest tylko do odczytu. Wynik sprawdza straznik jestWycena z src/dane/wyceny.js (jedyny opis wyceny).
+ * zapisie magazynu na swiezym stanie (zapiszPolaWyceny z src/dane/wyceny.js, tam reguly zapisu): `fn` dostaje swieza wycene
+ * i moze rzucic (nic sie nie zapisuje). Nowe wejscie dostaje tu migawke z ustawieniami ze swiezego stanu (pusty zakres: null).
  * @param {DaneAplikacji} kontekst @param {string} id @param {(w: Wycena) => ZmianaPolWyceny} fn
  * @returns {Wycena} wycena po zapisie
  */
 export function zapiszZmianyWyceny(kontekst, id, fn) {
   const { magazyn, katalog } = kontekst
-  const stan = magazyn.zmien((biezacy) => {
-    const obecna = znajdzWycene(biezacy, id)
-    if (!obecna) throw new BladWyceny('brak_wyceny', `Nie ma wyceny ${id}`)
-    if (obecna.status === 'wykonana') throw new BladWyceny('tylko_odczyt', `Wycena ${obecna.numer ?? id} jest wykonana`)
+  const stan = zapiszPolaWyceny(magazyn, id, (obecna, biezacy) => {
     const { wejscie, ...pola } = fn(obecna)
-    /** @type {Wycena} */
-    let nowa = { ...obecna, ...pola, zmieniona: new Date().toISOString() }
-    if (wejscie !== undefined) {
-      katalog.usluga(wejscie.uslugaId)
-      const wynik = czyPustyZakres(wejscie) ? null : migawkaWyniku(wejscie, kontekst, biezacy.ustawienia)
-      if (wynik === null && obecna.status !== 'szkic') throw new BladWyceny('pusty_zakres', `Wycena ${obecna.numer ?? id} musi mieć zakres`)
-      nowa = { ...nowa, wejscie, wynik, oferta: nieaktualnaPoWyslaniu(obecna) }
-    }
-    if (!jestWycena(nowa) || !maKrotkieTeksty(nowa)) throw new BladWyceny('ksztalt', `Zmiana wyceny ${id} daje zły kształt albo za długi tekst`)
-    return { ...biezacy, wyceny: biezacy.wyceny.map((w) => (w.id === id ? nowa : w)) }
+    if (wejscie === undefined) return pola
+    katalog.usluga(wejscie.uslugaId)
+    return { ...pola, wejscie, wynik: czyPustyZakres(wejscie) ? null : migawkaWyniku(wejscie, kontekst, biezacy.ustawienia) }
   })
   const zapisana = znajdzWycene(stan, id)
   if (!zapisana) throw new BladWyceny('brak_wyceny', `Nie ma wyceny ${id}`)

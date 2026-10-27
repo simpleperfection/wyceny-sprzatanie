@@ -1,13 +1,16 @@
 // Pytania do klienta przy wycenie (R13) dla ekranu `#/wycena/:id/pytania` i licznika „Pytania do klienta · a z n”: lista pytan
-// uslugi z odpowiedziami i skutkami w modelu oraz zapis odpowiedzi. Dokladna wycena dostaje skutek zmienionej odpowiedzi
-// w wejsciu (reczne zmiany w kreatorze zostaja), szybka liczy sie od nowa z formularza z dojazdem z odpowiedzi. Bez DOM.
+// uslugi z odpowiedziami i skutkami obecnymi w wejsciu oraz zapis odpowiedzi. Dokladna wycena dostaje skutek zmienionej
+// wartosci odpowiedzi w wejsciu (reczne zmiany w kreatorze zostaja, nowe pomieszczenie dostaje brud z brudOdpowiedzi), szybka
+// liczy sie od nowa z formularza z dojazdem i brudem z odpowiedzi. Bez DOM.
 
 import { wczytajStan } from '../dane/magazyn.js'
 import { scalKoszty } from '../dane/ustawienia.js'
 import { BladWyceny, wycena as znajdzWycene } from '../dane/wyceny.js'
 import { BladWejscia } from '../silnik/bledy.js'
-import { opisOdpowiedzi, pytaniaUslugi, zastosujOdpowiedzi } from '../silnik/pytania.js'
-import { zapiszZmianyWyceny } from './stan.js'
+import {
+  bezSkutkuBrudu, czySkutekWWejsciu, opisOdpowiedzi, pytaniaUslugi, regulyBrudu, zastosujOdpowiedzi,
+} from '../silnik/pytania.js'
+import { brudNowegoPomieszczenia, zapiszZmianyWyceny } from './stan.js'
 import { kontekstSzybkiej, wejscieZWyceny, zapiszSzybka, zSkutkamiOdpowiedzi } from './szybka.js'
 
 /** @typedef {import('../ui/router.js').DaneAplikacji} DaneAplikacji */
@@ -16,6 +19,8 @@ import { kontekstSzybkiej, wejscieZWyceny, zapiszSzybka, zSkutkamiOdpowiedzi } f
 /** @typedef {import('../silnik/pytania.js').Pytania} Pytania */
 /** @typedef {import('../silnik/pytania.js').Pytanie} Pytanie */
 /** @typedef {import('../silnik/pytania.js').Odpowiedz} Odpowiedz */
+/** @typedef {import('../silnik/cena.js').WejscieWyceny} WejscieWyceny */
+/** @typedef {import('../silnik/katalog.js').RegulaBrudu} RegulaBrudu */
 /**
  * @typedef {{ pytanie: Pytanie, odpowiedz: Odpowiedz | null, opis: string | null, skutek: string | null }} PytanieEkranu
  *   opis: odpowiedz do pokazania („Tak, kot”), skutek: co odpowiedz ustawila w wycenie („sierść, poziom 1 w pokojach”)
@@ -59,21 +64,42 @@ export function odpowiedziUslugi(uslugaId, odpowiedzi, pytania) {
   return { lista, odpowiedziane: lista.filter((p) => p.odpowiedz !== null).length, liczba: lista.length, bledne }
 }
 
+/** @param {OdpowiedziUslugi} wynik @returns {Record<string, unknown>} odpowiedzi o dobrym ksztalcie (bez `bledne`) */
+const poprawneOdpowiedzi = (wynik) => Object.fromEntries(wynik.lista.flatMap((p) => (p.odpowiedz ? [[p.pytanie.id, p.odpowiedz]] : [])))
+
 /**
- * Ekran pytan wyceny: odpowiedzi z opisem i skutkiem kazdej odpowiedzi w modelu (zastosujOdpowiedzi na wejsciu wyceny: brud
- * w pomieszczeniach, dojazd ze stawka klienta z ustawien).
+ * Ekran pytan wyceny: odpowiedzi z opisem i skutkiem odpowiedzi, ktory jest w wejsciu wyceny (brud skutku na jego poziomie
+ * w pasujacym pomieszczeniu, kilometry dojazdu rowne odpowiedzi; opis dojazdu ze stawka klienta z ustawien). Skutek zdjety
+ * recznie w kreatorze nie ma pigulki.
  * @param {Wycena} wycena @param {Pytania} pytania @param {DaneAplikacji} kontekst
  * @returns {OdpowiedziUslugi}
  */
 export function pytaniaWyceny(wycena, pytania, kontekst) {
   const { katalog, magazyn } = kontekst
   const wynik = odpowiedziUslugi(wycena.wejscie.uslugaId, wycena.odpowiedzi, pytania)
-  /** @type {Record<string, unknown>} */
-  const poprawne = Object.fromEntries(wynik.lista.flatMap((p) => (p.odpowiedz ? [[p.pytanie.id, p.odpowiedz]] : [])))
   const stawkiDojazdu = scalKoszty(katalog.kosztyFirmy, wczytajStan(magazyn).ustawienia).dojazd
-  const { skutki } = zastosujOdpowiedzi(wycena.wejscie, poprawne, pytania, katalog, { stawkiDojazdu })
+  const { skutki } = zastosujOdpowiedzi(wycena.wejscie, poprawneOdpowiedzi(wynik), pytania, katalog, { stawkiDojazdu })
   const opisy = new Map(skutki.map((s) => [s.pytanieId, s.opis]))
-  return { ...wynik, lista: wynik.lista.map((p) => ({ ...p, skutek: opisy.get(p.pytanie.id) ?? null })) }
+  return {
+    ...wynik,
+    lista: wynik.lista.map((p) => {
+      const opis = opisy.get(p.pytanie.id)
+      const czyObecny = opis !== undefined && p.pytanie.skutek !== undefined && p.odpowiedz !== null &&
+        czySkutekWWejsciu(wycena.wejscie, p.pytanie.skutek, p.odpowiedz)
+      return { ...p, skutek: czyObecny ? opis : null }
+    }),
+  }
+}
+
+/**
+ * Reguly brudu z odpowiedzi klienta wyceny (skutek `brud` z odpowiedzia rowna `gdy`) dla pomieszczenia dodanego w kreatorze
+ * po odpowiedzi; odpowiedzi o zlym ksztalcie sa pomijane.
+ * @param {Pick<Wycena, 'wejscie' | 'odpowiedzi'>} wycena @param {Pytania} pytania
+ * @returns {RegulaBrudu[]}
+ */
+export function brudOdpowiedzi(wycena, pytania) {
+  const { uslugaId } = wycena.wejscie
+  return regulyBrudu(uslugaId, poprawneOdpowiedzi(odpowiedziUslugi(uslugaId, wycena.odpowiedzi, pytania)), pytania)
 }
 
 /** @param {Odpowiedz} odpowiedz @returns {Odpowiedz} wartosc tekstowa i notatka bez spacji na koncach, pusta notatka pominieta */
@@ -84,10 +110,29 @@ function bezSpacji({ wartosc, notatka }) {
 }
 
 /**
+ * Wejscie dokladnej wyceny po zmianie wartosci odpowiedzi na pytanie ze skutkiem: skutek nowej wartosci albo zdjecie brudu
+ * skutku, ktory poprzednia wartosc uruchamiala (`tak` → `nie`). Undefined = wejscie bez zmian (pytanie bez skutku, ta sama
+ * wartosc, np. inna notatka, usuniecie odpowiedzi albo zmiana bez wplywu), wiec migawka i oferta zostaja.
+ * @param {Wycena} obecna @param {Pytanie} pytanie @param {Odpowiedz} odpowiedz @param {Pytania} pytania @param {DaneAplikacji} kontekst
+ * @returns {WejscieWyceny | undefined}
+ */
+function wejscieZOdpowiedzi(obecna, pytanie, odpowiedz, pytania, kontekst) {
+  const { skutek } = pytanie
+  const poprzednia = obecna.odpowiedzi[pytanie.id]
+  if (!skutek || (jestOdpowiedzia(poprzednia) && poprzednia.wartosc === odpowiedz.wartosc)) return undefined
+  const { katalog, magazyn } = kontekst
+  const stawkiDojazdu = scalKoszty(katalog.kosztyFirmy, wczytajStan(magazyn).ustawienia).dojazd
+  const { wejscie, skutki } = zastosujOdpowiedzi(obecna.wejscie, { [pytanie.id]: odpowiedz }, pytania, katalog, { stawkiDojazdu })
+  const czyZdjac = skutek.rodzaj === 'brud' && skutki.length === 0 && jestOdpowiedzia(poprzednia) && poprzednia.wartosc === skutek.gdy
+  const nowe = czyZdjac ? bezSkutkuBrudu(obecna.wejscie, skutek, (typ) => brudNowegoPomieszczenia(katalog, obecna.wejscie.uslugaId, typ)) : wejscie
+  return JSON.stringify(nowe) === JSON.stringify(obecna.wejscie) ? undefined : nowe
+}
+
+/**
  * Zapis odpowiedzi na pytanie (null usuwa odpowiedz). Zla wartosc albo za dluga notatka daje BladWejscia (`odpowiedz`, `notatka`),
- * pytanie spoza listy uslugi — BladWejscia `nieznane_pytanie`. Dokladna wycena: skutek tej odpowiedzi trafia do wejscia razem
- * z odpowiedziami w jednym zapisie (zmiana w innej karcie miedzy odczytem a zapisem daje BladWyceny `nieaktualna`); usuniecie
- * odpowiedzi zostawia wejscie. Szybka: formularz z nowymi odpowiedziami i ich skutkami (dojazd i brud) zapisuje zapiszSzybka.
+ * pytanie spoza listy uslugi — BladWejscia `nieznane_pytanie`. Dokladna wycena: zmiana wejscia z wejscieZOdpowiedzi trafia
+ * do zapisu razem z odpowiedziami (zmiana w innej karcie miedzy odczytem a zapisem daje BladWyceny `nieaktualna`); bez zmiany
+ * wejscia zapisuja sie same odpowiedzi. Szybka: formularz z nowymi odpowiedziami i ich skutkami (dojazd i brud) zapisuje zapiszSzybka.
  * @param {DaneAplikacji} kontekst @param {string} id @param {string} pytanieId @param {Odpowiedz | null} odpowiedz
  * @param {Pytania} pytania
  * @returns {Wycena}
@@ -106,9 +151,7 @@ export function zapiszOdpowiedz(kontekst, id, pytanieId, odpowiedz, pytania) {
     const formularz = { ...wejscieZWyceny(obecna, katalog), odpowiedzi }
     return zapiszSzybka(kontekst, id, zSkutkamiOdpowiedzi(formularz, pytania, kontekstSzybkiej(kontekst, formularz.uslugaId)))
   }
-  const stawkiDojazdu = scalKoszty(katalog.kosztyFirmy, wczytajStan(magazyn).ustawienia).dojazd
-  const wejscie = czysta === null ? undefined
-    : zastosujOdpowiedzi(obecna.wejscie, { [pytanieId]: czysta }, pytania, katalog, { stawkiDojazdu }).wejscie
+  const wejscie = czysta === null ? undefined : wejscieZOdpowiedzi(obecna, pytanie, czysta, pytania, kontekst)
   return zapiszZmianyWyceny(kontekst, id, (w) => {
     if (w.zmieniona !== obecna.zmieniona) throw new BladWyceny('nieaktualna', `Wycena ${id} zmieniła się w innej karcie`)
     return wejscie === undefined ? { odpowiedzi } : { odpowiedzi, wejscie }

@@ -6,6 +6,7 @@ import {
   jestDataIso, jestDniem, jestListaTekstow, jestLiczba, jestObiektem, jestTekstemLubNull, jestWarunkiem, MAKS_DLUGOSC_TEKSTU, MAKS_ZAGLEBIENIE,
   maKrotkieTeksty,
 } from './ksztalt.js'
+import { STANY_SZYBKIEJ, TRYBY_SZYBKIEJ } from '../silnik/szybka.js'
 
 /** @typedef {import('./magazyn.js').Magazyn} Magazyn */
 /** @typedef {import('./magazyn.js').Stan} Stan */
@@ -15,6 +16,7 @@ import {
 /** @typedef {import('../silnik/cena.js').Propozycja} Propozycja */
 /** @typedef {import('../silnik/cena.js').WejscieWyceny} WejscieWyceny */
 /** @typedef {import('../silnik/katalog.js').RegulaBrudu} RegulaBrudu */
+/** @typedef {import('../silnik/szybka.js').SzybkaWyceny} SzybkaWyceny */
 /** @typedef {import('../silnik/vat.js').StatusVat} StatusVat */
 /** @typedef {import('../silnik/widelki.js').WidelkiRynku} WidelkiRynku */
 
@@ -31,8 +33,6 @@ export const MAKS_WYCEN = 5000
  * @typedef {typeof STATUSY_WYCENY[number]} StatusWyceny
  * @typedef {typeof RODZAJE_WYCENY[number]} RodzajWyceny
  * @typedef {{ nazwa: string, adres: string, termin: string | null }} KlientWyceny
- * @typedef {{ stan: string, od: number, do: number, tryb: string, brud?: RegulaBrudu[] }} SzybkaWyceny widelki szybkiej wyceny,
- *   z ktorej powstala dokladna; brud: reguly ze skutkow odpowiedzi klienta, z ktorych formularz szybkiej wyceny je odtwarza
  * @typedef {{ id: string | null, nazwa: string, stawka_h: number, wsp: number }} WojewodztwoMigawki id null = srednia krajowa
  * @typedef {{ cena: number, netto: number, vat: number, mediana: number, widelki: WidelkiRynku, minutyNormowe: number,
  *   linie: LiniaWyceny[], propozycje: Propozycja[], dojazd: { km: number, kwota: number }, wojewodztwo: WojewodztwoMigawki,
@@ -51,6 +51,8 @@ export const MAKS_WYCEN = 5000
  * @typedef {{ teraz?: () => Date }} OpcjeWycen zegar (do testow)
  * @typedef {OpcjeWycen & { wynik?: MigawkaWyniku | null }} OpcjeWejscia wynik: przeliczenie zapisywane razem z wejsciem (null = pusty zakres)
  * @typedef {{ wycena: Wycena, licznikNumerow?: Record<string, number> }} ZmianaWyceny
+ * @typedef {{ wejscie?: WejscieWyceny, wynik?: MigawkaWyniku | null, rodzaj?: RodzajWyceny, szybka?: SzybkaWyceny | null,
+ *   odpowiedzi?: Record<string, unknown> }} PolaWyceny pola zmieniane razem; nowe wejscie wymaga wyniku (null = pusty zakres)
  */
 
 /** @type {Readonly<Record<StatusWyceny, readonly StatusWyceny[]>>} */
@@ -96,8 +98,9 @@ const jestMinutamiWykonania = (x) => jestDodatnia(x) && Number(x) <= MAKS_MINUT_
 const jestWejsciem = (x) => jestObiektem(x) && typeof x.uslugaId === 'string' && x.uslugaId !== ''
 /** @param {unknown} x regula brudu `{ pomieszczenie, brud, poziom }` (skutek odpowiedzi klienta) */
 const jestRegulaBrudu = (x) => jestObiektem(x) && typeof x.pomieszczenie === 'string' && typeof x.brud === 'string' && Number.isInteger(x.poziom)
-/** @param {unknown} x widelki szybkiej wyceny albo null */
-const jestSzybka = (x) => x === null || (jestObiektem(x) && typeof x.stan === 'string' && typeof x.tryb === 'string' && jestLiczba(x.od) &&
+/** @param {unknown} x widelki szybkiej wyceny (SzybkaWyceny ze znanym stanem i trybem) albo null */
+const jestSzybka = (x) => x === null || (jestObiektem(x) && STANY_SZYBKIEJ.some((s) => s.id === x.stan) &&
+  TRYBY_SZYBKIEJ.some((t) => t === x.tryb) && jestLiczba(x.od) &&
   jestLiczba(x.do) && (x.brud === undefined || (Array.isArray(x.brud) && x.brud.every(jestRegulaBrudu))))
 /** @param {unknown} x zapisany klient: teksty w granicach DLUGOSC_KLIENTA */
 const jestKlientem = (x) => jestObiektem(x) && typeof x.nazwa === 'string' && typeof x.adres === 'string' && jestTekstemLubNull(x.termin) &&
@@ -259,10 +262,10 @@ export function utworzSzkic(magazyn, dane, opcje = {}) {
   sprawdzWejscie(dane.wejscie)
   const klient = { ...PUSTY_KLIENT, ...klientZeZmiany(dane.klient ?? {}) }
   const szybka = dane.szybka ?? null
-  sprawdzSzybka(szybka)
   const odpowiedzi = dane.odpowiedzi ?? {}
-  if (!jestObiektem(odpowiedzi)) throw new BladWyceny('odpowiedzi', 'Odpowiedzi klienta muszą być obiektem')
   sprawdzDlugosc({ szybka, odpowiedzi }, 'Szkic wyceny')
+  sprawdzSzybka(szybka)
+  if (!jestObiektem(odpowiedzi)) throw new BladWyceny('odpowiedzi', 'Odpowiedzi klienta muszą być obiektem')
   const teraz = zegar(opcje).toISOString()
   /** @type {Wycena} */
   const nowa = { id: crypto.randomUUID(), numer: null, utworzona: teraz, zmieniona: teraz, status: 'szkic', rodzaj: dane.rodzaj, klient,
@@ -292,6 +295,31 @@ export function zapiszWejscie(magazyn, id, wejscie, opcje = {}) {
     if (wynik === undefined) return { wycena: zWejsciem }
     if (wynik === null && w.status !== 'szkic') throw new BladWyceny('pusty_zakres', `Wycena ${w.numer ?? id} musi mieć zakres`)
     return { wycena: { ...zWejsciem, wynik } }
+  })
+}
+
+/**
+ * Zmiana pol wyceny poza samym wejsciem (rodzaj, widelki szybkiej, odpowiedzi klienta) w jednym zapisie na swiezym stanie:
+ * `fn` dostaje swieza wycene i stan magazynu (ustawienia do przeliczenia) i moze rzucic (nic sie nie zapisuje). Nowe wejscie
+ * idzie razem z wynikiem jak w zapiszWejscie (null czysci migawke szkicu, wycena z numerem daje BladWyceny `pusty_zakres`)
+ * i po wyslaniu oznacza oferte jako nieaktualna; wykonana jest tylko do odczytu. Wynik o zlym ksztalcie albo za dlugim tekscie
+ * daje BladWyceny `ksztalt`.
+ * @param {Magazyn} magazyn @param {string} id @param {(w: Wycena, stan: Stan) => PolaWyceny} fn @param {OpcjeWycen} [opcje]
+ * @returns {Stan}
+ */
+export function zapiszPolaWyceny(magazyn, id, fn, opcje = {}) {
+  return zmienWycene(magazyn, id, opcje, (w, stan) => {
+    tylkoDoOdczytu(w)
+    const { wejscie, wynik, ...pola } = fn(w, stan)
+    /** @type {Wycena} */
+    let nowa = { ...w, ...pola }
+    if (wejscie !== undefined) {
+      if (wynik === undefined) throw new BladWyceny('wynik', `Nowe wejście wyceny ${id} wymaga przeliczenia`)
+      if (wynik === null && w.status !== 'szkic') throw new BladWyceny('pusty_zakres', `Wycena ${w.numer ?? id} musi mieć zakres`)
+      nowa = { ...nowa, wejscie, wynik, oferta: nieaktualnaPoWyslaniu(w) }
+    }
+    if (!jestWycena(nowa) || !maKrotkieTeksty(nowa)) throw new BladWyceny('ksztalt', `Zmiana wyceny ${id} daje zły kształt albo za długi tekst`)
+    return { wycena: nowa }
   })
 }
 

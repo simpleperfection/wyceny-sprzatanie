@@ -12,6 +12,7 @@ import { kosztPrzyTempie } from './podsumowanie.js'
 /** @typedef {import('../ui/router.js').DaneAplikacji} DaneAplikacji */
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
 /** @typedef {import('../dane/wyceny.js').MigawkaWyniku} MigawkaWyniku */
+/** @typedef {import('../dane/magazyn.js').Ustawienia} Ustawienia */
 /** @typedef {import('../silnik/tempo.js').TempoWlasne} TempoWlasne */
 /** @typedef {import('../silnik/tempo.js').TempoWyceny} TempoWyceny */
 /**
@@ -25,6 +26,9 @@ import { kosztPrzyTempie } from './podsumowanie.js'
  *   stawka i stawkaPlanu: zl za godzine pracy przy tempie faktu i planu; wizyt: wizyty wpisane przed tym zapisem
  * @typedef {{ wycenaId: string, wykonanieId: string, data: string, uslugaId: string, plan: number, fakt: number, procent: number }}
  *   WierszHistorii
+ * @typedef {{ wyceny: readonly Wycena[], ustawienia: Ustawienia | null, przed: TempoWyceny, wlasnePrzed: TempoWlasne | null,
+ *   plan: number, stawkaPlanu: number }} PlanZakonczenia dane ekranu niezalezne od czasu faktu, liczone raz na ekran: stan
+ *   magazynu, tempo przed zapisem (i tempo wlasne do banera osobnego tempa), plan w minutach i stawka przy tempie planu
  */
 
 /** Licznik czasu pracy zmienia sie o tyle minut (ustalenie z makiet). */
@@ -43,9 +47,10 @@ function migawka(w) {
   return w.wynik
 }
 
-/** @param {readonly Wycena[]} wyceny @param {DaneAplikacji} kontekst @param {Wycena} w @returns {TempoWyceny} */
-function tempoUslugi(wyceny, kontekst, w) {
-  return tempoDoWyceny(wczytajStan(kontekst.magazyn).ustawienia, wyceny, w.wejscie.uslugaId, kontekst.domyslne)
+/** @param {Wycena} w @param {DaneAplikacji} kontekst @returns {TempoWyceny} tempo uslugi z jednego odczytu magazynu */
+function tempoTeraz(w, kontekst) {
+  const { ustawienia, wyceny } = wczytajStan(kontekst.magazyn)
+  return tempoDoWyceny(ustawienia, wyceny, w.wejscie.uslugaId, kontekst.domyslne)
 }
 
 /**
@@ -59,12 +64,11 @@ export function poprawnyCzas(minuty) {
 
 /**
  * Punkt startu licznika: plan (czas normowy migawki × tempo firmy dla uslugi) zaokraglony do KROK_CZASU, w granicach licznika.
- * @param {Wycena} w @param {DaneAplikacji} kontekst
+ * @param {Wycena} w @param {DaneAplikacji} kontekst @param {TempoWyceny} [tempo] tempo juz policzone (PlanZakonczenia.przed)
  * @returns {number} minuty
  */
-export function czasStartowy(w, kontekst) {
+export function czasStartowy(w, kontekst, tempo = tempoTeraz(w, kontekst)) {
   const { minutyNormowe } = migawka(w)
-  const tempo = tempoUslugi(wczytajStan(kontekst.magazyn).wyceny, kontekst, w)
   const zaokraglony = Math.round((minutyNormowe * tempo.wartosc) / KROK_CZASU) * KROK_CZASU
   return Math.min(MAKS_MINUT_WYKONANIA, Math.max(KROK_CZASU, zaokraglony))
 }
@@ -89,36 +93,53 @@ function zPodgladem(wyceny, w, minuty, tempoPlanu) {
 }
 
 /**
- * @param {readonly Wycena[]} wyceny stan przed zapisem @param {Wycena} w @param {number} minuty @param {DaneAplikacji} kontekst
+ * Dane ekranu zakonczenia, ktore nie zaleza od czasu faktu (jeden odczyt magazynu): widok liczy je raz i podaje do
+ * widokZakonczenia przy kazdym kroku licznika. Wycena bez migawki daje BladWyceny `brak_wyniku`.
+ * @param {Wycena} w @param {DaneAplikacji} kontekst
+ * @returns {PlanZakonczenia}
+ */
+export function planZakonczenia(w, kontekst) {
+  const m = migawka(w)
+  const { ustawienia, wyceny } = wczytajStan(kontekst.magazyn)
+  const przed = tempoDoWyceny(ustawienia, wyceny, w.wejscie.uslugaId, kontekst.domyslne)
+  return {
+    wyceny, ustawienia, przed, wlasnePrzed: tempoWlasne(wyceny, w.wejscie.uslugaId), plan: minutyPlanu(m.minutyNormowe, przed.wartosc),
+    stawkaPlanu: kosztPrzyTempie(w, kontekst, przed.wartosc, ustawienia).zostajeNaGodzine,
+  }
+}
+
+/**
+ * @param {PlanZakonczenia} dane @param {Wycena} w @param {number} minuty @param {DaneAplikacji} kontekst
  * @returns {TempoZakonczenia}
  */
-function tempoZakonczenia(wyceny, w, minuty, kontekst) {
-  const przed = tempoUslugi(wyceny, kontekst, w)
+function tempoZakonczenia({ wyceny, ustawienia, przed, wlasnePrzed }, w, minuty, kontekst) {
   const po = zPodgladem(wyceny, w, minuty, przed.wartosc)
   const info = infoTempa(po, w.wejscie.uslugaId)
-  const czyPierwszeOsobne = tempoWlasne(wyceny, w.wejscie.uslugaId)?.zakres !== 'usluga' && info.tempo?.zakres === 'usluga'
-  return { przed, po: tempoUslugi(po, kontekst, w), info, osobne: czyPierwszeOsobne && info.tempo ? info.tempo.wartosc : null }
+  const czyPierwszeOsobne = wlasnePrzed?.zakres !== 'usluga' && info.tempo?.zakres === 'usluga'
+  const tempoPo = tempoDoWyceny(ustawienia, po, w.wejscie.uslugaId, kontekst.domyslne)
+  return { przed, po: tempoPo, info, osobne: czyPierwszeOsobne && info.tempo ? info.tempo.wartosc : null }
 }
 
 /**
  * Plan a fakt na biezaco przed zapisem: plan (czas normowy × tempo planu), roznica, realna stawka (koszt przy tempie
  * fakt / norma), stosunek tempa z flaga poza GRANICE_STOSUNKU_TEMPA i tempo przed oraz po zapisie tego wpisu.
  * @param {Wycena} w @param {number} minutyFakt @param {DaneAplikacji} kontekst
+ * @param {PlanZakonczenia} [dane] planZakonczenia tej wyceny, policzony raz na ekran (bez niego liczony tutaj)
  * @returns {WidokZakonczenia}
  */
-export function widokZakonczenia(w, minutyFakt, kontekst) {
+export function widokZakonczenia(w, minutyFakt, kontekst, dane) {
   if (poprawnyCzas(minutyFakt) !== null) throw new BladWejscia('czas', `Czas pracy poza zakresem (0, ${MAKS_MINUT_WYKONANIA}] min: ${minutyFakt}`)
   const m = migawka(w)
-  const tempo = tempoZakonczenia(wczytajStan(kontekst.magazyn).wyceny, w, minutyFakt, kontekst)
+  const stale = dane ?? planZakonczenia(w, kontekst)
+  const tempo = tempoZakonczenia(stale, w, minutyFakt, kontekst)
+  const { plan, stawkaPlanu } = stale
   const tempoPlanu = tempo.przed.wartosc
-  const plan = minutyPlanu(m.minutyNormowe, tempoPlanu)
   const stosunek = minutyFakt / m.minutyNormowe
-  const fakt = kosztPrzyTempie(w, kontekst, stosunek)
+  const fakt = kosztPrzyTempie(w, kontekst, stosunek, stale.ustawienia)
   return {
     plan, fakt: minutyFakt, roznica: minutyFakt - plan, procent: (minutyFakt - plan) / plan, tempoPlanu, stosunek,
     czyPozaGranicami: stosunek < GRANICE_STOSUNKU_TEMPA.min || stosunek > GRANICE_STOSUNKU_TEMPA.max,
-    zostaje: fakt.zostaje, stawka: fakt.zostajeNaGodzine, stawkaPlanu: kosztPrzyTempie(w, kontekst, tempoPlanu).zostajeNaGodzine,
-    czyAbonament: czyAbonament(m), wizyt: w.wykonania.length, tempo,
+    zostaje: fakt.zostaje, stawka: fakt.zostajeNaGodzine, stawkaPlanu, czyAbonament: czyAbonament(m), wizyt: w.wykonania.length, tempo,
   }
 }
 

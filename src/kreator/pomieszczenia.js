@@ -3,13 +3,14 @@
 // widok zapisuje wynik przez `zmienWejscie` z src/kreator/stan.js.
 
 import { BladWejscia } from '../silnik/bledy.js'
-import { minutyPomieszczen, mnoznikZakresu } from '../silnik/czas.js'
+import { minutyPomieszczen, mnoznikZakresu, zPoziomemBrudu } from '../silnik/czas.js'
 import { brudNowegoPomieszczenia } from './stan.js'
 
 /** @typedef {import('../silnik/cena.js').WejscieWyceny} WejscieWyceny */
 /** @typedef {import('../silnik/cena.js').PomieszczenieWyceny} PomieszczenieWyceny */
 /** @typedef {import('../silnik/katalog.js').Katalog} Katalog */
 /** @typedef {import('../silnik/katalog.js').Brud} Brud */
+/** @typedef {import('../silnik/katalog.js').RegulaBrudu} RegulaBrudu */
 /**
  * @typedef {{ m2: number, minutyNormowe: number, minutyZTempem: number }} PodsumowanieZakresu
  * @typedef {{ m2: number, lazienki: number, kuchnia: 'kuchnia' | 'aneks' | null }} OpisPrzeniesienia
@@ -53,9 +54,11 @@ function zmienPomieszczenie(wejscie, indeks, fn) {
 
 /**
  * Nowe pomieszczenie na koncu listy: nazwa domyslna z typu, metraz METRAZ_NOWEGO_POMIESZCZENIA, kurz 1 i reguly `brud_domyslny`
- * uslugi (np. pyl budowlany 2 po remoncie; przy powtorzonym rodzaju brudu wygrywa regula). Typ musi byc z zestawu uslugi.
+ * uslugi (np. pyl budowlany 2 po remoncie; przy powtorzonym rodzaju brudu wygrywa regula), potem brud z odpowiedzi klienta
+ * (np. sierść 1 w pokoju po „tak” o zwierzetach; zastepuje ten sam rodzaj). Typ musi byc z zestawu uslugi.
  * @param {WejscieWyceny} wejscie @param {string} typ @param {Katalog} katalog
- * @param {{ czyAneks?: boolean }} [opcje] kuchnia jako aneks (nazwa „Aneks kuchenny”)
+ * @param {{ czyAneks?: boolean, brudOdpowiedzi?: readonly RegulaBrudu[] }} [opcje] kuchnia jako aneks (nazwa „Aneks kuchenny”);
+ *   brudOdpowiedzi: reguly ze skutkow odpowiedzi wyceny (brudOdpowiedzi z src/kreator/pytania.js)
  * @returns {WejscieWyceny}
  */
 export function dodajPomieszczenie(wejscie, typ, katalog, opcje = {}) {
@@ -66,7 +69,8 @@ export function dodajPomieszczenie(wejscie, typ, katalog, opcje = {}) {
   }
   const brud = [...new Map(brudNowegoPomieszczenia(katalog, usluga.id, typ).map((b) => [b.id, b])).values()]
   const nazwa = typ === 'kuchnia' && opcje.czyAneks ? NAZWA_ANEKSU : NAZWY_DOMYSLNE[typ] ?? typ
-  return { ...wejscie, pomieszczenia: [...(wejscie.pomieszczenia ?? []), { typ, nazwa, m2: METRAZ_NOWEGO_POMIESZCZENIA, brud }] }
+  const [nowe] = zPoziomemBrudu([{ typ, nazwa, m2: METRAZ_NOWEGO_POMIESZCZENIA, brud }], opcje.brudOdpowiedzi ?? [])
+  return { ...wejscie, pomieszczenia: [...(wejscie.pomieszczenia ?? []), ...(nowe ? [nowe] : [])] }
 }
 
 /** @param {WejscieWyceny} wejscie @param {number} indeks @param {string} nazwa @returns {WejscieWyceny} */

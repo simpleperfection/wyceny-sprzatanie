@@ -5,10 +5,12 @@ import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
 import { czytajJson, katalogZDysku } from '../../tests/pomocnicze.js'
 import { utworzMagazyn } from '../dane/magazyn.js'
 import { wczytajDomyslne, zapiszUstawienia } from '../dane/ustawienia.js'
-import { BladWyceny, utworzSzkic, wycena } from '../dane/wyceny.js'
+import { BladWyceny, utworzSzkic, wycena, zmienStatus } from '../dane/wyceny.js'
 import { BladWejscia } from '../silnik/bledy.js'
 import { ukladMieszkania } from '../silnik/uklad.js'
-import { odpowiedziUslugi, pytaniaWyceny, zapiszOdpowiedz } from './pytania.js'
+import { dodajPomieszczenie } from './pomieszczenia.js'
+import { brudOdpowiedzi, odpowiedziUslugi, pytaniaWyceny, zapiszOdpowiedz } from './pytania.js'
+import { zmienWejscie } from './stan.js'
 import { formularzDomyslny, wejscieZWyceny, zapiszSzybka } from './szybka.js'
 
 /** @typedef {import('../silnik/katalog.js').Katalog} Katalog */
@@ -142,5 +144,70 @@ describe('zapiszOdpowiedz i pytaniaWyceny', () => {
   it('nieznana wycena daje BladWyceny brak_wyceny', () => {
     assert.throws(() => zapiszOdpowiedz(kontekstFirmy(), 'nie-ma', 'termin', { wartosc: 'jutro' }, pytania),
       { name: BladWyceny.name, kod: 'brak_wyceny' })
+  })
+})
+
+describe('zapiszOdpowiedz w dokładnej wycenie: skutek tylko przy zmianie wartości, pigułka z wejścia', () => {
+  /** @param {import('../dane/wyceny.js').Wycena} w */
+  const sierscPokoi = (w) => (w.wejscie.pomieszczenia ?? []).filter((p) => p.typ === 'pokoj').map((p) => p.brud)
+  /** Dwa pokoje po 15 m² i łazienka 5 m², kurz 1. @param {DaneAplikacji} kontekst */
+  const dwaPokoje = (kontekst) => utworzSzkic(kontekst.magazyn, { rodzaj: 'dokladna', wejscie: { uslugaId: 'mieszkanie_standard',
+    wojewodztwoId: 'mazowieckie', dojazdKm: 0, pomieszczenia: [['pokoj', 15], ['pokoj', 15], ['lazienka', 5]].map(([typ, m2]) => ({
+      typ: String(typ), m2: Number(m2), brud: [{ id: 'kurz', poziom: 1 }] })) } }).id
+
+  it('„tak” → „nie” o zwierzętach zdejmuje sierść z pokoi (wraca kurz 1), a pigułka skutku znika', () => {
+    const kontekst = kontekstFirmy()
+    const id = dwaPokoje(kontekst)
+    zapiszOdpowiedz(kontekst, id, 'zwierzeta', { wartosc: 'tak' }, pytania)
+
+    const po = zapiszOdpowiedz(kontekst, id, 'zwierzeta', { wartosc: 'nie' }, pytania)
+
+    assert.deepEqual(sierscPokoi(po), [[{ id: 'kurz', poziom: 1 }], [{ id: 'kurz', poziom: 1 }]])
+    assert.equal(pytaniaWyceny(po, pytania, kontekst).lista.find((p) => p.pytanie.id === 'zwierzeta')?.skutek, null)
+  })
+
+  it('„tak” → „nie”: pokój z ręcznie ustawioną sierścią 2 ją zachowuje, drugi pokój wraca do kurzu 1', () => {
+    const kontekst = kontekstFirmy()
+    const id = dwaPokoje(kontekst)
+    zapiszOdpowiedz(kontekst, id, 'zwierzeta', { wartosc: 'tak' }, pytania)
+    zmienWejscie(kontekst, id, (w) => ({ ...w, pomieszczenia: (w.pomieszczenia ?? []).map((p, i) => (i === 0 && p.typ === 'pokoj'
+      ? { ...p, brud: [{ id: 'kurz', poziom: 1 }, { id: 'siersc', poziom: 2 }] } : p)) }))
+
+    const po = zapiszOdpowiedz(kontekst, id, 'zwierzeta', { wartosc: 'nie' }, pytania)
+
+    assert.deepEqual(sierscPokoi(po), [[{ id: 'kurz', poziom: 1 }, { id: 'siersc', poziom: 2 }], [{ id: 'kurz', poziom: 1 }]])
+  })
+
+  it('odpowiedź bez skutku (termin) i ta sama wartość z inną notatką nie zmieniają wejścia, migawki ani aktualności wysłanej oferty', () => {
+    const kontekst = kontekstFirmy()
+    const id = dokladna50(kontekst)
+    zapiszOdpowiedz(kontekst, id, 'dojazd', { wartosc: 32 }, pytania)
+    zmienStatus(kontekst.magazyn, id, 'do_wyslania')
+    const wyslana = wycena(zmienStatus(kontekst.magazyn, id, 'wyslana'), id)
+    assert.ok(wyslana)
+    zmienWejscie(kontekst, id, (w) => ({ ...w, dojazdKm: 10 }))
+    const przed = zapisana(kontekst, id)
+
+    zapiszOdpowiedz(kontekst, id, 'termin', { wartosc: 'sobota rano' }, pytania)
+    const po = zapiszOdpowiedz(kontekst, id, 'dojazd', { wartosc: 32, notatka: 'parking pod blokiem' }, pytania)
+
+    assert.deepEqual([po.wejscie, po.wynik, po.oferta], [przed.wejscie, przed.wynik, przed.oferta])
+    assert.deepEqual([wyslana.oferta.nieaktualna, po.wejscie.dojazdKm], [false, 10])
+    assert.equal(pytaniaWyceny(po, pytania, kontekst).lista.find((p) => p.pytanie.id === 'dojazd')?.skutek, null)
+  })
+
+  it('pokój dodany po „tak” o zwierzętach dostaje sierść 1 z brudOdpowiedzi; łazienka i wycena bez odpowiedzi — sam kurz', () => {
+    const kontekst = kontekstFirmy()
+    const id = dokladna50(kontekst)
+    const bez = zapisana(kontekst, id)
+    const z = zapiszOdpowiedz(kontekst, id, 'zwierzeta', { wartosc: 'tak' }, pytania)
+    const reguly = brudOdpowiedzi(z, pytania)
+
+    const pokoj = dodajPomieszczenie(z.wejscie, 'pokoj', katalog, { brudOdpowiedzi: reguly }).pomieszczenia?.at(-1)
+    const lazienka = dodajPomieszczenie(z.wejscie, 'lazienka', katalog, { brudOdpowiedzi: reguly }).pomieszczenia?.at(-1)
+
+    assert.deepEqual(reguly, [{ pomieszczenie: 'pokoj', brud: 'siersc', poziom: 1 }])
+    assert.deepEqual(brudOdpowiedzi(bez, pytania), [])
+    assert.deepEqual([pokoj?.brud, lazienka?.brud], [[{ id: 'kurz', poziom: 1 }, { id: 'siersc', poziom: 1 }], [{ id: 'kurz', poziom: 1 }]])
   })
 })

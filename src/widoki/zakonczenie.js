@@ -6,8 +6,8 @@
 import { dzienLokalny } from '../dane/ksztalt.js'
 import { wczytajStan } from '../dane/magazyn.js'
 import { BladWyceny, czyAbonament as jestAbonamentem, dodajWykonanie, MAKS_MINUT_WYKONANIA, wycena as znajdzWycene } from '../dane/wyceny.js'
-import { czasStartowy, KROK_CZASU, poprawnyCzas, widokZakonczenia } from '../kreator/zakonczenie.js'
-import { czas, data, parsujLiczbe, tekstLiczby, tempo, zl } from '../ui/format.js'
+import { czasStartowy, KROK_CZASU, planZakonczenia, poprawnyCzas, widokZakonczenia } from '../kreator/zakonczenie.js'
+import { czas, data, FORMY, odmiana, parsujLiczbe, tekstLiczby, tempo, zl } from '../ui/format.js'
 import { h, ikona } from '../ui/h.js'
 import { przycisk } from '../ui/komponenty/formularz.js'
 import { baner, karta, naglowek } from '../ui/komponenty/uklad.js'
@@ -28,10 +28,10 @@ const MINUT_W_GODZINIE = 60
 const PROCENT = 100
 
 /** @param {number} minuty @returns {string} „5 h 0 min”, „0 h 45 min” (wartosc licznika i karty „Plan i fakt”) */
-const godzinyMinuty = (minuty) => `${Math.floor(minuty / MINUT_W_GODZINIE)} h ${Math.round(minuty % MINUT_W_GODZINIE)} min`
+export const godzinyMinuty = (minuty) => `${Math.floor(minuty / MINUT_W_GODZINIE)} h ${Math.round(minuty % MINUT_W_GODZINIE)} min`
 
-/** @param {WidokZakonczenia} widok @returns {string} zdanie o roznicy planu i faktu */
-function zdanieRoznicy({ roznica, procent }) {
+/** @param {Pick<WidokZakonczenia, 'roznica' | 'procent'>} widok @returns {string} zdanie o roznicy planu i faktu */
+export function zdanieRoznicy({ roznica, procent }) {
   const p = Math.round(Math.abs(procent) * PROCENT)
   if (roznica > 0) return `Praca trwała ${czas(roznica)} dłużej niż plan (+${p}%).`
   if (roznica < 0) return `Praca trwała ${czas(-roznica)} krócej niż plan (−${p}%).`
@@ -77,12 +77,22 @@ function kartaTempaZlecenia({ przed, po, info }) {
     h('p', { class: 'ustawienia__opis' }, `Własne tempo policzymy po ${info.wymagane} zleceniach (${info.liczba} z ${info.wymagane}).`))
 }
 
+/**
+ * Baner pierwszego osobnego tempa uslugi (liczba zlecen z InfoTempa.wymagane) albo null, gdy ten wpis go nie daje.
+ * @param {string} nazwa nazwa uslugi @param {Pick<TempoZakonczenia, 'osobne' | 'info'>} t @returns {string | null}
+ */
+export function tekstOsobnegoTempa(nazwa, { osobne, info }) {
+  if (osobne === null) return null
+  const zlecen = `${info.wymagane} ${odmiana(info.wymagane, FORMY.zlecenie)}`
+  return `Masz ${zlecen}: ${nazwa} – od teraz liczymy dla nich osobne tempo: ${tempo(osobne)}.`
+}
+
 /** @param {Wycena} w @param {WidokZakonczenia} widok @param {Kontekst} kontekst @returns {HTMLElement[]} */
 function kartyZlecenia(w, widok, { katalog }) {
   const nazwa = katalog.uslugi.find((u) => u.id === w.wejscie.uslugaId)?.nazwa ?? w.wejscie.uslugaId
+  const osobne = tekstOsobnegoTempa(nazwa, widok.tempo)
   return [kartaPlanuIFaktu(widok), kartaZostalo(widok), kartaTempaZlecenia(widok.tempo),
-    widok.tempo.osobne === null ? null : baner({ rodzaj: 'sukces',
-      tekst: `Masz 3 zlecenia: ${nazwa} – od teraz liczymy dla nich osobne tempo: ${tempo(widok.tempo.osobne)}.` }),
+    osobne === null ? null : baner({ rodzaj: 'sukces', tekst: osobne }),
     widok.czyPozaGranicami ? baner({ rodzaj: 'uwaga',
       tekst: `Ten czas bardzo odbiega od normy (${tempo(widok.stosunek)}). Zapiszemy go, ale nie wliczymy do Twojego tempa.` }) : null,
   ].filter((x) => x !== null)
@@ -186,20 +196,21 @@ function rysujEkran(kontener, kontekst, w) {
   const komunikat = h('div', { class: 'podsumowanie__komunikat', 'aria-live': 'polite' })
   /** @type {WidokZakonczenia | null} */
   let widok = null
+  const plan = planZakonczenia(w, kontekst)
 
   /** @param {number} minuty */
   function przelicz(minuty) {
     widok = null
     if (poprawnyCzas(minuty) !== null) return region.replaceChildren()
     try {
-      widok = widokZakonczenia(w, minuty, kontekst)
+      widok = widokZakonczenia(w, minuty, kontekst, plan)
       region.replaceChildren(...kartyZlecenia(w, widok, kontekst))
     } catch (blad) {
       region.replaceChildren(baner({ rodzaj: 'blad', tekst: zglosBladKreatora(blad) }))
     }
   }
 
-  const start = czasStartowy(w, kontekst)
+  const start = czasStartowy(w, kontekst, plan.przed)
   const licznik = licznikCzasu(start, przelicz)
   function handleZapisz() {
     if (!widok) return licznik.fokus()

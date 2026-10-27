@@ -383,9 +383,9 @@ Zależy od: Faza 4
 - [x] Test: [Unit] `poprawnyCzas(330)` → null; `poprawnyCzas(0)` i `poprawnyCzas(1500)` → kod błędu; `czasStartowy` dla planu 266 min → 270
 - [x] Test: [Unit] wycena 230,82 min normy, tempo planu 1,3, fakt 330 min: plan 300 min, różnica +10%, stosunek 1,43
 - [x] Test: [Unit] fakt 800 min dla normy 230,82 daje flagę poza granicami; `infoTempa` po pierwszym wpisie daje „1 z 3”
-- [ ] Test: [E2E] `zakonczenie-zlecenia` — okno 360×800, wstrzyknij `e2e/stany/zlecenie-przyjete.json`, otwórz zapisaną wycenę z listy „Wyceny”, kliknij „Wpisz czas pracy”, ustaw licznikiem 5 h 30 min, zrób screenshot, kliknij „Zapisz”, wejdź w „Firma” → przed zapisem karta „Plan i fakt” z planem 5 h 0 min, faktem 5 h 30 min i zdaniem „Praca trwała 30 min dłużej niż plan (+10%).”, karta tempa z „Własne tempo policzymy po 3 zleceniach (1 z 3).”; po zapisie wycena ma status „Wykonana”, w ustawieniach lista „Plan a fakt” ma jeden wiersz
-- [ ] Weryfikacja: `node --test src/kreator/zakonczenie.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Test: [E2E] `zakonczenie-zlecenia` — okno 360×800, wstrzyknij `e2e/stany/zlecenie-przyjete.json`, otwórz zapisaną wycenę z listy „Wyceny”, kliknij „Wpisz czas pracy”, ustaw licznikiem 5 h 30 min, zrób screenshot, kliknij „Zapisz”, wejdź w „Firma” → przed zapisem karta „Plan i fakt” z planem 5 h 0 min, faktem 5 h 30 min i zdaniem „Praca trwała 30 min dłużej niż plan (+10%).”, karta tempa z „Własne tempo policzymy po 3 zleceniach (1 z 3).”; po zapisie wycena ma status „Wykonana”, w ustawieniach lista „Plan a fakt” ma jeden wiersz
+- [x] Weryfikacja: `node --test src/kreator/zakonczenie.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-20: Silnik szybkiej wyceny i pytań do klienta (feature-builder-data)
 
@@ -404,9 +404,9 @@ Zależy od: Faza 4
 - [x] Test: [Unit] `naDokladna` dla mocnego stanu daje 4 pomieszczenia układu 50 m² z kurzem poziom 2 i te same odpowiedzi
 - [x] Test: [Unit] odpowiedź „tak” na pytanie o zwierzęta ze skutkiem sierść poziom 2 na `*` dodaje sierść do wszystkich pomieszczeń; odpowiedź 32 na pytanie z `dojazd_km` ustawia `dojazdKm` 32
 - [x] Test: [Unit] `sprawdzPytania` na prawdziwym `data/pytania.json` zwraca pustą listę; plik z nieznanym brudem `blotko` zwraca błąd
-- [ ] Weryfikacja: `node --test src/silnik/szybka.test.js src/silnik/pytania.test.js` przechodzi
-- [ ] Weryfikacja: `bash -c "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/kalibracja.ps1"` wypisuje „niezgodności katalogu: 0”
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `node --test src/silnik/szybka.test.js src/silnik/pytania.test.js` przechodzi
+- [x] Weryfikacja: `bash -c "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/kalibracja.ps1"` wypisuje „niezgodności katalogu: 0”
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-21: Ekrany szybkiej wyceny i pytań do klienta (feature-builder-fullstack)
 
@@ -418,18 +418,26 @@ Zależy od: Faza 4
 - [x] Modyfikuj: `src/widoki/indeks.js`
 - [x] Modyfikuj: `src/kreator/stan.test.js`
 - [x] Test: [Unit] `zSzybkiej` zostawia `id` i numer, ustawia `rodzaj: 'dokladna'`, pomieszczenia z układu i pole `szybka` z widełkami
-- [ ] Test: [E2E] `szybka-wycena-mieszkania` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, otwórz http://localhost:5174/#/szybka, wybierz „Mieszkanie lub dom”, „Standard”, metraż 50, stan „Typowy”, zrób screenshot, kliknij „Kopiuj tekst”, potem „Dokładna wycena” → widełki „250–300 zł”, „Mediana w mazowieckim: 250 zł”, „Rynek: 120–450 zł”, cytat „Sprzątanie mieszkania 50 m², standard: 250–300 zł. Cena ostateczna po obejrzeniu lokalu lub zdjęć.”, „Skopiowano”, kreator otwiera krok pomieszczeń z czterema pomieszczeniami (pokój 32, przedpokój 6, kuchnia 8, łazienka 4 m²)
-- [ ] Test: [E2E] `szybka-wycena-ogledziny` — w `#/szybka` wybierz usługę „Mieszkanie lub dom – sprzątanie po remoncie”, metraż 60 → „Orientacyjnie od {x} zł” i zalecenie oględzin, bez widełek
-- [ ] Test: [E2E] `pytania-do-klienta-skutek` — w `#/szybka` dla mieszkania 50 m² kliknij „Pytania do klienta · 0 z {n}”, przy pytaniu o zwierzęta „+ Dodaj odpowiedź” → „tak”, przy pytaniu o dojazd wpisz 32, kliknij „Gotowe” → na ekranie pytań pigułki skutków (sierść, „dojazd: 44 zł dla klienta”), po powrocie licznik „2 z {n}” i widełki wyższe o dojazd 44 zł i sierść
-- [ ] Weryfikacja: `node --test src/kreator/stan.test.js` przechodzi
-- [ ] Weryfikacja: `npm test` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Test: [E2E] `szybka-wycena-mieszkania` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, otwórz http://localhost:5174/#/szybka, wybierz „Mieszkanie lub dom”, „Standard”, metraż 50, stan „Typowy”, zrób screenshot, kliknij „Kopiuj tekst”, potem „Dokładna wycena” → widełki „250–300 zł”, „Mediana w mazowieckim: 250 zł”, „Rynek: 120–450 zł”, cytat „Sprzątanie mieszkania 50 m², standard: 250–300 zł. Cena ostateczna po obejrzeniu lokalu lub zdjęć.”, „Skopiowano”, kreator otwiera krok pomieszczeń z czterema pomieszczeniami (pokój 32, przedpokój 6, kuchnia 8, łazienka 4 m²)
+- [x] Test: [E2E] `szybka-wycena-ogledziny` — w `#/szybka` wybierz usługę „Mieszkanie lub dom – sprzątanie po remoncie”, metraż 60 → „Orientacyjnie od {x} zł” i zalecenie oględzin, bez widełek
+- [x] Test: [E2E] `pytania-do-klienta-skutek` — w `#/szybka` dla mieszkania 50 m² kliknij „Pytania do klienta · 0 z {n}”, przy pytaniu o zwierzęta „+ Dodaj odpowiedź” → „tak”, przy pytaniu o dojazd wpisz 32, kliknij „Gotowe” → na ekranie pytań pigułki skutków (sierść, „dojazd: 44 zł dla klienta”), po powrocie licznik „2 z {n}” i widełki wyższe o dojazd 44 zł i sierść
+- [x] Weryfikacja: `node --test src/kreator/stan.test.js` przechodzi
+- [x] Weryfikacja: `npm test` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+
+## Do poprawy po review fazy 5
+
+Zamkniete cyklem fix: 15 pozycji — pelna tresc findingow i uzasadnienia w `review-faza-5.md`.
 
 ## Operator checklist faza 5
 
 - [ ] Operator: Właściciel wpisuje czas po prawdziwym zleceniu i porównuje ekran z makietą `zakonczenie-zlecenia` (IU-19)
 - [ ] Operator: Właściciel robi szybką wycenę mieszkania w trakcie symulowanej rozmowy i mierzy czas (cel źródła: poniżej minuty) (IU-21)
 - [ ] [Manual] „Kopiuj tekst” na iPhonie w Safari i w aplikacji z ekranu początkowego (IU-21)
+- [ ] Operator: [Manual] zakonczenie-zlecenia: visual review (układ się zgadza; do oceny: „Zostało dla Ciebie” 235 zł przy planie i fakcie, zmienia się tylko stawka 47 → 43 zł/h) — Operator action: otwórz visual-diff/zakonczenie-zlecenia-figma.png obok visual-diff/zakonczenie-zlecenia-actual.png (stan e2e/stany/zlecenie-przyjete.json, trasa #/wycena/e2e-zlecenie-przyjete/koniec, licznik 5 h 30 min)
+- [ ] Operator: [Manual] ustawienia-firmy: visual review (nowa lista „Plan a fakt” pod „Tempo pracy”; dolne menu w środku zrzutu to artefakt) — Operator action: otwórz visual-diff/ustawienia-firmy-figma.png obok visual-diff/ustawienia-firmy-actual.png (stan e2e/stany/zlecenie-przyjete.json po jednym wpisie czasu, trasa #/ustawienia)
+- [ ] Operator: [Manual] szybka-wycena: visual review (pigułka „Zostaje ok. 47 zł/h” i zwijane „AGD i dodatki” to zaplanowane odstępstwa) — Operator action: otwórz visual-diff/szybka-wycena-figma.png obok visual-diff/szybka-wycena-actual.png (stan e2e/stany/ustawienia-mazowieckie.json, trasa #/szybka, mieszkanie standard 50 m², typowy)
+- [ ] Operator: [Manual] pytania-do-klienta: visual review (do oceny: kolejność pytań z data/pytania.json i pełna nazwa usługi w podtytule) — Operator action: otwórz visual-diff/pytania-do-klienta-figma.png obok visual-diff/pytania-do-klienta-actual.png (szybka wycena 50 m², zwierzęta „Tak”, dojazd 32 km, trasa #/wycena/<id>/pytania)
 
 ## Faza 6 — Oferta dla klienta
 

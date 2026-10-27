@@ -4,7 +4,7 @@ import { before, describe, it } from 'node:test'
 import { assertBlisko, czytajJson, katalogZDysku } from '../../tests/pomocnicze.js'
 import { wycenUsluge } from './cena.js'
 import { zBrudem } from './czas.js'
-import { naDokladna, STANY_SZYBKIEJ, szybkaWycena, tekstDlaKlienta } from './szybka.js'
+import { naDokladna, STAN_DOMYSLNY_SZYBKIEJ, STANY_SZYBKIEJ, szybkaWycena, tekstDlaKlienta, TRYBY_SZYBKIEJ } from './szybka.js'
 import { ukladMieszkania } from './uklad.js'
 
 /** @typedef {import('./katalog.js').Katalog} Katalog */
@@ -238,5 +238,23 @@ describe('naDokladna', () => {
 
   it('nieznana usługa daje BladWejscia nieznana_usluga', () => {
     rzucaKod(() => naDokladna({ uslugaId: 'mycie_jachtow', m2: 50, stan: 'typowy' }, kontekst(katalog)), 'nieznana_usluga')
+  })
+})
+
+describe('kontrakt widełek szybkiej wyceny (SzybkaWyceny)', () => {
+  /** @type {Katalog} */ let katalog
+  before(async () => {
+    katalog = await katalogZDysku()
+  })
+
+  it('tryby kwoty i stan domyślny ze źródła stałych', () => {
+    assert.deepEqual(TRYBY_SZYBKIEJ, ['widelki', 'ok', 'od'])
+    assert.equal(STAN_DOMYSLNY_SZYBKIEJ, 'typowy')
+  })
+
+  it('oględziny posadzek bez stanu w wejściu: widełki „od” ze stanem domyślnym typowy zamiast pustego tekstu', () => {
+    const wynik = naDokladna({ uslugaId: 'mycie_posadzek', m2: 100, wojewodztwoId: null }, kontekst(katalog))
+
+    assert.deepEqual([wynik.szybka.stan, wynik.szybka.tryb], ['typowy', 'od'])
   })
 })

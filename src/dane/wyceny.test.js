@@ -295,7 +295,7 @@ describe('granice zapisu wyceny (te same co w kopii zapasowej)', () => {
 describe('gałęzie walidacji szkicu, klienta i wyniku', () => {
   it('szkic z poprawnymi widełkami szybkiej wyceny zapisuje je; widełki z do: "x" → szybka, odpowiedzi listą → odpowiedzi', () => {
     const magazyn = nowyMagazyn()
-    const szybka = { stan: 'standard', od: 200, do: 300, tryb: 'pomieszczenia' }
+    const szybka = { stan: 'typowy', od: 200, do: 300, tryb: 'widelki' }
 
     const szkic = utworzSzkic(magazyn, { rodzaj: 'szybka', wejscie: WEJSCIE, szybka })
 
@@ -534,5 +534,63 @@ describe('zapiszCeneReczna', () => {
     assert.throws(() => modulWycen.zapiszCeneReczna(magazyn, szkic, 0), bladWyceny('cena_reczna'))
     assert.throws(() => modulWycen.zapiszCeneReczna(magazyn, szkic, 300), bladWyceny('brak_wyniku'))
     assert.throws(() => modulWycen.zapiszCeneReczna(magazyn, wykonana, 300), bladWyceny('tylko_odczyt'))
+  })
+})
+
+describe('widełki szybkiej wyceny: stan i tryb z kontraktu silnika', () => {
+  it('nieznany tryb (pomieszczenia) albo stan (standard) widełek → szybka, bez zapisu', () => {
+    const magazyn = nowyMagazyn()
+    const szybka = { stan: 'typowy', od: 200, do: 300, tryb: 'widelki' }
+
+    assert.throws(() => utworzSzkic(magazyn, { rodzaj: 'szybka', wejscie: WEJSCIE, szybka: /** @type {never} */ ({ ...szybka, tryb: 'pomieszczenia' }) }),
+      bladWyceny('szybka'))
+    assert.throws(() => utworzSzkic(magazyn, { rodzaj: 'szybka', wejscie: WEJSCIE, szybka: /** @type {never} */ ({ ...szybka, stan: 'standard' }) }),
+      bladWyceny('szybka'))
+    assert.deepEqual(stanMagazynu(magazyn).wyceny, [])
+  })
+})
+
+describe('zapiszPolaWyceny', () => {
+  it('zapisuje odpowiedzi i widełki bez wejścia: wejście, wynik i oferta zostają, zmieniona = zegar', () => {
+    const magazyn = nowyMagazyn()
+    const id = wycenaWStatusie(magazyn, ['do_wyslania', 'wyslana'])
+    const szybka = { stan: 'mocny', od: 300, do: 360, tryb: /** @type {const} */ ('widelki') }
+
+    modulWycen.zapiszPolaWyceny(magazyn, id, () => ({ odpowiedzi: { termin: { wartosc: 'jutro' } }, szybka }), LISTOPAD)
+
+    const po = zMagazynu(magazyn, id)
+    assert.deepEqual([po.odpowiedzi, po.szybka, po.wejscie, po.wynik?.cena, po.oferta.nieaktualna, po.zmieniona],
+      [{ termin: { wartosc: 'jutro' } }, szybka, WEJSCIE, 250, false, '2026-11-12T10:00:00.000Z'])
+  })
+
+  it('nowe wejście z wynikiem po wysłaniu oznacza ofertę jako nieaktualną; fn dostaje świeżą wycenę i stan magazynu', () => {
+    const magazyn = nowyMagazyn()
+    const id = wycenaWStatusie(magazyn, ['do_wyslania', 'wyslana'])
+    const nowe = { ...WEJSCIE, pomieszczenia: [{ typ: 'pokoj', m2: 30 }] }
+    /** @type {unknown[]} */
+    const widziane = []
+
+    modulWycen.zapiszPolaWyceny(magazyn, id, (w, stan) => {
+      widziane.push(w.status, stan.wyceny.length)
+      return { wejscie: nowe, wynik: migawka({ cena: 300 }) }
+    })
+
+    const po = zMagazynu(magazyn, id)
+    assert.deepEqual(widziane, ['wyslana', 1])
+    assert.deepEqual([po.wejscie, po.wynik?.cena, po.oferta.nieaktualna], [nowe, 300, true])
+  })
+
+  it('odmowy: wykonana → tylko_odczyt, nieznana → brak_wyceny, wejście bez wyniku → wynik, pusty zakres z numerem → pusty_zakres, zły kształt → ksztalt', () => {
+    const magazyn = nowyMagazyn()
+    const wykonana = wycenaWStatusie(magazyn, ['do_wyslania', 'przyjeta', 'wykonana'])
+    const zNumerem = wycenaWStatusie(magazyn, ['do_wyslania'])
+    const przed = stanMagazynu(magazyn)
+
+    assert.throws(() => modulWycen.zapiszPolaWyceny(magazyn, wykonana, () => ({ odpowiedzi: {} })), bladWyceny('tylko_odczyt'))
+    assert.throws(() => modulWycen.zapiszPolaWyceny(magazyn, 'nie-ma', () => ({})), bladWyceny('brak_wyceny'))
+    assert.throws(() => modulWycen.zapiszPolaWyceny(magazyn, zNumerem, () => ({ wejscie: WEJSCIE })), bladWyceny('wynik'))
+    assert.throws(() => modulWycen.zapiszPolaWyceny(magazyn, zNumerem, () => ({ wejscie: WEJSCIE, wynik: null })), bladWyceny('pusty_zakres'))
+    assert.throws(() => modulWycen.zapiszPolaWyceny(magazyn, zNumerem, () => ({ szybka: /** @type {never} */ ({ od: 'dużo' }) })), bladWyceny('ksztalt'))
+    assert.deepEqual(stanMagazynu(magazyn), przed)
   })
 })

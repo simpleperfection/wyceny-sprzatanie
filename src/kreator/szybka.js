@@ -7,8 +7,9 @@ import { wczytajStan } from '../dane/magazyn.js'
 import { scalKoszty, ustawieniaDomyslne } from '../dane/ustawienia.js'
 import { BladWyceny, utworzSzkic, wycena as znajdzWycene, zmienStatus } from '../dane/wyceny.js'
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
+import { ZESTAW_BIURA } from '../silnik/czas.js'
 import { regulyBrudu, zastosujOdpowiedzi } from '../silnik/pytania.js'
-import { naDokladna, STANY_SZYBKIEJ, szybkaWycena } from '../silnik/szybka.js'
+import { naDokladna, STAN_DOMYSLNY_SZYBKIEJ, STANY_SZYBKIEJ, szybkaWycena } from '../silnik/szybka.js'
 import { tempoDoWyceny } from '../silnik/tempo.js'
 import { domyslneLazienki } from '../silnik/uklad.js'
 import { METRAZ_WZORCOWY } from './podpowiedzi.js'
@@ -44,13 +45,9 @@ export const RODZAJE_MIESZKANIA = Object.freeze([
 ])
 const OPCJA_MIESZKANIA = 'mieszkanie'
 const NAZWA_OPCJI_MIESZKANIA = 'Mieszkanie lub dom'
-const STAN_DOMYSLNY = 'typowy'
 const USLUGA_DODATKOW = 'agd'
-const ZESTAW_BIURA = 'biuro'
 const CYFRY_METRAZU = 100
 
-/** @param {Usluga} usluga @returns {unknown} pole `szybka_wycena` z data/ceny.json (`widelki` albo `ogledziny`) */
-const rodzajSzybkiej = (usluga) => ('szybka_wycena' in usluga ? usluga.szybka_wycena : undefined)
 /** @param {string} uslugaId */
 const czyMieszkanie = (uslugaId) => RODZAJE_MIESZKANIA.some((r) => r.wartosc === uslugaId)
 /** @param {unknown} stan @returns {stan is StanSzybkiej} */
@@ -61,7 +58,7 @@ const jestStanem = (stan) => STANY_SZYBKIEJ.some((s) => s.id === stan)
  * @param {Katalog} katalog @returns {OpcjaUslugi[]}
  */
 export function opcjeUslug(katalog) {
-  const zSzybka = katalog.uslugi.filter((u) => !u.tylko_dodatek && rodzajSzybkiej(u) !== undefined)
+  const zSzybka = katalog.uslugi.filter((u) => !u.tylko_dodatek && u.szybka_wycena !== undefined)
   const mieszkania = zSzybka.filter((u) => czyMieszkanie(u.id)).map((u) => u.id)
   /** @type {OpcjaUslugi[]} */
   const opcje = []
@@ -74,7 +71,7 @@ export function opcjeUslug(katalog) {
 
 /** @param {Usluga} usluga @returns {PolaSzybkiej} */
 export function polaUslugi(usluga) {
-  const czyOgledziny = rodzajSzybkiej(usluga) === 'ogledziny'
+  const czyOgledziny = usluga.szybka_wycena === 'ogledziny'
   if (usluga.tryb === 'pozycje') return czyOgledziny ? 'ogledziny_pozycji' : 'pozycje'
   if (czyOgledziny) return 'ogledziny_pomieszczen'
   return usluga.zestaw_pomieszczen === ZESTAW_BIURA ? 'biuro' : 'mieszkanie'
@@ -99,7 +96,7 @@ export function zUsluga(wejscie, uslugaId, katalog) {
 export function formularzDomyslny(katalog, wojewodztwoId) {
   const [{ wartosc: uslugaId }] = RODZAJE_MIESZKANIA
   return {
-    uslugaId, m2: METRAZ_WZORCOWY, lazienki: domyslneLazienki(METRAZ_WZORCOWY, katalog.uklady), kuchnia: 'osobna', stan: STAN_DOMYSLNY,
+    uslugaId, m2: METRAZ_WZORCOWY, lazienki: domyslneLazienki(METRAZ_WZORCOWY, katalog.uklady), kuchnia: 'osobna', stan: STAN_DOMYSLNY_SZYBKIEJ,
     pozycje: [], dodatki: [], dojazdKm: 0, wojewodztwoId: katalog.wojewodztwo(wojewodztwoId).id, odpowiedzi: {}, brud: [],
   }
 }
@@ -166,7 +163,7 @@ export function wejscieZWyceny(wycena, katalog) {
   const stan = wycena.szybka?.stan
   return {
     uslugaId: usluga.id, m2, lazienki: pola === 'mieszkanie' || pola === 'ogledziny_pomieszczen' ? opis.lazienki : undefined,
-    kuchnia: opis.kuchnia === 'aneks' ? 'aneks' : 'osobna', stan: jestStanem(stan) ? stan : STAN_DOMYSLNY,
+    kuchnia: opis.kuchnia === 'aneks' ? 'aneks' : 'osobna', stan: jestStanem(stan) ? stan : STAN_DOMYSLNY_SZYBKIEJ,
     pozycje: pola === 'pozycje' ? pozycje : [], dodatki: wejscie.dodatki ?? [], dojazdKm: wejscie.dojazdKm ?? 0,
     wojewodztwoId: wejscie.wojewodztwoId ?? null, odpowiedzi: { ...wycena.odpowiedzi }, brud: [...(wycena.szybka?.brud ?? [])],
   }

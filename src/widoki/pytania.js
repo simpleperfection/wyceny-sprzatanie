@@ -8,6 +8,7 @@ import { pytaniaAplikacji } from '../dane/pytania.js'
 import { BladWyceny, wycena as znajdzWycene } from '../dane/wyceny.js'
 import { odpowiedziUslugi, pytaniaWyceny, zapiszOdpowiedz } from '../kreator/pytania.js'
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
+import { ODPOWIEDZI_TAK_NIE } from '../silnik/pytania.js'
 import { parsujLiczbe, tekstLiczby } from '../ui/format.js'
 import { h, ikona } from '../ui/h.js'
 import { chipy, pole, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
@@ -37,7 +38,8 @@ const WPISZ_LICZBE = 'Wpisz liczbę, np. 12.'
 const WPISZ_TEKST = 'Wpisz odpowiedź.'
 const ZA_DLUGA = 'Odpowiedź jest za długa. Skróć ją.'
 const ZA_DLUGA_NOTATKA = 'Notatka jest za długa. Skróć ją.'
-const TAK_NIE = Object.freeze([{ wartosc: 'tak', etykieta: 'Tak' }, { wartosc: 'nie', etykieta: 'Nie' }])
+/** Chipy pytania tak/nie: wartosci z silnika, etykieta wielka litera jak w opisOdpowiedzi („Tak”, „Nie”). */
+const TAK_NIE = Object.freeze(ODPOWIEDZI_TAK_NIE.map((wartosc) => ({ wartosc, etykieta: wartosc.charAt(0).toLocaleUpperCase('pl-PL') + wartosc.slice(1) })))
 
 /**
  * Tekst bledu wczytania pytan: brak sieci albo limit czasu to stan oczekiwany (log bez zgloszenia), plik niezgodny z katalogiem
