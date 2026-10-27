@@ -373,51 +373,51 @@ Zależy od: Faza 4
 
 ### IU-19: Zakończenie zlecenia i plan a fakt (feature-builder-fullstack)
 
-- [ ] Stwórz: `src/kreator/zakonczenie.js`
-- [ ] Stwórz: `src/widoki/zakonczenie.js`
-- [ ] Modyfikuj: `src/widoki/podsumowanie.js`
-- [ ] Modyfikuj: `src/widoki/ustawienia-tempo.js`
-- [ ] Modyfikuj: `src/widoki/indeks.js`
-- [ ] Stwórz: `e2e/stany/zlecenie-przyjete.json`
-- [ ] Test (unit): `src/kreator/zakonczenie.test.js`
-- [ ] Test: [Unit] `poprawnyCzas(330)` → null; `poprawnyCzas(0)` i `poprawnyCzas(1500)` → kod błędu; `czasStartowy` dla planu 266 min → 270
-- [ ] Test: [Unit] wycena 230,82 min normy, tempo planu 1,3, fakt 330 min: plan 300 min, różnica +10%, stosunek 1,43
-- [ ] Test: [Unit] fakt 800 min dla normy 230,82 daje flagę poza granicami; `infoTempa` po pierwszym wpisie daje „1 z 3”
+- [x] Stwórz: `src/kreator/zakonczenie.js`
+- [x] Stwórz: `src/widoki/zakonczenie.js`
+- [x] Modyfikuj: `src/widoki/podsumowanie.js`
+- [x] Modyfikuj: `src/widoki/ustawienia-tempo.js`
+- [x] Modyfikuj: `src/widoki/indeks.js`
+- [x] Stwórz: `e2e/stany/zlecenie-przyjete.json`
+- [x] Test (unit): `src/kreator/zakonczenie.test.js`
+- [x] Test: [Unit] `poprawnyCzas(330)` → null; `poprawnyCzas(0)` i `poprawnyCzas(1500)` → kod błędu; `czasStartowy` dla planu 266 min → 270
+- [x] Test: [Unit] wycena 230,82 min normy, tempo planu 1,3, fakt 330 min: plan 300 min, różnica +10%, stosunek 1,43
+- [x] Test: [Unit] fakt 800 min dla normy 230,82 daje flagę poza granicami; `infoTempa` po pierwszym wpisie daje „1 z 3”
 - [ ] Test: [E2E] `zakonczenie-zlecenia` — okno 360×800, wstrzyknij `e2e/stany/zlecenie-przyjete.json`, otwórz zapisaną wycenę z listy „Wyceny”, kliknij „Wpisz czas pracy”, ustaw licznikiem 5 h 30 min, zrób screenshot, kliknij „Zapisz”, wejdź w „Firma” → przed zapisem karta „Plan i fakt” z planem 5 h 0 min, faktem 5 h 30 min i zdaniem „Praca trwała 30 min dłużej niż plan (+10%).”, karta tempa z „Własne tempo policzymy po 3 zleceniach (1 z 3).”; po zapisie wycena ma status „Wykonana”, w ustawieniach lista „Plan a fakt” ma jeden wiersz
 - [ ] Weryfikacja: `node --test src/kreator/zakonczenie.test.js` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-20: Silnik szybkiej wyceny i pytań do klienta (feature-builder-data)
 
-- [ ] Stwórz: `src/silnik/szybka.js`
-- [ ] Stwórz: `src/silnik/pytania.js`
-- [ ] Modyfikuj: `data/ceny.json`
-- [ ] Modyfikuj: `sw.js`
-- [ ] Test (unit): `src/silnik/szybka.test.js`
-- [ ] Test (unit): `src/silnik/pytania.test.js`
-- [ ] Test: [Unit] mieszkanie 50 m² standard, mazowieckie, typowy: widełki 250–300 zł, `mediana` 250, rynek 120–450; mocny: 290–360 zł; lekki: „ok. 250 zł”
-- [ ] Test: [Unit] dolna granica typowego dla 50 m² równa się cenie dokładnej wyceny układu 50 m² ze scenariusza kalibracji (R14, R27)
-- [ ] Test: [Unit] mieszkanie 20 m² standard: obie granice ≥ 150 zł (minimum); dojazd 32 km dokłada 44 zł na obu końcach
-- [ ] Test: [Unit] okna 4 × okno 1-skrz.: 150 zł (minimum) — `tryb: 'ok'`; tapicerka kanapa 3-os. i fotel: widełki od ceny do ceny × 1,2
-- [ ] Test: [Unit] mieszkanie po remoncie 60 m²: `tryb: 'od'` i `od` = cena poziomu 1 z pyłem budowlanym, zaokrąglona w dół do 10 zł
-- [ ] Test: [Unit] tekst: „Sprzątanie mieszkania 50 m², standard: 250–300 zł. Cena ostateczna po obejrzeniu lokalu lub zdjęć.”
-- [ ] Test: [Unit] `naDokladna` dla mocnego stanu daje 4 pomieszczenia układu 50 m² z kurzem poziom 2 i te same odpowiedzi
-- [ ] Test: [Unit] odpowiedź „tak” na pytanie o zwierzęta ze skutkiem sierść poziom 2 na `*` dodaje sierść do wszystkich pomieszczeń; odpowiedź 32 na pytanie z `dojazd_km` ustawia `dojazdKm` 32
-- [ ] Test: [Unit] `sprawdzPytania` na prawdziwym `data/pytania.json` zwraca pustą listę; plik z nieznanym brudem `blotko` zwraca błąd
+- [x] Stwórz: `src/silnik/szybka.js`
+- [x] Stwórz: `src/silnik/pytania.js`
+- [x] Modyfikuj: `data/ceny.json`
+- [x] Modyfikuj: `sw.js`
+- [x] Test (unit): `src/silnik/szybka.test.js`
+- [x] Test (unit): `src/silnik/pytania.test.js`
+- [x] Test: [Unit] mieszkanie 50 m² standard, mazowieckie, typowy: widełki 250–300 zł, `mediana` 250, rynek 120–450; mocny: 290–360 zł; lekki: „ok. 250 zł”
+- [x] Test: [Unit] dolna granica typowego dla 50 m² równa się cenie dokładnej wyceny układu 50 m² ze scenariusza kalibracji (R14, R27)
+- [x] Test: [Unit] mieszkanie 20 m² standard: obie granice ≥ 150 zł (minimum); dojazd 32 km dokłada 44 zł na obu końcach
+- [x] Test: [Unit] okna 4 × okno 1-skrz.: 150 zł (minimum) — `tryb: 'ok'`; tapicerka kanapa 3-os. i fotel: widełki od ceny do ceny × 1,2
+- [x] Test: [Unit] mieszkanie po remoncie 60 m²: `tryb: 'od'` i `od` = cena poziomu 1 z pyłem budowlanym, zaokrąglona w dół do 10 zł
+- [x] Test: [Unit] tekst: „Sprzątanie mieszkania 50 m², standard: 250–300 zł. Cena ostateczna po obejrzeniu lokalu lub zdjęć.”
+- [x] Test: [Unit] `naDokladna` dla mocnego stanu daje 4 pomieszczenia układu 50 m² z kurzem poziom 2 i te same odpowiedzi
+- [x] Test: [Unit] odpowiedź „tak” na pytanie o zwierzęta ze skutkiem sierść poziom 2 na `*` dodaje sierść do wszystkich pomieszczeń; odpowiedź 32 na pytanie z `dojazd_km` ustawia `dojazdKm` 32
+- [x] Test: [Unit] `sprawdzPytania` na prawdziwym `data/pytania.json` zwraca pustą listę; plik z nieznanym brudem `blotko` zwraca błąd
 - [ ] Weryfikacja: `node --test src/silnik/szybka.test.js src/silnik/pytania.test.js` przechodzi
 - [ ] Weryfikacja: `bash -c "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/kalibracja.ps1"` wypisuje „niezgodności katalogu: 0”
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-21: Ekrany szybkiej wyceny i pytań do klienta (feature-builder-fullstack)
 
-- [ ] Stwórz: `src/widoki/szybka.js`
-- [ ] Stwórz: `src/widoki/szybka-wynik.js`
-- [ ] Stwórz: `src/widoki/pytania.js`
-- [ ] Modyfikuj: `src/kreator/stan.js`
-- [ ] Modyfikuj: `src/widoki/kreator-usluga.js`
-- [ ] Modyfikuj: `src/widoki/indeks.js`
-- [ ] Modyfikuj: `src/kreator/stan.test.js`
-- [ ] Test: [Unit] `zSzybkiej` zostawia `id` i numer, ustawia `rodzaj: 'dokladna'`, pomieszczenia z układu i pole `szybka` z widełkami
+- [x] Stwórz: `src/widoki/szybka.js`
+- [x] Stwórz: `src/widoki/szybka-wynik.js`
+- [x] Stwórz: `src/widoki/pytania.js`
+- [x] Modyfikuj: `src/kreator/stan.js`
+- [x] Modyfikuj: `src/widoki/kreator-usluga.js`
+- [x] Modyfikuj: `src/widoki/indeks.js`
+- [x] Modyfikuj: `src/kreator/stan.test.js`
+- [x] Test: [Unit] `zSzybkiej` zostawia `id` i numer, ustawia `rodzaj: 'dokladna'`, pomieszczenia z układu i pole `szybka` z widełkami
 - [ ] Test: [E2E] `szybka-wycena-mieszkania` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, otwórz http://localhost:5174/#/szybka, wybierz „Mieszkanie lub dom”, „Standard”, metraż 50, stan „Typowy”, zrób screenshot, kliknij „Kopiuj tekst”, potem „Dokładna wycena” → widełki „250–300 zł”, „Mediana w mazowieckim: 250 zł”, „Rynek: 120–450 zł”, cytat „Sprzątanie mieszkania 50 m², standard: 250–300 zł. Cena ostateczna po obejrzeniu lokalu lub zdjęć.”, „Skopiowano”, kreator otwiera krok pomieszczeń z czterema pomieszczeniami (pokój 32, przedpokój 6, kuchnia 8, łazienka 4 m²)
 - [ ] Test: [E2E] `szybka-wycena-ogledziny` — w `#/szybka` wybierz usługę „Mieszkanie lub dom – sprzątanie po remoncie”, metraż 60 → „Orientacyjnie od {x} zł” i zalecenie oględzin, bez widełek
 - [ ] Test: [E2E] `pytania-do-klienta-skutek` — w `#/szybka` dla mieszkania 50 m² kliknij „Pytania do klienta · 0 z {n}”, przy pytaniu o zwierzęta „+ Dodaj odpowiedź” → „tak”, przy pytaniu o dojazd wpisz 32, kliknij „Gotowe” → na ekranie pytań pigułki skutków (sierść, „dojazd: 44 zł dla klienta”), po powrocie licznik „2 z {n}” i widełki wyższe o dojazd 44 zł i sierść

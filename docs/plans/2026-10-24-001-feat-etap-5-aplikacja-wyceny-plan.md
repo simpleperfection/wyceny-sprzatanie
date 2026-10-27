@@ -1184,7 +1184,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 
 **Zależy od:** Faza 4
 
-- [ ] **IU-19: Zakończenie zlecenia i plan a fakt**
+- [x] **IU-19: Zakończenie zlecenia i plan a fakt**
 
 **Cel:** Wpis faktycznego czasu pracy, plan a fakt, realna stawka za godzinę, informacja o tempie i lista „plan a fakt” w ustawieniach.
 
@@ -1248,7 +1248,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 **Operator checklist:**
 - [ ] Właściciel wpisuje czas po prawdziwym zleceniu i porównuje ekran z makietą `zakonczenie-zlecenia`
 
-- [ ] **IU-20: Silnik szybkiej wyceny i pytań do klienta**
+- [x] **IU-20: Silnik szybkiej wyceny i pytań do klienta**
 
 **Cel:** Widełki i „orientacyjnie od” dla szybkiej wyceny, tekst dla klienta, zamiana w dokładną wycenę oraz pytania do klienta z automatycznymi skutkami w modelu.
 

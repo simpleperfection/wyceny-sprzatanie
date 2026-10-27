@@ -1851,3 +1851,396 @@ span.wiersz-pozycji__nazwa {
 .koszty__wiersz--razem dd {
   font-weight: 700;
 }
+
+/* Zakonczenie zlecenia i lista „Plan a fakt” (src/widoki/zakonczenie.js, ustawienia-tempo.js, podsumowanie.js; makiety
+   zakonczenie-zlecenia, ustawienia-firmy). Dlugosc paska z wlasciwosci --dlugosc ustawianej w JS przez CSSOM. */
+.zakonczenie__statusy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.zakonczenie__statusy .pigulka {
+  padding: 4px 10px;
+  font-size: var(--tekst-maly);
+}
+
+.zakonczenie__strzalka {
+  width: 18px;
+  height: 18px;
+  color: var(--tekst-trzeci);
+  transform: scaleX(-1);
+}
+
+.licznik-czasu .licznik__wartosc {
+  font-size: 26px;
+}
+
+.licznik__jednostka {
+  margin-right: 4px;
+}
+
+.zakonczenie__notka {
+  margin-top: -4px;
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.zakonczenie__karty {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.zakonczenie__karty:empty {
+  display: none;
+}
+
+.plan-fakt__wiersz {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+  font-size: var(--tekst-podstawowy);
+  color: var(--tekst-drugi);
+}
+
+.plan-fakt__wiersz .liczba {
+  font-weight: 700;
+  color: var(--tekst-glowny);
+}
+
+.plan-fakt__tor {
+  height: 8px;
+  margin-top: 4px;
+}
+
+.plan-fakt__pasek {
+  width: var(--dlugosc, 100%);
+  height: 100%;
+  border-radius: 4px;
+}
+
+.plan-fakt__pasek--plan {
+  background: var(--linia-obrys);
+}
+
+.plan-fakt__pasek--fakt {
+  background: var(--marka-zielen);
+}
+
+.plan-fakt__pasek--dluzej {
+  background: var(--uwaga-tekst);
+}
+
+.plan-fakt__zdanie {
+  margin-top: 10px;
+  font-size: var(--tekst-podstawowy);
+  font-weight: 600;
+  text-wrap: pretty;
+}
+
+.plan-fakt__zdanie--dluzej {
+  color: var(--uwaga-tekst);
+}
+
+.plan-fakt-ustawienia {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--linia-podzial);
+}
+
+.plan-fakt-ustawienia__tytul {
+  font-size: var(--tekst-podstawowy);
+  font-weight: 700;
+}
+
+.plan-fakt-lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plan-fakt-lista__wiersz {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--linia-podzial);
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+  text-wrap: pretty;
+}
+
+.plan-fakt-lista__wiersz:last-child {
+  border-bottom: 0;
+}
+
+.karta--bez-odstepu > .plan-fakt-lista {
+  padding: 0 14px 4px;
+}
+
+.licznik-czasu .licznik__wejscie {
+  min-width: 1ch;
+  text-align: right;
+}
+
+/* Szybka wycena (makieta szybka-wycena): pole „Usługa”, pola formularza, AGD, wiersz pytan i karta wyniku */
+.szybka__pola {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.szybka__lazienki {
+  display: contents;
+}
+
+.wybor-pola {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 14px;
+  border: 1px solid var(--tekst-trzeci);
+  border-radius: var(--promien-przycisk);
+  background: var(--tlo-karta);
+  color: var(--tekst-glowny);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.wybor-pola:hover {
+  background: var(--tlo-strona);
+}
+
+.wybor-pola__etykieta {
+  font-size: var(--tekst-maly);
+  font-weight: 600;
+  color: var(--tekst-drugi);
+}
+
+.wybor-pola__wartosc {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.szybka__notka {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.szybka__dodatki {
+  border: 1px solid var(--linia-podzial);
+  border-radius: var(--promien-karta);
+  background: var(--tlo-karta);
+}
+
+.szybka__dodatki-tytul {
+  display: list-item;
+  padding: 12px 14px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.szybka__dodatki-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 10px 10px;
+}
+
+.wiersz-pytan {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: var(--cel-dotyku);
+  padding: 8px 4px;
+  border: 0;
+  border-radius: var(--promien-przycisk);
+  background: none;
+  color: var(--marka-zielen);
+  font-size: var(--tekst-podstawowy);
+  font-weight: 700;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.wiersz-pytan:hover {
+  background: var(--marka-zielen-tlo);
+}
+
+.wiersz-pytan .ikona {
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+
+.wiersz-pytan__tekst {
+  flex: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.szybka__wynik {
+  margin-top: 4px;
+}
+
+.karta-szybkiej {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.karta-szybkiej__etykieta {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.karta-szybkiej__kwota {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+.karta-szybkiej__ogledziny {
+  padding: 8px 12px;
+  border-radius: var(--promien-przycisk);
+  background: var(--uwaga-tlo);
+  color: var(--uwaga-tekst);
+  font-size: var(--tekst-maly);
+  text-wrap: pretty;
+}
+
+.karta-szybkiej__pigulki {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.karta-szybkiej .pigulka {
+  font-size: var(--tekst-maly);
+  white-space: normal;
+}
+
+.pigulka--zostaje {
+  background: var(--sukces-tlo);
+  color: var(--sukces-tekst);
+}
+
+.karta-szybkiej__cytat {
+  display: block;
+  quotes: '„' '”';
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+  text-wrap: pretty;
+}
+
+.karta-szybkiej__pusto {
+  color: var(--tekst-drugi);
+}
+
+.karta-szybkiej__przyciski {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.karta-szybkiej__przyciski .przycisk {
+  flex: 1 1 auto;
+  white-space: nowrap;
+}
+
+/* Pytania do klienta (makieta pytania-do-klienta): lista pytan z odpowiedziami i skutkami, prosba o zdjecia, „Gotowe” */
+.lista-pytan {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pytanie {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--linia-podzial);
+}
+
+.pytanie:last-child {
+  border-bottom: 0;
+}
+
+.pytanie__tresc {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+  text-wrap: pretty;
+}
+
+.pytanie__odpowiedz {
+  min-height: var(--cel-dotyku);
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--tekst-glowny);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+p.pytanie__odpowiedz {
+  min-height: 0;
+  cursor: auto;
+}
+
+.pytanie__dodaj {
+  justify-content: flex-start;
+  padding: 4px 0;
+}
+
+.pytanie__brak {
+  color: var(--tekst-trzeci);
+}
+
+.pigulka--skutek {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+  background: var(--sukces-tlo);
+  color: var(--sukces-tekst);
+  font-size: var(--tekst-maly);
+  white-space: normal;
+}
+
+.pigulka--skutek .ikona {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+
+.pytania__prosba {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.pytania__stopka {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  margin-top: auto;
+  padding: 12px var(--odstep-ekranu) calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--linia-podzial);
+  background: var(--tlo-karta);
+}
+
+.pytania__stopka .przycisk {
+  flex: 1;
+}

@@ -141,6 +141,21 @@ export function widokPodsumowania(w, kontekst) {
   }
 }
 
+/**
+ * Koszt zlecenia z migawki wyceny przy podanym tempie (plan a fakt przy zakonczeniu zlecenia, R16): ta sama cena dla klienta,
+ * koszty firmy z ustawien i regula VAT co w widokPodsumowania. Wycena bez migawki daje BladWyceny `brak_wyniku`.
+ * @param {Wycena} w @param {DaneAplikacji} kontekst @param {number} tempo krotnosc czasu normowego
+ * @returns {KosztZlecenia}
+ */
+export function kosztPrzyTempie(w, kontekst, tempo) {
+  const m = w.wynik
+  if (m === null) throw new BladWyceny('brak_wyniku', `Wycena ${w.id} nie ma policzonej ceny`)
+  const { katalog, magazyn } = kontekst
+  const cena = cenaKlienta(m, w.cenaReczna)
+  const koszty = scalKoszty(katalog.kosztyFirmy, wczytajStan(magazyn).ustawienia)
+  return kosztZlecenia({ wynik: wynikZMigawki(m), cenaKlienta: cena, tempo, koszty, statusVat: cena.statusVat }, katalog)
+}
+
 /** @param {DaneAplikacji} kontekst @param {string} id @param {number | null} cenaReczna @returns {Wycena} wycena po zapisie */
 function cenaRecznaWyceny(kontekst, id, cenaReczna) {
   const zapisana = znajdzWycene(zapiszCeneReczna(kontekst.magazyn, id, cenaReczna), id)

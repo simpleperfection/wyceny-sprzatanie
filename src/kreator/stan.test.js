@@ -9,7 +9,8 @@ import { BladWyceny, dodajWykonanie, utworzSzkic, wycena, zmienStatus } from '..
 import { BladWejscia } from '../silnik/bledy.js'
 import { ukladMieszkania } from '../silnik/uklad.js'
 import {
-  brudNowegoPomieszczenia, bledyKroku, czyZmianaCzysciZakres, KROKI_KREATORA, nowySzkic, przelicz, zmienWejscie, zmienWybor,
+  brudNowegoPomieszczenia, bledyKroku, czyZmianaCzysciZakres, KROKI_KREATORA, nowySzkic, przelicz, zapiszZmianyWyceny, zmienWejscie,
+  zmienWybor,
 } from './stan.js'
 
 /** @typedef {import('../silnik/katalog.js').Katalog} Katalog */
@@ -319,5 +320,75 @@ describe('zmienWejscie i zmienWybor', () => {
     utworzSzkic(kontekst.magazyn, { rodzaj: 'dokladna', wejscie: { uslugaId: 'okna' } })
 
     assert.throws(() => zmienWejscie(kontekst, 'nie-ma', (w) => w), bladWyceny('brak_wyceny'))
+  })
+})
+
+describe('zapiszZmianyWyceny', () => {
+  const SZYBKA = { stan: 'typowy', od: 250, do: 300, tryb: 'widelki' }
+
+  it('zmienia rodzaj, widełki i odpowiedzi razem z wejściem w jednym zapisie; id zostaje, migawka liczy się od nowa', () => {
+    const pamiec = new LicznikMagazynu()
+    const magazyn = utworzMagazyn(pamiec, { loguj: () => {}, poprosOTrwalosc: () => true })
+    zapiszUstawienia(magazyn, { wojewodztwoId: 'mazowieckie', statusVat: 'zwolniony' }, domyslne)
+    const kontekst = { katalog, domyslne, magazyn }
+    const { id } = utworzSzkic(magazyn, { rodzaj: 'szybka', wejscie: { uslugaId: 'mieszkanie_standard', wojewodztwoId: 'mazowieckie' } })
+    pamiec.zeruj()
+
+    const po = zapiszZmianyWyceny(kontekst, id, () => ({ rodzaj: 'dokladna', szybka: SZYBKA, odpowiedzi: { zwierzeta: { wartosc: 'tak' } },
+      wejscie: { uslugaId: 'mieszkanie_standard', wojewodztwoId: 'mazowieckie', pomieszczenia: mieszkanie50() } }))
+
+    assert.equal(pamiec.zapisy, 1)
+    assert.deepEqual([po.id, po.rodzaj, po.szybka, po.odpowiedzi, po.wynik?.cena], [id, 'dokladna', SZYBKA, { zwierzeta: { wartosc: 'tak' } }, 250])
+    assert.deepEqual(zapisana(kontekst, id).szybka, SZYBKA)
+    assert.equal(zapisana(kontekst, id).wejscie.pomieszczenia?.length, 4)
+  })
+
+  it('bez nowego wejścia zostawia wejście, migawkę i ofertę; zmienia tylko podane pola', () => {
+    const kontekst = kontekstFirmy()
+    const { id } = nowySzkic(kontekst, { uslugaId: 'mieszkanie_standard', wojewodztwoId: 'mazowieckie' })
+    const przed = zmienWejscie(kontekst, id, (wejscie) => ({ ...wejscie, pomieszczenia: mieszkanie50() }))
+
+    const po = zapiszZmianyWyceny(kontekst, id, () => ({ odpowiedzi: { termin: { wartosc: 'jutro' } } }))
+
+    assert.deepEqual(po.odpowiedzi, { termin: { wartosc: 'jutro' } })
+    assert.deepEqual([po.rodzaj, po.wejscie, po.wynik, po.oferta], [przed.rodzaj, przed.wejscie, przed.wynik, przed.oferta])
+  })
+
+  it('wycena wykonana daje BladWyceny tylko_odczyt, a nieznana — brak_wyceny; nic się nie zapisuje', () => {
+    const kontekst = kontekstFirmy()
+    const { id } = nowySzkic(kontekst, { uslugaId: 'mieszkanie_standard', wojewodztwoId: 'mazowieckie' })
+    zmienWejscie(kontekst, id, (wejscie) => ({ ...wejscie, pomieszczenia: mieszkanie50() }))
+    zmienStatus(kontekst.magazyn, id, 'do_wyslania')
+    zmienStatus(kontekst.magazyn, id, 'przyjeta')
+    dodajWykonanie(kontekst.magazyn, id, { data: '2026-10-20', minuty: 240, tempoPlanu: 1.3 })
+
+    assert.throws(() => zapiszZmianyWyceny(kontekst, id, () => ({ odpowiedzi: { termin: { wartosc: 'jutro' } } })), bladWyceny('tylko_odczyt'))
+    assert.throws(() => zapiszZmianyWyceny(kontekst, 'nie-ma', () => ({})), bladWyceny('brak_wyceny'))
+    assert.deepEqual(zapisana(kontekst, id).odpowiedzi, {})
+  })
+
+  it('wycena z numerem nie przyjmuje pustego zakresu, a zły kształt pól daje BladWyceny ksztalt; zapis bez zmian', () => {
+    const kontekst = kontekstFirmy()
+    const { id } = nowySzkic(kontekst, { uslugaId: 'mieszkanie_standard', wojewodztwoId: 'mazowieckie' })
+    zmienWejscie(kontekst, id, (wejscie) => ({ ...wejscie, pomieszczenia: mieszkanie50() }))
+    zmienStatus(kontekst.magazyn, id, 'do_wyslania')
+
+    assert.throws(() => zapiszZmianyWyceny(kontekst, id, (w) => ({ wejscie: { ...w.wejscie, pomieszczenia: [] } })), bladWyceny('pusty_zakres'))
+    assert.throws(() => zapiszZmianyWyceny(kontekst, id, () => ({ szybka: /** @type {any} */ ({ od: 'dużo' }) })), bladWyceny('ksztalt'))
+    assert.throws(() => zapiszZmianyWyceny(kontekst, id, () => ({ odpowiedzi: { termin: { wartosc: 'x'.repeat(3000) } } })), bladWyceny('ksztalt'))
+    assert.deepEqual([zapisana(kontekst, id).szybka, zapisana(kontekst, id).wynik?.cena], [null, 250])
+  })
+
+  it('nowe wejście po wysłaniu oferty oznacza ją jako nieaktualną', () => {
+    const kontekst = kontekstFirmy()
+    const { id } = nowySzkic(kontekst, { uslugaId: 'mieszkanie_standard', wojewodztwoId: 'mazowieckie' })
+    zmienWejscie(kontekst, id, (wejscie) => ({ ...wejscie, pomieszczenia: mieszkanie50() }))
+    zmienStatus(kontekst.magazyn, id, 'do_wyslania')
+    zmienStatus(kontekst.magazyn, id, 'wyslana')
+
+    const po = zapiszZmianyWyceny(kontekst, id, (w) => ({ wejscie: { ...w.wejscie, dojazdKm: 32 } }))
+
+    assert.equal(po.oferta.nieaktualna, true)
+    assert.equal(po.wynik?.dojazd.km, 32)
   })
 })

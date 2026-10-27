@@ -18,8 +18,11 @@ import { widokKreatoraUslugi } from './kreator-usluga.js'
 import { widokKreatora } from './kreator-wspolne.js'
 import { widokListyWycen } from './lista-wycen.js'
 import { widokPodsumowaniaKreatora, widokZapisanejWyceny } from './podsumowanie.js'
+import { widokPytan } from './pytania.js'
 import { widokStartu } from './start.js'
+import { widokSzybkiejWyceny } from './szybka.js'
 import { widokUstawien } from './ustawienia.js'
+import { widokZakonczeniaZlecenia } from './zakonczenie.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../ui/router.js').Widoki} Widoki */
@@ -60,6 +63,9 @@ export const WIDOKI = Object.freeze({
   kreator: widokKreatora({ usluga: widokKreatoraUslugi, zakres: widokKreatoraZakresu, dodatki: widokKreatoraDodatkow, chemia: widokDoboruChemii,
     cena: widokPodsumowaniaKreatora }, NIE_MA_EKRANU),
   wycena: widokZapisanejWyceny,
+  zakonczenie: widokZakonczeniaZlecenia,
+  szybka: widokSzybkiejWyceny,
+  pytania: widokPytan,
   nieZnaleziono: NIE_MA_EKRANU,
   bladEkranu: widokKomunikatu('Nie udało się otworzyć tego ekranu. Wróć na start i spróbuj jeszcze raz.'),
 })

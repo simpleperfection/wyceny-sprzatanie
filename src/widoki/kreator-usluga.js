@@ -1,6 +1,7 @@
 // Pierwszy krok kreatora dokladnej wyceny (`#/kreator/usluga`, opcjonalnie `?wycena=<id>`, makieta kreator-wybor-uslugi):
 // wojewodztwo (podpowiedziane z ustawien) ze stawka, uslugi w dwoch grupach wg trybu z podpowiedzia ceny z silnika, warianty biur.
-// „Dalej” tworzy szkic albo zapisuje zmiane wyboru i przechodzi do kroku zakresu.
+// „Dalej” tworzy szkic albo zapisuje zmiane wyboru i przechodzi do kroku zakresu. Po utworzeniu szkicu pod uslugami jest wiersz
+// „Pytania do klienta · a z n” do ekranu pytan.
 
 import { wczytajStan } from '../dane/magazyn.js'
 import { ustawieniaDomyslne } from '../dane/ustawienia.js'
@@ -12,7 +13,9 @@ import { kwotaJednostki, m2, nazwaJednostki, tekstLiczby, zl } from '../ui/forma
 import { h } from '../ui/h.js'
 import { chipy, przycisk } from '../ui/komponenty/formularz.js'
 import { arkusz, baner, dialogPotwierdzenia, karta, wiersz } from '../ui/komponenty/uklad.js'
+import { sciezka } from '../ui/trasy.js'
 import { adresKroku, ramaKroku, wycenaKroku, zglosBladKreatora } from './kreator-wspolne.js'
+import { wierszPytan } from './pytania.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../ui/router.js').Kontekst} Kontekst */
@@ -146,6 +149,8 @@ export const widokKreatoraUslugi = {
       return [
         karta({ klasa: 'karta--bez-odstepu' }, wierszWojewodztwa),
         ...grupy,
+        zapisana ? wierszPytan({ katalog, uslugaId: zapisana.wejscie.uslugaId, odpowiedzi: zapisana.odpowiedzi,
+          adres: sciezka('pytania', { id: zapisana.id }) }) : null,
         katalog.uslugi.some((u) => u.tylko_dodatek) ? h('p', { class: 'kreator-usluga__notka' }, 'AGD, szafki i balkon dodasz w kroku „Dodatki”.') : null,
         komunikat,
       ].filter((element) => element !== null)

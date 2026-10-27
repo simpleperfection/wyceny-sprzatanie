@@ -23,6 +23,7 @@ const PLIKI_STARTOWE = [
   'data/rynek.json',
   'data/chemia.json',
   'data/domyslne.json',
+  'data/pytania.json',
 ]
 
 class PrzekroczenieCzasu extends Error {}

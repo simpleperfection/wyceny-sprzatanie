@@ -8,10 +8,11 @@ import { wczytajStan } from '../dane/magazyn.js'
 import { BladWyceny, usunWycene, wycena as znajdzWycene, zapiszWycene, zmienStatus } from '../dane/wyceny.js'
 import { akcjeWyceny, przeliczWycene, widokPodsumowania } from '../kreator/podsumowanie.js'
 import { KROKI_KREATORA } from '../kreator/stan.js'
-import { zl } from '../ui/format.js'
+import { historiaPlanuIFaktu } from '../kreator/zakonczenie.js'
+import { czas, data, procent, zl } from '../ui/format.js'
 import { h } from '../ui/h.js'
 import { pole, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
-import { arkusz, baner, dialogPotwierdzenia, naglowek, pasekPostepu } from '../ui/komponenty/uklad.js'
+import { arkusz, baner, dialogPotwierdzenia, karta, naglowek, pasekPostepu } from '../ui/komponenty/uklad.js'
 import { ETYKIETY_STATUSOW, pigulkaStatusu } from '../ui/statusy.js'
 import { sciezka } from '../ui/trasy.js'
 import { adresKroku, wycenaKroku, zglosBladKreatora } from './kreator-wspolne.js'
@@ -80,6 +81,21 @@ function przyciskAkcji(w, akcja, { naStatus, naUsun }) {
   return usun
 }
 
+/** @param {Wycena} w @returns {HTMLElement | null} wpisy czasu pracy (wykonana wycena, wizyty abonamentu), od najnowszego */
+function kartaWpisowCzasu(w) {
+  const wpisy = historiaPlanuIFaktu([w])
+  if (wpisy.length === 0) return null
+  return karta({ tytul: 'Wpisany czas pracy', klasa: 'karta--bez-odstepu' }, h('ul', { class: 'plan-fakt-lista' },
+    wpisy.map((x) => h('li', { class: 'plan-fakt-lista__wiersz liczba' },
+      `${data(x.data)} · plan ${czas(x.plan)} · fakt ${czas(x.fakt)} (${procent(x.procent)})`))))
+}
+
+/** @param {Wycena} w @param {ObslugaAkcji} obsluga @returns {HTMLElement[]} „Wpisz czas pracy” przy przyjetej, potem akcje wg statusu */
+function akcjeZapisanej(w, obsluga) {
+  const wpisCzasu = w.status === 'przyjeta' ? [przycisk({ tekst: 'Wpisz czas pracy', adres: sciezka('zakonczenie', { id: w.id }) })] : []
+  return [...wpisCzasu, ...akcjeWyceny(w.status).map((a) => przyciskAkcji(w, a, obsluga))]
+}
+
 /**
  * Karty podsumowania; wycena bez ceny albo z migawka, ktorej nie da sie policzyc z biezacymi danymi — komunikat.
  * @param {Wycena} w @param {Kontekst} kontekst @param {TrybPodsumowania} tryb @param {ObslugaKart} obsluga
@@ -116,7 +132,8 @@ function elementyEkranu({ w, kontekst, tryb, komunikat, obslugaKart, obslugaAkcj
       czyKreator ? null : h('div', { class: 'podsumowanie__status' }, pigulkaStatusu(w.status)),
       h('div', { class: 'podsumowanie__komunikat', 'aria-live': 'polite', tabIndex: -1 }, komunikat ? baner(komunikat) : null),
       karty(w, kontekst, tryb, obslugaKart),
-      czyKreator ? null : h('div', { class: 'podsumowanie__akcje' }, akcjeWyceny(w.status).map((a) => przyciskAkcji(w, a, obslugaAkcji)))),
+      czyKreator ? null : kartaWpisowCzasu(w),
+      czyKreator ? null : h('div', { class: 'podsumowanie__akcje' }, akcjeZapisanej(w, obslugaAkcji))),
     czyKreator ? h('div', { class: 'stopka-kreatora' }, przycisk({ tekst: 'Zapisz', naKlik: () => otworzZapis(kontekst, w) })) : null,
   ])
 }
