@@ -5,6 +5,7 @@
 
 import { wczytajStan } from '../dane/magazyn.js'
 import { pytaniaAplikacji } from '../dane/pytania.js'
+import { wycena as znajdzWycene } from '../dane/wyceny.js'
 import {
   dodajPomieszczenie, GRANICE_METRAZU, MAKS_DLUGOSC_NAZWY, opisPrzeniesienia, podsumowanieZakresu, rodzajeBrudu, ustawBrud, ustawMetraz,
   usunPomieszczenie, zmienNazwe,
@@ -18,6 +19,7 @@ import { h, ikona } from '../ui/h.js'
 import { chipy, licznik, pole, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
 import { arkusz, baner, karta, wiersz } from '../ui/komponenty/uklad.js'
 import { adresKroku, odswiezStopke, pokazKomunikat, ramaKroku, wycenaKroku, zapisKroku } from './kreator-wspolne.js'
+import { tekstBleduPytan } from './pytania.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../silnik/cena.js').WejscieWyceny} WejscieWyceny */
@@ -136,9 +138,7 @@ export const widokKreatoraPomieszczen = {
     /** @type {number | null} */
     let rozwiniety = null
     let czyWszystkieBrudy = false
-    /** @type {Pytania | null} pytania do brudu z odpowiedzi klienta w nowym pomieszczeniu (wczytane w tle; bez nich sam brud uslugi) */
-    let pytania = null
-    void pytaniaAplikacji(katalog).then((wczytane) => { pytania = wczytane }).catch(reportError)
+    let czyAktywny = true
 
     /** @param {string} typ */
     const nazwaTypu = (typ) => zestaw.find((n) => n.id === typ)?.nazwa ?? typ
@@ -167,9 +167,29 @@ export const widokKreatoraPomieszczen = {
       naUsun: (i) => poZmianie(zapisz((w) => usunPomieszczenie(w, i)), () => { rozwiniety = null; rysuj(FOKUS_DODAJ) }),
     }
 
+    /** @returns {Record<string, unknown>} odpowiedzi klienta z zapisu (moga sie zmienic w innej karcie) */
+    const swiezeOdpowiedzi = () => znajdzWycene(wczytajStan(magazyn), wycena.id)?.odpowiedzi ?? {}
+
+    /**
+     * Pytania do brudu z odpowiedzi w nowym pomieszczeniu: null, gdy wycena nie ma odpowiedzi; undefined, gdy pytan nie udalo
+     * sie wczytac (komunikat z tekstBleduPytan) — wtedy pomieszczenie sie nie dodaje, zeby nie zgubic brudu z odpowiedzi.
+     * @returns {Promise<Pytania | null | undefined>}
+     */
+    async function pytaniaDoBrudu() {
+      if (Object.keys(swiezeOdpowiedzi()).length === 0) return null
+      try {
+        return await pytaniaAplikacji(katalog)
+      } catch (blad) {
+        if (czyAktywny) pokazBlad(tekstBleduPytan(blad))
+        return undefined
+      }
+    }
+
     /** @param {string} typ */
-    function handleDodaj(typ) {
-      const zOdpowiedzi = (/** @type {WejscieWyceny} */ w) => (pytania ? brudOdpowiedzi({ wejscie: w, odpowiedzi: wycena.odpowiedzi }, pytania) : [])
+    async function handleDodaj(typ) {
+      const pytania = await pytaniaDoBrudu()
+      if (!czyAktywny || pytania === undefined) return
+      const zOdpowiedzi = (/** @type {WejscieWyceny} */ w) => (pytania ? brudOdpowiedzi({ wejscie: w, odpowiedzi: swiezeOdpowiedzi() }, pytania) : [])
       poZmianie(zapisz((w) => dodajPomieszczenie(w, typ, katalog, { brudOdpowiedzi: zOdpowiedzi(w) })), () => {
         rozwiniety = (wycena.wejscie.pomieszczenia ?? []).length - 1
         czyWszystkieBrudy = false
@@ -179,7 +199,7 @@ export const widokKreatoraPomieszczen = {
 
     function handleOtworzTypy() {
       const dialog = arkusz({ tytul: 'Dodaj pomieszczenie' }, karta({ klasa: 'karta--bez-odstepu' },
-        zestaw.map((n) => wiersz({ tytul: n.nazwa, naKlik: () => { dialog.close(); handleDodaj(n.id) } }))))
+        zestaw.map((n) => wiersz({ tytul: n.nazwa, naKlik: () => { dialog.close(); void handleDodaj(n.id).catch(reportError) } }))))
       dialog.addEventListener('close', () => dialog.remove())
       document.body.append(dialog)
       dialog.showModal()
@@ -241,5 +261,6 @@ export const widokKreatoraPomieszczen = {
     }
 
     rysuj()
+    return () => { czyAktywny = false }
   },
 }

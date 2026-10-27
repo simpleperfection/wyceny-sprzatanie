@@ -95,15 +95,16 @@ describe('zapiszOdpowiedz i pytaniaWyceny', () => {
     assert.equal(ekran.odpowiedziane, 2)
   })
 
-  it('usunięcie odpowiedzi dokładnej wyceny zostawia wejście (ręczne zmiany wygrywają)', () => {
+  it('usunięcie odpowiedzi o dojeździe w dokładnej wycenie zostawia wejście z 32 km (ręczne zmiany wygrywają)', () => {
     const kontekst = kontekstFirmy()
     const id = dokladna50(kontekst)
-    const z = zapiszOdpowiedz(kontekst, id, 'zwierzeta', { wartosc: 'tak' }, pytania)
+    const z = zapiszOdpowiedz(kontekst, id, 'dojazd', { wartosc: 32 }, pytania)
 
-    const po = zapiszOdpowiedz(kontekst, id, 'zwierzeta', null, pytania)
+    const po = zapiszOdpowiedz(kontekst, id, 'dojazd', null, pytania)
 
     assert.deepEqual(po.odpowiedzi, {})
     assert.deepEqual(po.wejscie, z.wejscie)
+    assert.equal(po.wejscie.dojazdKm, 32)
   })
 
   it('szybka wycena: dojazd z odpowiedzi trafia do formularza i widełek, usunięcie odpowiedzi go zeruje', () => {
@@ -175,6 +176,19 @@ describe('zapiszOdpowiedz w dokładnej wycenie: skutek tylko przy zmianie warto�
 
     const po = zapiszOdpowiedz(kontekst, id, 'zwierzeta', { wartosc: 'nie' }, pytania)
 
+    assert.deepEqual(sierscPokoi(po), [[{ id: 'kurz', poziom: 1 }, { id: 'siersc', poziom: 2 }], [{ id: 'kurz', poziom: 1 }]])
+  })
+
+  it('„Usuń odpowiedź” po „tak” o zwierzętach zdejmuje sierść 1 z pokoi jak „nie”; ręczna sierść 2 zostaje', () => {
+    const kontekst = kontekstFirmy()
+    const id = dwaPokoje(kontekst)
+    zapiszOdpowiedz(kontekst, id, 'zwierzeta', { wartosc: 'tak' }, pytania)
+    zmienWejscie(kontekst, id, (w) => ({ ...w, pomieszczenia: (w.pomieszczenia ?? []).map((p, i) => (i === 0 && p.typ === 'pokoj'
+      ? { ...p, brud: [{ id: 'kurz', poziom: 1 }, { id: 'siersc', poziom: 2 }] } : p)) }))
+
+    const po = zapiszOdpowiedz(kontekst, id, 'zwierzeta', null, pytania)
+
+    assert.deepEqual(po.odpowiedzi, {})
     assert.deepEqual(sierscPokoi(po), [[{ id: 'kurz', poziom: 1 }, { id: 'siersc', poziom: 2 }], [{ id: 'kurz', poziom: 1 }]])
   })
 
