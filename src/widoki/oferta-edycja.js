@@ -4,10 +4,10 @@
 // Link liczy sie w tle po kazdej zmianie (numer wersji odrzuca wynik starszej), zeby schowek i nowa karta dostaly go od razu.
 
 import { BladMagazynu, wczytajStan } from '../dane/magazyn.js'
-import { BladUstawien } from '../dane/ustawienia.js'
-import { BladWyceny, oznaczWyslana, wycena as znajdzWycene, zapiszOferte } from '../dane/wyceny.js'
+import { BladUstawien, POLA_WYMAGANE_W_OFERCIE } from '../dane/ustawienia.js'
+import { BladWyceny, czyStatusOferty, oznaczWyslana, wycena as znajdzWycene, zapiszOferte } from '../dane/wyceny.js'
 import { BladKodeka, linkOferty } from '../oferta/kodek.js'
-import { BladOferty, ofertaZWyceny } from '../oferta/tresc.js'
+import { BladOferty, ofertaZWyceny, warunkiZrodlowe } from '../oferta/tresc.js'
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
 import { h } from '../ui/h.js'
 import { przycisk } from '../ui/komponenty/formularz.js'
@@ -22,7 +22,6 @@ import { tekstBleduZapisu } from './teksty-bledow.js'
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../ui/router.js').Kontekst} Kontekst */
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
-/** @typedef {import('../dane/wyceny.js').StatusWyceny} StatusWyceny */
 /** @typedef {import('../dane/magazyn.js').Stan} Stan */
 /** @typedef {import('../oferta/kodek.js').LinkOferty} LinkOferty */
 /** @typedef {import('../oferta/tresc.js').Oferta} Oferta */
@@ -30,8 +29,6 @@ import { tekstBleduZapisu } from './teksty-bledow.js'
 /** @typedef {import('./oferta-edycja-sekcje.js').ZmianaOferty} ZmianaOferty */
 /** @typedef {{ w: Wycena, stan: Stan, oferta: Oferta }} BiezacaOferta */
 
-/** Statusy, z ktorych przygotowuje sie oferte (przycisk „Przygotuj ofertę” w zapisanej wycenie). */
-export const STATUSY_OFERTY = Object.freeze(/** @type {const} */ (['do_wyslania', 'wyslana', 'przyjeta']))
 const CZAS_KOMUNIKATU_MS = 3000
 const BRAK_DANYCH_FIRMY = 'Uzupełnij nazwę firmy i telefon w ustawieniach, zanim wyślesz ofertę.'
 const NIEAKTUALNA = 'Wycena zmieniła się po wysłaniu oferty. Wysłany wcześniej link pokazuje starą wersję — wyślij nowy.'
@@ -43,14 +40,11 @@ const BRAK_CENY = 'Ta wycena nie ma jeszcze ceny. Wróć do wyceny i dodaj zakre
 const BLAD_OFERTY = 'Nie udało się przygotować oferty z tej wyceny. Wróć do wyceny i sprawdź jej dane.'
 const ZA_DLUGI_TEKST = 'Ten tekst jest za długi. Skróć go.'
 
-/** @param {StatusWyceny} status @returns {boolean} z wyceny o tym statusie przygotowuje sie oferte */
-export const czyStatusOferty = (status) => STATUSY_OFERTY.some((s) => s === status)
-
 /** @param {number} n @returns {string} ostrzezenie o linku dluzszym niz MAKS_DLUGOSC_LINKU */
 export const tekstDlugiegoLinku = (n) => `Link ma ${n} znaków — w SMS-ie może się nie zmieścić. Wyślij go komunikatorem albo wydrukuj PDF.`
 
-/** @param {Pick<Oferta, 'firma'>} oferta @returns {boolean} oferta ma nazwe firmy i telefon (bez nich nie da sie jej wyslac) */
-export const czyDaneFirmy = (oferta) => oferta.firma.nazwa.trim() !== '' && oferta.firma.telefon.trim() !== ''
+/** @param {Pick<Oferta, 'firma'>} oferta @returns {boolean} oferta ma pola firmy z POLA_WYMAGANE_W_OFERCIE (bez nich nie da sie jej wyslac) */
+export const czyDaneFirmy = (oferta) => POLA_WYMAGANE_W_OFERCIE.every((pole) => oferta.firma[pole].trim() !== '')
 
 /** @param {unknown} blad @returns {string} tekst bledu zapisu oferty */
 function tekstBleduZapisuOferty(blad) {
@@ -259,7 +253,7 @@ function uruchomOferte(kontener, kontekst, id, zakresy, czyAktywny) {
         kartaDodatkow(oferta.dodatkiOpcjonalne),
         kartaWarunkow({ zapisz, dzis, pobierz: () => {
           const teraz = biezaca() ?? poczatek
-          const warunki = teraz.w.oferta.warunki ?? teraz.stan.ustawienia?.warunki ?? domyslne.oferta.warunki
+          const warunki = warunkiZrodlowe(teraz.w.oferta.warunki, teraz.stan.ustawienia, domyslne)
           return { warunki, szybka: teraz.oferta.szybka, czyZmienione: teraz.w.oferta.warunki !== null, waznaDo: teraz.oferta.waznaDo }
         } }),
         banery, komunikat, zapasowy),

@@ -350,4 +350,28 @@ describe('zapiszZakres i zapiszWarunki', () => {
     assert.throws(() => sprawdzUstawienia({ ...baza, warunki: [warunek, warunek] }), bladUstawien('wartosc', 'warunki'))
     assert.doesNotThrow(() => sprawdzUstawienia({ ...baza, zakresy: { okna: { wchodzi: ['Szyby'], nie_wchodzi: [] } }, warunki: [warunek] }))
   })
+
+  it('warunki: nie-lista, 51 warunków, obce pole, zły id i tylko_szybka nie-boolean → BladUstawien z polem, bez zapisu', () => {
+    const { magazyn } = nowyMagazyn()
+    zapiszWarunki(magazyn, [{ id: 'zaliczka', tresc: 'Bez zaliczki.', tylko_szybka: false }], DOMYSLNE)
+    const przed = ustawienia(magazyn).warunki
+    const warunek = { id: 'zaliczka', tresc: 'Bez zaliczki.', tylko_szybka: false }
+
+    assert.throws(() => zapiszWarunki(magazyn, /** @type {never} */ ({ 0: warunek })), bladUstawien('wartosc', 'warunki'))
+    assert.throws(() => zapiszWarunki(magazyn, Array.from({ length: 51 }, (_, i) => ({ ...warunek, id: `w${i}` }))), bladUstawien('za_duzo', 'warunki'))
+    assert.throws(() => zapiszWarunki(magazyn, /** @type {never} */ ([{ ...warunek, kolor: 'zielony' }])), bladUstawien('nieznane_pole', 'warunki.0.kolor'))
+    assert.throws(() => zapiszWarunki(magazyn, [{ ...warunek, id: 'Zaliczka!' }]), bladUstawien('wartosc', 'warunki.0.id'))
+    assert.throws(() => zapiszWarunki(magazyn, /** @type {never} */ ([{ ...warunek, tylko_szybka: 'tak' }])), bladUstawien('wartosc', 'warunki.0.tylko_szybka'))
+    assert.deepEqual(ustawienia(magazyn).warunki, przed)
+  })
+
+  it('sprawdzUstawienia (plik kopii): zakresy nie-obiekt, klucz usługi „Okna” i zakres z obcym polem → BladUstawien wartosc zakresy', () => {
+    const baza = ustawieniaDomyslne(DOMYSLNE)
+    const zakres = { wchodzi: ['Szyby'], nie_wchodzi: [] }
+
+    assert.throws(() => sprawdzUstawienia(/** @type {never} */ ({ ...baza, zakresy: [zakres] })), bladUstawien('wartosc', 'zakresy'))
+    assert.throws(() => sprawdzUstawienia({ ...baza, zakresy: { Okna: zakres } }), bladUstawien('wartosc', 'zakresy'))
+    assert.throws(() => sprawdzUstawienia(/** @type {never} */ ({ ...baza, zakresy: { okna: { ...zakres, uwagi: [] } } })), bladUstawien('wartosc', 'zakresy'))
+    assert.doesNotThrow(() => sprawdzUstawienia({ ...baza, zakresy: { okna: zakres } }))
+  })
 })

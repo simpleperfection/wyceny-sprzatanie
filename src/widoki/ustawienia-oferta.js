@@ -3,11 +3,12 @@
 // „Przywróć domyślne”). Zmiana obowiazuje w kazdej nowej ofercie; zapis i ponowne narysowanie ekranu robi `wykonaj` widoku.
 
 import { zapiszWarunki, zapiszZakres } from '../dane/ustawienia.js'
+import { warunkiPoEdycji, warunkiZrodlowe } from '../oferta/tresc.js'
 import { h } from '../ui/h.js'
 import { przycisk } from '../ui/komponenty/formularz.js'
 import { karta, wiersz } from '../ui/komponenty/uklad.js'
 import { edytorListy } from './edytor-listy.js'
-import { edytoryZakresu, listaPunktow, naglowekKarty, poZakresach, warunkiPoEdycji } from './oferta-edycja-sekcje.js'
+import { edytoryZakresu, listaPunktow, naglowekKarty, poZakresach } from './oferta-edycja-sekcje.js'
 import { fokusPola, otworzArkusz } from './ustawienia-sekcje.js'
 
 /** @typedef {import('../dane/magazyn.js').Magazyn} Magazyn */
@@ -89,7 +90,7 @@ function otworzWarunki(dane, warunki) {
 /** @param {DaneOfertyUstawien} dane @returns {HTMLElement} karta „Warunki oferty” z „Edytuj” i „Przywróć domyślne” */
 export function kartaWarunkowUstawien(dane) {
   const zapisane = dane.ustawienia.warunki
-  const warunki = zapisane ?? dane.domyslne.oferta.warunki
+  const warunki = warunkiZrodlowe(null, dane.ustawienia, dane.domyslne)
   return karta({ klasa: 'karta-ustawien karta-oferty' },
     naglowekKarty('Warunki oferty', { tekst: 'Edytuj', klucz: 'warunki-ustawien', naKlik: () => otworzWarunki(dane, warunki) }, 'pencil'),
     listaPunktow(warunki.map((w) => w.tresc), 'warunek', warunki.map((w) => (w.tylko_szybka ? TYLKO_SZYBKA : null))),

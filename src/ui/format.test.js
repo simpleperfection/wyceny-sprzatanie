@@ -162,3 +162,21 @@ describe('kwotaJednostki i nazwaJednostki', () => {
     assert.deepEqual(['m2', 'szt', 'mb'].map(modulFormatu.nazwaJednostki), ['m²', 'szt.', 'mb'])
   })
 })
+
+describe('tekstIlosci i terminKlienta (tekst oferty dla klienta)', () => {
+  it('tekstIlosci: jednostka z danych, tysiące z twardą spacją, ułamki z przecinkiem; NaN daje BladFormatu', () => {
+    assert.deepEqual([modulFormatu.tekstIlosci(50, 'm2'), modulFormatu.tekstIlosci(4, 'szt'), modulFormatu.tekstIlosci(1200, 'm2'),
+      modulFormatu.tekstIlosci(2.5, 'h')], ['50 m²', '4 szt.', `1${NBSP}200 m²`, '2,5 h'])
+    assert.throws(() => modulFormatu.tekstIlosci(Number.NaN, 'm2'), bladFormatu('nie_liczba'))
+  })
+
+  it('terminKlienta: data i godzina z pola formularza po polsku, sam dzień bez godziny, sekundy pomijane', () => {
+    assert.deepEqual(['2026-11-14T09:00', '2026-11-14T18:30:00', '2026-11-14'].map(modulFormatu.terminKlienta),
+      ['14 listopada 2026, 9:00', '14 listopada 2026, 18:30', '14 listopada 2026'])
+  })
+
+  it('terminKlienta: nieistniejący dzień, zła godzina i zwykły tekst zostają bez zmian', () => {
+    assert.deepEqual(['2026-02-30T09:00', '2026-11-14T24:00', 'jutro rano', ''].map(modulFormatu.terminKlienta),
+      ['2026-02-30T09:00', '2026-11-14T24:00', 'jutro rano', ''])
+  })
+})

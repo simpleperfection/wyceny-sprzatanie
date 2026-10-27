@@ -460,9 +460,9 @@ Zależy od: Faza 5
 - [x] Test: [Unit] fragment obcięty o 10 znaków, `v9.…` i JSON z kluczem spoza schematu albo tekstem 600 znaków dają `ok: false` z powodem `uszkodzony`, `wersja`, `uszkodzony`
 - [x] Test: [Unit] `sprawdzZakresy` na prawdziwym `data/zakresy.json` zwraca pustą listę
 - [x] Test: [Unit] `oznaczWyslana` zmienia status z `do_wyslania` na `wyslana` i kasuje `nieaktualna`
-- [ ] Weryfikacja: `node --test src/oferta/tresc.test.js src/oferta/kodek.test.js` przechodzi
-- [ ] Weryfikacja: `npm test` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `node --test src/oferta/tresc.test.js src/oferta/kodek.test.js` przechodzi
+- [x] Weryfikacja: `npm test` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-23: Edycja oferty oraz zakres prac i warunki w ustawieniach (feature-builder-ui)
 
@@ -473,10 +473,10 @@ Zależy od: Faza 5
 - [x] Modyfikuj: `src/widoki/ustawienia.js`
 - [x] Modyfikuj: `src/widoki/podsumowanie.js`
 - [x] Modyfikuj: `src/widoki/indeks.js`
-- [ ] Test: [E2E] `oferta-link` — okno 360×800, wstrzyknij `e2e/stany/wyceny-do-zrobienia.json`, otwórz wycenę „Do wysłania”, kliknij „Przygotuj ofertę”, wpisz klienta „Marzena Wróbel”, w „Zakres prac” kliknij „Edytuj” i usuń jeden punkt „W cenie”, kliknij „Kopiuj link”, odczytaj link przez `agent-browser eval "navigator.clipboard.readText()"` i otwórz go w nowej karcie → „Link skopiowany”, status wyceny „Wysłana”, oferta pokazuje „Marzena Wróbel”, nazwę firmy, kwotę i zakres bez usuniętego punktu, a tekst strony nie zawiera „Zostaje”, „tempo” ani „Koszt zlecenia”
-- [ ] Test: [E2E] `oferta-brak-danych-firmy` — wyczyść localStorage, pomiń kreator, utwórz i zapisz wycenę okien, kliknij „Przygotuj ofertę” → baner „Uzupełnij nazwę firmy i telefon…”, „Kopiuj link” nieaktywny
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
-- [ ] Weryfikacja: `npm test` przechodzi
+- [x] Test: [E2E] `oferta-link` — okno 360×800, wstrzyknij `e2e/stany/wyceny-do-zrobienia.json`, otwórz wycenę „Do wysłania”, kliknij „Przygotuj ofertę”, wpisz klienta „Marzena Wróbel”, w „Zakres prac” kliknij „Edytuj” i usuń jeden punkt „W cenie”, kliknij „Kopiuj link”, odczytaj link przez `agent-browser eval "navigator.clipboard.readText()"` i otwórz go w nowej karcie → „Link skopiowany”, status wyceny „Wysłana”, oferta pokazuje „Marzena Wróbel”, nazwę firmy, kwotę i zakres bez usuniętego punktu, a tekst strony nie zawiera „Zostaje”, „tempo” ani „Koszt zlecenia”
+- [x] Test: [E2E] `oferta-brak-danych-firmy` — wyczyść localStorage, pomiń kreator, utwórz i zapisz wycenę okien, kliknij „Przygotuj ofertę” → baner „Uzupełnij nazwę firmy i telefon…”, „Kopiuj link” nieaktywny
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `npm test` przechodzi
 
 ### IU-24: Strona oferty dla klienta i wydruk A4 (feature-builder-ui)
 
@@ -487,11 +487,15 @@ Zależy od: Faza 5
 - [x] Stwórz: `src/style/druk.css`
 - [x] Modyfikuj: `sw.js`
 - [x] Stwórz: `e2e/stany/oferta-po-terminie.txt`
-- [ ] Test: [E2E] `oferta-po-terminie` — otwórz http://localhost:5174/oferta.html# z treścią `e2e/stany/oferta-po-terminie.txt`, zrób screenshot → baner „Oferta była ważna do 1 października 2026…” nad dokumentem z danymi firmy i kwotą
-- [ ] Test: [E2E] `oferta-uszkodzony-link` — otwórz http://localhost:5174/oferta.html#v1.zepsute → tylko komunikat „Ten link do oferty jest niepełny albo uszkodzony…”, konsola bez nieobsłużonych błędów, `localStorage.length` w eval równe 0
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
-- [ ] Weryfikacja: `npm test` przechodzi
-- [ ] Weryfikacja: `grep -n "localStorage\|serviceWorker" src/oferta-start.js src/widoki/oferta-klient.js` nie zwraca wyników
+- [x] Test: [E2E] `oferta-po-terminie` — otwórz http://localhost:5174/oferta.html# z treścią `e2e/stany/oferta-po-terminie.txt`, zrób screenshot → baner „Oferta była ważna do 1 października 2026…” nad dokumentem z danymi firmy i kwotą
+- [x] Test: [E2E] `oferta-uszkodzony-link` — otwórz http://localhost:5174/oferta.html#v1.zepsute → tylko komunikat „Ten link do oferty jest niepełny albo uszkodzony…”, konsola bez nieobsłużonych błędów, `localStorage.length` w eval równe 0
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `npm test` przechodzi
+- [x] Weryfikacja: `grep -n "localStorage\|serviceWorker" src/oferta-start.js src/widoki/oferta-klient.js` nie zwraca wyników
+
+## Do poprawy po review fazy 6
+
+Zamkniete cyklem fix: 14 pozycji — pelna tresc findingow i uzasadnienia w `review-faza-6.md`.
 
 ## Operator checklist faza 6
 
@@ -499,3 +503,6 @@ Zależy od: Faza 5
 - [ ] Operator: Właściciel porównuje ofertę na telefonie i wydruk z makietą `oferta-klient` i zatwierdza brzmienie warunków (IU-24)
 - [ ] [Manual] „Pobierz PDF” na Androidzie (Chrome) i iPhonie (Safari) zapisuje jedną stronę A4 bez przycisków (IU-24)
 - [ ] [Manual] link otwarty w przeglądarce wbudowanej Messengera i WhatsAppa (IU-24)
+- [ ] Operator: [Manual] oferta-edycja: visual review — Operator action: otwórz visual-diff/oferta-edycja-figma.png obok visual-diff/oferta-edycja-actual.png (viewport 768×2719); trasa #/wycena/e2e-wycena-do-wyslania/oferta ze stanem e2e/stany/wyceny-do-zrobienia.json; sprawdź karty Twoja firma, Klient i termin, Zakres prac, Warunki, Oferta ważna do i stopkę PDF/Kopiuj link (karty Dodatki brak, bo wycena nie ma propozycji; makieta ma kolory spoza tokenów wariantu B)
+- [ ] Operator: [Manual] oferta-klient: visual review — Operator action: otwórz visual-diff/oferta-klient-figma.png obok visual-diff/oferta-klient-actual.png (viewport 768×2279); zrzut z linku scenariusza oferta-link, bez dojazdu i Możesz dobrać; pełny wariant w docs/active/etap-5-aplikacja-wyceny/oferta-po-terminie.png
+- [ ] Operator: [Manual] ustawienia-firmy: visual review — Operator action: otwórz visual-diff/ustawienia-firmy-figma.png obok visual-diff/ustawienia-firmy-actual.png (viewport 768×2579); trasa #/ustawienia; w tej fazie doszły sekcje Zakres prac i Warunki oferty

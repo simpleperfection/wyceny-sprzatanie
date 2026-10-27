@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict'
 import { afterEach, beforeEach, describe, it, mock } from 'node:test'
 
+import { warunkiPoEdycji, widoczneWarunki } from '../oferta/tresc.js'
 import { BladKatalogu } from '../silnik/bledy.js'
-import { tekstBleduZakresow, tekstKwoty, tekstWaznosci, warunkiPoEdycji, widoczneWarunki, zakresyAplikacji } from './oferta-edycja-sekcje.js'
+import { tekstBleduZakresow, tekstKwoty, tekstWaznosci, zakresyAplikacji } from './oferta-edycja-sekcje.js'
 
 const NBSP = ' '
 const DZIS = new Date(2026, 9, 24, 15, 30)

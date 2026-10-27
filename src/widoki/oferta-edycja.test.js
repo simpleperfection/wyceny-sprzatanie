@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { STATUSY_WYCENY } from '../dane/wyceny.js'
+import { czyStatusOferty, STATUSY_WYCENY } from '../dane/wyceny.js'
 import { MAKS_DLUGOSC_LINKU } from '../oferta/kodek.js'
-import { czyDaneFirmy, czyStatusOferty, tekstDlugiegoLinku } from './oferta-edycja.js'
+import { czyDaneFirmy, tekstDlugiegoLinku } from './oferta-edycja.js'
 
 describe('czyStatusOferty', () => {
   it('ofertę przygotowuje się z wyceny do wysłania, wysłanej i przyjętej, z pozostałych nie', () => {

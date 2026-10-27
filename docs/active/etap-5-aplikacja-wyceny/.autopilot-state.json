@@ -218,18 +218,192 @@
       "numer": 5,
       "nazwa": "Zlecenia, szybka wycena i pytania do klienta",
       "execute": "done",
-      "review": "pending",
-      "fix": "none",
+      "review": "done",
+      "fix": "done",
       "otwarteFindingi": [],
-      "baza": "db3275d3d69cb299855525b55a019a77ff771a3c"
+      "baza": "db3275d3d69cb299855525b55a019a77ff771a3c",
+      "metryki": {
+        "liczniki": {
+          "p1": 0,
+          "p2": 15,
+          "p3": 8,
+          "operator": 4
+        },
+        "przebieg": {
+          "pominieci": [],
+          "e2eTryb": "przegladarka",
+          "znalezione": 28,
+          "poDedupJs": 28,
+          "poDedupSem": 27,
+          "weryfikowane": 16,
+          "obalone": 0,
+          "p3Odrzucone": 0,
+          "e2eCheckboxy": 4,
+          "e2eStatus": "wykonany (tryb przegladarka)",
+          "e2ePass": 4,
+          "e2eFail": 0,
+          "e2eSkip": 0,
+          "e2eManual": 0,
+          "dossier": true,
+          "sceptycy": {
+            "p1": 0,
+            "p2Grupy": 4,
+            "p2Findingi": 16
+          },
+          "sceptyk": {
+            "agree": 15,
+            "disagree_evidence": 0,
+            "disagree_concern": 1,
+            "degradacje": 1
+          },
+          "tiery": {
+            "sceptykP2": "medium",
+            "sceptykP1": "high",
+            "reviewer": "high",
+            "spec": "medium",
+            "testCoverage": "medium",
+            "scribe": "low"
+          }
+        }
+      }
     },
     {
       "numer": 6,
       "nazwa": "Oferta dla klienta",
-      "execute": "pending",
-      "review": "pending",
-      "fix": "none",
-      "otwarteFindingi": []
+      "execute": "done",
+      "review": "done",
+      "fix": "pending",
+      "otwarteFindingi": [
+        {
+          "severity": "P1",
+          "typ": "KOD",
+          "plik": "src/oferta/tresc.js:212",
+          "opis": "Termin klienta z datetime-local ('2026-11-14T09:00') trafia do oferty bez formatowania; fixture'y z gotowym tekstem '14 listopada, 9:00' maskują błąd. Formatować termin po polsku i poprawić fixture'y."
+        },
+        {
+          "severity": "P2",
+          "typ": "KOD",
+          "plik": "src/dane/ksztalt.js:46",
+          "opis": "Kształt zakresu/warunku w trzech miejscach (magiczne length === 2/3, POLA_ZAKRESU/POLA_WARUNKU, KLUCZE.zakres); jedno źródło w ksztalt.js z maKlucze."
+        },
+        {
+          "severity": "P2",
+          "typ": "TEST",
+          "plik": "src/dane/ustawienia.test.js:248",
+          "opis": "Brak testów odmowy bramek warunkiZeZmiany i sprawdzUstawienia (zakresy)."
+        },
+        {
+          "severity": "P2",
+          "typ": "TEST",
+          "plik": "src/dane/wyceny.test.js:464",
+          "opis": "Brak testu odmowy tylkoDoOdczytu w zapiszOferte i zaostrzonego strażnika jestOferta."
+        },
+        {
+          "severity": "P2",
+          "typ": "KOD",
+          "plik": "src/oferta/kodek.js:24",
+          "opis": "Kodek powiela STATUSY_VAT, granicę stawki i POLA_FIRMY; użyć jednego źródła."
+        },
+        {
+          "severity": "P2",
+          "typ": "TEST",
+          "plik": "src/oferta/kodek.test.js:103",
+          "opis": "Warunki jestCzescia/odkodujOferte (VAT, puste punkty, długość pól, termin, szybka, limit 20000) bez testów odmowy."
+        },
+        {
+          "severity": "P2",
+          "typ": "KOD",
+          "plik": "src/oferta/tresc.js:32",
+          "opis": "JEDNOSTKI i FORMAT_LICZBY powielają format.js i już się rozjechały (mb, grupowanie tysięcy)."
+        },
+        {
+          "severity": "P2",
+          "typ": "KOD",
+          "plik": "src/oferta/tresc.js:109",
+          "opis": "Zakres z ustawień usługi przykrywa zakres wariantu (np. jednorazowe biuro dostaje zakres abonamentu), wbrew R19."
+        },
+        {
+          "severity": "P2",
+          "typ": "KOD",
+          "plik": "src/oferta/tresc.js:164",
+          "opis": "Szybka wycena w trybie od/ok. trafia do oferty jako cena sztywna z VAT; przenieść tryb przez kodek."
+        },
+        {
+          "severity": "P2",
+          "typ": "KOD",
+          "plik": "src/oferta/tresc.js:169",
+          "opis": "Oferta abonamentu pokazuje kwotę za wizytę jako Razem do zapłaty, bez dopisku i kwoty miesięcznej."
+        },
+        {
+          "severity": "P2",
+          "typ": "TEST",
+          "plik": "src/oferta/tresc.test.js:60",
+          "opis": "Gałęzie linieOferty (reszta < 0) i kwotyRazem (szybka od === do, szybka bez w.szybka) bez testu."
+        },
+        {
+          "severity": "P2",
+          "typ": "KOD",
+          "plik": "src/widoki/oferta-edycja.js:34",
+          "opis": "STATUSY_OFERTY/czyStatusOferty w widoku, rozjechane z wymagajZapisanej; przenieść do dane/wyceny.js."
+        },
+        {
+          "severity": "P2",
+          "typ": "KOD",
+          "plik": "src/widoki/oferta-edycja.js:53",
+          "opis": "czyDaneFirmy na sztywno nazwa+telefon zamiast POLA_WYMAGANE_W_OFERCIE."
+        },
+        {
+          "severity": "P2",
+          "typ": "KOD",
+          "plik": "src/widoki/oferta-edycja.js:262",
+          "opis": "Kolejność źródeł warunków i R20 powielona w widokach; wyeksportować z tresc.js warunkiZrodlowe, widoczneWarunki, warunkiPoEdycji."
+        }
+      ],
+      "baza": "4aa07aa251e36ec777130abe039b2edeae2aa533",
+      "metryki": {
+        "liczniki": {
+          "p1": 1,
+          "p2": 13,
+          "p3": 8,
+          "operator": 3
+        },
+        "przebieg": {
+          "pominieci": [],
+          "e2eTryb": "przegladarka",
+          "znalezione": 27,
+          "poDedupJs": 27,
+          "poDedupSem": 25,
+          "weryfikowane": 14,
+          "obalone": 0,
+          "p3Odrzucone": 0,
+          "e2eCheckboxy": 4,
+          "e2eStatus": "wykonany (tryb przegladarka)",
+          "e2ePass": 4,
+          "e2eFail": 0,
+          "e2eSkip": 0,
+          "e2eManual": 0,
+          "dossier": true,
+          "sceptycy": {
+            "p1": 3,
+            "p2Grupy": 4,
+            "p2Findingi": 13
+          },
+          "sceptyk": {
+            "agree": 16,
+            "disagree_evidence": 0,
+            "disagree_concern": 0,
+            "degradacje": 0
+          },
+          "tiery": {
+            "sceptykP2": "medium",
+            "sceptykP1": "high",
+            "reviewer": "high",
+            "spec": "medium",
+            "testCoverage": "medium",
+            "scribe": "low"
+          }
+        }
+      }
     }
   ],
   "zakonczenie": {

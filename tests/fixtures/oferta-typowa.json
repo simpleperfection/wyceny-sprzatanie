@@ -4,10 +4,12 @@
   "numer": "15/10/2026",
   "data": "2026-10-24",
   "waznaDo": "2026-11-07",
-  "klient": { "nazwa": "Anna Kowalska", "adres": "ul. Przykładowa 1, 00-001 Warszawa", "termin": "14 listopada, 9:00" },
+  "klient": { "nazwa": "Anna Kowalska", "adres": "ul. Przykładowa 1, 00-001 Warszawa", "termin": "14 listopada 2026, 9:00" },
   "uslugi": [{ "opis": "Mieszkanie lub dom – sprzątanie standardowe, 50 m²", "kwota": 290 }],
   "dojazd": 4,
   "razem": { "od": 294, "do": 294 },
+  "trybCeny": "stala",
+  "abonament": null,
   "vat": { "status": "zwolniony", "stawka": 23, "netto": 294, "kwotaVat": 0 },
   "dodatkiOpcjonalne": [{ "opis": "Mycie okien 1-skrzydłowych (4 szt.)", "kwota": 120 }],
   "zakres": {

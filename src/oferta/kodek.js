@@ -2,7 +2,10 @@
 // nie wysyla na serwer. Link moze sfabrykowac kazdy, wiec dekoder ogranicza rozmiar wejscia i wyniku i sprawdza scisle schemat
 // oferty (dozwolone klucze, typy, dlugosci tekstow i list, kwoty skonczone i nieujemne). Bez DOM i bez magazynu.
 
-import { GRANICE_OFERTY, jestDniem, jestObiektem } from '../dane/ksztalt.js'
+import { GRANICE_OFERTY, jestDniem, jestObiektem, maKlucze, POLA_FIRMY, POLA_ZAKRESU } from '../dane/ksztalt.js'
+import { jestStatusemVat } from '../dane/magazyn.js'
+import { MAKS_STAWKI_VAT_PROC } from '../silnik/vat.js'
+import { TRYBY_CENY } from './tresc.js'
 
 /** @typedef {import('./tresc.js').Oferta} Oferta */
 /**
@@ -21,17 +24,16 @@ const MAKS_BAJTOW_JSON = 128 * 1024
 const BASE64URL = /^[A-Za-z0-9_-]+$/
 const STRONA_OFERTY = 'oferta.html'
 const PROTOKOLY = new Set(['https:', 'http:'])
-const STATUSY_VAT = ['zwolniony', 'czynny']
-const MAKS_STAWKI_VAT = 100
 const KLUCZE = Object.freeze({
-  oferta: ['v', 'firma', 'numer', 'data', 'waznaDo', 'klient', 'uslugi', 'dojazd', 'razem', 'vat', 'dodatkiOpcjonalne', 'zakres', 'warunki',
-    'szybka'],
-  firma: ['nazwa', 'telefon', 'email', 'nip'],
+  oferta: ['v', 'firma', 'numer', 'data', 'waznaDo', 'klient', 'uslugi', 'dojazd', 'razem', 'trybCeny', 'abonament', 'vat', 'dodatkiOpcjonalne',
+    'zakres', 'warunki', 'szybka'],
+  firma: POLA_FIRMY,
   klient: ['nazwa', 'adres', 'termin'],
   linia: ['opis', 'kwota'],
   razem: ['od', 'do'],
+  abonament: ['wizyt', 'miesiecznie'],
   vat: ['status', 'stawka', 'netto', 'kwotaVat'],
-  zakres: ['wchodzi', 'nie_wchodzi'],
+  zakres: POLA_ZAKRESU,
 })
 
 /** Oferta, ktorej nie da sie zakodowac (`ksztalt`), albo zly adres aplikacji (`adres`). */
@@ -44,8 +46,6 @@ export class BladKodeka extends Error {
   }
 }
 
-/** @param {unknown} x @param {readonly string[]} klucze @returns {x is Record<string, unknown>} obiekt z dokladnie tymi kluczami */
-const maKlucze = (x, klucze) => jestObiektem(x) && Object.keys(x).length === klucze.length && klucze.every((k) => Object.hasOwn(x, k))
 /** @param {unknown} x */
 const jestTekstem = (x) => typeof x === 'string' && x.length <= GRANICE_OFERTY.tekst
 /** @param {unknown} x */
@@ -58,14 +58,19 @@ const jestKwotaLubNull = (x) => x === null || jestKwota(x)
 const jestLista = (x, czyElement, min = 0) => Array.isArray(x) && x.length >= min && x.length <= GRANICE_OFERTY.lista && x.every(czyElement)
 /** @param {unknown} x */
 const jestLinia = (x) => maKlucze(x, KLUCZE.linia) && jestNiepustymTekstem(x.opis) && jestKwota(x.kwota)
+/** @param {unknown} x kwoty od–do (razem, miesiecznie abonamentu): nieujemne, od nie wieksze niz do */
+const jestKwotamiOdDo = (x) => maKlucze(x, KLUCZE.razem) && jestKwota(x.od) && jestKwota(x.do) && Number(x.od) <= Number(x.do)
+/** @param {unknown} x abonament oferty: null albo dodatnia liczba wizyt w miesiacu i kwoty miesieczne */
+const jestAbonamentem = (x) => x === null || (maKlucze(x, KLUCZE.abonament) && jestKwota(x.wizyt) && Number(x.wizyt) > 0 &&
+  jestKwotamiOdDo(x.miesiecznie))
 
 /** @param {unknown} x */
 function jestCzescia(x) {
   const { firma, klient, razem, vat, zakres } = jestObiektem(x) ? x : {}
   return maKlucze(firma, KLUCZE.firma) && KLUCZE.firma.every((k) => jestTekstem(firma[k])) &&
     maKlucze(klient, KLUCZE.klient) && jestTekstem(klient.nazwa) && jestTekstem(klient.adres) && (klient.termin === null || jestTekstem(klient.termin)) &&
-    maKlucze(razem, KLUCZE.razem) && jestKwota(razem.od) && jestKwota(razem.do) && Number(razem.od) <= Number(razem.do) &&
-    maKlucze(vat, KLUCZE.vat) && STATUSY_VAT.some((s) => s === vat.status) && jestKwota(vat.stawka) && Number(vat.stawka) <= MAKS_STAWKI_VAT &&
+    jestKwotamiOdDo(razem) &&
+    maKlucze(vat, KLUCZE.vat) && jestStatusemVat(vat.status) && jestKwota(vat.stawka) && Number(vat.stawka) <= MAKS_STAWKI_VAT_PROC &&
     jestKwotaLubNull(vat.netto) && jestKwotaLubNull(vat.kwotaVat) &&
     maKlucze(zakres, KLUCZE.zakres) && jestLista(zakres.wchodzi, jestNiepustymTekstem) && jestLista(zakres.nie_wchodzi, jestNiepustymTekstem)
 }
@@ -78,7 +83,8 @@ function jestCzescia(x) {
 export function jestOferta(x) {
   return maKlucze(x, KLUCZE.oferta) && x.v === 1 && jestNiepustymTekstem(x.numer) && jestDniem(x.data) && jestDniem(x.waznaDo) &&
     jestLista(x.uslugi, jestLinia, 1) && jestKwota(x.dojazd) && jestLista(x.dodatkiOpcjonalne, jestLinia) &&
-    jestLista(x.warunki, jestNiepustymTekstem) && typeof x.szybka === 'boolean' && jestCzescia(x)
+    jestLista(x.warunki, jestNiepustymTekstem) && typeof x.szybka === 'boolean' && TRYBY_CENY.some((t) => t === x.trybCeny) &&
+    jestAbonamentem(x.abonament) && jestCzescia(x)
 }
 
 /** @param {Uint8Array} bajty @returns {string} */

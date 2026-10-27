@@ -4,7 +4,8 @@ import { afterEach, beforeEach, describe, it } from 'node:test'
 
 import { BladFormatu } from '../ui/format.js'
 import {
-  adresTelefonu, inicjalyFirmy, tekstKontaktu, tekstPozaCena, tekstRazem, tekstVat, tekstWarunkow, tytulOferty, widokOdmowy, widokOferty,
+  adresTelefonu, inicjalyFirmy, tekstAbonamentu, tekstKontaktu, tekstPozaCena, tekstRazem, tekstVat, tekstWarunkow, tytulOferty, widokOdmowy,
+  widokOferty,
 } from './oferta-klient.js'
 
 /** @typedef {import('../oferta/tresc.js').Oferta} Oferta */
@@ -84,7 +85,7 @@ describe('widokOferty: dokument oferty wg makiety', () => {
     assert.deepEqual(teksty(wezly, 'oferta__nazwa-firmy'), ['Twoja Firma Sprzątająca'])
     assert.deepEqual(teksty(wezly, 'oferta__kontakt'), ['tel. 500 000 000 · biuro@twojafirma.pl'])
     assert.deepEqual(wszystkie(wezly).filter((e) => e.tag === 'h1').map((e) => e.tekst), ['Wycena nr 15/10/2026'])
-    assert.deepEqual(teksty(wezly, 'oferta__drobny'), ['ważna do 7 listopada 2026', 'ul. Przykładowa 1, 00-001 Warszawa · termin: 14 listopada, 9:00'])
+    assert.deepEqual(teksty(wezly, 'oferta__drobny'), ['ważna do 7 listopada 2026', 'ul. Przykładowa 1, 00-001 Warszawa · termin: 14 listopada 2026, 9:00'])
     assert.deepEqual(teksty(wezly, 'oferta__klient'), ['Anna Kowalska'])
     assert.deepEqual(teksty(wezly, 'oferta__wiersz'), [
       `Mieszkanie lub dom – sprzątanie standardowe, 50 m²290${NBSP}zł`, `Dojazd4${NBSP}zł`, `Mycie okien 1-skrzydłowych (4 szt.)+120${NBSP}zł`,
@@ -128,6 +129,28 @@ describe('widokOferty: dokument oferty wg makiety', () => {
     assert.deepEqual(teksty(wezly, 'oferta__razem'), [`Razem do zapłaty: 254–304${NBSP}zł`])
     assert.deepEqual(teksty(wezly, 'oferta__wiersz').slice(0, 2), ['Sprzątanie mieszkania', `Dojazd4${NBSP}zł`])
     assert.deepEqual(teksty(wezly, 'oferta__vat'), ['Cena zawiera VAT 23%.'])
+  })
+
+  it('szybka po oględzinach: „Razem do zapłaty: od 1 200 zł”, linie usług bez kwot, VAT bez kwot', async () => {
+    const typowa = await ofertaTypowa()
+    const oferta = { ...typowa, szybka: true, razem: { od: 1200, do: 1200 }, trybCeny: /** @type {const} */ ('od'),
+      uslugi: [{ opis: 'Sprzątanie po remoncie', kwota: 1196 }], vat: { status: /** @type {const} */ ('czynny'), stawka: 23, netto: null, kwotaVat: null } }
+
+    const wezly = widokOferty(oferta, BEZ_DRUKU)
+
+    assert.deepEqual(teksty(wezly, 'oferta__razem'), [`Razem do zapłaty: od 1${NBSP}200${NBSP}zł`])
+    assert.deepEqual(teksty(wezly, 'oferta__wiersz').slice(0, 2), ['Sprzątanie po remoncie', `Dojazd4${NBSP}zł`])
+    assert.deepEqual(teksty(wezly, 'oferta__vat'), ['Cena zawiera VAT 23%.'])
+  })
+
+  it('abonament: pod „Razem” dopisek o kwocie za wizytę i kwota miesięczna; bez abonamentu dopisku nie ma', async () => {
+    const typowa = await ofertaTypowa()
+    const oferta = { ...typowa, abonament: { wizyt: 4.33, miesiecznie: { od: 1273, do: 1273 } } }
+
+    const wezly = widokOferty(oferta, BEZ_DRUKU)
+
+    assert.deepEqual(teksty(wezly, 'oferta__abonament'), [`Kwota za jedną wizytę. Miesięcznie (4,33 wizyt): 1${NBSP}273${NBSP}zł.`])
+    assert.deepEqual(teksty(widokOferty(typowa, BEZ_DRUKU), 'oferta__abonament'), [])
   })
 
   it('pola puste: bez dojazdu 0 zł, bez „Dla”, dodatków, zakresu, warunków i „Zadzwoń” przy firmie bez telefonu', async () => {
@@ -195,6 +218,20 @@ describe('teksty oferty', () => {
   it('tekstRazem: jedna kwota bez dwukropka, widełki z dwukropkiem, tysiące z twardą spacją', () => {
     assert.deepEqual(tekstRazem({ od: 294, do: 294 }), { etykieta: 'Razem do zapłaty', kwota: `294${NBSP}zł` })
     assert.deepEqual(tekstRazem({ od: 1200, do: 1500 }), { etykieta: 'Razem do zapłaty: ', kwota: `1${NBSP}200–1${NBSP}500${NBSP}zł` })
+  })
+
+  it('tekstRazem z trybem szybkiej wyceny: „ok. 290 zł”, „od 290 zł”; widełki zostają widełkami', () => {
+    assert.deepEqual(tekstRazem({ od: 290, do: 290 }, 'ok'), { etykieta: 'Razem do zapłaty: ', kwota: `ok. 290${NBSP}zł` })
+    assert.deepEqual(tekstRazem({ od: 290, do: 290 }, 'od'), { etykieta: 'Razem do zapłaty: ', kwota: `od 290${NBSP}zł` })
+    assert.deepEqual(tekstRazem({ od: 290, do: 290 }, 'stala'), { etykieta: 'Razem do zapłaty', kwota: `290${NBSP}zł` })
+    assert.deepEqual(tekstRazem({ od: 250, do: 320 }, 'widelki').kwota, `250–320${NBSP}zł`)
+  })
+
+  it('tekstAbonamentu: liczba wizyt z przecinkiem i kwota miesięczna w trybie kwoty', () => {
+    assert.equal(tekstAbonamentu({ wizyt: 4.33, miesiecznie: { od: 1100, do: 1316 } }, 'widelki'),
+      `Kwota za jedną wizytę. Miesięcznie (4,33 wizyt): 1${NBSP}100–1${NBSP}316${NBSP}zł.`)
+    assert.equal(tekstAbonamentu({ wizyt: 8.67, miesiecznie: { od: 2514, do: 2514 } }, 'ok'),
+      `Kwota za jedną wizytę. Miesięcznie (8,67 wizyt): ok. 2${NBSP}514${NBSP}zł.`)
   })
 
   it('inicjalyFirmy: dwie pierwsze litery słów, wielkie; pusta nazwa daje pusty tekst', () => {

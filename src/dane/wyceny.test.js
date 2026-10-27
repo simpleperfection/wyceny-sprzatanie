@@ -671,3 +671,34 @@ describe('zapiszOferte', () => {
     assert.equal(zMagazynu(magazyn, id).oferta.zakres, null)
   })
 })
+
+describe('zapiszOferte i oznaczWyslana: bramki statusu i strażnik oferty w wycenie', () => {
+  it('wykonana wycena → tylko_odczyt, odrzucona → przejscie (status spoza STATUSY_OFERTY); oferta bez zmian', () => {
+    const magazyn = nowyMagazyn()
+    const wykonana = wycenaWStatusie(magazyn, ['do_wyslania', 'przyjeta'])
+    dodajWykonanie(magazyn, wykonana, { data: '2026-10-16', minuty: 180, tempoPlanu: 1.3 }, PAZDZIERNIK)
+    const odrzucona = wycenaWStatusie(magazyn, ['do_wyslania', 'odrzucona'])
+
+    assert.throws(() => zapiszOferte(magazyn, wykonana, { waznaDo: '2026-11-30' }), bladWyceny('tylko_odczyt'))
+    assert.throws(() => zapiszOferte(magazyn, odrzucona, { waznaDo: '2026-11-30' }), bladWyceny('przejscie'))
+    assert.throws(() => oznaczWyslana(magazyn, odrzucona), bladWyceny('przejscie'))
+    assert.deepEqual([zMagazynu(magazyn, wykonana).oferta.waznaDo, zMagazynu(magazyn, odrzucona).oferta.waznaDo], [null, null])
+    assert.equal(zMagazynu(magazyn, odrzucona).oferta.wyslana, null)
+  })
+
+  it('czyStatusOferty: ofertę przygotowuje się z do_wyslania, wyslana i przyjeta (STATUSY_OFERTY)', () => {
+    assert.deepEqual(modulWycen.STATUSY_WYCENY.filter(modulWycen.czyStatusOferty), [...modulWycen.STATUSY_OFERTY])
+    assert.deepEqual(modulWycen.STATUSY_OFERTY, ['do_wyslania', 'wyslana', 'przyjeta'])
+  })
+
+  it('jestWycena odrzuca ofertę z datą ważności spoza RRRR-MM-DD, datą wysłania „wczoraj” i punktem zakresu ponad 500 znaków', () => {
+    const magazyn = nowyMagazyn()
+    const zapisana = zMagazynu(magazyn, wycenaWStatusie(magazyn, ['do_wyslania']))
+    const zOferta = (/** @type {object} */ zmiana) => ({ ...zapisana, oferta: { ...zapisana.oferta, ...zmiana } })
+
+    assert.equal(modulWycen.jestWycena(zOferta({ waznaDo: '2026-11-07', wyslana: '2026-10-15T10:00:00.000Z' })), true)
+    assert.equal(modulWycen.jestWycena(zOferta({ waznaDo: '7.11.2026' })), false)
+    assert.equal(modulWycen.jestWycena(zOferta({ wyslana: 'wczoraj' })), false)
+    assert.equal(modulWycen.jestWycena(zOferta({ zakres: { wchodzi: ['x'.repeat(501)], nie_wchodzi: [] } })), false)
+  })
+})

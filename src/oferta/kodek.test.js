@@ -113,6 +113,38 @@ describe('odkodujOferte: link uszkodzony albo sfabrykowany', () => {
     assert.deepEqual(await odkodujOferte(await sfabrykowany('{"v":1,')), { ok: false, powod: 'uszkodzony' })
   })
 
+  it('zły VAT, ujemne netto, pusty punkt, długie pole firmy, termin-liczba, szybka nie-boolean, zły tryb i abonament → uszkodzony', async () => {
+    const oferta = await typowa()
+    const przypadki = [
+      { ...oferta, vat: { ...oferta.vat, status: 'ryczalt' } }, { ...oferta, vat: { ...oferta.vat, status: 'czynny', stawka: 101 } },
+      { ...oferta, vat: { ...oferta.vat, netto: -1 } }, { ...oferta, vat: { ...oferta.vat, kwotaVat: -0.01 } },
+      { ...oferta, zakres: { ...oferta.zakres, wchodzi: [''] } }, { ...oferta, firma: { ...oferta.firma, email: 'a'.repeat(501) } },
+      { ...oferta, klient: { ...oferta.klient, termin: 20261114 } }, { ...oferta, szybka: 'tak' }, { ...oferta, trybCeny: 'okolo' },
+      { ...oferta, abonament: { wizyt: 0, miesiecznie: { od: 0, do: 0 } } }, { ...oferta, abonament: { wizyt: 4.33, miesiecznie: { od: 2, do: 1 } } },
+    ]
+
+    for (const przypadek of przypadki) {
+      assert.deepEqual(await odkodujOferte(await sfabrykowany(JSON.stringify(przypadek))), { ok: false, powod: 'uszkodzony' }, JSON.stringify(przypadek))
+    }
+  })
+
+  it('granice: stawka 100% i abonament przechodzą; fragment dłuższy niż 20 000 znaków → uszkodzony bez rozpakowania', async () => {
+    const oferta = await typowa()
+    const graniczna = { ...oferta, vat: { status: /** @type {const} */ ('czynny'), stawka: 100, netto: 147, kwotaVat: 147 },
+      abonament: { wizyt: 4.33, miesiecznie: { od: 1273, do: 1273 } } }
+
+    assert.deepEqual(await odkodujOferte(await sfabrykowany(JSON.stringify(graniczna))), { ok: true, oferta: graniczna })
+  })
+
+  it('poprawny kod dłuższy niż 20 000 znaków → uszkodzony (limit fragmentu przed rozpakowaniem)', async () => {
+    const oferta = await typowa()
+    const punkty = (przesuniecie) => Array.from({ length: 50 }, (_, i) => tekstLosowy(500 - przesuniecie - i))
+    const kod = await zakodujOferte({ ...oferta, zakres: { wchodzi: punkty(0), nie_wchodzi: punkty(50) }, warunki: punkty(100) })
+
+    assert.ok(kod.length > 20_000, `kod ma ${kod.length} znaków`)
+    assert.deepEqual(await odkodujOferte(kod), { ok: false, powod: 'uszkodzony' })
+  })
+
   it('mały link z poprawną ofertą rozpakowującą się do ponad 128 KB („bomba” deflate) → uszkodzony', async () => {
     const punkt = 'ą'.repeat(500)
     const linie = Array.from({ length: 50 }, () => ({ opis: punkt, kwota: 1 }))

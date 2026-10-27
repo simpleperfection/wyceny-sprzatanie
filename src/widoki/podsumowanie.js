@@ -5,7 +5,7 @@
 // Liczy src/kreator/podsumowanie.js, zapisuje src/dane/wyceny.js; widok tylko rysuje.
 
 import { wczytajStan } from '../dane/magazyn.js'
-import { BladWyceny, usunWycene, wycena as znajdzWycene, zapiszWycene, zmienStatus } from '../dane/wyceny.js'
+import { BladWyceny, czyStatusOferty, usunWycene, wycena as znajdzWycene, zapiszWycene, zmienStatus } from '../dane/wyceny.js'
 import { akcjeWyceny, przeliczWycene, widokPodsumowania } from '../kreator/podsumowanie.js'
 import { KROKI_KREATORA } from '../kreator/stan.js'
 import { historiaPlanuIFaktu } from '../kreator/zakonczenie.js'
@@ -16,7 +16,6 @@ import { arkusz, baner, dialogPotwierdzenia, karta, naglowek, pasekPostepu } fro
 import { ETYKIETY_STATUSOW, pigulkaStatusu } from '../ui/statusy.js'
 import { sciezka } from '../ui/trasy.js'
 import { adresKroku, wycenaKroku, zglosBladKreatora } from './kreator-wspolne.js'
-import { czyStatusOferty } from './oferta-edycja.js'
 import { banery, kartaCeny, kartaKosztow, kartaRynku, kartaZostaje, notkaPropozycji, otworzEdycjeCeny } from './podsumowanie-karty.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */

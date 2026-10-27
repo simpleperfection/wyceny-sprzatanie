@@ -1,10 +1,11 @@
 // Karty ekranu przygotowania oferty (makieta oferta-edycja): „Twoja firma”, „Klient i termin”, „Zakres prac”, „Dodatki do
 // zaproponowania” i „Warunki” z waznoscia oferty, wspolne pomocnicze dla sekcji oferty w ustawieniach (listy punktow, edytory
-// zakresu, warunki widoczne w ofercie) i wczytanie data/zakresy.json. Zapis robi widok przez `zapisz` (tekst bledu albo null).
+// zakresu) i wczytanie data/zakresy.json; reguly warunkow (R20) sa w src/oferta/tresc.js. Zapis robi widok przez `zapisz`
+// (tekst bledu albo null).
 
 import { dzienLokalny, jestDniem } from '../dane/ksztalt.js'
 import { pobierzJson } from '../dane/pobierz.js'
-import { wczytajZakresy } from '../oferta/tresc.js'
+import { warunkiPoEdycji, wczytajZakresy, widoczneWarunki } from '../oferta/tresc.js'
 import { BladKatalogu } from '../silnik/bledy.js'
 import { data, odmiana, zl } from '../ui/format.js'
 import { h, ikona } from '../ui/h.js'
@@ -21,14 +22,13 @@ import { otworzArkusz } from './ustawienia-sekcje.js'
 /** @typedef {import('../oferta/tresc.js').LiniaOferty} LiniaOferty */
 /** @typedef {import('../oferta/tresc.js').Zakresy} Zakresy */
 /** @typedef {import('../ui/ikony.js').NazwaIkony} NazwaIkony */
-/** @typedef {import('./edytor-listy.js').Punkt} Punkt */
 /**
  * @typedef {{ zakres?: ZakresUslugi | null, warunki?: WarunekOferty[] | null, waznaDo?: string | null, klient?: Partial<KlientWyceny> }}
  *   ZmianaOferty
  * @typedef {(zmiana: ZmianaOferty) => string | null} ZapisOferty tekst bledu zapisu albo null
  * @typedef {{ tekst: string, adres?: string, naKlik?: () => void, klucz?: string }} AkcjaKarty klucz: atrybut data-akcja (fokus)
  * @typedef {{ zakres: ZakresUslugi, czyZmieniony: boolean }} StanZakresu
- * @typedef {{ warunki: WarunekOferty[], szybka: boolean, czyZmienione: boolean, waznaDo: string }} StanWarunkow
+ * @typedef {{ warunki: readonly WarunekOferty[], szybka: boolean, czyZmienione: boolean, waznaDo: string }} StanWarunkow
  */
 
 const MS_DNIA = 86_400_000
@@ -103,21 +103,6 @@ export function tekstWaznosci(waznaDo, dzis) {
 
 /** @param {{ od: number, do: number }} razem @returns {string} „294 zł” albo widelki „250–320 zł” */
 export const tekstKwoty = (razem) => (razem.od === razem.do ? zl(razem.od) : `${zl(razem.od).replace(/\s?zł$/u, '')}–${zl(razem.do)}`)
-
-/** @param {readonly WarunekOferty[]} warunki @param {boolean} szybka @returns {WarunekOferty[]} warunki, ktore pokazuje oferta */
-export const widoczneWarunki = (warunki, szybka) => warunki.filter((w) => szybka || !w.tylko_szybka)
-
-/**
- * Warunki po edycji widocznych: kolejnosc i tresc z edytora, `tylko_szybka` z poprzedniego warunku o tym id (nowy — false),
- * a ukryte w tej ofercie (tylko szybka wycena) zostaja na koncu bez zmian.
- * @param {readonly WarunekOferty[]} warunki @param {readonly Punkt[]} punkty @param {boolean} szybka
- * @returns {WarunekOferty[]}
- */
-export function warunkiPoEdycji(warunki, punkty, szybka) {
-  const poprzednie = new Map(warunki.map((w) => [w.id, w]))
-  const widoczne = punkty.map((p) => ({ id: p.id, tresc: p.tekst, tylko_szybka: poprzednie.get(p.id)?.tylko_szybka ?? false }))
-  return [...widoczne, ...(szybka ? [] : warunki.filter((w) => w.tylko_szybka))]
-}
 
 /** @param {string} tytul @param {AkcjaKarty} [akcja] @param {NazwaIkony} [nazwaIkony] @returns {HTMLDivElement} tytul karty z akcja po prawej */
 export function naglowekKarty(tytul, akcja, nazwaIkony) {

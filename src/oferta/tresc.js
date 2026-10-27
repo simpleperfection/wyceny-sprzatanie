@@ -1,14 +1,19 @@
 // Tresc oferty dla klienta z zapisanej wyceny (R18–R21): gotowe kwoty dla klienta i teksty z bialej listy pol, bez kosztow firmy,
-// tempa, czasu i „zostaje” (R21). Zakres i warunki: oferta → ustawienia → dane domyslne. Waznosc do konca dnia waznaDo.
+// tempa, czasu i „zostaje” (R21). Zakres: oferta → zakres wariantu z danych → ustawienia → zakres uslugi; warunki: oferta →
+// ustawienia → dane domyslne (warunkiZrodlowe), z regula R20 w widoczneWarunki. Waznosc do konca dnia waznaDo.
 // Czyste funkcje bez DOM i magazynu: ustawienia podaje wywolujacy (stan magazynu), dane referencyjne z data/*.json.
 
 import { dzienLokalny, GRANICE_OFERTY, jestData, jestDniem, jestListaPunktow, jestObiektem, maWartosci } from '../dane/ksztalt.js'
+import { czyAbonament } from '../dane/wyceny.js'
 import { BladKatalogu } from '../silnik/bledy.js'
+import { TRYBY_SZYBKIEJ } from '../silnik/szybka.js'
 import { cenaDlaKlienta, zCenyRecznej } from '../silnik/vat.js'
+import { tekstIlosci, terminKlienta } from '../ui/format.js'
 
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
 /** @typedef {import('../dane/wyceny.js').MigawkaWyniku} MigawkaWyniku */
 /** @typedef {import('../dane/magazyn.js').Ustawienia} Ustawienia */
+/** @typedef {import('../dane/magazyn.js').WarunekOferty} WarunekOferty */
 /** @typedef {import('../dane/magazyn.js').ZakresUslugi} ZakresUslugi */
 /** @typedef {import('../dane/ustawienia.js').Domyslne} Domyslne */
 /** @typedef {import('../silnik/katalog.js').Katalog} Katalog */
@@ -19,18 +24,23 @@ import { cenaDlaKlienta, zCenyRecznej } from '../silnik/vat.js'
  * @typedef {{ meta?: unknown, uslugi: Record<string, ZakresDomyslny> }} Zakresy data/zakresy.json
  * @typedef {{ katalog: Katalog, domyslne: Domyslne, zakresy: Zakresy, ustawienia: Ustawienia | null }} KontekstOferty
  * @typedef {{ opis: string, kwota: number }} LiniaOferty
+ * @typedef {{ od: number, do: number }} KwotyOferty
+ * @typedef {typeof TRYBY_CENY[number]} TrybCeny `stala` (dokladna wycena albo cena reczna) albo tryb szybkiej wyceny
  * @typedef {{ v: 1, firma: { nazwa: string, telefon: string, email: string, nip: string }, numer: string, data: string, waznaDo: string,
- *   klient: { nazwa: string, adres: string, termin: string | null }, uslugi: LiniaOferty[], dojazd: number, razem: { od: number, do: number },
+ *   klient: { nazwa: string, adres: string, termin: string | null }, uslugi: LiniaOferty[], dojazd: number, razem: KwotyOferty,
+ *   trybCeny: TrybCeny, abonament: { wizyt: number, miesiecznie: KwotyOferty } | null,
  *   vat: { status: StatusVat, stawka: number, netto: number | null, kwotaVat: number | null }, dodatkiOpcjonalne: LiniaOferty[],
  *   zakres: ZakresUslugi, warunki: string[], szybka: boolean }} Oferta kwoty dla klienta (brutto) w zl; daty RRRR-MM-DD;
- *   vat.netto i vat.kwotaVat null przy widelkach szybkiej wyceny
+ *   termin klienta po polsku („14 listopada 2026, 9:00”); vat.netto i vat.kwotaVat null przy widelkach i „od” szybkiej wyceny;
+ *   przy abonamencie `razem` to kwota za wizyte, a `miesiecznie` = razem × wizyt w miesiacu
+ * @typedef {{ id: string, tekst: string }} PunktWarunku warunek z edytora listy (kolejnosc i tresc)
  */
 
+/** Tryby kwoty „Razem” w ofercie: sztywna kwota i tryby szybkiej wyceny (src/silnik/szybka.js); zrodlo listy dla dekodera linku. */
+export const TRYBY_CENY = Object.freeze(/** @type {const} */ (['stala', ...TRYBY_SZYBKIEJ]))
 const PLIK_ZAKRESOW = 'data/zakresy.json'
 const WERSJA_OFERTY = 1
 const WIELOKROPEK = '…'
-const JEDNOSTKI = Object.freeze(/** @type {Record<string, string>} */ ({ m2: 'm²', szt: 'szt.', mb: 'mb' }))
-const FORMAT_LICZBY = new Intl.NumberFormat('pl-PL', { maximumFractionDigits: 2 })
 const PUSTA_FIRMA = Object.freeze({ nazwa: '', telefon: '', email: '', nip: '' })
 
 /** Wycena bez numeru albo bez policzonej ceny: oferty z niej nie da sie przygotowac. */
@@ -45,8 +55,6 @@ export class BladOferty extends Error {
 
 /** @param {string} tekst @returns {string} tekst przyciety do GRANICE_OFERTY.tekst znakow (opis z danych) */
 const wGranicy = (tekst) => (tekst.length <= GRANICE_OFERTY.tekst ? tekst : `${tekst.slice(0, GRANICE_OFERTY.tekst - 1)}${WIELOKROPEK}`)
-/** @param {number} liczba @param {string} jednostka @returns {string} np. „50 m²”, „4 szt.” */
-const tekstIlosci = (liczba, jednostka) => `${FORMAT_LICZBY.format(liczba)} ${JEDNOSTKI[jednostka] ?? jednostka}`
 
 /** @param {unknown} x @returns {x is ZakresUslugi} */
 const jestZakresemDomyslnym = (x) => jestObiektem(x) && jestListaPunktow(x.wchodzi) && jestListaPunktow(x.nie_wchodzi)
@@ -99,25 +107,47 @@ export function sprawdzZakresy(zakresy, katalog) {
 }
 
 /**
- * Zakres oferty: zmieniony w tej ofercie → zmieniony w ustawieniach → data/zakresy.json (wariant zastepuje zakres uslugi).
+ * Zakres oferty: zmieniony w tej ofercie → wlasny zakres wariantu z data/zakresy.json (R19: rodzaj sprzatania, np. jednorazowe
+ * biuro) → zmieniony w ustawieniach zakres uslugi (edytor ustawien pokazuje zakres uslugi bez wariantu) → zakres uslugi z danych.
  * @param {Wycena} w @param {KontekstOferty} k @returns {ZakresUslugi}
  */
 function zakresOferty(w, k) {
   const { uslugaId, wariantId } = w.wejscie
   const domyslny = k.zakresy.uslugi[uslugaId]
   const wariant = wariantId ? domyslny?.warianty?.[wariantId] : undefined
-  const zakres = w.oferta.zakres ?? k.ustawienia?.zakresy[uslugaId] ?? wariant ?? domyslny ?? { wchodzi: [], nie_wchodzi: [] }
+  const zakres = w.oferta.zakres ?? wariant ?? k.ustawienia?.zakresy[uslugaId] ?? domyslny ?? { wchodzi: [], nie_wchodzi: [] }
   return { wchodzi: [...zakres.wchodzi], nie_wchodzi: [...zakres.nie_wchodzi] }
 }
 
 /**
- * Warunki oferty: z tej oferty → z ustawien → z data/domyslne.json; `tylko_szybka` tylko w ofercie z szybkiej wyceny (R20).
- * @param {Wycena} w @param {KontekstOferty} k @param {boolean} szybka @returns {string[]}
+ * Warunki, z ktorych powstaje oferta: zmienione w tej ofercie → zmienione w ustawieniach → data/domyslne.json.
+ * Jedno zrodlo kolejnosci dla tresci oferty, ekranu oferty i ustawien.
+ * @param {readonly WarunekOferty[] | null} warunkiWyceny `wycena.oferta.warunki` (null w ustawieniach i w ofercie bez zmian)
+ * @param {Pick<Ustawienia, 'warunki'> | null} ustawienia @param {Pick<Domyslne, 'oferta'>} domyslne
+ * @returns {readonly WarunekOferty[]}
  */
-function warunkiOferty(w, k, szybka) {
-  const warunki = w.oferta.warunki ?? k.ustawienia?.warunki ?? k.domyslne.oferta.warunki
-  return warunki.filter((warunek) => szybka || !warunek.tylko_szybka).map((warunek) => warunek.tresc)
+export const warunkiZrodlowe = (warunkiWyceny, ustawienia, domyslne) => warunkiWyceny ?? ustawienia?.warunki ?? domyslne.oferta.warunki
+
+/**
+ * Warunki pokazane w ofercie (R20): `tylko_szybka` tylko w ofercie z szybkiej wyceny.
+ * @param {readonly WarunekOferty[]} warunki @param {boolean} szybka @returns {WarunekOferty[]}
+ */
+export const widoczneWarunki = (warunki, szybka) => warunki.filter((w) => szybka || !w.tylko_szybka)
+
+/**
+ * Warunki po edycji widocznych: kolejnosc i tresc z edytora, `tylko_szybka` z poprzedniego warunku o tym id (nowy — false),
+ * a ukryte w tej ofercie (R20: tylko szybka wycena) zostaja na koncu bez zmian.
+ * @param {readonly WarunekOferty[]} warunki @param {readonly PunktWarunku[]} punkty @param {boolean} szybka
+ * @returns {WarunekOferty[]}
+ */
+export function warunkiPoEdycji(warunki, punkty, szybka) {
+  const poprzednie = new Map(warunki.map((w) => [w.id, w]))
+  const widoczne = punkty.map((p) => ({ id: p.id, tresc: p.tekst, tylko_szybka: poprzednie.get(p.id)?.tylko_szybka ?? false }))
+  return [...widoczne, ...(szybka ? [] : warunki.filter((w) => w.tylko_szybka))]
 }
+
+/** @param {Wycena} w @param {KontekstOferty} k @param {boolean} szybka @returns {string[]} tresci warunkow oferty */
+const warunkiOferty = (w, k, szybka) => widoczneWarunki(warunkiZrodlowe(w.oferta.warunki, k.ustawienia, k.domyslne), szybka).map((x) => x.tresc)
 
 /** @param {Wycena} w @param {Katalog} katalog @returns {string} np. „Mieszkanie – sprzątanie standardowe, 50 m²” */
 function opisUslugi(w, katalog) {
@@ -152,21 +182,32 @@ function dodatkiWCenie(linie) {
 const dlaKlienta = (m, kwota) => cenaDlaKlienta({ kwota, podstawaCeny: m.podstawaCeny, statusVat: m.statusVat, stawkaVatProc: m.stawkaVatProc }).brutto
 
 /**
- * Razem do zaplaty i VAT: cena reczna (kwota placona przez klienta, z dojazdem), widelki szybkiej wyceny albo cena z migawki.
+ * Razem do zaplaty, tryb kwoty i VAT: cena reczna (kwota placona przez klienta, z dojazdem), kwota szybkiej wyceny (widelki,
+ * „ok.” albo „od” przy ogledzinach, bez kwot VAT przy widelkach i „od”) albo cena z migawki.
  * @param {Wycena} w @param {MigawkaWyniku} m @param {boolean} szybka
- * @returns {{ razem: { od: number, do: number }, netto: number | null, kwotaVat: number | null }}
+ * @returns {{ razem: KwotyOferty, trybCeny: TrybCeny, netto: number | null, kwotaVat: number | null }}
  */
 function kwotyRazem(w, m, szybka) {
   if (w.cenaReczna !== null) {
     const cena = zCenyRecznej(w.cenaReczna, m.statusVat, m.stawkaVatProc)
-    return { razem: { od: cena.brutto, do: cena.brutto }, netto: cena.netto, kwotaVat: cena.vat }
+    return { razem: { od: cena.brutto, do: cena.brutto }, trybCeny: 'stala', netto: cena.netto, kwotaVat: cena.vat }
   }
   if (szybka && w.szybka) {
-    const { od, do: doKwoty } = w.szybka
-    const cena = od === doKwoty ? zCenyRecznej(od, m.statusVat, m.stawkaVatProc) : null
-    return { razem: { od, do: doKwoty }, netto: cena?.netto ?? null, kwotaVat: cena?.vat ?? null }
+    const { od, do: doKwoty, tryb } = w.szybka
+    const cena = od === doKwoty && tryb !== 'od' ? zCenyRecznej(od, m.statusVat, m.stawkaVatProc) : null
+    return { razem: { od, do: doKwoty }, trybCeny: tryb, netto: cena?.netto ?? null, kwotaVat: cena?.vat ?? null }
   }
-  return { razem: { od: m.cena, do: m.cena }, netto: m.netto, kwotaVat: m.vat }
+  return { razem: { od: m.cena, do: m.cena }, trybCeny: 'stala', netto: m.netto, kwotaVat: m.vat }
+}
+
+/**
+ * Abonament (czyAbonament): `razem` jest kwota za wizyte, miesiecznie = razem × wizyt w miesiacu (zaokraglone do zlotowki).
+ * @param {MigawkaWyniku} m @param {KwotyOferty} razem @returns {Oferta['abonament']}
+ */
+function abonamentOferty(m, razem) {
+  const wizyt = m.wizytWMiesiacu
+  if (wizyt === null || !czyAbonament(m)) return null
+  return { wizyt, miesiecznie: { od: Math.round(razem.od * wizyt), do: Math.round(razem.do * wizyt) } }
 }
 
 /**
@@ -200,19 +241,22 @@ export function ofertaZWyceny(w, kontekst, dzis) {
   const m = w.wynik
   if (m === null) throw new BladOferty('brak_wyniku', `Wycena ${w.numer} nie ma policzonej ceny`)
   const szybka = w.rodzaj === 'szybka'
-  const { razem, netto, kwotaVat } = kwotyRazem(w, m, szybka)
+  const { razem, trybCeny, netto, kwotaVat } = kwotyRazem(w, m, szybka)
   const { uslugi, dojazd } = linieOferty(w, m, razem.od, kontekst.katalog)
   const { nazwa, telefon, email, nip } = kontekst.ustawienia?.firma ?? PUSTA_FIRMA
+  const { termin } = w.klient
   return {
     v: WERSJA_OFERTY,
     firma: { nazwa, telefon, email, nip },
     numer: w.numer,
     data: dzienLokalny(dzis),
     waznaDo: w.oferta.waznaDo ?? poDniach(dzis, kontekst.domyslne.oferta.waznosc_dni),
-    klient: { nazwa: w.klient.nazwa, adres: w.klient.adres, termin: w.klient.termin },
+    klient: { nazwa: w.klient.nazwa, adres: w.klient.adres, termin: termin === null ? null : terminKlienta(termin) },
     uslugi,
     dojazd,
     razem,
+    trybCeny,
+    abonament: abonamentOferty(m, razem),
     vat: { status: m.statusVat, stawka: m.stawkaVatProc, netto, kwotaVat },
     dodatkiOpcjonalne: m.propozycje.map((p) => ({ opis: wGranicy(`${p.opis} (${tekstIlosci(p.ilosc, p.jednostka)})`), kwota: dlaKlienta(m, p.kwota) })),
     zakres: zakresOferty(w, kontekst),

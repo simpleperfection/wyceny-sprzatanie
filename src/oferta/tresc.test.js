@@ -4,7 +4,11 @@ import { describe, it } from 'node:test'
 import { czytajJson, katalogTestowy, katalogZDysku } from '../../tests/pomocnicze.js'
 import { ustawieniaDomyslne } from '../dane/ustawienia.js'
 import { BladKatalogu } from '../silnik/bledy.js'
-import { BladOferty, czyWazna, ofertaZWyceny, sprawdzZakresy, wczytajZakresy } from './tresc.js'
+import { TRYBY_SZYBKIEJ } from '../silnik/szybka.js'
+import { zCenyRecznej } from '../silnik/vat.js'
+import {
+  BladOferty, czyWazna, ofertaZWyceny, sprawdzZakresy, TRYBY_CENY, warunkiPoEdycji, warunkiZrodlowe, wczytajZakresy, widoczneWarunki,
+} from './tresc.js'
 
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
 /** @typedef {import('../dane/wyceny.js').MigawkaWyniku} MigawkaWyniku */
@@ -37,7 +41,7 @@ const migawka = (zmiana = {}) => ({
 /** @param {Partial<Wycena>} [zmiana] @returns {Wycena} zapisana wycena mieszkania 50 m² */
 const wycena = (zmiana = {}) => ({
   id: 'w1', numer: '15/10/2026', utworzona: '2026-10-24T10:00:00.000Z', zmieniona: '2026-10-24T10:00:00.000Z', status: 'do_wyslania',
-  rodzaj: 'dokladna', klient: { nazwa: 'Anna Kowalska', adres: 'ul. Przykładowa 1, Warszawa', termin: '14 listopada, 9:00' },
+  rodzaj: 'dokladna', klient: { nazwa: 'Anna Kowalska', adres: 'ul. Przykładowa 1, Warszawa', termin: '2026-11-14T09:00' },
   wejscie: { uslugaId: 'mieszkanie_standard', pomieszczenia: [{ typ: 'pokoj', m2: 30 }, { typ: 'kuchnia', m2: 20 }], dojazdKm: 12 },
   szybka: null, odpowiedzi: {}, wynik: migawka(), cenaReczna: null,
   wykonania: [{ id: 'x', data: '2026-10-20', minuty: 200, tempoPlanu: 1.3 }],
@@ -115,13 +119,32 @@ describe('ofertaZWyceny: kwoty', () => {
   })
 })
 
+describe('ofertaZWyceny: termin klienta po polsku', () => {
+  it('termin z pola daty i godziny „2026-11-14T09:00” trafia do oferty jako „14 listopada 2026, 9:00”', async () => {
+    const klient = { nazwa: 'Anna Kowalska', adres: 'ul. Przykładowa 1, 00-001 Warszawa', termin: '2026-11-14T09:00' }
+
+    const oferta = ofertaZWyceny(wycena({ klient }), await kontekst(), DZIEN_WYSTAWIENIA)
+
+    assert.equal(oferta.klient.termin, '14 listopada 2026, 9:00')
+  })
+
+  it('sam dzień „2026-11-14” → „14 listopada 2026”; brak terminu zostaje null; tekst spoza formatu bez zmian', async () => {
+    const k = await kontekst()
+    /** @param {string | null} termin */
+    const terminOferty = (termin) => ofertaZWyceny(wycena({ klient: { nazwa: '', adres: '', termin } }), k, DZIEN_WYSTAWIENIA).klient.termin
+
+    assert.deepEqual([terminOferty('2026-11-14'), terminOferty(null), terminOferty('po południu'), terminOferty('2026-11-31T09:00')],
+      ['14 listopada 2026', null, 'po południu', '2026-11-31T09:00'])
+  })
+})
+
 describe('ofertaZWyceny: biała lista pól (R21)', () => {
   it('oferta ma tylko pola typu Oferta, bez kosztów, tempa, czasu i „zostaje”', async () => {
     const oferta = ofertaZWyceny(wycena(), await kontekst({ tempo: { reczne: 1.2 } }), DZIEN_WYSTAWIENIA)
     const klucze = wszystkieKlucze(oferta)
 
-    assert.deepEqual(Object.keys(oferta).sort(), ['data', 'dodatkiOpcjonalne', 'dojazd', 'firma', 'klient', 'numer', 'razem', 'szybka', 'uslugi', 'v',
-      'vat', 'warunki', 'waznaDo', 'zakres'])
+    assert.deepEqual(Object.keys(oferta).sort(), ['abonament', 'data', 'dodatkiOpcjonalne', 'dojazd', 'firma', 'klient', 'numer', 'razem', 'szybka',
+      'trybCeny', 'uslugi', 'v', 'vat', 'warunki', 'waznaDo', 'zakres'])
     for (const zakazany of ['zostaje', 'tempo', 'koszt', 'minuty', 'chemia', 'sprzet']) {
       assert.ok(!klucze.some((k) => k.toLowerCase().includes(zakazany)), `klucz z „${zakazany}” w ofercie`)
       assert.ok(!JSON.stringify(oferta).includes(`"${zakazany}`), `„${zakazany}” w JSON oferty`)
@@ -133,7 +156,7 @@ describe('ofertaZWyceny: biała lista pól (R21)', () => {
 
     assert.deepEqual([oferta.firma, oferta.klient, oferta.numer, oferta.data], [
       { nazwa: 'Twoja Firma Sprzątająca', telefon: '500 000 000', email: 'biuro@twojafirma.pl', nip: '' },
-      { nazwa: 'Anna Kowalska', adres: 'ul. Przykładowa 1, Warszawa', termin: '14 listopada, 9:00' }, '15/10/2026', '2026-10-24',
+      { nazwa: 'Anna Kowalska', adres: 'ul. Przykładowa 1, Warszawa', termin: '14 listopada 2026, 9:00' }, '15/10/2026', '2026-10-24',
     ])
   })
 })
@@ -183,6 +206,90 @@ describe('ofertaZWyceny: zakres i warunki', () => {
     assert.deepEqual(ofertaZWyceny(wycena(), k, DZIEN_WYSTAWIENIA).warunki, ['Bez zaliczki.'])
     assert.deepEqual(ofertaZWyceny(wycena({ oferta: { ...wycena().oferta, warunki: zOferty } }), k, DZIEN_WYSTAWIENIA).warunki,
       ['Klucze odbieramy dzień wcześniej.'])
+  })
+})
+
+describe('ofertaZWyceny: wariant przed ustawieniami usługi i źródła warunków (R19, R20)', () => {
+  it('jednorazowe biuro dostaje zakres wariantu mimo zakresu „Sprzątanie biur” zmienionego w ustawieniach; abonament bierze ustawienia', async () => {
+    const zUstawien = { wchodzi: ['Abonament z ustawień: podłogi i kosze'], nie_wchodzi: [] }
+    const k = await kontekst({ zakresy: { sprzatanie_biur: zUstawien } })
+    /** @param {string} wariantId */
+    const biuro = (wariantId) => wycena({ wejscie: { uslugaId: 'sprzatanie_biur', wariantId, pomieszczenia: [{ typ: 'biuro', m2: 80 }] } })
+
+    assert.deepEqual(ofertaZWyceny(biuro('jednorazowe'), k, DZIEN_WYSTAWIENIA).zakres,
+      { wchodzi: ['Biura jednorazowo: podłogi i kuchnia'], nie_wchodzi: ['Mycie okien'] })
+    assert.deepEqual(ofertaZWyceny(biuro('abonament_1'), k, DZIEN_WYSTAWIENIA).zakres, zUstawien)
+  })
+
+  it('warunkiZrodlowe: oferta → ustawienia → domyślne; widoczneWarunki pomija tylko_szybka poza szybką wyceną', async () => {
+    const k = await kontekst({ warunki: null })
+    const zOferty = [{ id: 'klucze', tresc: 'Klucze dzień wcześniej.', tylko_szybka: false }]
+    const zUstawien = [{ id: 'zaliczka', tresc: 'Bez zaliczki.', tylko_szybka: true }]
+
+    assert.deepEqual(warunkiZrodlowe(zOferty, { warunki: zUstawien }, k.domyslne), zOferty)
+    assert.deepEqual(warunkiZrodlowe(null, { warunki: zUstawien }, k.domyslne), zUstawien)
+    assert.deepEqual(warunkiZrodlowe(null, null, k.domyslne), k.domyslne.oferta.warunki)
+    assert.deepEqual([widoczneWarunki(zUstawien, false), widoczneWarunki(zUstawien, true)], [[], zUstawien])
+  })
+
+  it('warunkiPoEdycji: kolejność z edytora, ukryty tylko_szybka zostaje na końcu', () => {
+    const warunki = [{ id: 'a', tresc: 'A.', tylko_szybka: false }, { id: 'b', tresc: 'B.', tylko_szybka: true }]
+
+    assert.deepEqual(warunkiPoEdycji(warunki, [{ id: 'n', tekst: 'Nowy.' }, { id: 'a', tekst: 'A2.' }], false), [
+      { id: 'n', tresc: 'Nowy.', tylko_szybka: false }, { id: 'a', tresc: 'A2.', tylko_szybka: false }, { id: 'b', tresc: 'B.', tylko_szybka: true },
+    ])
+  })
+})
+
+describe('ofertaZWyceny: gałęzie kwot (reszta ujemna, szybka bez widełek, tryb i abonament)', () => {
+  it('cena ręczna niższa niż dodatki: dodatki łączą się z usługą w jedną linię, dojazd osobno', async () => {
+    const m = migawka({ linie: /** @type {never} */ ([linia({ kwota: 150 }),
+      linia({ rodzaj: 'dodatek', opis: 'Okno', ilosc: 1, jednostka: 'szt', kwota: 100 })]) })
+
+    const oferta = ofertaZWyceny(wycena({ wynik: m, cenaReczna: 50 }), await kontekst(), DZIEN_WYSTAWIENIA)
+
+    assert.deepEqual([oferta.uslugi, oferta.dojazd, oferta.razem], [[{ opis: 'Mieszkanie – sprzątanie standardowe, 50 m²', kwota: 46 }], 4,
+      { od: 50, do: 50 }])
+  })
+
+  it('szybka „ok.” (od = do), czynny VAT: netto i VAT z ceny ręcznej, tryb „ok”', async () => {
+    const m = migawka({ statusVat: 'czynny' })
+    const szybka = { stan: /** @type {const} */ ('typowy'), od: 294, do: 294, tryb: /** @type {const} */ ('ok') }
+
+    const oferta = ofertaZWyceny(wycena({ rodzaj: 'szybka', szybka, wynik: m }), await kontekst(), DZIEN_WYSTAWIENIA)
+
+    assert.deepEqual([oferta.razem, oferta.trybCeny, oferta.vat], [{ od: 294, do: 294 }, 'ok',
+      { status: 'czynny', stawka: 23, netto: zCenyRecznej(294, 'czynny', 23).netto, kwotaVat: zCenyRecznej(294, 'czynny', 23).vat }])
+    assert.notEqual(oferta.vat.netto, null)
+  })
+
+  it('szybka po oględzinach („od”): tryb „od”, bez kwot netto i VAT', async () => {
+    const szybka = { stan: /** @type {const} */ ('typowy'), od: 1200, do: 1200, tryb: /** @type {const} */ ('od') }
+
+    const oferta = ofertaZWyceny(wycena({ rodzaj: 'szybka', szybka, wynik: migawka({ statusVat: 'czynny' }) }), await kontekst(), DZIEN_WYSTAWIENIA)
+
+    assert.deepEqual([oferta.razem, oferta.trybCeny, oferta.vat.netto, oferta.vat.kwotaVat], [{ od: 1200, do: 1200 }, 'od', null, null])
+  })
+
+  it('szybka bez zapisanych widełek bierze cenę z migawki jako kwotę stałą', async () => {
+    const oferta = ofertaZWyceny(wycena({ rodzaj: 'szybka', szybka: null }), await kontekst(), DZIEN_WYSTAWIENIA)
+
+    assert.deepEqual([oferta.razem, oferta.trybCeny, oferta.vat.netto, oferta.szybka], [{ od: 254, do: 254 }, 'stala', 254, true])
+  })
+
+  it('abonament (4,33 wizyty w miesiącu): razem za wizytę i kwota miesięczna; jednorazowe bez abonamentu', async () => {
+    const k = await kontekst()
+
+    const abonament = ofertaZWyceny(wycena({ wynik: migawka({ wizytWMiesiacu: 4.33 }) }), k, DZIEN_WYSTAWIENIA)
+    const jednorazowe = ofertaZWyceny(wycena({ wynik: migawka({ wizytWMiesiacu: 1 }) }), k, DZIEN_WYSTAWIENIA)
+
+    assert.deepEqual([abonament.razem, abonament.abonament], [{ od: 254, do: 254 }, { wizyt: 4.33, miesiecznie: { od: 1100, do: 1100 } }])
+    assert.equal(jednorazowe.abonament, null)
+  })
+
+  it('TRYBY_CENY: kwota stała i wszystkie tryby szybkiej wyceny z silnika', () => {
+    assert.deepEqual(TRYBY_CENY, ['stala', ...TRYBY_SZYBKIEJ])
+    assert.deepEqual(TRYBY_SZYBKIEJ, ['widelki', 'ok', 'od'])
   })
 })
 

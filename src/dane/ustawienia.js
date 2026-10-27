@@ -4,7 +4,8 @@
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
 import { sprawdzStatusVat } from '../silnik/vat.js'
 import {
-  GRANICE_OFERTY, ID_WARUNKU, jestLiczba, jestObiektem, jestWarunkamiOferty, jestWarunkiem, jestZakresemOferty, POLA_FIRMY,
+  GRANICE_OFERTY, ID_WARUNKU, jestLiczba, jestObiektem, jestWarunkamiOferty, jestWarunkiem, jestZakresemOferty, POLA_FIRMY, POLA_WARUNKU,
+  POLA_ZAKRESU,
 } from './ksztalt.js'
 import { jestStatusemVat } from './magazyn.js'
 import { bladEmaila, bladLiczby, bladNip, bladTelefonu, bladTempa } from './walidacja.js'
@@ -48,8 +49,6 @@ export const POLA_WYMAGANE_W_OFERCIE = Object.freeze(/** @type {const} */ (['naz
 const PLIK_DOMYSLNYCH = 'data/domyslne.json'
 const POLA_ZMIANY = ['wojewodztwoId', 'statusVat', 'firma', 'tempo', 'koszty', 'przypomnienieKopiiDni', 'kreatorZakonczony']
 const IDENTYFIKATOR = /^[a-z][a-z0-9_-]{0,39}$/
-const POLA_ZAKRESU = /** @type {const} */ (['wchodzi', 'nie_wchodzi'])
-const POLA_WARUNKU = /** @type {const} */ (['id', 'tresc', 'tylko_szybka'])
 
 /** Bledna zmiana ustawien: `kod` (np. `telefon`, `zakres`, `nieznane_pole`, `brak_ustawien`) i `pole` (np. `firma.telefon`). */
 export class BladUstawien extends Error {

@@ -3,6 +3,10 @@
 
 /** Pola danych firmy w ustawieniach; zrodlo listy dla ksztaltu stanu (magazyn) i walidacji zmian (ustawienia). */
 export const POLA_FIRMY = Object.freeze(/** @type {const} */ (['nazwa', 'telefon', 'email', 'nip']))
+/** Pola zakresu prac oferty; zrodlo dla straznika stanu, walidacji zmian (ustawienia) i dekodera linku oferty. */
+export const POLA_ZAKRESU = Object.freeze(/** @type {const} */ (['wchodzi', 'nie_wchodzi']))
+/** Pola warunku oferty; zrodlo dla straznika stanu i walidacji zmian (ustawienia). */
+export const POLA_WARUNKU = Object.freeze(/** @type {const} */ (['id', 'tresc', 'tylko_szybka']))
 /** Najdluzszy tekst i klucz w zapisanych danych; ta sama granica obowiazuje przy zapisie, w kopii i przy jej odczycie. */
 export const MAKS_DLUGOSC_TEKSTU = 2000
 /** Glebokosc zagniezdzenia danych; stan aplikacji ma kilka poziomow, wiecej znaczy dane spoza aplikacji. */
@@ -27,6 +31,9 @@ export const jestListaTekstow = (x) => Array.isArray(x) && x.every((t) => typeof
 /** @param {unknown} x @returns {x is string} data czytelna dla Date.parse (zapisy ISO z aplikacji) */
 export const jestDataIso = (x) => typeof x === 'string' && !Number.isNaN(Date.parse(x))
 
+/** @param {unknown} x @param {readonly string[]} klucze @returns {x is Record<string, unknown>} obiekt z dokladnie tymi kluczami */
+export const maKlucze = (x, klucze) => jestObiektem(x) && Object.keys(x).length === klucze.length && klucze.every((k) => Object.hasOwn(x, k))
+
 /** @param {unknown} x @param {(wartosc: unknown) => boolean} czyWartosc @returns {boolean} obiekt, ktorego kazda wartosc spelnia warunek */
 export function maWartosci(x, czyWartosc) {
   return jestObiektem(x) && Object.values(x).every(czyWartosc)
@@ -43,8 +50,7 @@ export const jestListaPunktow = (x) => Array.isArray(x) && x.length <= GRANICE_O
  * Zakres prac `{ wchodzi, nie_wchodzi }` bez innych kluczy; jedyny straznik zakresu zapisanego w ustawieniach i w wycenie.
  * @param {unknown} x @returns {x is { wchodzi: string[], nie_wchodzi: string[] }}
  */
-export const jestZakresemOferty = (x) => jestObiektem(x) && Object.keys(x).length === 2 && jestListaPunktow(x.wchodzi) &&
-  jestListaPunktow(x.nie_wchodzi)
+export const jestZakresemOferty = (x) => maKlucze(x, POLA_ZAKRESU) && jestListaPunktow(x.wchodzi) && jestListaPunktow(x.nie_wchodzi)
 /**
  * Warunki oferty: do GRANICE_OFERTY.lista wpisow `{ id, tresc, tylko_szybka }` bez innych kluczy, z niepowtarzalnym id;
  * jedyny straznik warunkow zapisanych w ustawieniach i w wycenie.
@@ -52,7 +58,7 @@ export const jestZakresemOferty = (x) => jestObiektem(x) && Object.keys(x).lengt
  */
 export function jestWarunkamiOferty(x) {
   if (!Array.isArray(x) || x.length > GRANICE_OFERTY.lista) return false
-  const pelne = x.every((w) => jestWarunkiem(w) && Object.keys(w).length === 3 && ID_WARUNKU.test(w.id) && jestPunktemOferty(w.tresc))
+  const pelne = x.every((w) => jestWarunkiem(w) && maKlucze(w, POLA_WARUNKU) && ID_WARUNKU.test(w.id) && jestPunktemOferty(w.tresc))
   return pelne && new Set(x.map((w) => w.id)).size === x.length
 }
 

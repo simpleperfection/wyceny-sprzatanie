@@ -20,16 +20,30 @@ const TEKSTY = Object.freeze({
   zwolniony: 'Kwota bez VAT – firma zwolniona z VAT.',
   razem: 'Razem do zapłaty',
 })
+/** Kwota szybkiej wyceny bez widelek: „ok.” (jedna kwota) i „od” (wycena po ogledzinach). */
+const PRZEDROSTKI_KWOTY = Object.freeze({ ok: 'ok.', od: 'od' })
 const KONIEC_ZDANIA = /[.!?…]$/u
 const KONCOWA_INTERPUNKCJA = /[\s.,;:]+$/u
 
 /** @param {number} x @returns {string} „290 zł”, a kwota z groszami „54,98 zł” */
 const kwota = (x) => (Number.isInteger(x) ? zl(x) : zlGr(x))
 
-/** @param {{ od: number, do: number }} razem @returns {{ etykieta: string, kwota: string }} widelki: „Razem do zapłaty: 254–304 zł” */
-export function tekstRazem({ od, do: doKwoty }) {
-  if (od === doKwoty) return { etykieta: TEKSTY.razem, kwota: kwota(od) }
-  return { etykieta: `${TEKSTY.razem}: `, kwota: `${kwota(od).slice(0, -WALUTA.length)}–${kwota(doKwoty)}` }
+/**
+ * @param {Oferta['razem']} razem @param {Oferta['trybCeny']} [trybCeny] tryb kwoty szybkiej wyceny albo `stala`
+ * @returns {{ etykieta: string, kwota: string }} widelki: „Razem do zapłaty: 254–304 zł”, szybka „ok. 290 zł”, ogledziny „od 290 zł”
+ */
+export function tekstRazem({ od, do: doKwoty }, trybCeny = 'stala') {
+  if (od !== doKwoty) return { etykieta: `${TEKSTY.razem}: `, kwota: `${kwota(od).slice(0, -WALUTA.length)}–${kwota(doKwoty)}` }
+  if (trybCeny === 'ok' || trybCeny === 'od') return { etykieta: `${TEKSTY.razem}: `, kwota: `${PRZEDROSTKI_KWOTY[trybCeny]} ${kwota(od)}` }
+  return { etykieta: TEKSTY.razem, kwota: kwota(od) }
+}
+
+/**
+ * @param {NonNullable<Oferta['abonament']>} abonament @param {Oferta['trybCeny']} trybCeny
+ * @returns {string} „Kwota za jedną wizytę. Miesięcznie (4,33 wizyt): 1 273 zł.”
+ */
+export function tekstAbonamentu({ wizyt, miesiecznie }, trybCeny) {
+  return `Kwota za jedną wizytę. Miesięcznie (${tekstLiczby(wizyt)} wizyt): ${tekstRazem(miesiecznie, trybCeny).kwota}.`
 }
 
 /** @param {Oferta['vat']} vat @returns {string} zdanie o VAT pod kwota; przy widelkach (bez kwot netto) tylko stawka */
@@ -50,7 +64,7 @@ export function tekstKontaktu({ telefon, email, nip }) {
   return [telefon && `tel. ${telefon}`, email, nip && `NIP ${nip}`].filter(Boolean).join(' · ')
 }
 
-/** @param {Oferta['klient']} klient @returns {string} „ul. Przykładowa 1 · termin: 14 listopada, 9:00” */
+/** @param {Oferta['klient']} klient @returns {string} „ul. Przykładowa 1 · termin: 14 listopada 2026, 9:00” (termin po polsku z tresc.js) */
 export const tekstDla = ({ adres, termin }) => [adres, termin && `termin: ${termin}`].filter(Boolean).join(' · ')
 
 /** @param {string} telefon numer wpisany przez firme @returns {string | null} `tel:` z samych cyfr (i `+` na poczatku), null bez cyfr */
@@ -105,17 +119,18 @@ function sekcjaDla(klient) {
     szczegoly ? h('p', { class: 'oferta__drobny' }, szczegoly) : null)
 }
 
-/** @param {Oferta} oferta @returns {HTMLElement[]} wiersze uslug, dojazd, „Razem do zapłaty” i zdanie o VAT */
-function sekcjaCeny({ uslugi, dojazd, razem, vat }) {
-  const czyWidelki = razem.od !== razem.do
-  const suma = tekstRazem(razem)
-  // Przy widelkach linie uslug maja kwote dolnej granicy, wiec pokazujemy same opisy, a kwote tylko w „Razem”.
-  const linie = uslugi.map((u) => wiersz(u.opis, czyWidelki ? null : kwota(u.kwota)))
+/** @param {Oferta} oferta @returns {HTMLElement[]} wiersze uslug, dojazd, „Razem do zapłaty”, abonament i zdanie o VAT */
+function sekcjaCeny({ uslugi, dojazd, razem, trybCeny, abonament, vat }) {
+  const czyBezKwotLinii = razem.od !== razem.do || trybCeny === 'od'
+  const suma = tekstRazem(razem, trybCeny)
+  // Przy widelkach i „od” linie uslug maja kwote dolnej granicy, wiec pokazujemy same opisy, a kwote tylko w „Razem”.
+  const linie = uslugi.map((u) => wiersz(u.opis, czyBezKwotLinii ? null : kwota(u.kwota)))
   return [
     h('ul', { class: 'oferta__wiersze' }, linie, dojazd > 0 ? wiersz('Dojazd', kwota(dojazd)) : null),
     h('p', { class: 'oferta__razem' }, h('span', null, suma.etykieta), h('strong', { class: 'liczba' }, suma.kwota)),
+    abonament ? h('p', { class: 'oferta__abonament' }, tekstAbonamentu(abonament, trybCeny)) : null,
     h('p', { class: 'oferta__vat' }, tekstVat(vat)),
-  ]
+  ].filter((wezel) => wezel !== null)
 }
 
 /** @param {Oferta['dodatkiOpcjonalne']} dodatki @returns {HTMLElement | null} */

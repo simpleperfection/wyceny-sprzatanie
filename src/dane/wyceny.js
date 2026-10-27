@@ -23,6 +23,8 @@ import { STANY_SZYBKIEJ, TRYBY_SZYBKIEJ } from '../silnik/szybka.js'
 
 /** Statusy wyceny w kolejnosci cyklu zycia; zrodlo stalej dla widokow i listy wycen. */
 export const STATUSY_WYCENY = Object.freeze(/** @type {const} */ (['szkic', 'do_wyslania', 'wyslana', 'przyjeta', 'odrzucona', 'wykonana']))
+/** Statusy, z ktorych przygotowuje sie i wysyla oferte; zrodlo reguly dla zapisu oferty i widokow (podsumowanie, ekran oferty). */
+export const STATUSY_OFERTY = Object.freeze(/** @type {const} */ (['do_wyslania', 'wyslana', 'przyjeta']))
 /** Najdluzsze wykonanie zlecenia w minutach (doba); zrodlo progu dla ekranu zakonczenia zlecenia. */
 export const MAKS_MINUT_WYKONANIA = 1440
 /** Rodzaje wyceny; zrodlo stalej dla zapisu, kopii zapasowej i widokow. */
@@ -384,9 +386,14 @@ export function zmienStatus(magazyn, id, nowy, opcje = {}) {
   })
 }
 
-/** @param {Wycena} w */
-function wymagajZapisanej(w) {
-  if (w.status === 'szkic') throw new BladWyceny('przejscie', `Ofertę przygotowuje się z zapisanej wyceny, ${w.id} jest szkicem`)
+/** @param {StatusWyceny} status @returns {boolean} z wyceny o tym statusie przygotowuje sie oferte (STATUSY_OFERTY) */
+export const czyStatusOferty = (status) => STATUSY_OFERTY.some((s) => s === status)
+
+/** @param {Wycena} w oferta tylko z wyceny o statusie z STATUSY_OFERTY; inna (szkic, odrzucona) daje BladWyceny `przejscie` */
+function wymagajStatusuOferty(w) {
+  if (!czyStatusOferty(w.status)) {
+    throw new BladWyceny('przejscie', `Ofertę przygotowuje się z wyceny do wysłania, wysłanej albo przyjętej, ${w.numer ?? w.id} ma status ${w.status}`)
+  }
 }
 
 /**
@@ -412,7 +419,7 @@ function zmianaOferty(zmiana) {
 /**
  * Oferta tylko tej wyceny (R19, R20, R18): zakres i warunki (null = wroc do ustawien albo domyslnych), data waznosci RRRR-MM-DD
  * (null = dzis + oferta.waznosc_dni) i dane klienta. Zly zakres albo warunki daja BladUstawien (te same reguly co w ustawieniach),
- * szkic i wykonana BladWyceny; zmiana po wyslaniu oznacza oferte jako nieaktualna.
+ * szkic i odrzucona (status spoza STATUSY_OFERTY) oraz wykonana daja BladWyceny; zmiana po wyslaniu oznacza oferte jako nieaktualna.
  * @param {Magazyn} magazyn @param {string} id
  * @param {{ zakres?: ZakresUslugi | null, warunki?: WarunekOferty[] | null, waznaDo?: string | null, klient?: Partial<KlientWyceny> }} zmiana
  * @param {OpcjeWycen} [opcje]
@@ -422,7 +429,7 @@ export function zapiszOferte(magazyn, id, zmiana, opcje = {}) {
   const { klient, ...pola } = zmianaOferty(zmiana)
   return zmienWycene(magazyn, id, opcje, (w) => {
     tylkoDoOdczytu(w)
-    wymagajZapisanej(w)
+    wymagajStatusuOferty(w)
     const nowa = { ...w, klient: { ...w.klient, ...klient }, oferta: { ...w.oferta, ...pola } }
     const czyZmiana = JSON.stringify([nowa.klient, nowa.oferta]) !== JSON.stringify([w.klient, w.oferta])
     return { wycena: czyZmiana ? { ...nowa, oferta: nieaktualnaPoWyslaniu(nowa) } : w }
@@ -431,14 +438,14 @@ export function zapiszOferte(magazyn, id, zmiana, opcje = {}) {
 
 /**
  * Oferta trafila do klienta (skopiowany albo udostepniony link, otwarta do druku): `do_wyslania` → `wyslana`, data wyslania
- * = teraz, oferta znow aktualna; przyjeta, odrzucona i juz wyslana zostaja w swoim statusie. Szkic i wykonana daja BladWyceny.
+ * = teraz, oferta znow aktualna; przyjeta i juz wyslana zostaja w swoim statusie. Szkic, odrzucona i wykonana daja BladWyceny.
  * @param {Magazyn} magazyn @param {string} id @param {OpcjeWycen} [opcje]
  * @returns {Stan}
  */
 export function oznaczWyslana(magazyn, id, opcje = {}) {
   return zmienWycene(magazyn, id, opcje, (w, _stan, teraz) => {
     tylkoDoOdczytu(w)
-    wymagajZapisanej(w)
+    wymagajStatusuOferty(w)
     const status = w.status === 'do_wyslania' ? 'wyslana' : w.status
     return { wycena: { ...w, status, oferta: { ...w.oferta, wyslana: teraz.toISOString(), nieaktualna: false } } }
   })
