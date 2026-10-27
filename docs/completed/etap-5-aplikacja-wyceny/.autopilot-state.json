@@ -272,93 +272,8 @@
       "nazwa": "Oferta dla klienta",
       "execute": "done",
       "review": "done",
-      "fix": "pending",
-      "otwarteFindingi": [
-        {
-          "severity": "P1",
-          "typ": "KOD",
-          "plik": "src/oferta/tresc.js:212",
-          "opis": "Termin klienta z datetime-local ('2026-11-14T09:00') trafia do oferty bez formatowania; fixture'y z gotowym tekstem '14 listopada, 9:00' maskują błąd. Formatować termin po polsku i poprawić fixture'y."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/dane/ksztalt.js:46",
-          "opis": "Kształt zakresu/warunku w trzech miejscach (magiczne length === 2/3, POLA_ZAKRESU/POLA_WARUNKU, KLUCZE.zakres); jedno źródło w ksztalt.js z maKlucze."
-        },
-        {
-          "severity": "P2",
-          "typ": "TEST",
-          "plik": "src/dane/ustawienia.test.js:248",
-          "opis": "Brak testów odmowy bramek warunkiZeZmiany i sprawdzUstawienia (zakresy)."
-        },
-        {
-          "severity": "P2",
-          "typ": "TEST",
-          "plik": "src/dane/wyceny.test.js:464",
-          "opis": "Brak testu odmowy tylkoDoOdczytu w zapiszOferte i zaostrzonego strażnika jestOferta."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/oferta/kodek.js:24",
-          "opis": "Kodek powiela STATUSY_VAT, granicę stawki i POLA_FIRMY; użyć jednego źródła."
-        },
-        {
-          "severity": "P2",
-          "typ": "TEST",
-          "plik": "src/oferta/kodek.test.js:103",
-          "opis": "Warunki jestCzescia/odkodujOferte (VAT, puste punkty, długość pól, termin, szybka, limit 20000) bez testów odmowy."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/oferta/tresc.js:32",
-          "opis": "JEDNOSTKI i FORMAT_LICZBY powielają format.js i już się rozjechały (mb, grupowanie tysięcy)."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/oferta/tresc.js:109",
-          "opis": "Zakres z ustawień usługi przykrywa zakres wariantu (np. jednorazowe biuro dostaje zakres abonamentu), wbrew R19."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/oferta/tresc.js:164",
-          "opis": "Szybka wycena w trybie od/ok. trafia do oferty jako cena sztywna z VAT; przenieść tryb przez kodek."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/oferta/tresc.js:169",
-          "opis": "Oferta abonamentu pokazuje kwotę za wizytę jako Razem do zapłaty, bez dopisku i kwoty miesięcznej."
-        },
-        {
-          "severity": "P2",
-          "typ": "TEST",
-          "plik": "src/oferta/tresc.test.js:60",
-          "opis": "Gałęzie linieOferty (reszta < 0) i kwotyRazem (szybka od === do, szybka bez w.szybka) bez testu."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/widoki/oferta-edycja.js:34",
-          "opis": "STATUSY_OFERTY/czyStatusOferty w widoku, rozjechane z wymagajZapisanej; przenieść do dane/wyceny.js."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/widoki/oferta-edycja.js:53",
-          "opis": "czyDaneFirmy na sztywno nazwa+telefon zamiast POLA_WYMAGANE_W_OFERCIE."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/widoki/oferta-edycja.js:262",
-          "opis": "Kolejność źródeł warunków i R20 powielona w widokach; wyeksportować z tresc.js warunkiZrodlowe, widoczneWarunki, warunkiPoEdycji."
-        }
-      ],
+      "fix": "done",
+      "otwarteFindingi": [],
       "baza": "4aa07aa251e36ec777130abe039b2edeae2aa533",
       "metryki": {
         "liczniki": {
@@ -407,9 +322,9 @@
     }
   ],
   "zakonczenie": {
-    "walidacja": "pending",
-    "complete": "pending",
-    "compound": "pending"
+    "walidacja": "done",
+    "complete": "done",
+    "compound": "done"
   },
   "bazaZielona": null
 }
