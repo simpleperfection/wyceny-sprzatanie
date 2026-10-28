@@ -385,4 +385,22 @@ describe('kształt stanu v2: klienci, zlecenia i odwołania', () => {
 
     assert.deepEqual(zle.map(zaktualizujStan), zle.map(() => ({ blad: 'uszkodzony' })))
   })
+
+  it('klient z kopii: zły telefon, za długie teksty, spacje na końcu, zła data, brak telefonu → uszkodzony', () => {
+    const { telefon: _bezTelefonu, ...klientBezTelefonu } = klientTestowy('k1')
+    const zleKlienty = [
+      { ...klientTestowy('k1'), telefon: '123' },
+      { ...klientTestowy('k1'), nazwa: 'N'.repeat(121) },
+      { ...klientTestowy('k1'), adres: 'Lipowa 3 ' },
+      { ...klientTestowy('k1'), notatki: 'n'.repeat(1001) },
+      { ...klientTestowy('k1'), utworzony: 'wczoraj' },
+      klientBezTelefonu,
+    ]
+
+    const wyniki = zleKlienty.map((k) => zaktualizujStan(stanZ({ klienci: [k] })))
+
+    assert.deepEqual(wyniki, zleKlienty.map(() => ({ blad: 'uszkodzony' })))
+    const graniczny = { ...klientTestowy('k1'), nazwa: 'N'.repeat(120), adres: 'Lipowa 3', notatki: 'n'.repeat(1000) }
+    assert.deepEqual(zaktualizujStan(stanZ({ klienci: [graniczny] })), { stan: stanZ({ klienci: [graniczny] }) })
+  })
 })

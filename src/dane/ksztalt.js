@@ -17,6 +17,7 @@ export const MAKS_ZAGLEBIENIE = 32
  */
 export const GRANICE_OFERTY = Object.freeze({ tekst: 500, lista: 50 })
 const DZIEN = /^\d{4}-\d{2}-\d{2}$/
+const MIESIAC = /^\d{4}-(0[1-9]|1[0-2])$/
 /** Identyfikator warunku oferty (jak w data/domyslne.json). */
 export const ID_WARUNKU = /^[a-z0-9][a-z0-9_-]{0,39}$/
 
@@ -24,6 +25,12 @@ export const ID_WARUNKU = /^[a-z0-9][a-z0-9_-]{0,39}$/
 export const jestObiektem = (x) => typeof x === 'object' && x !== null && !Array.isArray(x)
 /** @param {unknown} x @returns {x is number} */
 export const jestLiczba = (x) => typeof x === 'number' && Number.isFinite(x)
+/** @param {unknown} x @returns {x is number} liczba skonczona ≥ 0 (cena, kwota zaplaty) */
+export const jestKwota = (x) => jestLiczba(x) && x >= 0
+/** @param {unknown} x @returns {x is string} identyfikator rekordu: niepusty tekst do MAKS_DLUGOSC_TEKSTU znakow */
+export const jestId = (x) => typeof x === 'string' && x !== '' && x.length <= MAKS_DLUGOSC_TEKSTU
+/** @param {unknown} x @returns {x is string} miesiac RRRR-MM (numeracja wycen, zaplaty miesieczne) */
+export const jestMiesiacem = (x) => typeof x === 'string' && MIESIAC.test(x)
 /** @param {unknown} x @returns {x is string | null} */
 export const jestTekstemLubNull = (x) => x === null || typeof x === 'string'
 /** @param {unknown} x @returns {x is string[]} */

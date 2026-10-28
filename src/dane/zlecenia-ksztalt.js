@@ -4,7 +4,7 @@
 
 import { jestGodzina } from '../kalendarz/daty.js'
 import { CYKLE } from '../kalendarz/wystapienia.js'
-import { jestDataIso, jestDniem, jestLiczba, jestObiektem, MAKS_DLUGOSC_TEKSTU } from './ksztalt.js'
+import { jestDataIso, jestDniem, jestId, jestKwota, jestLiczba, jestMiesiacem, jestObiektem } from './ksztalt.js'
 
 /** Sposoby rozliczenia zlecenia; zrodlo stalej dla ksztaltu, formularza zlecenia i kopii. */
 export const ROZLICZENIA = Object.freeze(/** @type {const} */ (['za_wizyte', 'miesiecznie']))
@@ -21,7 +21,6 @@ export const DLUGOSC_OPISU = 120
 
 /** Dni tygodnia ISO w cyklu: 1 = poniedzialek … 7 = niedziela. */
 const DNI_TYGODNIA = Object.freeze({ min: 1, max: 7 })
-const MIESIAC = /^\d{4}-(0[1-9]|1[0-2])$/
 
 /**
  * @typedef {typeof ROZLICZENIA[number]} Rozliczenie
@@ -40,16 +39,10 @@ const MIESIAC = /^\d{4}-(0[1-9]|1[0-2])$/
  *   wizyty pod data pierwotna RRRR-MM-DD, zaplaty miesieczne pod RRRR-MM
  */
 
-/** @param {unknown} x @returns {x is string} niepusty tekst do MAKS_DLUGOSC_TEKSTU znakow */
-const jestId = (x) => typeof x === 'string' && x !== '' && x.length <= MAKS_DLUGOSC_TEKSTU
-/** @param {unknown} x */
-const jestKwota = (x) => jestLiczba(x) && x >= 0
 /** @param {unknown} x */
 const jestDodatnia = (x) => jestLiczba(x) && x > 0
 /** @param {unknown} x */
 const jestOpisem = (x) => x === null || (typeof x === 'string' && x !== '' && x === x.trim() && x.length <= DLUGOSC_OPISU)
-/** @param {unknown} x */
-const jestMiesiacem = (x) => typeof x === 'string' && MIESIAC.test(x)
 /** @param {unknown} x */
 const jestDniemTygodnia = (x) => Number.isInteger(x) && Number(x) >= DNI_TYGODNIA.min && Number(x) <= DNI_TYGODNIA.max
 

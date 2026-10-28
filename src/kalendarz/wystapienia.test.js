@@ -4,11 +4,25 @@ process.env.TZ = 'Europe/Warsaw'
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { BladKalendarza } from './daty.js'
+import { BladKalendarza, dniOdDo, dodajDni, dzienTygodnia, poczatekTygodnia } from './daty.js'
 import { CYKLE, dniOkresu, najblizszaWizyta, wystapienia } from './wystapienia.js'
 
 /** @param {string} kod */
 const bladKalendarza = (kod) => ({ name: BladKalendarza.name, kod })
+
+/**
+ * Wzorzec cyklu tygodniowego: kazdy dzien okna po kolei, przy `dwa_tygodnie` tylko parzyste tygodnie od tygodnia `odOkresu`.
+ * @param {string} odOkresu @param {{ co: string, dni: number[] }} c @param {string} odDnia @param {string} doDnia @returns {string[]}
+ */
+function dzienPoDniu(odOkresu, c, odDnia, doDnia) {
+  const kotwica = poczatekTygodnia(odOkresu)
+  const wynik = []
+  for (let dzien = odDnia; dzien <= doDnia; dzien = dodajDni(dzien, 1)) {
+    const parzysty = c.co !== 'dwa_tygodnie' || dniOdDo(kotwica, dzien) % 14 < 7
+    if (parzysty && c.dni.includes(dzienTygodnia(dzien))) wynik.push(dzien)
+  }
+  return wynik
+}
 
 /** @param {'tydzien' | 'dwa_tygodnie' | 'miesiac'} co @param {number[]} [dni] */
 const cykl = (co, dni = []) => ({ co, dni })
@@ -77,6 +91,32 @@ describe('dniOkresu', () => {
 
     assert.throws(() => dniOkresu(/** @type {never} */ (coRok), '2026-10-26', '2026-11-08'), bladKalendarza('cykl'))
     assert.throws(() => dniOkresu(PN_CZW, '2026-11-08', '2026-10-26'), bladKalendarza('okno'))
+  })
+
+  it('cykle tygodniowe w oknach od różnych dni dają te same dni co przejście dzień po dniu', () => {
+    const cykle = [cykl('tydzien', [1, 4]), cykl('tydzien', [7, 3]), cykl('dwa_tygodnie', [1]), cykl('dwa_tygodnie', [2, 6, 7])]
+    for (const c of cykle) {
+      const o = okres('2026-10-29', c)
+      for (let przesuniecie = 0; przesuniecie < 21; przesuniecie += 1) {
+        const odDnia = dodajDni('2026-10-29', przesuniecie)
+
+        const wynik = dniOkresu(o, odDnia, '2027-04-30')
+
+        assert.deepEqual(wynik, dzienPoDniu(o.od, c, odDnia, '2027-04-30'), `${c.co} ${c.dni.join(',')} od ${odDnia}`)
+      }
+    }
+  })
+
+  it('seria co tydzień w pn przez 200 lat liczy się krokiem tygodnia: 10 436 dni w mniej niż 100 ms', () => {
+    const poniedzialki = okres('2026-11-02', cykl('tydzien', [1]))
+    const start = performance.now()
+
+    const wynik = dniOkresu(poniedzialki, '2026-11-02', '2226-11-01')
+
+    const czas = performance.now() - start
+    assert.equal(wynik.length, 10436)
+    assert.deepEqual([wynik[0], wynik[1], wynik.at(-1)], ['2026-11-02', '2026-11-09', '2226-10-30'])
+    assert.ok(czas < 100, `dniOkresu liczyło ${Math.round(czas)} ms`)
   })
 })
 
@@ -158,6 +198,16 @@ describe('najblizszaWizyta', () => {
 
     assert.equal(najblizsza?.data, '2026-11-05')
     assert.equal(najblizsza?.godzina, '09:00')
+  })
+
+  it('seria co miesiąc: wizyta za miesiąc i, po dwóch odwołanych, za trzy miesiące; przesunięta bliżej wygrywa', () => {
+    const coMiesiac = okres('2026-01-15', cykl('miesiac'))
+    const odwolane = { '2026-02-15': stan({ odwolana: true }), '2026-03-15': stan({ odwolana: true }) }
+    const przesunieta = { '2026-05-15': stan({ przeniesiona: { data: '2026-01-20', godzina: null } }) }
+
+    assert.equal(najblizszaWizyta(zlecenie({ okresy: [coMiesiac] }), '2026-01-16')?.data, '2026-02-15')
+    assert.equal(najblizszaWizyta(zlecenie({ okresy: [coMiesiac], wizyty: odwolane }), '2026-01-16')?.data, '2026-04-15')
+    assert.equal(najblizszaWizyta(zlecenie({ okresy: [coMiesiac], wizyty: przesunieta }), '2026-01-16')?.dataPierwotna, '2026-05-15')
   })
 
   it('seria z samymi odwołanymi wizytami (z końcem) → null', () => {

@@ -3,9 +3,9 @@
 // domyslnego. Kazda akcja to jedno magazyn.zmien przez zmienZlecenie (src/dane/zlecenia.js); dni z src/kalendarz/.
 
 import { jestGodzina, ostatniDzienMiesiaca, porownajDni } from '../kalendarz/daty.js'
-import { wystapienia } from '../kalendarz/wystapienia.js'
-import { dzienLokalny, jestDniem, jestLiczba } from './ksztalt.js'
-import { BladZlecenia, okresWDniu, zleceniaKlienta, zmienZlecenie } from './zlecenia.js'
+import { okresDnia, wystapienia } from '../kalendarz/wystapienia.js'
+import { dzienLokalny, jestDniem, jestLiczba, jestMiesiacem } from './ksztalt.js'
+import { BladZlecenia, zleceniaKlienta, zmienZlecenie } from './zlecenia.js'
 import { FORMY_ZAPLATY, MAKS_MINUT_PRACY, MAKS_WIZYT_ZLECENIA } from './zlecenia-ksztalt.js'
 
 /**
@@ -100,7 +100,7 @@ export function cofnijZrobiona(magazyn, id, dataPierwotna, opcje = {}) {
 export function oznaczZaplacona(magazyn, id, dataPierwotna, opcje = {}) {
   const forma = opcje.forma === undefined ? null : sprawdzForme(opcje.forma)
   return zmienWizyte(magazyn, id, dataPierwotna, opcje, (w, z, stan, teraz) => {
-    const { cenaWizyty } = okresWDniu(z, dataPierwotna)
+    const { cenaWizyty } = okresDnia(z.okresy, dataPierwotna)
     if (z.rozliczenie === 'miesiecznie' || cenaWizyty === null) {
       throw new BladZlecenia('rozliczenie_miesieczne', 'W serii rozliczanej miesięcznie płaci się za miesiąc, nie za wizytę')
     }
@@ -150,7 +150,7 @@ export function przesunWizyte(magazyn, id, dataPierwotna, cel, opcje = {}) {
   if (!jestDniem(data)) throw new BladZlecenia('data', `Nowy dzień wizyty musi mieć postać RRRR-MM-DD, jest ${String(data)}`)
   if (godzina !== null && !jestGodzina(godzina)) throw new BladZlecenia('godzina', `Godzina musi mieć postać HH:MM, jest ${String(godzina)}`)
   return zmienWizyte(magazyn, id, dataPierwotna, opcje, (w, z) => {
-    const naMiejscu = data === dataPierwotna && (godzina === null || godzina === okresWDniu(z, dataPierwotna).godzina)
+    const naMiejscu = data === dataPierwotna && (godzina === null || godzina === okresDnia(z.okresy, dataPierwotna).godzina)
     const przeniesiona = naMiejscu ? null : { data, godzina }
     const bezZmiany = przeniesiona?.data === w.przeniesiona?.data && przeniesiona?.godzina === w.przeniesiona?.godzina
     return bezZmiany ? w : { ...w, przeniesiona }
@@ -169,7 +169,7 @@ export function przywrocWizyte(magazyn, id, dataPierwotna, opcje = {}) {
 
 /** @param {unknown} miesiac @returns {asserts miesiac is string} RRRR-MM */
 function sprawdzMiesiac(miesiac) {
-  if (typeof miesiac !== 'string' || !jestDniem(`${miesiac}-01`)) throw new BladZlecenia('miesiac', `Miesiąc musi mieć postać RRRR-MM, jest ${String(miesiac)}`)
+  if (!jestMiesiacem(miesiac)) throw new BladZlecenia('miesiac', `Miesiąc musi mieć postać RRRR-MM, jest ${String(miesiac)}`)
 }
 
 /** @param {Zlecenie} z */
@@ -178,16 +178,29 @@ function wymagajMiesiecznego(z) {
 }
 
 /**
- * Kwota miesiaca: cenaMiesiaca okresu pierwszej wizyty z reguly w tym miesiacu; miesiac bez wizyty → `brak_wizyty`.
+ * Data pierwotna pierwszej zrobionej, nieodwolanej wizyty z dniem pierwotnym w miesiacu; bez takiej null.
+ * @param {Zlecenie} z @param {string} miesiac RRRR-MM @returns {string | null}
+ */
+function pierwszaZrobiona(z, miesiac) {
+  const zrobione = Object.entries(z.wizyty).filter(([dzien, s]) => dzien.startsWith(`${miesiac}-`) && s.zrobiona !== null && !s.odwolana)
+  return zrobione.map(([dzien]) => dzien).sort()[0] ?? null
+}
+
+/**
+ * Kwota miesiaca serii, jedna regula dla zapisu zaplaty i „Niezaplacone” (src/zlecenia/zapytania.js): cenaMiesiaca okresu
+ * pierwszej wizyty z reguly w tym miesiacu, a gdy regula nie daje w nim wizyty (np. po koncu serii) — okresu pierwszej
+ * zrobionej, nieodwolanej wizyty z data pierwotna w tym miesiacu. Bez takich wizyt → `brak_wizyty`, okres bez ceny za
+ * miesiac → `rozliczenie`.
  * @param {Zlecenie} z @param {string} miesiac RRRR-MM @returns {number}
  */
-function kwotaMiesiaca(z, miesiac) {
+export function kwotaMiesiaca(z, miesiac) {
   const ostatni = ostatniDzienMiesiaca(Number(miesiac.slice(0, 4)), Number(miesiac.slice(5, 7)))
   const [pierwsza] = wystapienia({ ...z, wizyty: {} }, `${miesiac}-01`, `${miesiac}-${ostatni}`)
-  if (pierwsza === undefined) throw new BladZlecenia('brak_wizyty', `Zlecenie ${z.id} nie ma wizyty w miesiącu ${miesiac}`)
-  const kwota = pierwsza.okres.cenaMiesiaca
-  if (kwota === null) throw new BladZlecenia('rozliczenie', `Okres od ${pierwsza.okres.od} nie ma ceny za miesiąc`)
-  return kwota
+  const zrobiona = pierwsza === undefined ? pierwszaZrobiona(z, miesiac) : null
+  const okres = pierwsza?.okres ?? (zrobiona === null ? null : okresDnia(z.okresy, zrobiona))
+  if (okres === null) throw new BladZlecenia('brak_wizyty', `Zlecenie ${z.id} nie ma wizyty w miesiącu ${miesiac}`)
+  if (okres.cenaMiesiaca === null) throw new BladZlecenia('rozliczenie', `Okres od ${okres.od} nie ma ceny za miesiąc`)
+  return okres.cenaMiesiaca
 }
 
 /**

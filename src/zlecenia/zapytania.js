@@ -2,11 +2,10 @@
 // liczba wizyt dzis i najblizsza wizyta. Logika modulu Zlecenia bez DOM i bez zapisu: funkcje dostaja stan odczytany raz
 // na render i dzien `dzis` (dzienLokalny) w argumencie; wizyty serii licza sie z okresow (src/kalendarz/wystapienia.js).
 
-import { klient } from '../dane/klienci.js'
 import { dzienLokalny, jestDniem } from '../dane/ksztalt.js'
-import { okresWDniu } from '../dane/zlecenia.js'
-import { BladKalendarza, dodajDni,miesiacDnia, ostatniDzienMiesiaca, porownajDni } from '../kalendarz/daty.js'
-import { najblizszaWizyta, wystapienia } from '../kalendarz/wystapienia.js'
+import { kwotaMiesiaca } from '../dane/wizyty.js'
+import { BladKalendarza, dodajDni, miesiacDnia, porownajDni } from '../kalendarz/daty.js'
+import { najblizszaWizyta, okresDnia, wystapienia } from '../kalendarz/wystapienia.js'
 
 /**
  * @typedef {import('../dane/magazyn.js').Stan} Stan
@@ -16,6 +15,7 @@ import { najblizszaWizyta, wystapienia } from '../kalendarz/wystapienia.js'
  * @typedef {import('../dane/zlecenia-ksztalt.js').Zlecenie} Zlecenie
  * @typedef {import('../kalendarz/wystapienia.js').Wystapienie<Okres, StanWizyty>} WystapienieZlecenia
  * @typedef {Pick<Stan, 'klienci' | 'zlecenia'>} StanZlecen
+ * @typedef {Map<string, Klient>} KlienciPoId
  * @typedef {(uslugaId: string) => string} NazwaUslugi nazwa uslugi z katalogu (podaje wolajacy)
  * @typedef {{ zlecenieId: string, klientId: string, klient: Klient | null, adres: string | null, nazwa: string,
  *   dataPierwotna: string, data: string, godzina: string | null, kwota: number | null, stan: StanWizyty | null,
@@ -37,13 +37,16 @@ function porownajWizyty(a, b) {
   return porownajDni(a.dataPierwotna, b.dataPierwotna)
 }
 
+/** Klienci po id: jedno przejscie listy na zapytanie zamiast szukania w kazdym wierszu. @param {StanZlecen} stan @returns {KlienciPoId} */
+const klienciPoId = (stan) => new Map(stan.klienci.map((k) => [k.id, k]))
+
 /**
  * Wiersz wizyty z klientem z karty i nazwa zlecenia.
- * @param {StanZlecen} stan @param {Zlecenie} z @param {WystapienieZlecenia} w @param {NazwaUslugi} nazwaUslugi
+ * @param {KlienciPoId} klienci @param {Zlecenie} z @param {WystapienieZlecenia} w @param {NazwaUslugi} nazwaUslugi
  * @returns {WizytaDnia}
  */
-function wiersz(stan, z, w, nazwaUslugi) {
-  const k = klient(stan, z.klientId)
+function wiersz(klienci, z, w, nazwaUslugi) {
+  const k = klienci.get(z.klientId) ?? null
   const nazwa = z.opis ?? (z.uslugaId === null ? '' : nazwaUslugi(z.uslugaId))
   return { zlecenieId: z.id, klientId: z.klientId, klient: k, adres: k?.adres ?? null, nazwa, dataPierwotna: w.dataPierwotna,
     data: w.data, godzina: w.godzina, kwota: w.okres.cenaWizyty, stan: w.stan, odwolana: w.stan?.odwolana ?? false }
@@ -58,7 +61,8 @@ function wiersz(stan, z, w, nazwaUslugi) {
 export function wizytyOkresu(stan, od, doDnia, nazwaUslugi) {
   sprawdzDzien(od)
   sprawdzDzien(doDnia)
-  const wynik = stan.zlecenia.flatMap((z) => wystapienia(z, od, doDnia).map((w) => wiersz(stan, z, w, nazwaUslugi)))
+  const klienci = klienciPoId(stan)
+  const wynik = stan.zlecenia.flatMap((z) => wystapienia(z, od, doDnia).map((w) => wiersz(klienci, z, w, nazwaUslugi)))
   return wynik.sort(porownajWizyty)
 }
 
@@ -80,47 +84,38 @@ const czekaNaZaplate = (z, s, okres) => z.rozliczenie === 'za_wizyte' && s.zrobi
  */
 export function doZamkniecia(stan, dzis, nazwaUslugi) {
   const wczoraj = dodajDni(dzis, -1)
+  const klienci = klienciPoId(stan)
   const wynik = stan.zlecenia.flatMap((z) => {
     const od = dzienZalozenia(z)
     if (porownajDni(od, wczoraj) > 0) return []
     return wystapienia(z, od, wczoraj)
       .filter((w) => w.stan === null || (!w.stan.odwolana && (w.stan.zrobiona === null || czekaNaZaplate(z, w.stan, w.okres))))
-      .map((w) => wiersz(stan, z, w, nazwaUslugi))
+      .map((w) => wiersz(klienci, z, w, nazwaUslugi))
   })
   return wynik.sort(porownajWizyty)
 }
 
 /**
- * Kwota miesiaca serii jak przy zapisie zaplaty (src/dane/wizyty.js): cena okresu pierwszej wizyty z reguly w miesiacu,
- * a gdy regula nie daje juz wizyty w tym miesiacu — cena okresu zrobionej wizyty.
- * @param {Zlecenie} z @param {string} miesiac RRRR-MM @param {string} dataZrobionej RRRR-MM-DD @returns {number}
- */
-function kwotaMiesiaca(z, miesiac, dataZrobionej) {
-  const ostatni = ostatniDzienMiesiaca(Number(miesiac.slice(0, 4)), Number(miesiac.slice(5, 7)))
-  const [pierwsza] = wystapienia({ ...z, wizyty: {} }, `${miesiac}-01`, `${miesiac}-${ostatni}`)
-  return (pierwsza?.okres ?? okresWDniu(z, dataZrobionej)).cenaMiesiaca ?? 0
-}
-
-/**
- * Miesiace serii miesiecznej przed miesiacem `dzis` z co najmniej jedna zrobiona (nieodwolana) wizyta i bez zaplaty.
+ * Miesiace serii miesiecznej przed miesiacem `dzis` z co najmniej jedna zrobiona (nieodwolana) wizyta i bez zaplaty;
+ * kwota z tej samej reguly co zapis zaplaty (kwotaMiesiaca, src/dane/wizyty.js).
  * @param {Zlecenie} z @param {string} biezacyMiesiac RRRR-MM @returns {Niezaplacone[]}
  */
 function niezaplaconeMiesiace(z, biezacyMiesiac) {
-  /** @type {Map<string, string>} miesiac → data pierwotna pierwszej zrobionej wizyty */
-  const zrobione = new Map()
+  /** @type {Set<string>} */
+  const miesiace = new Set()
   for (const [dataPierwotna, s] of Object.entries(z.wizyty)) {
     const miesiac = miesiacDnia(dataPierwotna)
     if (s.zrobiona === null || s.odwolana || miesiac >= biezacyMiesiac || Object.hasOwn(z.zaplatyMiesieczne, miesiac)) continue
-    if (!zrobione.has(miesiac) || dataPierwotna < String(zrobione.get(miesiac))) zrobione.set(miesiac, dataPierwotna)
+    miesiace.add(miesiac)
   }
-  return [...zrobione].map(([miesiac, data]) => ({ rodzaj: /** @type {const} */ ('miesiac'), zlecenieId: z.id, klientId: z.klientId,
-    klucz: miesiac, kwota: kwotaMiesiaca(z, miesiac, data) })).filter((n) => n.kwota > 0)
+  return [...miesiace].map((miesiac) => ({ rodzaj: /** @type {const} */ ('miesiac'), zlecenieId: z.id, klientId: z.klientId,
+    klucz: miesiac, kwota: kwotaMiesiaca(z, miesiac) })).filter((n) => n.kwota > 0)
 }
 
 /** @param {Zlecenie} z @returns {Niezaplacone[]} zrobione wizyty za wizyte bez zaplaty z cena > 0, kazdego dnia */
 function niezaplaconeWizyty(z) {
   return Object.entries(z.wizyty).flatMap(([dataPierwotna, s]) => {
-    const okres = okresWDniu(z, dataPierwotna)
+    const okres = okresDnia(z.okresy, dataPierwotna)
     if (!czekaNaZaplate(z, s, okres)) return []
     return [{ rodzaj: /** @type {const} */ ('wizyta'), zlecenieId: z.id, klientId: z.klientId, klucz: dataPierwotna, kwota: okres.cenaWizyty ?? 0 }]
   })
@@ -152,12 +147,13 @@ export function liczbaDzis(stan, dzis) {
  */
 export function najblizsza(stan, dzis, nazwaUslugi) {
   const jutro = dodajDni(dzis, 1)
+  const klienci = klienciPoId(stan)
   /** @type {WizytaDnia | null} */
   let wynik = null
   for (const z of stan.zlecenia) {
     const w = najblizszaWizyta(z, jutro)
     if (w === null) continue
-    const kandydat = wiersz(stan, z, w, nazwaUslugi)
+    const kandydat = wiersz(klienci, z, w, nazwaUslugi)
     if (wynik === null || porownajWizyty(kandydat, wynik) < 0) wynik = kandydat
   }
   return wynik

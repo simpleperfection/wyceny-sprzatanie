@@ -3,7 +3,8 @@
 // opisuje jestZlecenie (src/dane/zlecenia-ksztalt.js), a spojnosc odwolan do klientow i wycen sprawdza magazyn.
 
 import { jestGodzina, porownajDni } from '../kalendarz/daty.js'
-import { jestDniem, jestLiczba, jestObiektem, MAKS_DLUGOSC_TEKSTU } from './ksztalt.js'
+import { okresDnia } from '../kalendarz/wystapienia.js'
+import { jestDniem, jestId, jestKwota, jestLiczba, jestObiektem } from './ksztalt.js'
 import { czyAbonament, wycena } from './wyceny.js'
 import { DLUGOSC_OPISU, jestZlecenie, MAKS_WIZYT_ZLECENIA, MAKS_ZLECEN, ROZLICZENIA } from './zlecenia-ksztalt.js'
 
@@ -45,10 +46,6 @@ export class BladZlecenia extends Error {
 
 /** @param {OpcjeZlecen} opcje */
 const zegar = ({ teraz = () => new Date() }) => teraz()
-/** @param {unknown} x @returns {x is string} */
-const jestId = (x) => typeof x === 'string' && x !== '' && x.length <= MAKS_DLUGOSC_TEKSTU
-/** @param {unknown} x */
-const jestKwota = (x) => jestLiczba(x) && x >= 0
 
 /** @param {Pick<Stan, 'zlecenia'>} stan @param {string} id @returns {Zlecenie | null} */
 export const zlecenie = (stan, id) => stan.zlecenia.find((z) => z.id === id) ?? null
@@ -58,8 +55,6 @@ export const zleceniaKlienta = (stan, klientId) => stan.zlecenia.filter((z) => z
 export const zleceniaWyceny = (stan, wycenaId) => stan.zlecenia.filter((z) => z.wycenaId === wycenaId)
 /** Seria (okresy z cyklem), a nie zlecenie jednorazowe. @param {Pick<Zlecenie, 'okresy'>} z @returns {boolean} */
 export const czySeria = (z) => z.okresy[0].cykl !== null
-/** Okres w dniu: ostatni z `od` nie pozniejszym (jak w src/kalendarz/wystapienia.js). @param {Zlecenie} z @param {string} dzien @returns {Okres} */
-export const okresWDniu = (z, dzien) => z.okresy.findLast((o) => porownajDni(o.od, dzien) <= 0) ?? z.okresy[0]
 
 /**
  * Wycena z co najmniej jednym zleceniem jest tylko do odczytu.
@@ -216,8 +211,9 @@ function zmianaOkresu(zmiany) {
 }
 
 /**
- * Zmiana ceny, godziny albo cyklu od wizyty z data pierwotna: w serii nowy okres od tego dnia (okres o tym samym `od` zostaje
- * zastapiony, pozniejsze okresy zostaja), w zleceniu jednorazowym zmiana jedynego okresu (dodanie cyklu → `jednorazowe`).
+ * Zmiana ceny, godziny albo cyklu od wizyty z data pierwotna w przod (R13): w serii nowy okres od tego dnia (okres o tym samym
+ * `od` zostaje zastapiony), a podane pola nadpisuja tez pozniejsze okresy (ich pozostale pola zostaja); w zleceniu
+ * jednorazowym zmiana jedynego okresu (dodanie cyklu → `jednorazowe`).
  * @param {Magazyn} magazyn @param {string} id @param {string} dataPierwotna @param {ZmianaOkresu} zmiany @param {OpcjeZlecen} [opcje]
  * @returns {Stan}
  */
@@ -231,9 +227,10 @@ export function zmienOdWizyty(magazyn, id, dataPierwotna, zmiany, opcje = {}) {
     }
     if (porownajDni(dataPierwotna, z.start) < 0) throw new BladZlecenia('data', `Seria zaczyna się ${z.start}, wizyta ${dataPierwotna} jest wcześniej`)
     if (zmiana.cykl === null) throw new BladZlecenia('cykl', 'Seria musi mieć powtarzanie')
-    const okres = okresZeZmiany(okresWDniu(z, dataPierwotna), zmiana, z.rozliczenie, dataPierwotna)
-    const okresy = [...z.okresy.filter((o) => o.od !== dataPierwotna), okres].sort((a, b) => porownajDni(a.od, b.od))
-    return sprawdzony({ ...z, okresy })
+    const okres = okresZeZmiany(okresDnia(z.okresy, dataPierwotna), zmiana, z.rozliczenie, dataPierwotna)
+    const wczesniejsze = z.okresy.filter((o) => porownajDni(o.od, dataPierwotna) < 0)
+    const pozniejsze = z.okresy.filter((o) => porownajDni(o.od, dataPierwotna) > 0).map((o) => okresZeZmiany(o, zmiana, z.rozliczenie, o.od))
+    return sprawdzony({ ...z, okresy: [...wczesniejsze, okres, ...pozniejsze] })
   })
 }
 

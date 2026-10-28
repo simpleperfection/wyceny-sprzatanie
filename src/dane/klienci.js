@@ -2,7 +2,7 @@
 // zapisanego klienta: uzywa go zapis tutaj, magazyn (src/dane/magazyn.js) i kopia zapasowa.
 // Klienta z historia (wycena albo zlecenie) nie da sie usunac; zmiana karty nie zmienia kopii nazwy i adresu w wycenach.
 
-import { jestDataIso, jestObiektem, MAKS_DLUGOSC_TEKSTU } from './ksztalt.js'
+import { jestDataIso, jestId, jestObiektem } from './ksztalt.js'
 import { bladTelefonu } from './walidacja.js'
 
 /** @typedef {import('./magazyn.js').Magazyn} Magazyn */
@@ -44,8 +44,6 @@ export class BladKlienta extends Error {
 
 /** @param {OpcjeKlienta} opcje */
 const zegar = ({ teraz = () => new Date() }) => teraz()
-/** @param {unknown} x @returns {x is string} */
-const jestId = (x) => typeof x === 'string' && x !== '' && x.length <= MAKS_DLUGOSC_TEKSTU
 /** @param {unknown} x @param {PoleKlienta} pole tekst bez bialych znakow na koncach, niepusty, w granicy pola */
 const jestTekstemPola = (x, pole) => typeof x === 'string' && x !== '' && x === x.trim() && x.length <= DLUGOSCI_KLIENTA[pole]
 /** @param {unknown} x @param {PoleKlienta} pole */

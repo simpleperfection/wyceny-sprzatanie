@@ -122,6 +122,15 @@ describe('doZamkniecia i niezaplacone: granice', () => {
     assert.deepEqual(doZamkniecia(stan, DZIS, nazwaUslugi), [])
   })
 
+  it('odwołane wizyty nie trafiają do doZamkniecia (jednorazowa wczoraj i wizyta serii sprzed tygodnia)', () => {
+    const odwolanaJednorazowa = stanZ([{ ...Z3, wizyty: { '2026-11-03': wizyta({ odwolana: true }) } }])
+    const odwolanaWSerii = stanZ([{ ...Z2, wizyty: { ...Z2.wizyty, '2026-10-28': wizyta({ odwolana: true }) }, zaplatyMiesieczne: {} }])
+
+    assert.deepEqual(doZamkniecia(odwolanaJednorazowa, DZIS, nazwaUslugi), [])
+    assert.deepEqual(klucze(doZamkniecia(odwolanaWSerii, DZIS, nazwaUslugi)), [])
+    assert.deepEqual(klucze(doZamkniecia(stanZ([Z2]), DZIS, nazwaUslugi)), ['z2 2026-10-28'])
+  })
+
   it('wizyta zrobiona i zapłacona wypada z doZamkniecia i z niezaplacone', () => {
     const zaplata = { forma: 'gotowka', data: '2026-11-03', kwota: 180 }
     const stan = stanZ([{ ...Z3, wizyty: { '2026-11-03': wizyta({ zrobiona: ZROBIONA, zaplata }) } }])

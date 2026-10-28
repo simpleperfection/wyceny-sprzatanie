@@ -175,6 +175,30 @@ describe('zmienOdWizyty', () => {
       [['2026-11-02', '09:00', 250], ['2026-11-16', '11:00', 280]])
   })
 
+  it('zmiana od wizyty działa w przód: cena 300 od 16.11 nadpisuje też późniejszy okres godziny od 30.11 (R13)', () => {
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')], zlecenia: [seriaTestowa('z1')] })
+    zmienOdWizyty(magazyn, 'z1', '2026-11-30', { godzina: '11:00' })
+
+    const stan = zmienOdWizyty(magazyn, 'z1', '2026-11-16', { cenaWizyty: 300 })
+
+    const z = zlecenie(stan, 'z1')
+    assert.deepEqual(z?.okresy.map((o) => [o.od, o.godzina, o.cenaWizyty]),
+      [['2026-11-02', '09:00', 250], ['2026-11-16', '09:00', 300], ['2026-11-30', '11:00', 300]])
+    assert.deepEqual(wystapienia(z, '2026-11-23', '2026-12-14').map((w) => [w.data, w.godzina, w.okres.cenaWizyty]),
+      [['2026-11-23', '09:00', 300], ['2026-11-30', '11:00', 300], ['2026-12-07', '11:00', 300], ['2026-12-14', '11:00', 300]])
+  })
+
+  it('seria co miesiąc od 31.01 po zmianie ceny od wizyty 28.02 dalej wypada 31.03, 30.04, 31.05', () => {
+    const coMiesiac = zlecenieTestowe('z1', { start: '2026-01-31',
+      okresy: [{ od: '2026-01-31', cykl: { co: 'miesiac', dni: [] }, godzina: null, cenaWizyty: 250, cenaMiesiaca: null }] })
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')], zlecenia: [coMiesiac] })
+
+    const stan = zmienOdWizyty(magazyn, 'z1', '2026-02-28', { cenaWizyty: 300 })
+
+    assert.deepEqual(wystapienia(zlecenie(stan, 'z1'), '2026-01-01', '2026-05-31').map((w) => [w.data, w.okres.cenaWizyty]),
+      [['2026-01-31', 250], ['2026-02-28', 300], ['2026-03-31', 300], ['2026-04-30', 300], ['2026-05-31', 300]])
+  })
+
   it('w zleceniu jednorazowym zmienia jedyny okres; dodanie cyklu → jednorazowe', () => {
     const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')], zlecenia: [zlecenieTestowe('z1')] })
 

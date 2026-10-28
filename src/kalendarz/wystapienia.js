@@ -32,6 +32,8 @@ const DNI_DWOCH_TYGODNI = 14
 const MIESIECY_W_ROKU = 12
 /** Najblizsza wizyte szuka sie w tylu dniach od podanego (seria z samymi odwolaniami konczy sie null). */
 const HORYZONT_NAJBLIZSZEJ_DNI = 366
+/** Kolejne okna szukania najblizszej wizyty: dwa tygodnie, dwa miesiace, horyzont. */
+const OKNA_NAJBLIZSZEJ_DNI = Object.freeze([14, 62, HORYZONT_NAJBLIZSZEJ_DNI])
 
 /** @param {string} odDnia @param {string} doDnia */
 function sprawdzOkno(odDnia, doDnia) {
@@ -43,12 +45,14 @@ const pozniejszy = (a, b) => (porownajDni(a, b) >= 0 ? a : b)
 /** @param {string} a @param {string} b @returns {string} */
 const wczesniejszy = (a, b) => (porownajDni(a, b) <= 0 ? a : b)
 
+/** @param {string} dzien RRRR-MM-DD @returns {number} dzien miesiaca 1–31 */
+const numerDnia = (dzien) => Number(dzien.slice(8, 10))
+
 /**
- * Dzien miesiaca z `odOkresu` w kolejnych miesiacach, w krotszym ostatni dzien (31.01 → 28.02 → 31.03).
- * @param {string} odOkresu @param {string} odDnia nie wczesniej niz odOkresu @param {string} doDnia @returns {string[]}
+ * Dzien miesiaca w kolejnych miesiacach, w krotszym ostatni dzien (31.01 → 28.02 → 31.03).
+ * @param {number} dzienMiesiaca 1–31 @param {string} odDnia @param {string} doDnia @returns {string[]}
  */
-function dniMiesieczne(odOkresu, odDnia, doDnia) {
-  const dzienMiesiaca = Number(odOkresu.slice(8, 10))
+function dniMiesieczne(dzienMiesiaca, odDnia, doDnia) {
   let rok = Number(odDnia.slice(0, 4))
   let miesiac = Number(odDnia.slice(5, 7))
   const wynik = []
@@ -62,26 +66,37 @@ function dniMiesieczne(odOkresu, odDnia, doDnia) {
 
 /**
  * Dni tygodniowe; przy `dwa_tygodnie` tylko tygodnie o parzystej odleglosci od tygodnia (od poniedzialku) `odOkresu`.
+ * Dla kazdego dnia cyklu pierwszy pasujacy dzien okna, dalej krok 7 albo 14 dni liczony na numerze dnia (Date.UTC), wiec
+ * koszt rosnie z liczba wizyt, a nie z dlugoscia okna.
  * @param {string} odOkresu @param {CyklKalendarza} cykl @param {string} odDnia nie wczesniej niz odOkresu @param {string} doDnia
  * @returns {string[]}
  */
 function dniTygodniowe(odOkresu, cykl, odDnia, doDnia) {
-  const kotwica = poczatekTygodnia(odOkresu)
+  const coDwa = cykl.co === 'dwa_tygodnie'
+  const krok = coDwa ? DNI_DWOCH_TYGODNI : DNI_TYGODNIA
+  const dniOkna = dniOdDo(odDnia, doDnia)
+  const dniOdKotwicy = dniOdDo(poczatekTygodnia(odOkresu), odDnia)
+  const tydzienOd = dzienTygodnia(odDnia)
+  const [rok, miesiac, dzien] = odDnia.split('-').map(Number)
   const wynik = []
-  for (let dzien = odDnia; porownajDni(dzien, doDnia) <= 0; dzien = dodajDni(dzien, 1)) {
-    const nieparzystyTydzien = cykl.co === 'dwa_tygodnie' && dniOdDo(kotwica, dzien) % DNI_DWOCH_TYGODNI >= DNI_TYGODNIA
-    if (!nieparzystyTydzien && cykl.dni.includes(dzienTygodnia(dzien))) wynik.push(dzien)
+  for (const dzienCyklu of cykl.dni) {
+    let przesuniecie = (dzienCyklu - tydzienOd + DNI_TYGODNIA) % DNI_TYGODNIA
+    if (coDwa && (dniOdKotwicy + przesuniecie) % DNI_DWOCH_TYGODNI >= DNI_TYGODNIA) przesuniecie += DNI_TYGODNIA
+    for (let i = przesuniecie; i <= dniOkna; i += krok) {
+      wynik.push(new Date(Date.UTC(rok, miesiac - 1, dzien + i)).toISOString().slice(0, 10))
+    }
   }
-  return wynik
+  return wynik.sort()
 }
 
 /**
  * Dni, ktore daje regula okresu w oknie `odDnia`–`doDnia` (wlacznie), rosnaco; nic przed `okres.od`.
  * Bez cyklu tylko `okres.od`. Konca okresu (nastepny okres, koniec zlecenia) nie zna: przycina go `wystapienia`.
- * @param {OkresKalendarza} okres @param {string} odDnia @param {string} doDnia
+ * Cykl `miesiac` wypada w dniu `dzienMiesiaca` (domyslnie dzien z `okres.od`; kotwice serii podaje dniKotwic).
+ * @param {OkresKalendarza} okres @param {string} odDnia @param {string} doDnia @param {number} [dzienMiesiaca] 1–31
  * @returns {string[]}
  */
-export function dniOkresu(okres, odDnia, doDnia) {
+export function dniOkresu(okres, odDnia, doDnia, dzienMiesiaca = numerDnia(okres.od)) {
   sprawdzOkno(odDnia, doDnia)
   if (okres.cykl !== null && !CYKLE.includes(okres.cykl.co)) {
     throw new BladKalendarza('cykl', `Nieznany cykl okresu: ${String(okres.cykl.co)}`)
@@ -89,15 +104,35 @@ export function dniOkresu(okres, odDnia, doDnia) {
   const od = pozniejszy(okres.od, odDnia)
   if (porownajDni(od, doDnia) > 0) return []
   if (okres.cykl === null) return od === okres.od ? [od] : []
-  if (okres.cykl.co === 'miesiac') return dniMiesieczne(okres.od, od, doDnia)
+  if (okres.cykl.co === 'miesiac') return dniMiesieczne(dzienMiesiaca, od, doDnia)
   return dniTygodniowe(okres.od, okres.cykl, od, doDnia)
 }
 
 /**
  * Okres obowiazujacy w dniu: ostatni z `od` nie pozniejszym niz dzien (dzien przed pierwszym okresem dostaje pierwszy).
+ * Jedyna regula okresu dnia dla kalendarza, zapisu wizyt i zaplat (src/dane/) i zapytan (src/zlecenia/).
  * @template {OkresKalendarza} O @param {readonly O[]} okresy niepuste, rosnace `od` @param {string} dzien @returns {O}
  */
-const okresDnia = (okresy, dzien) => okresy.findLast((o) => porownajDni(o.od, dzien) <= 0) ?? okresy[0]
+export const okresDnia = (okresy, dzien) => okresy.findLast((o) => porownajDni(o.od, dzien) <= 0) ?? okresy[0]
+
+/**
+ * Dzien miesiaca kazdego okresu: okres miesieczny, ktory zaczyna sie w dniu wizyty poprzedniego okresu miesiecznego
+ * (zmiana „od wizyty” 28.02 w serii od 31.01), dziedziczy jego dzien, wiec seria nie przesuwa sie na stale na 28.;
+ * pozostale okresy biora dzien ze swojego `od`.
+ * @param {readonly OkresKalendarza[]} okresy @returns {number[]}
+ */
+function dniKotwic(okresy) {
+  /** @type {number[]} */
+  const wynik = []
+  okresy.forEach((okres, i) => {
+    const poprzedni = okresy[i - 1]
+    const kotwica = wynik[i - 1]
+    const miesieczne = poprzedni?.cykl?.co === 'miesiac' && okres.cykl?.co === 'miesiac'
+    const wDniuWizyty = miesieczne && dzienWMiesiacu(Number(okres.od.slice(0, 4)), Number(okres.od.slice(5, 7)), kotwica) === okres.od
+    wynik.push(wDniuWizyty ? kotwica : numerDnia(okres.od))
+  })
+  return wynik
+}
 
 /**
  * Daty pierwotne z reguly w oknie: okres od swojego `od` do dnia przed `od` nastepnego, nic po `koniec` zlecenia.
@@ -105,10 +140,11 @@ const okresDnia = (okresy, dzien) => okresy.findLast((o) => porownajDni(o.od, dz
  */
 function dniZReguly(zlecenie, odDnia, doDnia) {
   const koniecOkna = zlecenie.koniec === null ? doDnia : wczesniejszy(doDnia, zlecenie.koniec)
+  const kotwice = dniKotwic(zlecenie.okresy)
   return zlecenie.okresy.flatMap((okres, i) => {
     const nastepny = zlecenie.okresy[i + 1]
     const doOkresu = nastepny ? wczesniejszy(koniecOkna, dodajDni(nastepny.od, -1)) : koniecOkna
-    return porownajDni(doOkresu, odDnia) < 0 ? [] : dniOkresu(okres, odDnia, doOkresu)
+    return porownajDni(doOkresu, odDnia) < 0 ? [] : dniOkresu(okres, odDnia, doOkresu, kotwice[i])
   })
 }
 
@@ -146,11 +182,15 @@ export function wystapienia(zlecenie, odDnia, doDnia) {
 
 /**
  * Pierwsza nieodwolana wizyta od `odDnia` (wlacznie), szukana w HORYZONT_NAJBLIZSZEJ_DNI dniach; inaczej null.
+ * Okna rosna (OKNA_NAJBLIZSZEJ_DNI): okno ma kazda wizyte z dniem w nim, wiec pierwsza w krotszym jest pierwsza w dluzszym.
  * @template {OkresKalendarza} O @template {StanKalendarza} S
  * @param {ZlecenieKalendarza<O, S>} zlecenie @param {string} odDnia
  * @returns {Wystapienie<O, S> | null}
  */
 export function najblizszaWizyta(zlecenie, odDnia) {
-  const okno = wystapienia(zlecenie, odDnia, dodajDni(odDnia, HORYZONT_NAJBLIZSZEJ_DNI - 1))
-  return okno.find((w) => !w.stan?.odwolana) ?? null
+  for (const dni of OKNA_NAJBLIZSZEJ_DNI) {
+    const pierwsza = wystapienia(zlecenie, odDnia, dodajDni(odDnia, dni - 1)).find((w) => !w.stan?.odwolana)
+    if (pierwsza !== undefined) return pierwsza
+  }
+  return null
 }

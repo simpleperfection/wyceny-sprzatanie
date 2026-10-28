@@ -4,7 +4,7 @@
 import { BladWejscia } from '../silnik/bledy.js'
 import { sprawdzStatusVat } from '../silnik/vat.js'
 import { jestKlient } from './klienci.js'
-import { jestDataIso, jestListaTekstow, jestLiczba, jestObiektem, jestTekstemLubNull, jestWarunkiem, maWartosci, POLA_FIRMY } from './ksztalt.js'
+import { jestDataIso, jestListaTekstow, jestLiczba, jestMiesiacem, jestObiektem, jestTekstemLubNull, jestWarunkiem, maWartosci, POLA_FIRMY } from './ksztalt.js'
 import { zV1DoV2 } from './migracja-v2.js'
 import { jestZlecenie } from './zlecenia-ksztalt.js'
 
@@ -42,7 +42,6 @@ export const WERSJA_SCHEMATU = 2
  */
 const AKTUALIZACJE = new Map([[1, zV1DoV2]])
 const NAZWY_PRZEPELNIENIA = ['QuotaExceededError', 'NS_ERROR_DOM_QUOTA_REACHED']
-const MIESIAC_NUMERACJI = /^\d{4}-(0[1-9]|1[0-2])$/
 
 /** Blad magazynu: `pelny` (brak miejsca), `uszkodzony`, `nowsza_wersja` (stanu nie da sie zmienic), `zly_stan` (zapis zlego ksztaltu). */
 export class BladMagazynu extends Error {
@@ -127,7 +126,7 @@ function jestStanem(x) {
   return jestObiektem(x) && x.wersja === WERSJA_SCHEMATU && (x.ustawienia === null || jestUstawieniami(x.ustawienia)) &&
     maSpojneRekordy(x) &&
     jestObiektem(x.licznikNumerow) &&
-    Object.entries(x.licznikNumerow).every(([miesiac, n]) => MIESIAC_NUMERACJI.test(miesiac) && Number.isInteger(n) && Number(n) >= 0) &&
+    Object.entries(x.licznikNumerow).every(([miesiac, n]) => jestMiesiacem(miesiac) && Number.isInteger(n) && Number(n) >= 0) &&
     jestObiektem(x.kopia) && jestDataIsoLubNull(x.kopia.ostatnia) && jestDataIsoLubNull(x.kopia.zmianaOd) &&
     jestObiektem(x.preferencje) && typeof x.preferencje.iosInstrukcjaZamknieta === 'boolean'
 }

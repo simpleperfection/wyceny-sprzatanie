@@ -2,12 +2,14 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
 import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
+import { niezaplacone } from '../zlecenia/zapytania.js'
 import { KLUCZ_MAGAZYNU, utworzMagazyn, wczytajStan } from './magazyn.js'
 import {
   cofnijZaplate, cofnijZaplateMiesiaca, cofnijZrobiona, formaDomyslna, odwolajWizyte, oznaczZaplacona, oznaczZaplateMiesiaca, oznaczZrobiona,
   przesunWizyte, przywrocWizyte, wpiszCzasPracy, zmienForme,
 } from './wizyty.js'
 import { BladZlecenia, zlecenie } from './zlecenia.js'
+import { MAKS_WIZYT_ZLECENIA } from './zlecenia-ksztalt.js'
 
 const TERAZ = new Date('2026-11-02T08:00:00.000Z')
 /** Czas lokalny: dzien oznaczenia 2026-11-18 niezaleznie od strefy maszyny testowej. */
@@ -97,6 +99,19 @@ describe('oznaczZrobiona i cofnijZrobiona', () => {
     assert.throws(() => oznaczZrobiona(magazyn, 'z1', '2026-11-31'), blad('data'))
     assert.throws(() => oznaczZrobiona(magazyn, 'z9', '2026-11-09'), blad('brak_zlecenia'))
     assert.equal(storage.getItem(KLUCZ_MAGAZYNU), przed)
+  })
+
+  it('nowa wizyta ze stanem przy MAKS_WIZYT_ZLECENIA zapisanych → za_duzo, bez zapisu; zmiana zapisanej przechodzi', () => {
+    const dni = Array.from({ length: MAKS_WIZYT_ZLECENIA }, (_, i) => new Date(Date.UTC(2020, 0, 1 + i)).toISOString().slice(0, 10))
+    const wizyty = Object.fromEntries(dni.map((d) => [d, { ...STAN_WIZYTY, minutyPracy: 60 }]))
+    const { magazyn, storage } = magazynZeZleceniami([seriaTestowa('z1', { wizyty })])
+    const przed = storage.getItem(KLUCZ_MAGAZYNU)
+
+    assert.throws(() => oznaczZrobiona(magazyn, 'z1', '2026-11-09'), blad('za_duzo'))
+    assert.equal(storage.getItem(KLUCZ_MAGAZYNU), przed)
+
+    const stan = wpiszCzasPracy(magazyn, 'z1', dni[0], 90)
+    assert.equal(wizytyZlecenia(stan)?.[dni[0]].minutyPracy, 90)
   })
 })
 
@@ -202,6 +217,26 @@ describe('zapłata w serii miesięcznej', () => {
     assert.deepEqual(zlecenie(stan, 'z1')?.zaplatyMiesieczne, { '2026-11': zaplata('przelew', '2026-11-18', 1560) })
   })
 
+  it('powtórne oznaczZaplateMiesiaca zostawia pierwszą zapłatę i datę zmiany zlecenia', () => {
+    const { magazyn } = magazynZeZleceniami([abonamentTestowy('z1')])
+    oznaczZaplateMiesiaca(magazyn, 'z1', '2026-11', { forma: 'przelew', teraz: () => OZNACZENIE })
+
+    const stan = oznaczZaplateMiesiaca(magazyn, 'z1', '2026-11', { forma: 'gotowka', teraz: () => POZNIEJ })
+
+    assert.deepEqual(zlecenie(stan, 'z1')?.zaplatyMiesieczne, { '2026-11': zaplata('przelew', '2026-11-18', 1560) })
+    assert.equal(zlecenie(stan, 'z1')?.zmienione, OZNACZENIE.toISOString())
+  })
+
+  it('zapłata za kolejny miesiąc przy MAKS_WIZYT_ZLECENIA zapisanych miesiącach → za_duzo, bez zapisu', () => {
+    const miesiace = Array.from({ length: MAKS_WIZYT_ZLECENIA }, (_, i) => `${1800 + Math.floor(i / 12)}-${String((i % 12) + 1).padStart(2, '0')}`)
+    const zaplatyMiesieczne = Object.fromEntries(miesiace.map((m) => [m, zaplata('gotowka', '2026-11-02', 1560)]))
+    const { magazyn, storage } = magazynZeZleceniami([{ ...abonamentTestowy('z1'), zaplatyMiesieczne }])
+    const przed = storage.getItem(KLUCZ_MAGAZYNU)
+
+    assert.throws(() => oznaczZaplateMiesiaca(magazyn, 'z1', '2026-11', { forma: 'przelew' }), blad('za_duzo'))
+    assert.equal(storage.getItem(KLUCZ_MAGAZYNU), przed)
+  })
+
   it('kwota grudnia z okresu pierwszej wizyty miesiąca (2026-12-02), a nie ze zmiany od 2026-12-04; cofnięcie usuwa', () => {
     const { magazyn } = magazynZeZleceniami([abonamentTestowy('z1')])
 
@@ -209,6 +244,27 @@ describe('zapłata w serii miesięcznej', () => {
     assert.deepEqual(zlecenie(stan, 'z1')?.zaplatyMiesieczne['2026-12'], zaplata('gotowka', '2026-11-18', 1560))
 
     assert.deepEqual(zlecenie(cofnijZaplateMiesiaca(magazyn, 'z1', '2026-12'), 'z1')?.zaplatyMiesieczne, {})
+  })
+
+  it('miesiąc po końcu serii ze zrobioną wizytą: „Niezapłacone” i zapłata liczą tę samą kwotę, a zapłata zamyka pozycję', () => {
+    const zrobiona = { ...STAN_WIZYTY, zrobiona: '2026-12-02T18:00:00.000Z' }
+    const { magazyn } = magazynZeZleceniami([{ ...abonamentTestowy('z1'), koniec: '2026-11-30', wizyty: { '2026-12-02': zrobiona } }])
+    const przed = niezaplacone(wczytajStan(magazyn), '2027-01-10').filter((n) => n.klucz === '2026-12')
+
+    const stan = oznaczZaplateMiesiaca(magazyn, 'z1', '2026-12', { forma: 'blik', teraz: () => OZNACZENIE })
+
+    assert.deepEqual(przed, [{ rodzaj: 'miesiac', zlecenieId: 'z1', klientId: 'k1', klucz: '2026-12', kwota: 1560 }])
+    assert.deepEqual(zlecenie(stan, 'z1')?.zaplatyMiesieczne, { '2026-12': zaplata('blik', '2026-11-18', 1560) })
+    assert.deepEqual(niezaplacone(stan, '2027-01-10').filter((n) => n.klucz === '2026-12'), [])
+  })
+
+  it('miesiąc po końcu serii bez zrobionej wizyty → brak_wizyty', () => {
+    const odwolana = { ...STAN_WIZYTY, zrobiona: '2026-12-02T18:00:00.000Z', odwolana: true }
+    const { magazyn } = magazynZeZleceniami([{ ...abonamentTestowy('z1'), koniec: '2026-11-30', wizyty: { '2026-12-02': odwolana } }])
+
+    assert.throws(() => oznaczZaplateMiesiaca(magazyn, 'z1', '2026-12'), blad('brak_wizyty'))
+    assert.throws(() => oznaczZaplateMiesiaca(magazyn, 'z1', '2027-01'), blad('brak_wizyty'))
+    assert.deepEqual(zlecenie(wczytajStan(magazyn), 'z1')?.zaplatyMiesieczne, {})
   })
 
   it('zlecenie za wizytę → rozliczenie, miesiąc przed startem → brak_wizyty, zły miesiąc → miesiac', () => {

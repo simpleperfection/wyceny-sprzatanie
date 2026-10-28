@@ -27,8 +27,8 @@ Zależy od: Brak
 - [x] Test: [Unit] `najblizszaWizyta` serii z samymi odwołanymi wizytami zwraca null
 - [x] Test: [Unit] `siatkaMiesiaca(2026, 11)`: pierwszy tydzień ma 6 pustych dni i niedzielę 1 listopada, ostatni dzień to 30 listopada
 - [x] Test: [Unit] `dzienWMiesiacu(2027, 2, 31)` → 2027-02-28; `dzienTygodnia('2026-11-01')` → 7
-- [ ] Weryfikacja: `node --test src/kalendarz/` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `node --test "src/kalendarz/*.test.js"` przechodzi (glob plików testów; Node 24 nie przyjmuje katalogu jako argumentu)
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-2: Schemat v2: klienci i kształt zleceń (feature-builder-data)
 
@@ -47,9 +47,9 @@ Zależy od: Brak
 - [x] Test: [Unit] `szukajKlientow(stan, 'kow')` znajduje „Anna Kowalska” i „KOWALSKI Jan”; `listaKlientow` stawia „Lucyna” przed „Łukasz”
 - [x] Test: [Unit] `normalizujNazwe('  Anna   KOWALSKA ')` równa się `normalizujNazwe('anna kowalska')`; „Żaneta” w NFD i NFC daje ten sam wynik
 - [x] Test: [Unit] `WERSJA_SCHEMATU` = 2, pusty stan magazynu ma `klienci: []` i `zlecenia: []`
-- [ ] Weryfikacja: `node --test src/dane/klienci.test.js src/dane/zlecenia-ksztalt.test.js src/dane/magazyn.test.js` przechodzi
-- [ ] Weryfikacja: `npm test` przechodzi (stare testy wycen i kopii zostają zielone)
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `node --test src/dane/klienci.test.js src/dane/zlecenia-ksztalt.test.js src/dane/magazyn.test.js` przechodzi
+- [x] Weryfikacja: `npm test` przechodzi (stare testy wycen i kopii zostają zielone)
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-3: Zapis zleceń, wizyt i zapłat (feature-builder-data)
 
@@ -67,8 +67,8 @@ Zależy od: Brak
 - [x] Test: [Unit] `doZaplanowania`: przyjęta jednorazowa ze zleceniem → false; przyjęty abonament z samymi zleceniami jednorazowymi → true
 - [x] Test: [Unit] `czyWycenaZamknieta` true dla wyceny ze zleceniem, false bez
 - [x] Test: [Unit] `zakonczSerie` z dniem przed `start` → błąd
-- [ ] Weryfikacja: `node --test src/dane/zlecenia.test.js src/dane/wizyty.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `node --test src/dane/zlecenia.test.js src/dane/wizyty.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-4: Zapytania dnia: wizyty, do zamknięcia i niezapłacone (feature-builder-data)
 
@@ -81,8 +81,14 @@ Zależy od: Brak
 - [x] Test: [Unit] seria miesięczna: poprzedni miesiąc ze zrobioną wizytą bez zapłaty → jedna pozycja `miesiac`; bieżący miesiąc nie jest niezapłacony
 - [x] Test: [Unit] wizyta przesunięta z dziś na jutro nie liczy się w `liczbaDzis` dziś, a liczy jutro
 - [x] Test: [Unit] skrypt `e2e/stany/moduly-dzis.js` uruchomiony w `node:vm` z atrapą `localStorage` i zegarem ustawionym na 2026-11-02 (pn), 2026-11-08 (nd) i 2026-12-01 daje stan, który przechodzi `jestStanem`, z liczbami jak wyżej
-- [ ] Weryfikacja: `node --test src/zlecenia/zapytania.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `node --test src/zlecenia/zapytania.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+
+## Do poprawy po review fazy 1
+
+Zamkniete cyklem fix: 14 pozycji — pelna tresc findingow i uzasadnienia w `review-faza-1.md`.
+
+## Operator checklist faza 1
 
 ## Faza 2 — Przeniesienie wykonań i kopia v2
 
