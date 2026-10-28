@@ -307,6 +307,19 @@ describe('gałęzie walidacji szkicu, klienta i wyniku', () => {
     assert.throws(() => utworzSzkic(magazyn, { rodzaj: 'szybka', wejscie: WEJSCIE, odpowiedzi: /** @type {never} */ ([]) }), bladWyceny('odpowiedzi'))
   })
 
+  it('poziom górnej granicy 3 zapisuje się w widełkach; poziom "3" (tekst) i 2,5 → szybka', () => {
+    const magazyn = nowyMagazyn()
+    const szybka = { stan: 'typowy', od: 150, do: 210, tryb: 'widelki', poziomGorny: 3 }
+
+    const szkic = utworzSzkic(magazyn, { rodzaj: 'szybka', wejscie: WEJSCIE, szybka })
+
+    assert.deepEqual(zMagazynu(magazyn, szkic.id).szybka, szybka)
+    for (const poziomGorny of ['3', 2.5]) {
+      assert.throws(() => utworzSzkic(magazyn, { rodzaj: 'szybka', wejscie: WEJSCIE, szybka: /** @type {never} */ ({ ...szybka, poziomGorny }) }),
+        bladWyceny('szybka'))
+    }
+  })
+
   it('nazwa klienta 121 znaków i adres liczbą → klient; termin ze spacji zapisuje się jako null', () => {
     const magazyn = nowyMagazyn()
     const id = wycenaWStatusie(magazyn, [])

@@ -155,6 +155,18 @@ describe('szybkaWycena: usługi z pozycjami', () => {
     assert.deepEqual([wynik.tryb, wynik.od, wynik.do, wynik.mediana], ['widelki', 200, 240, 200])
   })
 
+  it('te same pozycje z poziomem górnej granicy 3 (trudne plamy): widełki do ceny × 1,4 (280 zł), dolna bez zmian', () => {
+    const pozycje = [{ id: 'kanapa_3', ilosc: 1 }, { id: 'fotel', ilosc: 1 }]
+
+    const wynik = szybkaWycena({ uslugaId: 'tapicerka', pozycje, poziomGorny: 3 }, kontekst(katalog))
+
+    assert.deepEqual([wynik.tryb, wynik.od, wynik.do, wynik.mediana], ['widelki', 200, 280, 200])
+  })
+
+  it('poziom górnej granicy spoza poziomy_brudu daje BladWejscia poziom_brudu', () => {
+    rzucaKod(() => szybkaWycena({ uslugaId: 'tapicerka', pozycje: [{ id: 'kanapa_3', ilosc: 1 }], poziomGorny: 4 }, kontekst(katalog)), 'poziom_brudu')
+  })
+
   it('mycie kostki 100 m² (oględziny): „orientacyjnie od” głównej pozycji bez dopłat', () => {
     const wynik = szybkaWycena({ uslugaId: 'mycie_kostki', m2: 100 }, kontekst(katalog))
 
@@ -224,6 +236,13 @@ describe('naDokladna', () => {
     assert.deepEqual(wynik.wejscie.pomieszczenia?.find((p) => p.typ === 'kuchnia')?.brud, [{ id: 'tluszcz', poziom: 3 }])
     assert.deepEqual(wynik.wejscie.pomieszczenia?.find((p) => p.typ === 'lazienka')?.brud, [{ id: 'kamien', poziom: 2 }])
     assert.deepEqual(wynik.szybka, { stan: 'typowy', od: 400, do: 460, tryb: 'widelki', brud })
+  })
+
+  it('kanapa z poziomem górnej granicy 3: wejście z pozycją bez zmian, widełki 150–210 zł i poziomGorny zostają w szybka', () => {
+    const wynik = naDokladna({ uslugaId: 'tapicerka', pozycje: [{ id: 'kanapa_3', ilosc: 1 }], poziomGorny: 3 }, kontekst(katalog))
+
+    assert.deepEqual(wynik.wejscie.pozycje, [{ id: 'kanapa_3', ilosc: 1 }])
+    assert.deepEqual(wynik.szybka, { stan: 'typowy', od: 150, do: 210, tryb: 'widelki', poziomGorny: 3 })
   })
 
   it('typowy stan: pomieszczenia bez reguły kurzu, pozycje i dodatki przechodzą do wejścia', () => {

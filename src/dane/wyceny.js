@@ -105,7 +105,8 @@ const jestRegulaBrudu = (x) => jestObiektem(x) && typeof x.pomieszczenie === 'st
 /** @param {unknown} x widelki szybkiej wyceny (SzybkaWyceny ze znanym stanem i trybem) albo null */
 const jestSzybka = (x) => x === null || (jestObiektem(x) && STANY_SZYBKIEJ.some((s) => s.id === x.stan) &&
   TRYBY_SZYBKIEJ.some((t) => t === x.tryb) && jestLiczba(x.od) &&
-  jestLiczba(x.do) && (x.brud === undefined || (Array.isArray(x.brud) && x.brud.every(jestRegulaBrudu))))
+  jestLiczba(x.do) && (x.brud === undefined || (Array.isArray(x.brud) && x.brud.every(jestRegulaBrudu))) &&
+  (x.poziomGorny === undefined || Number.isInteger(x.poziomGorny)))
 /** @param {unknown} x zapisany klient: teksty w granicach DLUGOSC_KLIENTA */
 const jestKlientem = (x) => jestObiektem(x) && typeof x.nazwa === 'string' && typeof x.adres === 'string' && jestTekstemLubNull(x.termin) &&
   POLA_KLIENTA.every((pole) => String(x[pole] ?? '').length <= DLUGOSC_KLIENTA[pole])

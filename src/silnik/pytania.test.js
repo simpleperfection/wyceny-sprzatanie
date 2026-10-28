@@ -4,7 +4,7 @@ import { before, describe, it } from 'node:test'
 import { czytajJson, katalogZDysku } from '../../tests/pomocnicze.js'
 import {
   bezSkutkuBrudu, czySkutekWWejsciu, ODPOWIEDZI_TAK_NIE, opisOdpowiedzi, pytaniaUslugi, regulyBrudu, RODZAJE_SKUTKOW, sprawdzPytania,
-  TYPY_ODPOWIEDZI, zastosujOdpowiedzi,
+  TYPY_ODPOWIEDZI, poziomGornejGranicy, zastosujOdpowiedzi,
 } from './pytania.js'
 
 /** @typedef {import('./katalog.js').Katalog} Katalog */
@@ -20,10 +20,15 @@ const ZWIERZETA = {
 }
 /** @type {Pytanie} */
 const SPRZET = { id: 'sprzet', tresc: 'Czyj sprzęt?', typ: 'wybor', opcje: ['Nasze', 'Klienta'] }
+/** @type {Pytanie} */
+const PLAMY = { id: 'plamy', tresc: 'Czy są trudne plamy?', typ: 'tak_nie', skutek: { rodzaj: 'gorna_granica', poziom: 3, gdy: 'tak' } }
 /** @type {Pytania} */
 const PYTANIA = {
   wspolne: [DOJAZD],
-  uslugi: { mieszkanie_standard: [ZWIERZETA, SPRZET], okna: [{ ...ZWIERZETA, id: 'zwierzeta_okna' }] },
+  uslugi: {
+    mieszkanie_standard: [ZWIERZETA, SPRZET], okna: [{ ...ZWIERZETA, id: 'zwierzeta_okna' }],
+    tapicerka: [PLAMY, { ...PLAMY, id: 'siersc', skutek: { rodzaj: 'gorna_granica', poziom: 2, gdy: 'tak' } }],
+  },
 }
 const POKOJE = [
   { typ: 'pokoj', m2: 30, brud: [{ id: 'kurz', poziom: 1 }] },
@@ -45,7 +50,7 @@ async function zmienionePytania(zmien) {
 
 describe('stałe pytań', () => {
   it('rodzaje skutków i typy odpowiedzi z rejestru planu', () => {
-    assert.deepEqual(RODZAJE_SKUTKOW, ['brud', 'dojazd_km'])
+    assert.deepEqual(RODZAJE_SKUTKOW, ['brud', 'dojazd_km', 'gorna_granica'])
     assert.deepEqual(TYPY_ODPOWIEDZI, ['tak_nie', 'wybor', 'liczba', 'tekst'])
   })
 })
@@ -109,6 +114,14 @@ describe('zastosujOdpowiedzi', () => {
   it('zła odpowiedź na pytanie ze skutkiem daje BladWejscia odpowiedz', () => {
     rzucaKod(() => zastosujOdpowiedzi({ uslugaId: 'mieszkanie_standard' }, { dojazd: { wartosc: 'daleko' } }, PYTANIA, katalog), 'odpowiedz')
   })
+
+  it('skutek górnej granicy nie zmienia wejścia wyceny ani nie daje pigułki (działa tylko w widełkach szybkiej wyceny)', () => {
+    const wejscie = { uslugaId: 'tapicerka', pozycje: [{ id: 'kanapa_3', ilosc: 1 }] }
+
+    const wynik = zastosujOdpowiedzi(wejscie, { plamy: { wartosc: 'tak' } }, PYTANIA, katalog)
+
+    assert.deepEqual(wynik, { wejscie, skutki: [] })
+  })
 })
 
 describe('regulyBrudu', () => {
@@ -127,6 +140,24 @@ describe('regulyBrudu', () => {
   it('zła odpowiedź na pytanie ze skutkiem brudu daje BladWejscia odpowiedz, usługa bez pytań — nieznana_usluga', () => {
     rzucaKod(() => regulyBrudu('mieszkanie_standard', { zwierzeta: { wartosc: 'może' } }, PYTANIA), 'odpowiedz')
     rzucaKod(() => regulyBrudu('dywany', {}, PYTANIA), 'nieznana_usluga')
+  })
+})
+
+describe('poziomGornejGranicy', () => {
+  it('„tak” o trudnych plamach daje poziom 3, a przy dwóch skutkach wygrywa wyższy', () => {
+    assert.equal(poziomGornejGranicy('tapicerka', { plamy: { wartosc: 'tak' } }, PYTANIA), 3)
+    assert.equal(poziomGornejGranicy('tapicerka', { plamy: { wartosc: 'tak' }, siersc: { wartosc: 'tak' } }, PYTANIA), 3)
+    assert.equal(poziomGornejGranicy('tapicerka', { siersc: { wartosc: 'tak' } }, PYTANIA), 2)
+  })
+
+  it('„nie”, brak odpowiedzi i skutek brudu nie dają poziomu (null)', () => {
+    assert.equal(poziomGornejGranicy('tapicerka', { plamy: { wartosc: 'nie' } }, PYTANIA), null)
+    assert.equal(poziomGornejGranicy('tapicerka', {}, PYTANIA), null)
+    assert.equal(poziomGornejGranicy('mieszkanie_standard', { zwierzeta: { wartosc: 'tak' } }, PYTANIA), null)
+  })
+
+  it('zła odpowiedź na pytanie ze skutkiem daje BladWejscia odpowiedz', () => {
+    rzucaKod(() => poziomGornejGranicy('tapicerka', { plamy: { wartosc: 'może' } }, PYTANIA), 'odpowiedz')
   })
 })
 
@@ -220,6 +251,40 @@ describe('sprawdzPytania: odmowy pojedynczych reguł', () => {
 
     assert.deepEqual(sprawdzPytania(lista, katalog), ['zdjecia: musi być obiektem'])
     assert.deepEqual(sprawdzPytania(zle, katalog), ['zdjecia.jachty: nieznana usługa', 'zdjecia.okna: pusta podpowiedź albo prośba'])
+  })
+})
+
+describe('sprawdzPytania: skutek górnej granicy', () => {
+  /** @type {Katalog} */ let katalog
+  before(async () => {
+    katalog = await katalogZDysku()
+  })
+
+  const PYTANIE = { ...PLAMY, id: 'plamy_test' }
+  const SKUTEK = { rodzaj: 'gorna_granica', poziom: 3, gdy: 'tak' }
+  const POZA_USLUGA = 'skutek gorna_granica tylko w usługach z pozycjami i widełkami'
+  /** @type {[string, string, Record<string, unknown>, string[]][]} */
+  const przypadki = [
+    ['usługa z pomieszczeniami', 'mieszkanie_standard', PYTANIE, [`uslugi.mieszkanie_standard[0] (plamy_test): ${POZA_USLUGA}`]],
+    ['usługa z oględzinami', 'mycie_kostki', PYTANIE, [`uslugi.mycie_kostki[0] (plamy_test): ${POZA_USLUGA}`]],
+    ['poziom spoza poziomy_brudu', 'tapicerka', { ...PYTANIE, skutek: { ...SKUTEK, poziom: 4 } },
+      ['uslugi.tapicerka[0] (plamy_test): poziom górnej granicy 4 spoza poziomy_brudu']],
+    ['warunek spoza odpowiedzi tak/nie', 'tapicerka', { ...PYTANIE, skutek: { ...SKUTEK, gdy: 'moze' } },
+      ['uslugi.tapicerka[0] (plamy_test): warunek skutku moze nie jest możliwą odpowiedzią']],
+    ['skutek przy liczbie', 'tapicerka', { ...PYTANIE, typ: 'liczba' }, ['uslugi.tapicerka[0] (plamy_test): skutek gorna_granica przy typie liczba']],
+  ]
+  for (const [regula, uslugaId, pytanie, bledy] of przypadki) {
+    it(`${regula} → ${bledy.join('; ')}`, async () => {
+      const pytania = await zmienionePytania((p) => { p.uslugi[uslugaId]?.splice(0, 1, /** @type {Pytanie} */ (pytanie)) })
+
+      assert.deepEqual(sprawdzPytania(pytania, katalog), bledy)
+    })
+  }
+
+  it('pytanie wspólne ze skutkiem górnej granicy daje błąd', async () => {
+    const pytania = await zmienionePytania((p) => { p.wspolne.push(PYTANIE) })
+
+    assert.deepEqual(sprawdzPytania(pytania, katalog), [`wspolne[2] (plamy_test): ${POZA_USLUGA}`])
   })
 })
 

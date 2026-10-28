@@ -26,8 +26,9 @@ import { widelkiRynku } from './widelki.js'
  * @typedef {typeof TRYBY_SZYBKIEJ[number]} TrybSzybkiej
  * @typedef {{ uslugaId: string, m2?: number, lazienki?: number, kuchnia?: RodzajKuchni, stan?: StanSzybkiej,
  *   pozycje?: { id: string, ilosc: number }[], dodatki?: DodatekWyceny[], dojazdKm?: number, wojewodztwoId?: string | null,
- *   odpowiedzi?: Record<string, unknown>, brud?: RegulaBrudu[] }} WejscieSzybkiej brud: reguly ze skutkow odpowiedzi klienta
- *   (regulyBrudu z pytania.js), ustawiaja poziom w pasujacych pomieszczeniach ukladu
+ *   odpowiedzi?: Record<string, unknown>, brud?: RegulaBrudu[], poziomGorny?: number | null }} WejscieSzybkiej brud: reguly
+ *   ze skutkow odpowiedzi klienta (regulyBrudu z pytania.js), ustawiaja poziom w pasujacych pomieszczeniach ukladu; poziomGorny:
+ *   poziom z poziomy_brudu gornej granicy widelek pozycji ze skutku odpowiedzi (poziomGornejGranicy), null = poziom 2
  * @typedef {{ katalog: Katalog, statusVat: StatusVat, stawkaVatProc: number, tempo: number, koszty: KosztyFirmy, zastrzezenie: string }}
  *   KontekstSzybkiej koszty: koszty_firmy scalone z ustawieniami (stawki dojazdu klienta i firmy), zastrzezenie z data/domyslne.json
  * @typedef {{ tryb: TrybSzybkiej, od: number, do: number }} KwotySzybkiej
@@ -35,9 +36,9 @@ import { widelkiRynku } from './widelki.js'
  *   zostaje: { od: number, do: number, naGodzine: { od: number, do: number } }, tekst: string }} WynikSzybkiej
  * @typedef {{ wejscie: WejscieWyceny, wynik: WynikWyceny, kwota: number }} Granica kwota: cena modelu z minimum, bez dojazdu klienta
  * @typedef {{ granice: Granica[], dolna: Granica, bazowa: Granica }} GraniceSzybkiej bazowa: poziom 1 (mediana i widelki rynku)
- * @typedef {{ stan: StanSzybkiej, od: number, do: number, tryb: TrybSzybkiej, brud?: RegulaBrudu[] }} SzybkaWyceny widelki
- *   szybkiej wyceny zapisane w rekordzie (src/dane/wyceny.js); brud: reguly ze skutkow odpowiedzi klienta, z ktorych formularz
- *   szybkiej wyceny je odtwarza
+ * @typedef {{ stan: StanSzybkiej, od: number, do: number, tryb: TrybSzybkiej, brud?: RegulaBrudu[], poziomGorny?: number }}
+ *   SzybkaWyceny widelki szybkiej wyceny zapisane w rekordzie (src/dane/wyceny.js); brud i poziomGorny: skutki odpowiedzi
+ *   klienta, z ktorych formularz szybkiej wyceny je odtwarza
  */
 
 /** Spodziewany stan lokalu w szybkiej wycenie; zrodlo stalej dla ekranu szybkiej wyceny. */
@@ -54,7 +55,7 @@ export const TRYBY_SZYBKIEJ = Object.freeze(/** @type {const} */ (['widelki', 'o
 /** Poziomy reguly `kurz` na `*` dla granic widelek: lekki = jedna kwota, typowy 1–2, mocny 2–3. */
 const POZIOMY_STANU = Object.freeze({ lekki: [1], typowy: [1, 2], mocny: [2, 3] })
 const POZIOM_BEZ_REGULY = 1 // poziom 1 kurzu jest juz w normie pomieszczenia
-const POZIOM_GORNY_POZYCJI = 2 // gorna granica pozycji: cena × mnoznik poziomu 2 z poziomy_brudu
+const POZIOM_GORNY_POZYCJI = 2 // gorna granica pozycji: cena × mnoznik poziomu 2 z poziomy_brudu, chyba ze skutek odpowiedzi daje inny
 const BRUD_STANU = 'kurz'
 const WARIANT_SZYBKIEJ = 'jednorazowe' // biura tylko jednorazowo (R10)
 const ZAOKRAGLENIE_ZL = 10
@@ -136,7 +137,8 @@ function granicePomieszczen(usluga, wejscie, rodzaj, kontekst) {
 }
 
 /**
- * Pozycje: widelki od ceny do ceny z pozycjami glownymi × mnoznik poziomu 2, ogledziny: glowna pozycja × metraz; bazowa = dolna.
+ * Pozycje: widelki od ceny do ceny z pozycjami glownymi × mnoznik poziomu 2 (albo `poziomGorny` ze skutku odpowiedzi klienta,
+ * np. 3 przy trudnych plamach; decyzja wlasciciela 2026-10-28), ogledziny: glowna pozycja × metraz; bazowa = dolna.
  * @param {Usluga} usluga @param {WejscieSzybkiej} wejscie @param {RodzajSzybkiej} rodzaj @param {KontekstSzybkiej} kontekst
  * @returns {GraniceSzybkiej}
  */
@@ -148,8 +150,9 @@ function granicePozycji(usluga, wejscie, rodzaj, kontekst) {
     return { granice: [jedyna], dolna: jedyna, bazowa: jedyna }
   }
   const dolna = granica({ ...wejscieWspolne(usluga, wejscie), pozycje: wejscie.pozycje ?? [] }, kontekst)
-  const mnoznik = kontekst.katalog.poziomyBrudu.find((p) => p.poziom === POZIOM_GORNY_POZYCJI)?.mnoznik
-  if (mnoznik === undefined) throw new BladWejscia('poziom_brudu', `Brak poziomu ${POZIOM_GORNY_POZYCJI} w poziomy_brudu`)
+  const poziom = wejscie.poziomGorny ?? POZIOM_GORNY_POZYCJI
+  const mnoznik = kontekst.katalog.poziomyBrudu.find((p) => p.poziom === poziom)?.mnoznik
+  if (mnoznik === undefined) throw new BladWejscia('poziom_brudu', `Brak poziomu ${poziom} w poziomy_brudu`)
   const glowne = dolna.wynik.linie.filter((l) => l.rodzaj === 'pozycja').reduce((suma, l) => suma + l.kwota, 0)
   const gorna = { ...dolna, kwota: Math.max(dolna.wynik.minimum, dolna.wynik.cenaUslugi + glowne * (mnoznik - 1)) }
   return { granice: [dolna, gorna], dolna, bazowa: dolna }
@@ -255,8 +258,8 @@ export function szybkaWycena(wejscie, kontekst) {
 /**
  * Zamiana szybkiej wyceny w dokladna: wejscie dolnej granicy (pomieszczenia ukladu z kurzem na dolnym poziomie stanu: lekki
  * i typowy bez reguly, mocny poziom 2; albo pozycje) z dodatkami i dojazdem, te same odpowiedzi klienta i widelki szybkiej
- * wyceny (do ostrzezenia w podsumowaniu, gdy cena dokladna z nich wyjdzie). Reguly brudu z odpowiedzi klienta (gdy sa)
- * zostaja w `szybka.brud`, zeby formularz szybkiej wyceny odtworzyl je z zapisanego rekordu.
+ * wyceny (do ostrzezenia w podsumowaniu, gdy cena dokladna z nich wyjdzie). Reguly brudu i poziom gornej granicy z odpowiedzi
+ * klienta (gdy sa) zostaja w `szybka.brud` i `szybka.poziomGorny`, zeby formularz szybkiej wyceny odtworzyl je z rekordu.
  * @param {WejscieSzybkiej} szybkaWejscie
  * @param {KontekstSzybkiej} kontekst
  * @returns {{ wejscie: WejscieWyceny, odpowiedzi: Record<string, unknown>, szybka: SzybkaWyceny }}
@@ -265,9 +268,13 @@ export function naDokladna(szybkaWejscie, kontekst) {
   const obliczone = obliczGranice(szybkaWejscie, kontekst)
   const wynik = wynikSzybkiej(obliczone, szybkaWejscie, kontekst)
   const brud = szybkaWejscie.brud ?? []
+  const poziomGorny = szybkaWejscie.poziomGorny ?? null
   return {
     wejscie: obliczone.dolna.wejscie,
     odpowiedzi: { ...szybkaWejscie.odpowiedzi },
-    szybka: { stan: szybkaWejscie.stan ?? STAN_DOMYSLNY_SZYBKIEJ, od: wynik.od, do: wynik.do, tryb: wynik.tryb, ...(brud.length > 0 ? { brud: [...brud] } : {}) },
+    szybka: {
+      stan: szybkaWejscie.stan ?? STAN_DOMYSLNY_SZYBKIEJ, od: wynik.od, do: wynik.do, tryb: wynik.tryb,
+      ...(brud.length > 0 ? { brud: [...brud] } : {}), ...(poziomGorny === null ? {} : { poziomGorny }),
+    },
   }
 }

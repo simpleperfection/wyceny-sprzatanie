@@ -11,7 +11,7 @@ import { ukladMieszkania } from '../silnik/uklad.js'
 import { dodajPomieszczenie } from './pomieszczenia.js'
 import { brudOdpowiedzi, odpowiedziUslugi, pytaniaWyceny, zapiszOdpowiedz } from './pytania.js'
 import { zmienWejscie } from './stan.js'
-import { formularzDomyslny, wejscieZWyceny, zapiszSzybka } from './szybka.js'
+import { formularzDomyslny, wejscieZWyceny, zapiszSzybka, zUsluga } from './szybka.js'
 
 /** @typedef {import('../silnik/katalog.js').Katalog} Katalog */
 /** @typedef {import('../dane/ustawienia.js').Domyslne} Domyslne */
@@ -130,6 +130,20 @@ describe('zapiszOdpowiedz i pytaniaWyceny', () => {
     assert.deepEqual(wejscieZWyceny(z, katalog).brud, [{ pomieszczenie: 'pokoj', brud: 'siersc', poziom: 1 }])
     assert.deepEqual(z.wejscie.pomieszczenia?.find((p) => p.typ === 'pokoj')?.brud, [{ id: 'siersc', poziom: 1 }])
     assert.deepEqual([bez.szybka?.od, bez.szybka?.do, bez.szybka?.brud], [294, 344, undefined])
+  })
+
+  it('szybka wycena kanapy: „tak” o trudnych plamach podnosi górną granicę do 210 zł (+40%), „nie” wraca do 180 zł; bez pigułki skutku', () => {
+    const kontekst = kontekstFirmy()
+    const kanapa = { ...zUsluga(formularzDomyslny(katalog, 'mazowieckie'), 'tapicerka', katalog), pozycje: [{ id: 'kanapa_3', ilosc: 1 }] }
+    const { id } = zapiszSzybka(kontekst, null, kanapa)
+
+    const z = zapiszOdpowiedz(kontekst, id, 'plamy', { wartosc: 'tak' }, pytania)
+    const ekran = pytaniaWyceny(z, pytania, kontekst)
+    const bez = zapiszOdpowiedz(kontekst, id, 'plamy', { wartosc: 'nie' }, pytania)
+
+    assert.deepEqual([z.szybka?.od, z.szybka?.do, z.szybka?.poziomGorny], [150, 210, 3])
+    assert.equal(ekran.lista.find((p) => p.pytanie.id === 'plamy')?.skutek, null)
+    assert.deepEqual([bez.szybka?.od, bez.szybka?.do, bez.szybka?.poziomGorny], [150, 180, undefined])
   })
 
   it('zła wartość, za długa notatka i pytanie spoza usługi dają BladWejscia; nic się nie zapisuje', () => {

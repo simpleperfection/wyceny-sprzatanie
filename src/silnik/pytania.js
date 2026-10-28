@@ -1,5 +1,5 @@
 // Pytania do klienta przed wycena (R13): lista pytan uslugi z data/pytania.json, opis odpowiedzi, skutki odpowiedzi w modelu
-// (brud w pomieszczeniach, kilometry dojazdu) i kontrola pliku pytan wzgledem katalogu uslug i norm.
+// (brud w pomieszczeniach, kilometry dojazdu, gorna granica widelek pozycji) i kontrola pliku pytan wzgledem katalogu uslug i norm.
 
 import { BladWejscia } from './bledy.js'
 import { dojazdKlienta } from './cena.js'
@@ -14,7 +14,8 @@ import { zPoziomemBrudu } from './czas.js'
 /**
  * @typedef {typeof TYPY_ODPOWIEDZI[number]} TypOdpowiedzi
  * @typedef {{ rodzaj: 'brud', brud: string, poziom: number, pomieszczenie: string, gdy: string }} SkutekBrudu gdy: „tak” albo opcja
- * @typedef {SkutekBrudu | { rodzaj: 'dojazd_km' }} Skutek
+ * @typedef {{ rodzaj: 'gorna_granica', poziom: number, gdy: string }} SkutekGornejGranicy poziom z poziomy_brudu w data/ceny.json
+ * @typedef {SkutekBrudu | SkutekGornejGranicy | { rodzaj: 'dojazd_km' }} Skutek
  * @typedef {{ id: string, tresc: string, typ: TypOdpowiedzi, opcje?: string[], jednostka?: string, skutek?: Skutek }} Pytanie
  * @typedef {{ meta?: unknown, wspolne: Pytanie[], uslugi: Record<string, Pytanie[]>,
  *   zdjecia?: Record<string, { podpowiedz: string, prosba: string }> }} Pytania schemat data/pytania.json
@@ -23,7 +24,7 @@ import { zPoziomemBrudu } from './czas.js'
  */
 
 /** Skutki odpowiedzi w modelu wyceny; zrodlo stalej dla ekranu pytan. */
-export const RODZAJE_SKUTKOW = Object.freeze(/** @type {const} */ (['brud', 'dojazd_km']))
+export const RODZAJE_SKUTKOW = Object.freeze(/** @type {const} */ (['brud', 'dojazd_km', 'gorna_granica']))
 /** Typy odpowiedzi na pytania do klienta; zrodlo stalej dla ekranu pytan. */
 export const TYPY_ODPOWIEDZI = Object.freeze(/** @type {const} */ (['tak_nie', 'wybor', 'liczba', 'tekst']))
 
@@ -107,6 +108,7 @@ function zastosujSkutek(wejscie, skutek, odpowiedz, { usluga, katalog, stawki })
     if (typeof km !== 'number') throw new BladWejscia('skutek', 'Skutek dojazd_km wymaga odpowiedzi liczbowej')
     return { wejscie: { ...wejscie, dojazdKm: km }, opis: `dojazd: ${FORMAT_LICZBY.format(dojazdKlienta(km, stawki).kwota)} zł dla klienta` }
   }
+  if (skutek.rodzaj === 'gorna_granica') return null // tylko widelki szybkiej wyceny (poziomGornejGranicy), wejscie bez zmian
   if (usluga.tryb !== 'pomieszczenia' || odpowiedz.wartosc !== skutek.gdy) return null
   katalog.normaBrudu(skutek.brud, skutek.poziom)
   const nazwa = katalog.brud.find((b) => b.id === skutek.brud)?.nazwa ?? skutek.brud
@@ -163,13 +165,35 @@ export function regulyBrudu(uslugaId, odpowiedzi, pytania) {
 }
 
 /**
+ * Poziom z poziomy_brudu dla gornej granicy widelek szybkiej wyceny uslugi z pozycjami: najwyzszy ze skutkow `gorna_granica`
+ * z odpowiedzia rowna `gdy` (np. 3 przy trudnych plamach; decyzja wlasciciela 2026-10-28). Zla odpowiedz na pytanie ze skutkiem
+ * daje BladWejscia `odpowiedz`.
+ * @param {string} uslugaId
+ * @param {Record<string, unknown>} odpowiedzi id pytania → `{ wartosc, notatka? }`
+ * @param {Pytania} pytania
+ * @returns {number | null} null = zadna odpowiedz go nie ustawia (szybka wycena liczy poziom 2)
+ */
+export function poziomGornejGranicy(uslugaId, odpowiedzi, pytania) {
+  const poziomy = pytaniaUslugi(uslugaId, pytania).flatMap((pytanie) => {
+    const { skutek } = pytanie
+    if (skutek?.rodzaj !== 'gorna_granica' || !Object.hasOwn(odpowiedzi, pytanie.id)) return []
+    const odpowiedz = odpowiedzi[pytanie.id]
+    sprawdzOdpowiedz(pytanie, odpowiedz)
+    return odpowiedz.wartosc === skutek.gdy ? [skutek.poziom] : []
+  })
+  return poziomy.length === 0 ? null : Math.max(...poziomy)
+}
+
+/**
  * Czy skutek odpowiedzi jest w wejsciu wyceny: kilometry dojazdu rowne odpowiedzi albo brud skutku na jego poziomie w co najmniej
- * jednym pasujacym pomieszczeniu (reczna zmiana w kreatorze albo pomieszczenie bez skutku go zdejmuja).
+ * jednym pasujacym pomieszczeniu (reczna zmiana w kreatorze albo pomieszczenie bez skutku go zdejmuja). Gorna granica widelek
+ * nie zmienia wejscia, wiec jej tu nie ma.
  * @param {WejscieWyceny} wejscie @param {Skutek} skutek @param {Odpowiedz} odpowiedz
  * @returns {boolean}
  */
 export function czySkutekWWejsciu(wejscie, skutek, odpowiedz) {
   if (skutek.rodzaj === 'dojazd_km') return (wejscie.dojazdKm ?? 0) === odpowiedz.wartosc
+  if (skutek.rodzaj === 'gorna_granica') return false
   return (wejscie.pomieszczenia ?? []).some((p) => czyPasuje(skutek, p) && maPoziomSkutku(skutek, p))
 }
 
@@ -203,23 +227,46 @@ function bledySkutkuBrudu(miejsce, skutek, pytanie, typy, katalog) {
   if (typeof skutek.pomieszczenie !== 'string' || (skutek.pomieszczenie !== KAZDE_POMIESZCZENIE && !typy.has(skutek.pomieszczenie))) {
     bledy.push(`${miejsce}: nieznane pomieszczenie ${String(skutek.pomieszczenie)}`)
   }
-  const dozwolone = pytanie.typ === 'tak_nie' ? [...ODPOWIEDZI_TAK_NIE] : pytanie.typ === 'wybor' && Array.isArray(pytanie.opcje) ? pytanie.opcje : null
-  if (!dozwolone) bledy.push(`${miejsce}: skutek brud przy typie ${String(pytanie.typ)}`)
-  else if (!dozwolone.includes(skutek.gdy)) bledy.push(`${miejsce}: warunek skutku ${String(skutek.gdy)} nie jest możliwą odpowiedzią`)
-  return bledy
+  return [...bledy, ...bledyWarunku(miejsce, skutek, pytanie)]
 }
 
-/** @param {string} miejsce @param {Record<string, unknown>} pytanie @param {Set<string>} typy @param {Katalog} katalog @returns {string[]} */
-function bledySkutku(miejsce, pytanie, typy, katalog) {
+/** Warunek `gdy` skutku: mozliwa odpowiedz na pytanie tak_nie albo wybor. @param {string} miejsce @param {Record<string, unknown>} skutek @param {Record<string, unknown>} pytanie */
+function bledyWarunku(miejsce, skutek, pytanie) {
+  const dozwolone = pytanie.typ === 'tak_nie' ? [...ODPOWIEDZI_TAK_NIE] : pytanie.typ === 'wybor' && Array.isArray(pytanie.opcje) ? pytanie.opcje : null
+  if (!dozwolone) return [`${miejsce}: skutek ${String(skutek.rodzaj)} przy typie ${String(pytanie.typ)}`]
+  return dozwolone.includes(skutek.gdy) ? [] : [`${miejsce}: warunek skutku ${String(skutek.gdy)} nie jest możliwą odpowiedzią`]
+}
+
+/**
+ * Gorna granica widelek: tylko w usludze z pozycjami i szybka wycena `widelki` (nie w pytaniach wspolnych), poziom z poziomy_brudu.
+ * @param {string} miejsce @param {Record<string, unknown>} skutek @param {Record<string, unknown>} pytanie @param {Usluga | null} usluga
+ * @param {Katalog} katalog
+ */
+function bledySkutkuGranicy(miejsce, skutek, pytanie, usluga, katalog) {
+  const bledy = []
+  if (usluga?.tryb !== 'pozycje' || usluga.szybka_wycena !== 'widelki') bledy.push(`${miejsce}: skutek gorna_granica tylko w usługach z pozycjami i widełkami`)
+  if (!katalog.poziomyBrudu.some((p) => p.poziom === skutek.poziom)) bledy.push(`${miejsce}: poziom górnej granicy ${String(skutek.poziom)} spoza poziomy_brudu`)
+  return [...bledy, ...bledyWarunku(miejsce, skutek, pytanie)]
+}
+
+/**
+ * @param {string} miejsce @param {Record<string, unknown>} pytanie @param {Set<string>} typy @param {Usluga | null} usluga null = pytanie wspolne
+ * @param {Katalog} katalog @returns {string[]}
+ */
+function bledySkutku(miejsce, pytanie, typy, usluga, katalog) {
   const skutek = pytanie.skutek
   if (skutek === undefined) return []
   if (!jestObiektem(skutek) || !RODZAJE_SKUTKOW.some((r) => r === skutek.rodzaj)) return [`${miejsce}: nieznany rodzaj skutku`]
   if (skutek.rodzaj === 'brud') return bledySkutkuBrudu(miejsce, skutek, pytanie, typy, katalog)
+  if (skutek.rodzaj === 'gorna_granica') return bledySkutkuGranicy(miejsce, skutek, pytanie, usluga, katalog)
   return pytanie.typ === 'liczba' ? [] : [`${miejsce}: skutek dojazd_km przy typie ${String(pytanie.typ)}`]
 }
 
-/** @param {string} miejsce @param {unknown} pytanie @param {Set<string>} typy @param {Katalog} katalog @returns {string[]} */
-function bledyPytania(miejsce, pytanie, typy, katalog) {
+/**
+ * @param {string} miejsce @param {unknown} pytanie @param {Set<string>} typy @param {Usluga | null} usluga null = pytanie wspolne
+ * @param {Katalog} katalog @returns {string[]}
+ */
+function bledyPytania(miejsce, pytanie, typy, usluga, katalog) {
   if (!jestObiektem(pytanie)) return [`${miejsce}: pytanie musi być obiektem`]
   const gdzie = `${miejsce} (${String(pytanie.id)})`
   const bledy = []
@@ -228,7 +275,7 @@ function bledyPytania(miejsce, pytanie, typy, katalog) {
   if (!TYPY_ODPOWIEDZI.some((t) => t === pytanie.typ)) bledy.push(`${gdzie}: nieznany typ ${String(pytanie.typ)}`)
   const opcje = pytanie.opcje
   if (pytanie.typ === 'wybor' && !(Array.isArray(opcje) && opcje.length > 0 && opcje.every(jestNiepustymTekstem))) bledy.push(`${gdzie}: puste opcje`)
-  return [...bledy, ...bledySkutku(gdzie, pytanie, typy, katalog)]
+  return [...bledy, ...bledySkutku(gdzie, pytanie, typy, usluga, katalog)]
 }
 
 /** @param {string} miejsce @param {unknown[]} lista @returns {string[]} */
@@ -264,12 +311,12 @@ export function sprawdzPytania(pytania, katalog) {
   const { wspolne } = pytania
   const uslugi = new Map(katalog.uslugi.map((u) => [u.id, u]))
   const wszystkieTypy = new Set([...uslugi.values()].flatMap((u) => [...typyPomieszczen(u, katalog)]))
-  const bledy = wspolne.flatMap((p, i) => bledyPytania(`wspolne[${i}]`, p, wszystkieTypy, katalog))
+  const bledy = wspolne.flatMap((p, i) => bledyPytania(`wspolne[${i}]`, p, wszystkieTypy, null, katalog))
   for (const [id, lista] of Object.entries(pytania.uslugi)) {
     const usluga = uslugi.get(id)
     if (!usluga) bledy.push(`uslugi.${id}: nieznana usługa`)
     else if (!Array.isArray(lista)) bledy.push(`uslugi.${id}: lista pytań musi być tablicą`)
-    else bledy.push(...lista.flatMap((p, i) => bledyPytania(`uslugi.${id}[${i}]`, p, typyPomieszczen(usluga, katalog), katalog)), ...bledyPowtorzen(`uslugi.${id}`, [...wspolne, ...lista]))
+    else bledy.push(...lista.flatMap((p, i) => bledyPytania(`uslugi.${id}[${i}]`, p, typyPomieszczen(usluga, katalog), usluga, katalog)), ...bledyPowtorzen(`uslugi.${id}`, [...wspolne, ...lista]))
   }
   for (const u of uslugi.values()) if (!u.tylko_dodatek && !Object.hasOwn(pytania.uslugi, u.id)) bledy.push(`uslugi: brak pytań usługi ${u.id}`)
   return [...bledy, ...bledyZdjec(pytania.zdjecia, uslugi)]

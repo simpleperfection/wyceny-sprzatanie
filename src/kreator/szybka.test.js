@@ -97,6 +97,17 @@ describe('opcje i pola formularza', () => {
       [{ pomieszczenie: '*', brud: 'siersc', poziom: 2 }])
   })
 
+  it('„tak” o trudnych plamach daje poziomGorny 3, a „nie” i zmiana usługi go zdejmują (null)', () => {
+    const kanapa = { ...zUsluga(mieszkanie50(), 'tapicerka', katalog), odpowiedzi: { plamy: { wartosc: 'tak' } } }
+
+    const zPlamami = zBrudemOdpowiedzi(kanapa, pytania)
+
+    assert.equal(mieszkanie50().poziomGorny, null)
+    assert.equal(zPlamami.poziomGorny, 3)
+    assert.equal(zBrudemOdpowiedzi({ ...zPlamami, odpowiedzi: { plamy: { wartosc: 'nie' } } }, pytania).poziomGorny, null)
+    assert.equal(zUsluga(zPlamami, 'okna', katalog).poziomGorny, null)
+  })
+
   it('zła odpowiedź na pytanie ze skutkiem brudu daje BladWejscia odpowiedz', () => {
     assert.throws(() => zBrudemOdpowiedzi({ ...mieszkanie50(), odpowiedzi: { zwierzeta: { wartosc: 'kot' } } }, pytania), bladWejscia('odpowiedz'))
   })
@@ -167,6 +178,15 @@ describe('zapis szybkiej wyceny', () => {
     assert.deepEqual([dobry.odpowiedzi, wejscieZWyceny(dobry, katalog).m2], [{ termin: { wartosc: 'jutro' } }, 70])
   })
 
+  it('liczniki pozycji (tapicerka): formularz z rekordu ma metraż wzorcowy 50 m², bo licznik metrażu nie przyjmuje 0', () => {
+    const kontekst = kontekstFirmy()
+    const kanapa = { ...zUsluga({ ...mieszkanie50(), m2: 72 }, 'tapicerka', katalog), pozycje: [{ id: 'kanapa_3', ilosc: 1 }] }
+
+    const odtworzony = wejscieZWyceny(zapiszSzybka(kontekst, null, kanapa), katalog)
+
+    assert.deepEqual([odtworzony.m2, odtworzony.pozycje], [50, [{ id: 'kanapa_3', ilosc: 1 }]])
+  })
+
   it('oględziny pozycji: formularz wraca z metrażu głównej pozycji, a tryb „od” trafia do widełek', () => {
     const kontekst = kontekstFirmy()
     const kostka = { ...zUsluga(mieszkanie50(), 'mycie_kostki', katalog), m2: 100 }
@@ -199,6 +219,22 @@ describe('zapis szybkiej wyceny', () => {
     assert.match(wyslana.numer ?? '', /^1\/\d{2}\/\d{4}$/)
     assert.equal(oznaczWyslana(kontekst, id).status, 'przyjeta')
     assert.throws(() => oznaczWyslana(kontekst, 'nie-ma'), bladWyceny('brak_wyceny'))
+  })
+
+  it('kanapa z trudnymi plamami: widełki 150–210 zł, poziomGorny 3 w rekordzie, w odtworzonym formularzu i po zamianie w dokładną', () => {
+    const kontekst = kontekstFirmy()
+    const kanapa = { ...zUsluga(mieszkanie50(), 'tapicerka', katalog), pozycje: [{ id: 'kanapa_3', ilosc: 1 }], odpowiedzi: { plamy: { wartosc: 'tak' } } }
+    const formularz = zBrudemOdpowiedzi(kanapa, pytania)
+
+    const stan = wynikFormularza(kontekst, formularz)
+    const w = zapiszSzybka(kontekst, null, formularz)
+    const dokladna = zSzybkiej(kontekst, w, pytania)
+
+    assert.ok(stan.stan === 'wynik')
+    assert.deepEqual([stan.wynik.od, stan.wynik.do], [150, 210])
+    assert.deepEqual(w.szybka, { stan: 'typowy', od: 150, do: 210, tryb: 'widelki', poziomGorny: 3 })
+    assert.equal(wejscieZWyceny(w, katalog).poziomGorny, 3)
+    assert.deepEqual(dokladna.szybka, w.szybka)
   })
 
   it('dojazd z odpowiedzi „Parking i dojazd” (32 km) dokłada 44 zł na obu końcach widełek', () => {

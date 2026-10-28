@@ -8,7 +8,7 @@ import { scalKoszty, ustawieniaDomyslne } from '../dane/ustawienia.js'
 import { BladWyceny, utworzSzkic, wycena as znajdzWycene, zmienStatus } from '../dane/wyceny.js'
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
 import { ZESTAW_BIURA } from '../silnik/czas.js'
-import { regulyBrudu, zastosujOdpowiedzi } from '../silnik/pytania.js'
+import { poziomGornejGranicy, regulyBrudu, zastosujOdpowiedzi } from '../silnik/pytania.js'
 import { naDokladna, STAN_DOMYSLNY_SZYBKIEJ, STANY_SZYBKIEJ, szybkaWycena } from '../silnik/szybka.js'
 import { tempoDoWyceny } from '../silnik/tempo.js'
 import { domyslneLazienki } from '../silnik/uklad.js'
@@ -29,8 +29,9 @@ import { pozycjeGlowne, zapiszZmianyWyceny } from './stan.js'
 /**
  * @typedef {WejscieSzybkiej & { m2: number, stan: StanSzybkiej, pozycje: { id: string, ilosc: number }[],
  *   dodatki: import('../silnik/cena.js').DodatekWyceny[], odpowiedzi: Record<string, unknown>,
- *   brud: import('../silnik/katalog.js').RegulaBrudu[] }} FormularzSzybkiej
- *   wejscie formularza: zawsze z metrazem, stanem i brudem z odpowiedzi (pola niewidoczne dla uslugi silnik pomija)
+ *   brud: import('../silnik/katalog.js').RegulaBrudu[], poziomGorny: number | null }} FormularzSzybkiej
+ *   wejscie formularza: zawsze z metrazem, stanem, brudem i poziomem gornej granicy z odpowiedzi (pola niewidoczne dla uslugi
+ *   silnik pomija)
  * @typedef {'mieszkanie' | 'biuro' | 'pozycje' | 'ogledziny_pomieszczen' | 'ogledziny_pozycji'} PolaSzybkiej pola formularza uslugi
  * @typedef {{ wartosc: string, etykieta: string, uslugi: string[] }} OpcjaUslugi opcja arkusza „Usługa” (mieszkania jako jedna)
  * @typedef {{ stan: 'wynik', wynik: WynikSzybkiej, wojewodztwo: { id: string | null, nazwa: string } } | { stan: 'pusty' }
@@ -79,14 +80,15 @@ export function polaUslugi(usluga) {
 
 /**
  * Wejscie formularza po wyborze uslugi: metraz, stan i odpowiedzi zostaja; pozycje od zera (tylko uslugi z licznikami pozycji),
- * dodatki AGD tylko przy mieszkaniu. Brud z odpowiedzi znika, bo zalezy od pytan uslugi (zBrudemOdpowiedzi liczy go od nowa).
+ * dodatki AGD tylko przy mieszkaniu. Brud i poziom gornej granicy z odpowiedzi znikaja, bo zaleza od pytan uslugi
+ * (zBrudemOdpowiedzi liczy je od nowa).
  * @param {FormularzSzybkiej} wejscie @param {string} uslugaId @param {Katalog} katalog @returns {FormularzSzybkiej}
  */
 export function zUsluga(wejscie, uslugaId, katalog) {
   const usluga = katalog.usluga(uslugaId)
   const pola = polaUslugi(usluga)
   const pozycje = pola === 'pozycje' ? pozycjeGlowne(usluga).map((p) => ({ id: p.id, ilosc: 0 })) : []
-  return { ...wejscie, uslugaId, pozycje, dodatki: pola === 'mieszkanie' ? wejscie.dodatki : [], brud: [] }
+  return { ...wejscie, uslugaId, pozycje, dodatki: pola === 'mieszkanie' ? wejscie.dodatki : [], brud: [], poziomGorny: null }
 }
 
 /**
@@ -97,7 +99,7 @@ export function formularzDomyslny(katalog, wojewodztwoId) {
   const [{ wartosc: uslugaId }] = RODZAJE_MIESZKANIA
   return {
     uslugaId, m2: METRAZ_WZORCOWY, lazienki: domyslneLazienki(METRAZ_WZORCOWY, katalog.uklady), kuchnia: 'osobna', stan: STAN_DOMYSLNY_SZYBKIEJ,
-    pozycje: [], dodatki: [], dojazdKm: 0, wojewodztwoId: katalog.wojewodztwo(wojewodztwoId).id, odpowiedzi: {}, brud: [],
+    pozycje: [], dodatki: [], dojazdKm: 0, wojewodztwoId: katalog.wojewodztwo(wojewodztwoId).id, odpowiedzi: {}, brud: [], poziomGorny: null,
   }
 }
 
@@ -148,7 +150,8 @@ export function wynikFormularza(kontekst, wejscie) {
 
 /**
  * Formularz z zapisanej szybkiej wyceny (`?wycena=<id>`): metraz i lazienki z pomieszczen, kuchnia z nazwy aneksu, metraz
- * ogledzin z glownej pozycji, stan i brud z odpowiedzi z widelek; odpowiedzi, dodatki, dojazd i wojewodztwo bez zmian.
+ * ogledzin z glownej pozycji (przy licznikach pozycji wzorcowy), stan, brud i poziom gornej granicy z odpowiedzi z widelek;
+ * odpowiedzi, dodatki, dojazd i wojewodztwo bez zmian.
  * @param {Wycena} wycena rodzaj `szybka` (inna daje BladWyceny `rodzaj`) @param {Katalog} katalog
  * @returns {FormularzSzybkiej}
  */
@@ -159,13 +162,16 @@ export function wejscieZWyceny(wycena, katalog) {
   const pola = polaUslugi(usluga)
   const opis = opisPrzeniesienia(wejscie)
   const pozycje = wejscie.pozycje ?? []
-  const m2 = pola === 'ogledziny_pozycji' ? pozycje[0]?.ilosc ?? 0 : Math.round(opis.m2 * CYFRY_METRAZU) / CYFRY_METRAZU
+  // liczniki pozycji nie maja metrazu w rekordzie, a licznik metrazu na ekranie nie przyjmuje 0
+  const m2 = pola === 'ogledziny_pozycji' ? pozycje[0]?.ilosc ?? 0
+    : pola === 'pozycje' ? METRAZ_WZORCOWY : Math.round(opis.m2 * CYFRY_METRAZU) / CYFRY_METRAZU
   const stan = wycena.szybka?.stan
   return {
     uslugaId: usluga.id, m2, lazienki: pola === 'mieszkanie' || pola === 'ogledziny_pomieszczen' ? opis.lazienki : undefined,
     kuchnia: opis.kuchnia === 'aneks' ? 'aneks' : 'osobna', stan: jestStanem(stan) ? stan : STAN_DOMYSLNY_SZYBKIEJ,
     pozycje: pola === 'pozycje' ? pozycje : [], dodatki: wejscie.dodatki ?? [], dojazdKm: wejscie.dojazdKm ?? 0,
     wojewodztwoId: wejscie.wojewodztwoId ?? null, odpowiedzi: { ...wycena.odpowiedzi }, brud: [...(wycena.szybka?.brud ?? [])],
+    poziomGorny: wycena.szybka?.poziomGorny ?? null,
   }
 }
 
@@ -197,12 +203,14 @@ export function dojazdZOdpowiedzi(formularz, pytania, k) {
 }
 
 /**
- * Formularz z regulami brudu z odpowiedzi klienta wg pytan biezacej uslugi (skutek `brud`, np. sierść przy zwierzetach);
- * szybka wycena naklada je na uklad typowego lokalu.
+ * Formularz z regulami brudu z odpowiedzi klienta wg pytan biezacej uslugi (skutek `brud`, np. sierść przy zwierzetach;
+ * szybka wycena naklada je na uklad typowego lokalu) i poziomem gornej granicy widelek pozycji (skutek `gorna_granica`,
+ * np. trudne plamy na tapicerce).
  * @param {FormularzSzybkiej} formularz @param {Pytania} pytania @returns {FormularzSzybkiej}
  */
 export function zBrudemOdpowiedzi(formularz, pytania) {
-  return { ...formularz, brud: regulyBrudu(formularz.uslugaId, formularz.odpowiedzi, pytania) }
+  const { uslugaId, odpowiedzi } = formularz
+  return { ...formularz, brud: regulyBrudu(uslugaId, odpowiedzi, pytania), poziomGorny: poziomGornejGranicy(uslugaId, odpowiedzi, pytania) }
 }
 
 /**
