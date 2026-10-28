@@ -1,0 +1,15 @@
+{
+  "name": "Wyceny sprzątania",
+  "short_name": "Wyceny",
+  "lang": "pl",
+  "start_url": "./#/start",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f1ea",
+  "theme_color": "#26282c",
+  "icons": [
+    { "src": "ikony/ikona-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "ikony/ikona-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "ikony/ikona-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

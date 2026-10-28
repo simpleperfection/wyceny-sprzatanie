@@ -13,7 +13,7 @@
 
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, readFileSync, rmSync } from 'node:fs'
+import { closeSync, existsSync, openSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
 
@@ -164,16 +164,28 @@ export const NARZEDZIA = {
     return { ok: w.status === 0, detal: (w.stdout || '').split('\n').filter((l) => /\bfail\b/.test(l)).join('; ') || `kod ${w.status}` }
   },
   // Probny zrzut about:blank w osobnej sesji agent-browser (sesji testera nie dotyka), z limitem na open + screenshot.
+  // Wyjscie do pliku, nie do potokow: na Windows demon startowany przez `open` dziedziczy potoki i spawnSync czekal na ich
+  // zamkniecie do limitu, choc `open` konczyl sie kodem 0 w 1 s (wyceny-sprzatanie, 2026-10-24).
   zrzut: () => {
     const plik = join(tmpdir(), `autopilot-e2e-proba-${process.pid}.png`)
+    const wyjscie = join(tmpdir(), `autopilot-e2e-proba-${process.pid}.txt`)
     const termin = Date.now() + LIMIT_ZRZUTU_SEK * 1000
-    const krok = (/** @type {string[]} */ a) => spawnSync('agent-browser', [...SESJA_PROBY, ...a], { encoding: 'utf8', timeout: Math.max(termin - Date.now(), 1), killSignal: 'SIGKILL' })
+    const krok = (/** @type {string[]} */ a) => {
+      const fd = openSync(wyjscie, 'w')
+      try {
+        const w = spawnSync('agent-browser', [...SESJA_PROBY, ...a], { stdio: ['ignore', fd, fd], timeout: Math.max(termin - Date.now(), 1), killSignal: 'SIGKILL' })
+        return { error: w.error, status: w.status, tekst: readFileSync(wyjscie, 'utf8') }
+      } finally {
+        closeSync(fd)
+      }
+    }
     const otwarcie = krok(['open', 'about:blank'])
     const zrzut = otwarcie.status === 0 && !otwarcie.error ? krok(['screenshot', plik]) : otwarcie
     spawnSync('agent-browser', [...SESJA_PROBY, 'close'], { timeout: LIMIT_ZAMKNIECIA_MS, killSignal: 'SIGKILL' })
     rmSync(plik, { force: true })
+    rmSync(wyjscie, { force: true })
     if (zrzut.error) return { ok: false, detal: zrzut.error.message.includes('ETIMEDOUT') ? `nie skonczyl sie w ${LIMIT_ZRZUTU_SEK} s` : zrzut.error.message }
-    return zrzut.status === 0 ? { ok: true, detal: '' } : { ok: false, detal: `kod ${zrzut.status}: ${(zrzut.stderr || zrzut.stdout || '').trim().split('\n').pop()}` }
+    return zrzut.status === 0 ? { ok: true, detal: '' } : { ok: false, detal: `kod ${zrzut.status}: ${zrzut.tekst.trim().split('\n').pop()}` }
   },
 }
 

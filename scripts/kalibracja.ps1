@@ -1,7 +1,8 @@
 ﻿# Kalibracja danych do wycen.
 # 1. Liczy data/rynek.json: mediany krajowe i współczynniki 16 województw z plików research/.
-# 2. Liczy data/normy.json: normy czasu pracy skalibrowane do median rynkowych.
-# 3. Sprawdza model cen na scenariuszach testowych i zapisuje raport research/KALIBRACJA.md.
+# 2. Liczy data/normy.json: normy czasu pracy skalibrowane do median rynkowych i układy typowego mieszkania i biura.
+# 3. Sprawdza model cen na scenariuszach testowych i zapisuje raport research/KALIBRACJA.md
+#    oraz scenariusze w pełnej precyzji do research/kalibracja-scenariusze.json (test parytetu silnika JS).
 #
 # Uruchomienie z katalogu projektu:
 #   powershell -NoProfile -ExecutionPolicy Bypass -File scripts\kalibracja.ps1
@@ -206,10 +207,38 @@ $F = 30  # przygotowanie i odbiór zlecenia, min na wizytę
 $M50 = $kraj.mieszkanie_50m2.mediana
 $REM = $kraj.po_remoncie_m2.mediana
 
+# Układy typowego mieszkania i biura: jedno źródło dla Uklad-Mieszkania, Uklad-Biura i pola uklady w data/normy.json,
+# z którego korzysta silnik wyceny w aplikacji. Aneksu skrypt nie używa (założenie planu etapu 5, do potwierdzenia).
+$uklady = [ordered]@{
+  mieszkanie = [ordered]@{
+    kuchnia = [ordered]@{ udzial = 0.16; min_m2 = 6; max_m2 = 14 }
+    aneks = [ordered]@{ udzial = 0.10; min_m2 = 4; max_m2 = 8 }
+    przedpokoj = [ordered]@{ udzial = 0.12 }
+    lazienki = @(
+      [ordered]@{ do_m2 = 60; m2 = @(4) }
+      [ordered]@{ do_m2 = 100; m2 = @(5) }
+      [ordered]@{ do_m2 = $null; m2 = @(8, 5) }
+    )
+    zasady = 'kuchnia (osobna) = udzial × metraż w granicach min_m2–max_m2; aneks liczy się tak samo z parametrami aneksu (założenie: aneks jest mniejszy od kuchni, różnica przechodzi do pokoi); przedpokój = udzial × metraż; łazienki = m2 z pierwszej pozycji listy, dla której metraż < do_m2 (null = bez górnej granicy); inna liczba łazienek skraca listę domyślną albo dokłada łazienki o metrażu ostatniej pozycji listy; pokoje = reszta metrażu.'
+  }
+  biuro = [ordered]@{
+    na_m2 = 100
+    pomieszczenia = @(
+      [ordered]@{ typ = 'biuro'; m2 = 60 }
+      [ordered]@{ typ = 'sala'; m2 = 15 }
+      [ordered]@{ typ = 'kuchnia_socjalna'; m2 = 6 }
+      [ordered]@{ typ = 'toaleta'; m2 = 5 }
+      [ordered]@{ typ = 'korytarz'; m2 = 14 }
+    )
+    zasady = 'metraż pomieszczenia = m2 × metraż biura / na_m2'
+  }
+}
+
 function Uklad-Mieszkania([double]$m2) {
-  $kuchnia = [math]::Min(14, [math]::Max(6, $m2 * 0.16))
-  $przedpokoj = $m2 * 0.12
-  if ($m2 -lt 60) { $lazienki = @(4) } elseif ($m2 -lt 100) { $lazienki = @(5) } else { $lazienki = @(8, 5) }
+  $um = $uklady.mieszkanie
+  $kuchnia = [math]::Min($um.kuchnia.max_m2, [math]::Max($um.kuchnia.min_m2, $m2 * $um.kuchnia.udzial))
+  $przedpokoj = $m2 * $um.przedpokoj.udzial
+  foreach ($lz in $um.lazienki) { if ($null -eq $lz.do_m2 -or $m2 -lt $lz.do_m2) { $lazienki = $lz.m2; break } }
   $pokoje = $m2 - $kuchnia - $przedpokoj - ($lazienki | Measure-Object -Sum).Sum
   $u = @(@{ typ = 'pokoj'; m2 = $pokoje }, @{ typ = 'przedpokoj'; m2 = $przedpokoj }, @{ typ = 'kuchnia'; m2 = $kuchnia })
   foreach ($l in $lazienki) { $u += @{ typ = 'lazienka'; m2 = [double]$l } }
@@ -217,11 +246,8 @@ function Uklad-Mieszkania([double]$m2) {
 }
 
 function Uklad-Biura([double]$m2) {
-  $k = $m2 / 100
-  , @(
-    @{ typ = 'biuro'; m2 = 60 * $k }, @{ typ = 'sala'; m2 = 15 * $k }, @{ typ = 'kuchnia_socjalna'; m2 = 6 * $k },
-    @{ typ = 'toaleta'; m2 = 5 * $k }, @{ typ = 'korytarz'; m2 = 14 * $k }
-  )
+  $k = $m2 / $uklady.biuro.na_m2
+  , @(foreach ($p in $uklady.biuro.pomieszczenia) { @{ typ = $p.typ; m2 = $p.m2 * $k } })
 }
 
 # Względny czas na m² (pokój = 2,5); skala wynika z kalibracji.
@@ -364,6 +390,7 @@ $normy = [ordered]@{
   przygotowanie_min_uslug = $przygotowanieUslug
   zestawy_pomieszczen = $zestawyOut
   progi_wydajnosci = [ordered]@{ biuro = $progiBiura }
+  uklady = $uklady
   brud = @(foreach ($b in $brudDef.Keys) { [ordered]@{ id = $b; nazwa = $brudDef[$b].nazwa; chemia = $brudDef[$b].chemia; min_m2 = $brudDef[$b].min_m2 } })
   poziomy = @(
     [ordered]@{ poziom = 1; nazwa = 'lekkie'; opis = 'typowe, codzienne zabrudzenie' }
@@ -419,6 +446,58 @@ function Material($p) {
 $koszty = $ceny.koszty_firmy
 $kosztH = [double]$koszty.praca.koszt_h
 $chemiaH = [double]$koszty.chemia_h.wartosc
+
+# Scenariusze referencyjne dla testu parytetu silnika JS (research/kalibracja-scenariusze.json), w pełnej precyzji.
+$scenPomieszczenia = New-Object System.Collections.Generic.List[object]
+$scenPozycje = New-Object System.Collections.Generic.List[object]
+
+# Usługa w trybie pomieszczeń przy typowym układzie: czas i cena bez minimum ($woj = $null: stawka krajowa).
+function Scenariusz-Pomieszczen([string]$opis, [string]$id, $wariant, [double]$m2, $woj) {
+  $u = Usluga $id
+  $stawka = [double]$H
+  if ($woj) { $stawka = [double]($wojewodztwa | Where-Object { $_.id -eq $woj }).stawka_h }
+  $wizyt = $null
+  if ($u.zestaw_pomieszczen -eq 'biuro') {
+    $war = $u.warianty | Where-Object id -eq $wariant
+    if (-not $war) { throw "Brak wariantu $wariant usługi $id" }
+    $uklad = Uklad-Biura $m2
+    $min = Minuty $uklad ([double]$war.mnoznik_zakresu * (Skala-Biura $m2))
+    $wizyt = [double]$war.wizyt_w_miesiacu
+  } else {
+    $uklad = Uklad-Mieszkania $m2
+    $min = Minuty-Uslugi $id $m2
+  }
+  $s = [ordered]@{
+    opis = $opis; usluga = $id; wariant = $wariant; m2 = $m2; wojewodztwo = $woj; stawka_h = $stawka
+    uklad = @(foreach ($p in $uklad) { [ordered]@{ typ = $p.typ; m2 = [double]$p.m2 } })
+    minuty = $min; cena = $min / 60 * $stawka; wizyt_w_miesiacu = $wizyt
+  }
+  $scenPomieszczenia.Add($s)
+  $s
+}
+
+# Zlecenie wzorcowe w trybie pozycji (pierwsza pozycja usługi) przy tempie 1: cena z minimum, progiem metrażu i materiałem,
+# czas z przygotowaniem, koszt chemii i sprzętu z czasu normowego.
+function Zlecenie-Wzorcowe([string]$uid, [double]$ilosc) {
+  $u = Usluga $uid
+  $p = @($u.pozycje)[0]
+  $n = $pozycjeOut["$uid.$($p.id)"]
+  $mnProg = 1.0
+  if ($u.progi -and $p.jednostka -eq 'm2') { $mnProg = Prog $u.progi $ilosc }
+  $minPracy = $ilosc * [double]$n.min_na_jednostke
+  $sprzetH = 0.0
+  if ($p.sprzet) { $sprzetH = [double]$koszty.sprzet.($p.sprzet).koszt_h }
+  $s = [ordered]@{
+    usluga = $uid; pozycja = $p.id; ilosc = $ilosc; prog = $mnProg; material = (Material $p)
+    cena = [math]::Max([double]$u.minimum_zl, $ilosc * ([double]$p.cena * $mnProg + (Material $p)))
+    minuty_pracy = $minPracy; minuty = $przygotowanieUslug[$uid] + $minPracy
+    chemia = $ilosc * (Chemia-Jednostki $p ([double]$n.min_na_jednostke / 60))
+    sprzet = $minPracy / 60 * $sprzetH
+  }
+  $scenPozycje.Add($s)
+  $s
+}
+
 $L = New-Object System.Collections.Generic.List[string]
 function L([string]$s = '') { $L.Add($s) }
 
@@ -461,8 +540,9 @@ $cele = [ordered]@{
   mieszkanie_po_wynajmie = @($null, 'brak danych – założenie')
 }
 foreach ($id in $cele.Keys) {
-  $m = Minuty-Uslugi $id 50
-  $cena = $m / 60 * $H
+  $sc = Scenariusz-Pomieszczen "sekcja 2: $id, 50 m², stawka krajowa" $id $null 50 $null
+  $m = $sc.minuty
+  $cena = $sc.cena
   $cel = $cele[$id][0]
   if ($null -ne $cel) { $c = "$(Zl $cel) zł ($($cele[$id][1]))"; $o = Odch $cena $cel } else { $c = $cele[$id][1]; $o = "$(Dz ($cena / ($M50)) 2) × standard" }
   L "| $((Usluga $id).nazwa) | $(Dz ($m / 60) 1) h | $(Zl $cena) zł | $c | $o |"
@@ -478,9 +558,9 @@ $kbMid = @{}
 foreach ($s in 'dom_do40', 'dom_40_100', 'dom_100_200') {
   $kbMid[$s] = ($kbRows | ForEach-Object { ((Num $_."$($s)_min") + (Num $_."$($s)_max")) / 2 } | Measure-Object -Average).Average
 }
-$p35 = (Minuty-Uslugi 'mieszkanie_standard' 35) / 60 * $H
-$p70 = (Minuty-Uslugi 'mieszkanie_standard' 70) / 60 * $H
-$p150 = (Minuty-Uslugi 'mieszkanie_standard' 150) / 60 * $H
+$p35 = (Scenariusz-Pomieszczen 'sekcja 3: mieszkanie_standard, 35 m², stawka krajowa' 'mieszkanie_standard' $null 35 $null).cena
+$p70 = (Scenariusz-Pomieszczen 'sekcja 3: mieszkanie_standard, 70 m², stawka krajowa' 'mieszkanie_standard' $null 70 $null).cena
+$p150 = (Scenariusz-Pomieszczen 'sekcja 3: mieszkanie_standard, 150 m², stawka krajowa' 'mieszkanie_standard' $null 150 $null).cena
 L '| Porównanie | Rynek | Model | Różnica |'
 L '|---|---|---|---|'
 L "| kb.pl: cena 40–100 m² / do 40 m² (model: 70 / 35 m²) | $(Dz ($kbMid.dom_40_100 / $kbMid.dom_do40)) | $(Dz ($p70 / $p35)) | $(Odch ($p70 / $p35) ($kbMid.dom_40_100 / $kbMid.dom_do40)) |"
@@ -502,8 +582,9 @@ $firmyMetraz = @(
 )
 $pierwszy = @{}
 foreach ($fm in $firmyMetraz) {
-  $sw = ($wojewodztwa | Where-Object { $_.id -eq $fm.woj }).stawka_h
-  $pm = (Minuty-Uslugi 'mieszkanie_standard' $fm.m2) / 60 * $sw
+  $sc = Scenariusz-Pomieszczen "sekcja 3: $($fm.firma), $($fm.opis), mieszkanie_standard $($fm.m2) m²" 'mieszkanie_standard' $null $fm.m2 $fm.woj
+  $sw = $sc.stawka_h
+  $pm = $sc.cena
   if (-not $pierwszy.ContainsKey($fm.firma)) { $pierwszy[$fm.firma] = @{ cena = $fm.cena; model = $pm } }
   $kFirma = $fm.cena / $pierwszy[$fm.firma].cena
   $kModel = $pm / $pierwszy[$fm.firma].model
@@ -520,9 +601,10 @@ foreach ($wid in 'jednorazowe', 'abonament_1', 'abonament_3') {
   $war = $biura.warianty | Where-Object id -eq $wid
   foreach ($m2 in 100, 1000) {
     if ($wid -eq 'jednorazowe' -and $m2 -eq 1000) { continue }
-    $min = Minuty (Uklad-Biura $m2) ([double]$war.mnoznik_zakresu * (Skala-Biura $m2))
-    $wiz = [double]$war.wizyt_w_miesiacu
-    $mies = $min / 60 * $H * $wiz
+    $sc = Scenariusz-Pomieszczen "sekcja 4: sprzatanie_biur, $wid, $m2 m², stawka krajowa" 'sprzatanie_biur' $wid $m2 $null
+    $min = $sc.minuty
+    $wiz = $sc.wizyt_w_miesiacu
+    $mies = $sc.cena * $wiz
     if ($wid -eq 'jednorazowe') {
       L ("| $($war.nazwa), $m2 m² | $(Zl $mies) zł netto ($(Dz ($min / 60) 1) h) | 366–418 zł brutto (kb.pl) | " + 'kb.pl podaje „do 2 h”, ale ta cena to ok. 190 zł/h – niespójne z jego stawką po remoncie (64 zł/h) |')
     } elseif ($wid -eq 'abonament_1') {
@@ -543,7 +625,7 @@ L ''
 L '| Województwo | wsp | Skan (n) | kb.pl | Stawka zł/h | Model 50 m² | Skan 50 m² (n) | GUS sekcja N zł/h |'
 L '|---|---|---|---|---|---|---|---|'
 foreach ($w in $wojewodztwa) {
-  $cena50 = (Minuty-Uslugi 'mieszkanie_standard' 50) / 60 * $w.stawka_h
+  $cena50 = (Scenariusz-Pomieszczen "sekcja 5: mieszkanie_standard, 50 m², $($w.nazwa)" 'mieszkanie_standard' $null 50 $w.id).cena
   $skan = '–'
   if ($w.rynek.Contains('mieszkanie_50m2')) { $skan = "$(Zl $w.rynek.mieszkanie_50m2.mediana) ($($w.rynek.mieszkanie_50m2.n))" }
   $own = '–'
@@ -591,19 +673,12 @@ foreach ($id in $cele.Keys) {
 foreach ($uid in $wzorcowe.Keys) {
   $u = Usluga $uid
   $p = @($u.pozycje)[0]
-  $ilosc = [double]$wzorcowe[$uid]
-  $n = $pozycjeOut["$uid.$($p.id)"]
-  $mnProg = 1.0
-  if ($u.progi -and $p.jednostka -eq 'm2') { $mnProg = Prog $u.progi $ilosc }
-  $cena = [math]::Max([double]$u.minimum_zl, $ilosc * ([double]$p.cena * $mnProg + (Material $p)))
-  $minPracy = $ilosc * [double]$n.min_na_jednostke
-  $sprzetH = 0.0
-  if ($p.sprzet) { $sprzetH = [double]$koszty.sprzet.($p.sprzet).koszt_h }
-  $koszt = ($przygotowanieUslug[$uid] + $minPracy) / 60 * $kosztH + $minPracy / 60 * $sprzetH + $ilosc * (Chemia-Jednostki $p ([double]$n.min_na_jednostke / 60))
-  $mar = 1 - $koszt / $cena
+  $zw = Zlecenie-Wzorcowe $uid ([double]$wzorcowe[$uid])
+  $koszt = $zw.minuty / 60 * $kosztH + $zw.sprzet + $zw.chemia
+  $mar = 1 - $koszt / $zw.cena
   $jedn = 'szt.'
   if ($p.jednostka -eq 'm2') { $jedn = 'm²' }
-  L "| $($u.nazwa): $($p.nazwa), $ilosc $jedn | $(Zl $cena) zł | $(Dz (($przygotowanieUslug[$uid] + $minPracy) / 60) 1) h | $(Zl $koszt) zł | $(Zl ($mar * 100))%$(Flaga $mar) |"
+  L "| $($u.nazwa): $($p.nazwa), $($zw.ilosc) $jedn | $(Zl $zw.cena) zł | $(Dz ($zw.minuty / 60) 1) h | $(Zl $koszt) zł | $(Zl ($mar * 100))%$(Flaga $mar) |"
 }
 L ''
 L '### Pozycje na jednostkę (bez przygotowania zlecenia)'
@@ -629,6 +704,20 @@ L ''
 
 Save-Text 'research\KALIBRACJA.md' (($L -join "`n") + "`n")
 
+$scenariusze = [ordered]@{
+  meta = [ordered]@{
+    wersja = $dzis
+    opis = 'Plik generowany przez scripts/kalibracja.ps1 – nie edytować ręcznie. Scenariusze z sekcji 2–5 i 7 research/KALIBRACJA.md w pełnej precyzji; czyta je test parytetu silnika wyceny (src/silnik/parytet.test.js).'
+    pomieszczenia = 'usługi w trybie pomieszczeń przy typowym układzie (data/normy.json, uklady): minuty z przygotowaniem i brudem domyślnym usługi (biura: mnożnik wariantu × progi_wydajnosci); cena = minuty / 60 × stawka_h, bez minimum zlecenia i dojazdu; wojewodztwo null = stawka krajowa; wizyt_w_miesiacu z wariantu biura, null dla mieszkań.'
+    pozycje = 'zlecenia wzorcowe w trybie pozycji (pierwsza pozycja usługi), tempo 1, bez mnożnika poziomu brudu: cena = max(minimum_zl, ilosc × (cena pozycji × prog + material)); prog = mnożnik progu metrażu; material = materiał doliczany klientowi na jednostkę; minuty = przygotowanie usługi + minuty_pracy; chemia = koszt chemii zlecenia; sprzet = minuty_pracy / 60 × koszt_h sprzętu.'
+  }
+  stawka_kraj = $H
+  # ToArray: w PS 5.1 @() na List[object] ze słownikami [ordered] rzuca ArgumentException.
+  pomieszczenia = $scenPomieszczenia.ToArray()
+  pozycje = $scenPozycje.ToArray()
+}
+Save-Text 'research\kalibracja-scenariusze.json' ((To-Json $scenariusze) + "`n")
+
 Write-Host ("Mediany: stawka {0} zł/h, mieszkanie 50 m² {1} zł, po remoncie {2} zł/m²" -f $H, $M50, $REM)
 Write-Host ("Skala norm: dom {0}, biuro {1}; pył budowlany poz. 2 = {2} min/m²" -f (Rnd $skalaDom 4), (Rnd $skalaBiuro 4), $brudDef.pyl_budowlany.min_m2[1])
-Write-Host ("Zapisano data\rynek.json, data\normy.json, research\KALIBRACJA.md; niezgodności katalogu: {0}" -f $bledy)
+Write-Host ("Zapisano data\rynek.json, data\normy.json, research\KALIBRACJA.md, research\kalibracja-scenariusze.json; niezgodności katalogu: {0}" -f $bledy)

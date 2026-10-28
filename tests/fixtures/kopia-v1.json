@@ -1,0 +1,62 @@
+{
+  "aplikacja": "wyceny-sprzatanie",
+  "wersjaSchematu": 1,
+  "utworzona": "2026-10-20T16:45:00.000Z",
+  "stan": {
+    "wersja": 1,
+    "ustawienia": {
+      "wojewodztwoId": "mazowieckie",
+      "statusVat": "zwolniony",
+      "firma": { "nazwa": "Lśniący Dom", "telefon": "600 100 200", "email": "biuro@lsniacy-dom.pl", "nip": "" },
+      "tempo": { "reczne": null },
+      "koszty": { "chemia_h": 2.5, "sprzet": {}, "dojazd": { "klient_zl_km": 1.5 } },
+      "zakresy": {},
+      "warunki": null,
+      "przypomnienieKopiiDni": 14,
+      "kreatorZakonczony": true
+    },
+    "wyceny": [
+      {
+        "id": "8c5a1d2e-4b7f-4c1a-9e0d-1f2a3b4c5d6e",
+        "numer": "1/10/2026",
+        "utworzona": "2026-10-12T09:00:00.000Z",
+        "zmieniona": "2026-10-18T11:20:00.000Z",
+        "status": "przyjeta",
+        "rodzaj": "dokladna",
+        "klient": { "nazwa": "Anna Nowak", "adres": "ul. Lipowa 4, Warszawa", "termin": "2026-10-25" },
+        "wejscie": { "uslugaId": "mieszkanie_standard", "pomieszczenia": [{ "typ": "pokoj", "m2": 20 }, { "typ": "kuchnia", "m2": 8 }] },
+        "szybka": null,
+        "odpowiedzi": { "zwierzeta": "kot" },
+        "wynik": {
+          "cena": 250, "netto": 250, "vat": 0, "mediana": 240, "widelki": { "od": 200, "do": 300, "pelne": true },
+          "minutyNormowe": 180, "linie": [], "propozycje": [], "dojazd": { "km": 0, "kwota": 0 },
+          "wojewodztwo": { "id": "mazowieckie", "nazwa": "mazowieckie", "stawka_h": 70, "wsp": 1.08 },
+          "statusVat": "zwolniony", "stawkaVatProc": 23, "podstawaCeny": "brutto", "wizytWMiesiacu": null,
+          "wersjaDanych": { "ceny": "2026-10-23", "normy": "2026-10-23", "rynek": "2026-10-23" }
+        },
+        "cenaReczna": null,
+        "wykonania": [],
+        "oferta": { "zakres": null, "warunki": null, "waznaDo": "2026-11-01", "wyslana": "2026-10-15T08:00:00.000Z", "nieaktualna": false }
+      },
+      {
+        "id": "f0e1d2c3-b4a5-4968-8776-655443322110",
+        "numer": null,
+        "utworzona": "2026-10-19T14:00:00.000Z",
+        "zmieniona": "2026-10-19T14:05:00.000Z",
+        "status": "szkic",
+        "rodzaj": "szybka",
+        "klient": { "nazwa": "", "adres": "", "termin": null },
+        "wejscie": { "uslugaId": "okna" },
+        "szybka": null,
+        "odpowiedzi": {},
+        "wynik": null,
+        "cenaReczna": null,
+        "wykonania": [],
+        "oferta": { "zakres": null, "warunki": null, "waznaDo": null, "wyslana": null, "nieaktualna": false }
+      }
+    ],
+    "licznikNumerow": { "2026-10": 1 },
+    "kopia": { "ostatnia": "2026-10-05T18:00:00.000Z", "zmianaOd": "2026-10-19T14:05:00.000Z" },
+    "preferencje": { "iosInstrukcjaZamknieta": true }
+  }
+}

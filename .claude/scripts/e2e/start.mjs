@@ -31,7 +31,9 @@ import { bledySrodowiska, envE2e, konfiguracja, LIMIT_ZRZUTU_SEK, NARZEDZIA, PLI
  */
 
 // Komenda startu bez aplikacji: pnpm/npm bez binarki, skryptu albo package.json, powloka bez programu (kod 127).
-const BRAK_APLIKACJI = /Command "[^"]+" not found|command not found|ERR_PNPM_NO_IMPORTER_MANIFEST_FOUND|ERR_PNPM_NO_SCRIPT|Missing script|ENOENT[^\n]*package\.json/i
+// `Cannot find module` i komunikat cmd.exe (wyceny-sprzatanie, 2026-10-24): E2E_START to `node scripts/serwer-dev.mjs`, ktory
+// powstaje dopiero w fazie 1.
+const BRAK_APLIKACJI = /Command "[^"]+" not found|command not found|is not recognized as an internal or external command|Cannot find module|ERR_PNPM_NO_IMPORTER_MANIFEST_FOUND|ERR_PNPM_NO_SCRIPT|Missing script|ENOENT[^\n]*package\.json/i
 const KOD_BRAKU_PROGRAMU = 127
 
 /**

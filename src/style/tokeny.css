@@ -1,0 +1,54 @@
+/*
+ * Tokeny wygladu: wariant B „kartka i długopis” (docs/plans/etap-5-aplikacja-wyceny-figma/SPEC.md).
+ * Nazwy kolorow = zmienne Figmy z kolekcji „Kolory v3” (`/` → `-`). Nazwy „zielen” to spuscizna wersji 3:
+ * w wariancie B to kolor akcji (niebieski tusz). Zmiana wariantu albo barw marki = zmiana wartosci tylko w tym pliku.
+ */
+:root {
+  --tlo-strona: #f4f1ea;
+  --tlo-karta: #fffdf8;
+  --tlo-miekkie: #ebe6dc;
+  --marka-granat: #26282c;
+  --marka-granat-jasny: #aaa59b;
+  --marka-zielen: #2340a8;
+  --marka-zielen-ciemna: #1a2f7d;
+  --marka-zielen-tlo: #e6ebf8;
+  --marka-zielen-wykres: #c9d3ef;
+  --tekst-glowny: #26282c;
+  --tekst-drugi: #5f5b54;
+  --tekst-trzeci: #948f86;
+  --tekst-na-ciemnym: #fffdf8;
+  --linia-podzial: #e4ded3;
+  --linia-obrys: #d3ccbf;
+  --uwaga-tlo: #fbefb6;
+  --uwaga-tekst: #6e5300;
+  --info-tlo: #e6ebf8;
+  --info-tekst: #2340a8;
+  --blad-tlo: #f8e1dc;
+  --blad-tekst: #a8321f;
+  --status-szkic-tekst: #5f5b54;
+  --status-wykonana-tlo: #e2ddd3;
+  --sukces-tlo: #e3efe2;
+  --sukces-tekst: #2f6b3a;
+  --zakreslacz-mocny: #f5dc62;
+
+  /* Zaokraglenia wariantu B */
+  --promien-karta: 10px;
+  --promien-przycisk: 8px;
+  --promien-chip: 8px;
+  --promien-pigulka: 6px;
+  --promien-arkusz: 14px;
+  --rozmiar-plus: 48px;
+
+  /* Typografia (podglad wariantu B) */
+  --font: 'Source Sans 3', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --tekst-podstawowy: 14px;
+  --tekst-maly: 12.5px;
+  --tekst-drobny: 11.5px;
+  --tekst-tytul-ekranu: 19px;
+  --tekst-tytul-powitalny: 21px;
+
+  /* Uklad */
+  --szerokosc-kolumny: 560px;
+  --odstep-ekranu: 16px;
+  --cel-dotyku: 44px;
+}

@@ -1,0 +1,1067 @@
+/* Komponenty wspolne (src/ui/komponenty/): wymiary i typografia z podgladu wariantu B, kolory z tokeny.css. */
+
+.ikona {
+  width: 20px;
+  height: 20px;
+}
+
+/* Naglowek ekranu: grafitowy pas */
+.naglowek {
+  background: var(--marka-granat);
+  color: var(--tekst-na-ciemnym);
+  padding: 18px var(--odstep-ekranu) 16px;
+}
+
+.naglowek__wiersz {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.naglowek__tytul {
+  font-size: var(--tekst-tytul-ekranu);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.naglowek__podtytul {
+  margin-top: 3px;
+  font-size: var(--tekst-maly);
+  color: var(--marka-granat-jasny);
+}
+
+.naglowek__wstecz {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cel-dotyku);
+  height: var(--cel-dotyku);
+  margin: -10px 0 -10px -12px;
+  border-radius: var(--promien-przycisk);
+}
+
+.naglowek--duzy {
+  padding: 22px var(--odstep-ekranu) 20px;
+}
+
+.naglowek--duzy .naglowek__tytul {
+  font-size: var(--tekst-tytul-powitalny);
+}
+
+/* Karta */
+.karta {
+  background: var(--tlo-karta);
+  border: 1px solid var(--linia-podzial);
+  border-radius: var(--promien-karta);
+  padding: 14px;
+}
+
+.karta__tytul {
+  margin-bottom: 8px;
+  font-size: var(--tekst-podstawowy);
+  font-weight: 700;
+}
+
+.karta--bez-odstepu {
+  padding: 0;
+  overflow: hidden;
+}
+
+.karta--bez-odstepu > .karta__tytul {
+  padding: 14px 14px 0;
+}
+
+/* Baner */
+.baner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-radius: var(--promien-przycisk);
+  padding: 10px 14px;
+  font-size: var(--tekst-maly);
+  font-weight: 500;
+}
+
+.baner--uwaga {
+  background: var(--uwaga-tlo);
+  color: var(--uwaga-tekst);
+}
+
+.baner--info {
+  background: var(--info-tlo);
+  color: var(--info-tekst);
+}
+
+.baner--blad {
+  background: var(--blad-tlo);
+  color: var(--blad-tekst);
+}
+
+.baner--sukces {
+  background: var(--sukces-tlo);
+  color: var(--sukces-tekst);
+}
+
+.baner__akcja {
+  flex: none;
+  min-height: var(--cel-dotyku);
+  margin: -10px -8px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  background: none;
+  font-weight: 700;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+/* Pasek postepu kreatora */
+.postep {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 10px var(--odstep-ekranu);
+  list-style: none;
+  background: var(--tlo-karta);
+  border-bottom: 1px solid var(--linia-podzial);
+}
+
+.postep__krok {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--tekst-drobny);
+  color: var(--tekst-drugi);
+}
+
+.postep__kreska {
+  display: block;
+  height: 4px;
+  margin-bottom: 5px;
+  border-radius: 2px;
+  background: var(--linia-podzial);
+}
+
+.postep__krok--zrobiony .postep__kreska {
+  background: var(--marka-zielen);
+}
+
+.postep__krok--aktywny {
+  color: var(--tekst-glowny);
+  font-weight: 700;
+}
+
+/* Wiersz listy */
+.wiersz {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: var(--cel-dotyku);
+  padding: 12px 12px 12px 14px;
+  border: 0;
+  border-bottom: 1px solid var(--linia-podzial);
+  background: none;
+  text-align: left;
+  text-decoration: none;
+}
+
+.wiersz:last-child {
+  border-bottom: 0;
+}
+
+.wiersz--akcja {
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.wiersz--akcja:hover {
+  background: var(--tlo-strona);
+}
+
+.wiersz__awatar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--tlo-miekkie);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.wiersz__ikona {
+  color: var(--marka-zielen);
+}
+
+.wiersz__tresc {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.wiersz__tytul {
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.wiersz__opis {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.wiersz__wartosc {
+  font-weight: 600;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.wiersz__strzalka {
+  color: var(--tekst-trzeci);
+}
+
+/* Przycisk */
+.przycisk {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 12px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--promien-przycisk);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.przycisk:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.przycisk:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.przycisk .ikona {
+  width: 18px;
+  height: 18px;
+}
+
+.przycisk--glowny {
+  background: var(--marka-zielen);
+  border-color: var(--marka-zielen);
+  color: var(--tekst-na-ciemnym);
+}
+
+.przycisk--glowny:hover:not(:disabled),
+.przycisk--glowny:active:not(:disabled) {
+  background: var(--marka-zielen-ciemna);
+  border-color: var(--marka-zielen-ciemna);
+}
+
+.przycisk--drugi {
+  background: var(--tlo-karta);
+  border-color: var(--linia-obrys);
+  color: var(--tekst-glowny);
+}
+
+.przycisk--drugi:hover:not(:disabled) {
+  background: var(--tlo-strona);
+}
+
+.przycisk--tekstowy {
+  min-height: var(--cel-dotyku);
+  padding: 10px 4px;
+  background: none;
+  color: var(--marka-zielen);
+}
+
+.przycisk--niebezpieczny {
+  background: var(--blad-tekst);
+  border-color: var(--blad-tekst);
+  color: var(--tekst-na-ciemnym);
+}
+
+/* Pole tekstowe */
+.pole {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pole__etykieta {
+  font-size: var(--tekst-maly);
+  font-weight: 600;
+  color: var(--tekst-drugi);
+}
+
+.pole__wejscie {
+  width: 100%;
+  min-height: var(--cel-dotyku);
+  padding: 11px 14px;
+  border: 1px solid var(--tekst-trzeci);
+  border-radius: var(--promien-przycisk);
+  background: var(--tlo-karta);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.pole--blad .pole__wejscie {
+  border-color: var(--blad-tekst);
+  background: var(--blad-tlo);
+}
+
+.pole__podpowiedz {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.pole__blad {
+  padding: 6px 10px;
+  border-radius: var(--promien-pigulka);
+  background: var(--blad-tlo);
+  color: var(--blad-tekst);
+  font-size: var(--tekst-maly);
+  font-weight: 600;
+}
+
+/* Licznik − / wartosc / + */
+.licznik {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 12px 12px 12px 14px;
+  border: 1px solid var(--linia-podzial);
+  border-radius: var(--promien-karta);
+  background: var(--tlo-karta);
+}
+
+.licznik__opis {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.licznik__etykieta {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.licznik__wartosc {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 23px;
+  font-weight: 700;
+}
+
+.licznik__wejscie {
+  field-sizing: content;
+  min-width: 2ch;
+  max-width: 8ch;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.licznik__wejscie:hover,
+.licznik__wejscie:focus {
+  border-bottom-color: var(--tekst-trzeci);
+}
+
+.licznik__wejscie[aria-invalid='true'] {
+  border-bottom-color: var(--blad-tekst);
+  color: var(--blad-tekst);
+}
+
+.licznik__przyciski {
+  display: flex;
+  gap: 10px;
+}
+
+.licznik__przycisk {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--linia-obrys);
+  border-radius: 50%;
+  background: var(--tlo-karta);
+  color: var(--tekst-glowny);
+}
+
+.licznik__przycisk::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+}
+
+.licznik__przycisk--plus {
+  background: var(--marka-granat);
+  border-color: var(--marka-granat);
+  color: var(--tekst-na-ciemnym);
+}
+
+.licznik__przycisk[aria-disabled='true'] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.licznik .pole__blad {
+  flex-basis: 100%;
+}
+
+/* Chipy pojedynczego wyboru */
+.grupa-chipow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.grupa-chipow__etykieta {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.chipy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid var(--linia-obrys);
+  border-radius: var(--promien-chip);
+  background: var(--tlo-karta);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+@media (pointer: coarse) {
+  .chip {
+    min-height: var(--cel-dotyku);
+  }
+}
+
+.chip__wejscie {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.chip:has(.chip__wejscie:checked) {
+  background: var(--marka-zielen);
+  border-color: var(--marka-zielen);
+  color: var(--tekst-na-ciemnym);
+}
+
+.chip:has(.chip__wejscie:focus-visible) {
+  outline: 2px solid var(--marka-zielen);
+  outline-offset: 2px;
+}
+
+/* Przelacznik */
+.przelacznik {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: var(--cel-dotyku);
+  cursor: pointer;
+}
+
+.przelacznik__tekst {
+  display: flex;
+  flex-direction: column;
+}
+
+.przelacznik__etykieta {
+  font-weight: 600;
+}
+
+.przelacznik__opis {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.przelacznik__wejscie {
+  flex: none;
+  appearance: none;
+  width: 44px;
+  height: 26px;
+  margin: 0;
+  border-radius: 13px;
+  background: var(--tekst-trzeci) radial-gradient(circle, var(--tlo-karta) 9px, transparent 9.5px) no-repeat left 3px center / 20px 20px;
+  cursor: pointer;
+  transition: background-color 0.15s, background-position 0.15s;
+}
+
+.przelacznik__wejscie:checked {
+  background-color: var(--marka-zielen);
+  background-position: right 3px center;
+}
+
+/* Dolny pasek nawigacji */
+.dolny-pasek {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  margin-top: auto;
+  padding-bottom: env(safe-area-inset-bottom);
+  border-top: 1px solid var(--linia-podzial);
+  background: var(--tlo-karta);
+  font-size: var(--tekst-drobny);
+}
+
+.dolny-pasek__pozycja {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 56px;
+  padding: 8px 0 10px;
+  color: var(--tekst-drugi);
+  text-decoration: none;
+}
+
+.dolny-pasek__pozycja .ikona {
+  width: 22px;
+  height: 22px;
+}
+
+.dolny-pasek__pozycja--aktywna {
+  color: var(--tekst-glowny);
+  font-weight: 700;
+}
+
+.dolny-pasek__plus {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+}
+
+.dolny-pasek__kolo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--rozmiar-plus);
+  height: var(--rozmiar-plus);
+  border-radius: 50%;
+  background: var(--marka-zielen);
+  color: var(--tekst-na-ciemnym);
+  transition: background-color 0.15s;
+}
+
+.dolny-pasek__plus:hover .dolny-pasek__kolo {
+  background: var(--marka-zielen-ciemna);
+}
+
+.dolny-pasek__kolo .ikona {
+  width: 26px;
+  height: 26px;
+}
+
+/* Arkusz od dolu i dialog potwierdzenia (natywny <dialog>) */
+.arkusz,
+.dialog {
+  padding: 0;
+  border: 0;
+  background: var(--tlo-karta);
+  color: var(--tekst-glowny);
+}
+
+.arkusz::backdrop,
+.dialog::backdrop {
+  background: rgb(38 40 44 / 0.45);
+}
+
+.arkusz {
+  width: 100%;
+  max-width: var(--szerokosc-kolumny);
+  max-height: 85dvh;
+  margin: auto auto 0;
+  border-radius: var(--promien-arkusz) var(--promien-arkusz) 0 0;
+}
+
+.arkusz[open] {
+  animation: wysun-arkusz 0.2s ease-out;
+}
+
+@keyframes wysun-arkusz {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+.arkusz__wnetrze {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: var(--odstep-ekranu) var(--odstep-ekranu) calc(var(--odstep-ekranu) + env(safe-area-inset-bottom));
+}
+
+.arkusz__gora {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.arkusz__tytul {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.arkusz__zamknij {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cel-dotyku);
+  height: var(--cel-dotyku);
+  margin: -10px -10px -10px 0;
+  border: 0;
+  border-radius: var(--promien-przycisk);
+  background: none;
+}
+
+.opcja-arkusza {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--linia-podzial);
+  border-radius: var(--promien-karta);
+  text-decoration: none;
+  transition: background-color 0.15s;
+}
+
+.opcja-arkusza:hover {
+  background: var(--marka-zielen-tlo);
+}
+
+.opcja-arkusza__ikona {
+  width: 22px;
+  height: 22px;
+  color: var(--marka-zielen);
+}
+
+.opcja-arkusza__tresc {
+  display: flex;
+  flex-direction: column;
+}
+
+.opcja-arkusza__tytul {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.opcja-arkusza__opis {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.dialog {
+  width: min(100% - 32px, 400px);
+  border-radius: var(--promien-karta);
+}
+
+.dialog__wnetrze {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+}
+
+.dialog__tytul {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.dialog__tresc {
+  color: var(--tekst-drugi);
+}
+
+.dialog__przyciski {
+  display: flex;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.dialog__przyciski .przycisk {
+  flex: 1;
+}
+
+/* Ekrany komunikatow (nieznany adres, wczytywanie) */
+.tresc--komunikat {
+  align-items: flex-start;
+  padding-top: 40px;
+}
+
+.komunikat {
+  font-size: var(--tekst-tytul-ekranu);
+  font-weight: 700;
+}
+
+.ladowanie {
+  color: var(--tekst-drugi);
+}
+
+/* Pigulka statusu wyceny (src/ui/statusy.js) */
+.pigulka {
+  flex: none;
+  padding: 3px 8px;
+  border-radius: var(--promien-pigulka);
+  background: var(--tlo-miekkie);
+  color: var(--tekst-glowny);
+  font-size: var(--tekst-drobny);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pigulka--szkic {
+  color: var(--status-szkic-tekst);
+}
+
+.pigulka--do_wyslania {
+  background: var(--uwaga-tlo);
+  color: var(--uwaga-tekst);
+}
+
+.pigulka--wyslana {
+  background: var(--marka-zielen-tlo);
+  color: var(--marka-zielen);
+}
+
+.pigulka--przyjeta {
+  background: var(--sukces-tlo);
+  color: var(--sukces-tekst);
+}
+
+.pigulka--wykonana {
+  background: var(--status-wykonana-tlo);
+}
+
+/* Ekran startowy: kafle wycen, karta miesiaca, sekcja „Do zrobienia” */
+.kafle {
+  display: flex;
+  gap: 10px;
+}
+
+.kafel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  border: 1px solid var(--linia-podzial);
+  border-radius: var(--promien-karta);
+  background: var(--tlo-karta);
+  text-decoration: none;
+  transition: background-color 0.15s, transform 0.15s;
+}
+
+.kafel:hover {
+  background: var(--tlo-strona);
+}
+
+.kafel:active {
+  transform: scale(0.96);
+}
+
+.kafel__ikona {
+  width: 22px;
+  height: 22px;
+  color: var(--marka-zielen);
+}
+
+.kafel__tytul {
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.kafel__opis {
+  font-size: var(--tekst-drobny);
+  color: var(--tekst-drugi);
+}
+
+.kafel--glowny {
+  border-color: var(--marka-zielen);
+  background: var(--marka-zielen);
+  color: var(--tekst-na-ciemnym);
+}
+
+.kafel--glowny:hover {
+  border-color: var(--marka-zielen-ciemna);
+  background: var(--marka-zielen-ciemna);
+}
+
+.kafel--glowny .kafel__ikona,
+.kafel--glowny .kafel__opis {
+  color: var(--tekst-na-ciemnym);
+}
+
+.karta-miesiaca__miesiac {
+  font-size: var(--tekst-maly);
+  font-weight: 400;
+  color: var(--tekst-drugi);
+}
+
+.statystyki {
+  display: flex;
+  gap: 8px;
+  margin: 6px 0 10px;
+}
+
+.statystyka {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.statystyka__wartosc {
+  font-size: var(--tekst-tytul-ekranu);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.statystyka__etykieta {
+  font-size: var(--tekst-drobny);
+  color: var(--tekst-drugi);
+}
+
+.karta-miesiaca__tempo {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--linia-podzial);
+  font-size: var(--tekst-maly);
+}
+
+.karta-miesiaca__etykieta {
+  color: var(--tekst-drugi);
+}
+
+.karta-miesiaca__wartosc {
+  font-weight: 700;
+}
+
+.sekcja {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sekcja__naglowek {
+  display: flex;
+  justify-content: space-between;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.sekcja__licznik {
+  color: var(--marka-zielen);
+}
+
+.start-pusty {
+  color: var(--tekst-drugi);
+}
+
+/* Lista wycen: kwota nad pigulka statusu */
+.wiersz-wyceny__status {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+/* Ustawienia firmy i kreator pierwszego uruchomienia (src/widoki/ustawienia*.js, kreator-startowy.js) */
+.karta-ustawien {
+  display: flex;
+  flex-direction: column;
+}
+
+.karta-ustawien .wiersz {
+  padding-inline: 0;
+}
+
+.karta-ustawien .wiersz__tresc {
+  flex: none;
+}
+
+.karta-ustawien .wiersz__tytul,
+.karta-kopii .wiersz__tytul {
+  font-weight: 500;
+}
+
+.karta-ustawien .wiersz__wartosc,
+.karta-kopii .wiersz__wartosc {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+  color: var(--tekst-drugi);
+  font-weight: 500;
+}
+
+.karta-ustawien .grupa-chipow {
+  padding-top: 12px;
+}
+
+.karta-ustawien > .przycisk--tekstowy {
+  align-self: flex-start;
+}
+
+.ustawienia__linia {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--linia-podzial);
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.ustawienia__opis {
+  margin-top: 8px;
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+  text-wrap: pretty;
+}
+
+.ustawienia__komunikat {
+  position: sticky;
+  bottom: calc(var(--cel-dotyku) + 32px);
+  padding-inline: var(--odstep-ekranu);
+}
+
+.ustawienia__komunikat:not(:empty) {
+  padding-bottom: 8px;
+}
+
+.karta-tempa__gora {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.karta-tempa__gora .karta__tytul {
+  margin-bottom: 0;
+}
+
+.karta-tempa__wartosc {
+  margin-top: 6px;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.pigulka--tempo {
+  background: var(--marka-zielen-tlo);
+  color: var(--marka-zielen);
+}
+
+.arkusz__formularz {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kreator-startowy__przyciski {
+  display: flex;
+  gap: 8px;
+}
+
+.kreator-startowy__przyciski .przycisk {
+  flex: 1;
+}
+
+/* Kopia danych i ekran ratunkowy (src/widoki/kopia.js, ratunek.js) */
+.kopia__ikona {
+  display: block;
+  width: 24px;
+  height: 24px;
+  margin-bottom: 8px;
+  color: var(--marka-zielen);
+}
+
+.kopia__opis,
+.ratunek__opis {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+  text-wrap: pretty;
+}
+
+.kopia__podsumowanie {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kopia__podsumowanie .pigulka {
+  padding: 5px 10px;
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.kopia__akcja {
+  display: flex;
+  flex-direction: column;
+  margin-top: 12px;
+}
+
+.kopia__komunikat:empty {
+  display: none;
+}
+
+.opcja-dialogu {
+  width: 100%;
+  background: var(--tlo-karta);
+  text-align: left;
+}
+
+.opcja-dialogu:active {
+  transform: scale(0.98);
+}
+
+.ratunek__przyciski {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-self: stretch;
+}

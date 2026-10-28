@@ -1,0 +1,18 @@
+{
+  "name": "wyceny-sprzatanie",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Narzędzia deweloperskie aplikacji wyceny usług sprzątających (testy, typy, serwer lokalny); aplikacja nie ma kroku budowania.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "node --test \"src/**/*.test.js\" \"scripts/**/*.test.mjs\"",
+    "typecheck": "tsc -p tsconfig.json",
+    "start": "node scripts/serwer-dev.mjs"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2"
+  }
+}
