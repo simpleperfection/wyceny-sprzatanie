@@ -1,7 +1,7 @@
 ---
 zadanie: etap-5-aplikacja-wyceny
 data: 2026-10-27
-claude_md: do-uzgodnienia
+claude_md: uzgodniono
 ---
 
 # Decyzje — etap-5-aplikacja-wyceny
