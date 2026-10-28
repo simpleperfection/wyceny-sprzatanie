@@ -187,6 +187,38 @@ describe('zapis szybkiej wyceny', () => {
     assert.deepEqual([odtworzony.m2, odtworzony.pozycje], [50, [{ id: 'kanapa_3', ilosc: 1 }]])
   })
 
+  it('zapisane pozycje albo oględziny pozycji po zmianie usługi na mieszkanie mają domyślne łazienki dla metrażu; ustawione zostają', () => {
+    const kontekst = kontekstFirmy()
+    const kanapa = { ...zUsluga(mieszkanie50(), 'tapicerka', katalog), pozycje: [{ id: 'kanapa_3', ilosc: 1 }] }
+    const kostka = { ...zUsluga(mieszkanie50(), 'mycie_kostki', katalog), m2: 120 }
+    const zKanapy = wejscieZWyceny(zapiszSzybka(kontekst, null, kanapa), katalog)
+    const zKostki = wejscieZWyceny(zapiszSzybka(kontekst, null, kostka), katalog)
+
+    const mieszkanie = zUsluga(zKanapy, 'mieszkanie_standard', katalog)
+    const poRemoncie = zUsluga(zKostki, 'mieszkanie_po_remoncie', katalog)
+
+    assert.deepEqual([zKanapy.lazienki, zKostki.lazienki], [undefined, undefined])
+    assert.deepEqual([mieszkanie.m2, mieszkanie.lazienki], [50, 1])
+    assert.deepEqual([poRemoncie.m2, poRemoncie.lazienki], [120, 2])
+    assert.equal(zUsluga({ ...mieszkanie50(), lazienki: 3 }, 'mieszkanie_gruntowne', katalog).lazienki, 3)
+  })
+
+  it('poziomGorny spoza poziomów brudu z rekordu (np. z ręcznie zmienionej kopii) formularz pomija, więc widełki się liczą', () => {
+    const kontekst = kontekstFirmy()
+    const kanapa = { ...zUsluga(mieszkanie50(), 'tapicerka', katalog), pozycje: [{ id: 'kanapa_3', ilosc: 1 }] }
+    const { wejscie } = zapiszSzybka(kontekst, null, kanapa)
+    /** @param {number} poziomGorny */
+    const zPoziomem = (poziomGorny) => utworzSzkic(kontekst.magazyn,
+      { rodzaj: 'szybka', wejscie, szybka: { stan: 'typowy', od: 150, do: 180, tryb: 'widelki', poziomGorny } })
+
+    const formularze = [0, 4, 99, 3].map((poziom) => wejscieZWyceny(zPoziomem(poziom), katalog))
+    const stan = wynikFormularza(kontekst, formularze[1])
+
+    assert.deepEqual(formularze.map((f) => f.poziomGorny), [null, null, null, 3])
+    assert.ok(stan.stan === 'wynik')
+    assert.deepEqual([stan.wynik.od, stan.wynik.do], [150, 180])
+  })
+
   it('oględziny pozycji: formularz wraca z metrażu głównej pozycji, a tryb „od” trafia do widełek', () => {
     const kontekst = kontekstFirmy()
     const kostka = { ...zUsluga(mieszkanie50(), 'mycie_kostki', katalog), m2: 100 }
