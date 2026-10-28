@@ -1,6 +1,6 @@
 {
-  "name": "Wyceny sprzątania",
-  "short_name": "Wyceny",
+  "name": "Czysty Zarobek",
+  "short_name": "Czysty Zarobek",
   "lang": "pl",
   "start_url": "./#/start",
   "scope": "./",
