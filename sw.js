@@ -6,7 +6,7 @@
 // Po pierwszym uruchomieniu online aplikacja dziala offline.
 // Klasyczny skrypt (bez importow modulow), poza typecheck. Zakres = katalog aplikacji.
 
-const WERSJA_CACHE = 'wyceny-v1'
+const WERSJA_CACHE = 'czysty-zarobek-v1'
 const LIMIT_SIECI_MS = 4000
 /** Zapis w tle (pliki od strony) nie blokuje uzytkownika, wiec ma dluzszy limit na wolnym laczu. */
 const LIMIT_ZAPISU_W_TLE_MS = 30000

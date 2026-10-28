@@ -20,7 +20,7 @@ import { tekstBleduZapisu } from './teksty-bledow.js'
 /** @typedef {import('../dane/magazyn.js').Stan} Stan */
 /** @typedef {import('./start-dane.js').Zadanie} Zadanie */
 
-const TYTUL_BEZ_FIRMY = 'Wyceny sprzątania'
+const TYTUL_BEZ_FIRMY = 'Czysty Zarobek'
 const PUSTY_START = 'Nie masz jeszcze wycen. Zacznij od szybkiej wyceny przez telefon albo dokładnej wyceny na miejscu.'
 const BEZ_KOPII = 'Nie masz jeszcze kopii danych. Dane są tylko w tej przeglądarce.'
 const ZOSTAJE = 'zostaje średnio'
