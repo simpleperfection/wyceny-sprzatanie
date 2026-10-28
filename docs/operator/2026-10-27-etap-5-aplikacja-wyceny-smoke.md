@@ -48,7 +48,8 @@ Wejście: start → kafel szybkiej wyceny (`#/szybka`).
 - [ ] Otwórz `visual-diff/szybka-wycena-figma.png` obok `visual-diff/szybka-wycena-actual.png` (mieszkanie standard 50 m², typowy, województwo mazowieckie) → układ zgodny z makietą; pigułka „Zostaje ok. 47 zł/h” i zwijane „AGD i dodatki” to zaplanowane odstępstwa
 - [ ] **[fizyczne urządzenie]** Zrób szybką wycenę mieszkania w trakcie symulowanej rozmowy telefonicznej i zmierz czas stoperem → od otwarcia ekranu do gotowych widełek mniej niż minuta
 - [ ] **[fizyczne urządzenie]** „Kopiuj tekst” na iPhonie w Safari i w aplikacji zainstalowanej na ekranie początkowym → tekst wyceny trafia do schowka i wkleja się w SMS/komunikator; nie ma komunikatu o nieudanym kopiowaniu
-- [ ] Decyzja właściciela: widełki usług z pomieszczeniami liczone bez minimum zlecenia (mieszkanie 50 m² w mazowieckim: dolna granica 120 zamiast 150 zł; decyzja wykonawcy z IU-4, plan techniczny linia 369) → potwierdź albo odrzuć; dopisz tę pozycję do listy „Założenia planu do potwierdzenia przez właściciela w smoke'u” w `PLAN.md` (sekcja etapu 5), a po potwierdzeniu usuń dopisek „do potwierdzenia przez właściciela” z linii 369 planu technicznego
+- [x] Decyzja właściciela: widełki usług z pomieszczeniami liczone bez minimum zlecenia (mieszkanie 50 m² w mazowieckim: dolna granica 120 zamiast 150 zł; decyzja wykonawcy z IU-4, plan techniczny linia 369) → potwierdź albo odrzuć; dopisz tę pozycję do listy „Założenia planu do potwierdzenia przez właściciela w smoke'u” w `PLAN.md` (sekcja etapu 5), a po potwierdzeniu usuń dopisek „do potwierdzenia przez właściciela” z linii 369 planu technicznego
+  - 2026-10-28: potwierdzone bez minimum; zapisane w `PLAN.md` (Ustalenia i sekcja etapu 5), w planie technicznym dopisek zamieniony na „potwierdzone przez właściciela 2026-10-28”.
 
 ## 6. Pytania do klienta
 Wejście: szybka wycena → pytania (`#/wycena/<id>/pytania`).
@@ -57,7 +58,8 @@ Wejście: szybka wycena → pytania (`#/wycena/<id>/pytania`).
 ## 7. Dokładna wycena i podsumowanie (IU-18)
 Wejście: start → kafel dokładnej wyceny → kreator (usługa → zakres → pomieszczenia → dodatki → chemia) → podsumowanie.
 - [ ] **[fizyczne urządzenie]** Przejdź dokładną wycenę mieszkania na telefonie i porównaj podsumowanie z makietą `podsumowanie-wyceny` → układ kart i kwoty czytelne, cena, koszt firmy i to, co zostaje, w kolejności jak w makiecie
-- [ ] Decyzja właściciela: aneks kuchenny = 10% metrażu (w granicach 4–8 m²) i koszt dojazdu firmy liczony tam i z powrotem → potwierdź albo odrzuć oba założenia (lista w `PLAN.md`, sekcja etapu 5)
+- [x] Decyzja właściciela: aneks kuchenny = 10% metrażu (w granicach 4–8 m²) i koszt dojazdu firmy liczony tam i z powrotem → potwierdź albo odrzuć oba założenia (lista w `PLAN.md`, sekcja etapu 5)
+  - 2026-10-28: aneks **odrzucony** – liczy się jak osobna kuchnia (16% w granicach 6–14 m²), bo praca w kuchni to fronty, blat, zlew i AGD. Zmienione `$uklady` w `scripts/kalibracja.ps1`, wygenerowane `data/normy.json` i fixture testów; 50 m² z aneksem daje teraz 250–300 zł zamiast 230–290 zł (sprawdzone w aplikacji). Dojazd tam i z powrotem potwierdzony.
 
 ## 8. Oferta — edycja
 Wejście: wycena → „Oferta” (`#/wycena/<id>/oferta`).
@@ -67,6 +69,7 @@ Wejście: wycena → „Oferta” (`#/wycena/<id>/oferta`).
 Wejście: edycja oferty → „Kopiuj link” albo „PDF”; strona `oferta.html` z linku.
 - [ ] **[fizyczne urządzenie]** Przygotuj ofertę z prawdziwej wyceny, wyślij link do siebie SMS-em, Messengerem i WhatsAppem i otwórz go na drugim telefonie, także w przeglądarce wbudowanej Messengera i WhatsAppa → oferta otwiera się w całości (nie jako „uszkodzony link”), polskie litery i kwoty poprawne
 - [ ] **[fizyczne urządzenie]** Porównaj ofertę na telefonie i wydruk z makietą `oferta-klient` oraz `visual-diff/oferta-klient-figma.png` obok `visual-diff/oferta-klient-actual.png` (zrzut 768×2279 bez dojazdu i „Możesz dobrać”; pełny wariant w `oferta-po-terminie.png`) i zatwierdź brzmienie warunków → układ zgodny z makietą, brzmienie warunków zaakceptowane albo spisane poprawki
+  - 2026-10-28: brzmienie domyślnych warunków zaakceptowane bez zmian; zostaje porównanie układu na telefonie i wydruku.
 - [ ] **[fizyczne urządzenie]** „Pobierz PDF” na Androidzie (Chrome) i iPhonie (Safari) → zapisuje się jedna strona A4, bez przycisków aplikacji na wydruku
 
 ## 10. Zakończenie zlecenia (IU-19)
@@ -76,6 +79,7 @@ Wejście: przyjęta wycena → „Wpisz czas pracy” (`#/wycena/<id>/koniec`).
 ## 11. Kopia zapasowa (IU-12)
 Wejście: dolne menu → Kopia (`#/kopia`).
 - [ ] Otwórz `visual-diff/kopia-zapasowa-figma.png` obok `visual-diff/kopia-zapasowa-actual.png` (stan `wyceny-do-zrobienia`) → układ zgodny z makietą; oceń pigułkę „0 zleceń”: liczy tylko wyceny wykonane, więc przy jednej wycenie „Przyjęta” pokazuje 0 (w makiecie liczba zleceń równa się liczbie przyjętych na starcie) — zostaw albo zgłoś do zmiany
+  - 2026-10-28: liczba zostaje, napis zmieniony na „N wykonanych zleceń” (`FORMY.wykonaneZlecenie`, test w `src/widoki/kopia-teksty.test.js`; zrzut `kopia-zapasowa-actual.png` jest sprzed zmiany). Zostaje porównanie układu z makietą.
 - [ ] **[fizyczne urządzenie]** Zapisz kopię na telefonie, przenieś plik na komputer i wczytaj ją opcją „Połącz”; potem na Androidzie i iPhonie wczytaj plik kopii z systemowego okna wyboru plików, raz „Połącz”, raz „Zastąp” → okno wyboru pliku się otwiera, plik się wczytuje, „Połącz” zachowuje obecne wyceny i dokłada te z pliku, „Zastąp” zostawia tylko dane z kopii
 
 ## 12. PWA: offline i ekran początkowy (IU-13)
@@ -85,7 +89,8 @@ Wejście: aplikacja otwarta raz z siecią.
 - [ ] **[fizyczne urządzenie]** Dodaj aplikację do ekranu początkowego na Androidzie i na iPhonie → instaluje się, ikona zastępcza jest widoczna, aplikacja startuje bez paska przeglądarki
 
 ## 13. Przed publikacją (etap 6)
-- [ ] Decyzja właściciela o adresie publikacji: na GitHub Pages pod `simpleperfection.github.io` każda inna strona Pages tego konta ma dostęp do `localStorage` z danymi klientów i do cache service workera (i może wysłać do `sw.js` komunikat `zapisz-zasoby`) → wybierz własną (sub)domenę albo osobne konto lub organizację GitHub tylko z tą aplikacją; zapisz decyzję w „Otwarte pytania” `PLAN.md` (punkt 1). Kodu etapu 5 to nie blokuje
+- [x] Decyzja właściciela o adresie publikacji: na GitHub Pages pod `simpleperfection.github.io` każda inna strona Pages tego konta ma dostęp do `localStorage` z danymi klientów i do cache service workera (i może wysłać do `sw.js` komunikat `zapisz-zasoby`) → wybierz własną (sub)domenę albo osobne konto lub organizację GitHub tylko z tą aplikacją; zapisz decyzję w „Otwarte pytania” `PLAN.md` (punkt 1). Kodu etapu 5 to nie blokuje
+  - 2026-10-28: subdomena firmy na GitHub Pages, roboczo `wyceny.simple-perfection.pl`; zapisane w Ustaleniach `PLAN.md`, a pytanie przeniesione do rozstrzygniętych. W etapie 6: CNAME u rejestratora, własna domena i HTTPS w ustawieniach Pages.
 
 ## Jak kontynuować w nowej sesji
 Skopiuj jako pierwszą wiadomość:

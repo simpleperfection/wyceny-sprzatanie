@@ -59,7 +59,7 @@
     "uklady": {
       "mieszkanie": {
         "kuchnia": { "udzial": 0.16, "min_m2": 6, "max_m2": 14 },
-        "aneks": { "udzial": 0.1, "min_m2": 4, "max_m2": 8 },
+        "aneks": { "udzial": 0.16, "min_m2": 6, "max_m2": 14 },
         "przedpokoj": { "udzial": 0.12 },
         "lazienki": [{ "do_m2": 60, "m2": [4] }, { "do_m2": 100, "m2": [5] }, { "do_m2": null, "m2": [8, 5] }]
       },

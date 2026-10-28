@@ -28,6 +28,7 @@ const formatDnia = new Intl.DateTimeFormat(JEZYK, { weekday: 'long', day: 'numer
 export const FORMY = Object.freeze({
   wycena: /** @type {const} */ (['wycena', 'wyceny', 'wycen']),
   zlecenie: /** @type {const} */ (['zlecenie', 'zlecenia', 'zleceń']),
+  wykonaneZlecenie: /** @type {const} */ (['wykonane zlecenie', 'wykonane zlecenia', 'wykonanych zleceń']),
   przyjeta: /** @type {const} */ (['przyjęta', 'przyjęte', 'przyjętych']),
 })
 
