@@ -115,6 +115,18 @@ describe('wczytajKatalog: kontrole danych', () => {
     })
   }
 
+  it('szybka_wycena usługi: ogledziny trafia do katalogu, nieznana wartość (telefon) → BladKatalogu zly_format', async () => {
+    const dobre = await daneTestowe()
+    dobre.ceny.uslugi[0].szybka_wycena = 'ogledziny'
+    const zle = await daneTestowe()
+    zle.ceny.uslugi[0].szybka_wycena = 'telefon'
+
+    const katalog = await katalogZDanych(dobre)
+
+    assert.equal(katalog.usluga(dobre.ceny.uslugi[0].id).szybka_wycena, 'ogledziny')
+    await assert.rejects(katalogZDanych(zle), bladKatalogu('zly_format'))
+  })
+
   it('pola, których silnik nie czyta (koszty_firmy.praca, dojazd.zakres_rynkowy), nie są wymagane', async () => {
     const dane = await daneTestowe()
     delete dane.ceny.koszty_firmy.praca
@@ -135,5 +147,25 @@ describe('wczytajKatalog: kontrole danych', () => {
     }
 
     await assert.rejects(wczytajKatalog(pobierz), (blad) => bladKatalogu('brak_pliku')(blad) && blad instanceof Error && blad.cause === przyczyna)
+  })
+})
+
+describe('progDlaMetrazu', () => {
+  it('próg z granicami: 50 m² → 0–100 (×1,3), 600 m² → od 500 bez końca (×0,7); progi nie po kolei — ostatni pasujący w danych', async () => {
+    const katalog = await katalogTestowy()
+    const dane = await daneTestowe()
+    const progi = [{ od_m2: 500, mnoznik: 0.7 }, { od_m2: 0, mnoznik: 1.3 }]
+    const nieposortowane = await katalogZDanych({ ...dane, ceny: { ...dane.ceny, progi_metrazu: { ...dane.ceny.progi_metrazu, maszynowe: { progi } } } })
+
+    assert.deepEqual(katalog.progDlaMetrazu('maszynowe', 50), { od: 0, do: 100, mnoznik: 1.3 })
+    assert.deepEqual(katalog.progDlaMetrazu('maszynowe', 600), { od: 500, do: null, mnoznik: 0.7 })
+    assert.deepEqual(nieposortowane.progDlaMetrazu('maszynowe', 600), { od: 0, do: null, mnoznik: 1.3 })
+    assert.equal(nieposortowane.progMetrazu('maszynowe', 600), 1.3)
+  })
+
+  it('nieznana nazwa progów daje BladKatalogu brak_progu', async () => {
+    const katalog = await katalogTestowy()
+
+    assert.throws(() => katalog.progDlaMetrazu('brak', 10), bladKatalogu('brak_progu'))
   })
 })

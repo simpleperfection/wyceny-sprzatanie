@@ -208,18 +208,18 @@ $M50 = $kraj.mieszkanie_50m2.mediana
 $REM = $kraj.po_remoncie_m2.mediana
 
 # Układy typowego mieszkania i biura: jedno źródło dla Uklad-Mieszkania, Uklad-Biura i pola uklady w data/normy.json,
-# z którego korzysta silnik wyceny w aplikacji. Aneksu skrypt nie używa (założenie planu etapu 5, do potwierdzenia).
+# z którego korzysta silnik wyceny w aplikacji. Aneksu skrypt nie używa; aneks ma parametry osobnej kuchni (decyzja właściciela 2026-10-28).
 $uklady = [ordered]@{
   mieszkanie = [ordered]@{
     kuchnia = [ordered]@{ udzial = 0.16; min_m2 = 6; max_m2 = 14 }
-    aneks = [ordered]@{ udzial = 0.10; min_m2 = 4; max_m2 = 8 }
+    aneks = [ordered]@{ udzial = 0.16; min_m2 = 6; max_m2 = 14 }
     przedpokoj = [ordered]@{ udzial = 0.12 }
     lazienki = @(
       [ordered]@{ do_m2 = 60; m2 = @(4) }
       [ordered]@{ do_m2 = 100; m2 = @(5) }
       [ordered]@{ do_m2 = $null; m2 = @(8, 5) }
     )
-    zasady = 'kuchnia (osobna) = udzial × metraż w granicach min_m2–max_m2; aneks liczy się tak samo z parametrami aneksu (założenie: aneks jest mniejszy od kuchni, różnica przechodzi do pokoi); przedpokój = udzial × metraż; łazienki = m2 z pierwszej pozycji listy, dla której metraż < do_m2 (null = bez górnej granicy); inna liczba łazienek skraca listę domyślną albo dokłada łazienki o metrażu ostatniej pozycji listy; pokoje = reszta metrażu.'
+    zasady = 'kuchnia (osobna) = udzial × metraż w granicach min_m2–max_m2; aneks liczy się tak samo z parametrami aneksu (decyzja właściciela 2026-10-28: aneks jak osobna kuchnia, bo praca w kuchni to fronty, blat, zlew i AGD, a nie podłoga); przedpokój = udzial × metraż; łazienki = m2 z pierwszej pozycji listy, dla której metraż < do_m2 (null = bez górnej granicy); inna liczba łazienek skraca listę domyślną albo dokłada łazienki o metrażu ostatniej pozycji listy; pokoje = reszta metrażu.'
   }
   biuro = [ordered]@{
     na_m2 = 100

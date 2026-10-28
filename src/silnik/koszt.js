@@ -93,6 +93,17 @@ function sprawdzWejscie({ wynik, cenaKlienta, tempo, koszty, statusVat }) {
 }
 
 /**
+ * Dojazd firmy: tam i z powrotem po kilometrowce firmy; zrodlo modelu dojazdu firmy dla kreatora.
+ * @param {number} km odleglosc w jedna strone @param {Pick<KosztyFirmy['dojazd'], 'koszt_firmy_zl_km'>} stawki
+ * @returns {{ km: number, kmRazem: number, kwota: number }}
+ */
+export function dojazdFirmy(km, stawki) {
+  if (!Number.isFinite(km) || km < 0) throw new BladWejscia('dojazd', `Odległość dojazdu musi być nieujemna, jest ${km}`)
+  const kmRazem = KURSOW_NA_ZLECENIE * km
+  return { km, kmRazem, kwota: kmRazem * stawki.koszt_firmy_zl_km }
+}
+
+/**
  * Koszt zlecenia i „zostaje dla Ciebie”. Przychod czynnego podatnika to netto, firmy zwolnionej brutto.
  * Abonament: wartosci za wizyte, a `miesiecznie` × wizyt_w_miesiacu.
  * @param {WejscieKosztu} wejscie `koszty` to koszty_firmy z data/ceny.json juz scalone z ustawieniami
@@ -106,14 +117,13 @@ export function kosztZlecenia(wejscie, katalog) {
   const minutyWlasne = wynik.minutyNormowe * tempo
   const chemia = wynik.linie.reduce((suma, l) => suma + chemiaLinii(l, pozycje, koszty.chemia_h.wartosc), 0)
   const sprzet = kosztSprzetu(wynik.linie, pozycje, tempo, koszty)
-  const km = wynik.dojazd.km
-  const dojazdFirmy = { km, kwota: KURSOW_NA_ZLECENIE * km * koszty.dojazd.koszt_firmy_zl_km }
-  const kosztRazem = chemia + sprzet.reduce((suma, s) => suma + s.kwota, 0) + dojazdFirmy.kwota
+  const { km, kwota } = dojazdFirmy(wynik.dojazd.km, koszty.dojazd)
+  const kosztRazem = chemia + sprzet.reduce((suma, s) => suma + s.kwota, 0) + kwota
   const przychod = statusVat === 'czynny' ? cenaKlienta.netto : cenaKlienta.brutto
   const zostaje = przychod - kosztRazem
   const wizyt = wynik.wizytWMiesiacu
   return {
-    minutyNormowe: wynik.minutyNormowe, minutyWlasne, chemia, sprzet, dojazdFirmy, kosztRazem, przychod, zostaje,
+    minutyNormowe: wynik.minutyNormowe, minutyWlasne, chemia, sprzet, dojazdFirmy: { km, kwota }, kosztRazem, przychod, zostaje,
     zostajeNaGodzine: zostaje / (minutyWlasne / MINUT_W_GODZINIE),
     miesiecznie: wizyt === null ? null : { przychod: przychod * wizyt, kosztRazem: kosztRazem * wizyt, zostaje: zostaje * wizyt },
   }

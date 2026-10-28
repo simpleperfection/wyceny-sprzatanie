@@ -1,0 +1,275 @@
+/*
+ * Strona oferty dla klienta (makieta oferta-klient, wariant B): dokument na tle karty, kolumna do 560 px wysrodkowana
+ * na szerszym ekranie. Uklad i rozmiary z podgladu wariantu B (docs/operator/etap-5-wariant-b.html, `.phone.doc`),
+ * kolory z tokenow. Drobny tekst ma --tekst-drugi zamiast --tekst-trzeci z podgladu, bo ten na --tlo-karta nie ma 4,5:1.
+ */
+
+.oferta {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 100dvh;
+  max-width: var(--szerokosc-kolumny);
+  margin: 0 auto;
+  padding: 22px var(--odstep-ekranu) 32px;
+  background: var(--tlo-karta);
+}
+
+@media screen and (min-width: 600px) {
+  body {
+    background: var(--tlo-miekkie);
+  }
+
+  .oferta {
+    border-inline: 1px solid var(--linia-podzial);
+  }
+}
+
+.oferta__dokument {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Baner po terminie i komunikaty bez oferty */
+.oferta__baner {
+  border-radius: var(--promien-przycisk);
+  padding: 10px 14px;
+  background: var(--uwaga-tlo);
+  color: var(--uwaga-tekst);
+  font-size: var(--tekst-maly);
+  font-weight: 600;
+  text-wrap: pretty;
+}
+
+.oferta__komunikat {
+  border-radius: var(--promien-karta);
+  padding: 14px;
+  background: var(--blad-tlo);
+  color: var(--blad-tekst);
+  font-weight: 600;
+  text-wrap: pretty;
+}
+
+/* Naglowek firmy */
+.oferta__firma {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--linia-podzial);
+}
+
+.oferta__inicjaly {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--marka-granat);
+  color: var(--tekst-na-ciemnym);
+  font-weight: 800;
+}
+
+.oferta__nazwa-firmy {
+  font-size: 16.5px;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.oferta__kontakt {
+  color: var(--tekst-drugi);
+  font-size: var(--tekst-drobny);
+  overflow-wrap: anywhere;
+}
+
+/* Tytul i „Dla” */
+.oferta__tytul h1 {
+  font-size: var(--tekst-tytul-powitalny);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.oferta__drobny {
+  color: var(--tekst-drugi);
+  font-size: var(--tekst-maly);
+  overflow-wrap: anywhere;
+}
+
+.oferta__pole {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-radius: var(--promien-karta);
+  padding: 14px;
+  background: var(--tlo-strona);
+}
+
+.oferta__etykieta-dla {
+  color: var(--tekst-drugi);
+  font-size: var(--tekst-drobny);
+  font-weight: 600;
+}
+
+.oferta__etykieta {
+  color: var(--tekst-drugi);
+  font-size: var(--tekst-maly);
+  font-weight: 600;
+}
+
+.oferta__klient {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* Wiersze kwot */
+.oferta__wiersze {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oferta__wiersz {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--linia-podzial);
+  overflow-wrap: anywhere;
+}
+
+.oferta__wiersze--dodatki .oferta__wiersz {
+  border-bottom: 0;
+}
+
+.oferta__kwota {
+  flex: none;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.oferta__kwota--dodatek {
+  color: var(--marka-zielen);
+}
+
+.oferta__razem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: -10px;
+  border-radius: var(--promien-przycisk);
+  padding: 12px 14px;
+  background: var(--marka-granat);
+  color: var(--tekst-na-ciemnym);
+  font-weight: 700;
+}
+
+.oferta__razem strong {
+  font-size: var(--tekst-tytul-powitalny);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.oferta__vat,
+.oferta__warunki {
+  color: var(--tekst-drugi);
+  font-size: var(--tekst-drobny);
+  text-wrap: pretty;
+}
+
+.oferta__vat {
+  margin-top: -6px;
+}
+
+/* Zakres prac */
+.oferta__zakres {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.oferta__naglowek {
+  font-size: var(--tekst-podstawowy);
+  font-weight: 700;
+}
+
+.oferta__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oferta__lista li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.35;
+}
+
+.oferta__znacznik {
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  color: var(--marka-zielen);
+}
+
+.oferta__poza {
+  color: var(--tekst-drugi);
+  font-size: var(--tekst-maly);
+  text-wrap: pretty;
+}
+
+/* Przyciski: „Zadzwoń” (link tel:) i „Pobierz PDF” (druk przegladarki) */
+.oferta__przyciski {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.oferta__przycisk {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--promien-przycisk);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.oferta__przycisk:active {
+  transform: scale(0.97);
+}
+
+.oferta__przycisk--glowny {
+  background: var(--marka-zielen);
+  border-color: var(--marka-zielen);
+  color: var(--tekst-na-ciemnym);
+}
+
+.oferta__przycisk--glowny:hover,
+.oferta__przycisk--glowny:active {
+  background: var(--marka-zielen-ciemna);
+  border-color: var(--marka-zielen-ciemna);
+}
+
+.oferta__przycisk--drugi {
+  background: var(--tlo-karta);
+  border-color: var(--linia-obrys);
+  color: var(--tekst-glowny);
+}
+
+.oferta__przycisk--drugi:hover {
+  background: var(--tlo-strona);
+}

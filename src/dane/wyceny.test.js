@@ -4,8 +4,8 @@ import { describe, it } from 'node:test'
 import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
 import { utworzMagazyn } from './magazyn.js'
 import {
-  BladWyceny, MAKS_MINUT_WYKONANIA, STATUSY_WYCENY, dodajWykonanie, listaWycen, usunWycene, utworzSzkic, wycena, zapiszWejscie,
-  zapiszWycene, zapiszWynik, zmienStatus,
+  BladWyceny, MAKS_MINUT_WYKONANIA, STATUSY_WYCENY, dodajWykonanie, listaWycen, oznaczWyslana, usunWycene, utworzSzkic, wycena,
+  zapiszOferte, zapiszWejscie, zapiszWycene, zapiszWynik, zmienStatus,
 } from './wyceny.js'
 import * as modulWycen from './wyceny.js'
 
@@ -295,14 +295,29 @@ describe('granice zapisu wyceny (te same co w kopii zapasowej)', () => {
 describe('gałęzie walidacji szkicu, klienta i wyniku', () => {
   it('szkic z poprawnymi widełkami szybkiej wyceny zapisuje je; widełki z do: "x" → szybka, odpowiedzi listą → odpowiedzi', () => {
     const magazyn = nowyMagazyn()
-    const szybka = { stan: 'standard', od: 200, do: 300, tryb: 'pomieszczenia' }
+    const szybka = { stan: 'typowy', od: 200, do: 300, tryb: 'widelki' }
 
     const szkic = utworzSzkic(magazyn, { rodzaj: 'szybka', wejscie: WEJSCIE, szybka })
 
     assert.deepEqual(zMagazynu(magazyn, szkic.id).szybka, szybka)
     assert.throws(() => utworzSzkic(magazyn, { rodzaj: 'szybka', wejscie: WEJSCIE, szybka: /** @type {never} */ ({ ...szybka, do: 'x' }) }),
       bladWyceny('szybka'))
+    assert.throws(() => utworzSzkic(magazyn, { rodzaj: 'szybka', wejscie: WEJSCIE,
+      szybka: /** @type {never} */ ({ ...szybka, brud: [{ pomieszczenie: 'pokoj', brud: 'siersc', poziom: '1' }] }) }), bladWyceny('szybka'))
     assert.throws(() => utworzSzkic(magazyn, { rodzaj: 'szybka', wejscie: WEJSCIE, odpowiedzi: /** @type {never} */ ([]) }), bladWyceny('odpowiedzi'))
+  })
+
+  it('poziom górnej granicy 3 zapisuje się w widełkach; poziom "3" (tekst) i 2,5 → szybka', () => {
+    const magazyn = nowyMagazyn()
+    const szybka = { stan: 'typowy', od: 150, do: 210, tryb: 'widelki', poziomGorny: 3 }
+
+    const szkic = utworzSzkic(magazyn, { rodzaj: 'szybka', wejscie: WEJSCIE, szybka })
+
+    assert.deepEqual(zMagazynu(magazyn, szkic.id).szybka, szybka)
+    for (const poziomGorny of ['3', 2.5]) {
+      assert.throws(() => utworzSzkic(magazyn, { rodzaj: 'szybka', wejscie: WEJSCIE, szybka: /** @type {never} */ ({ ...szybka, poziomGorny }) }),
+        bladWyceny('szybka'))
+    }
   })
 
   it('nazwa klienta 121 znaków i adres liczbą → klient; termin ze spacji zapisuje się jako null', () => {
@@ -425,6 +440,23 @@ describe('jestWycena, jestMigawkaWyniku i RODZAJE_WYCENY', () => {
     assert.equal(modulWycen.jestMigawkaWyniku({ ...migawka(), propozycje: undefined }), false)
   })
 
+  it('minimum tekstem, ujemne albo nieskończone przy czyMinimum true → false; czyMinimum nie boolean → false; poprawne minimum → true', () => {
+    assert.equal(modulWycen.jestMigawkaWyniku(migawka({ minimum: 'abc', czyMinimum: true })), false)
+    assert.equal(modulWycen.jestMigawkaWyniku(migawka({ minimum: -50, czyMinimum: true })), false)
+    assert.equal(modulWycen.jestMigawkaWyniku(migawka({ minimum: 1e309, czyMinimum: true })), false)
+    assert.equal(modulWycen.jestMigawkaWyniku(migawka({ minimum: 300, czyMinimum: 'tak' })), false)
+    assert.equal(modulWycen.jestMigawkaWyniku(migawka({ minimum: 300, czyMinimum: true })), true)
+  })
+
+  it('zapiszWynik z minimum tekstem, ujemnym albo nieskończonym: BladWyceny wynik', () => {
+    const magazyn = nowyMagazyn()
+    const id = wycenaWStatusie(magazyn, ['do_wyslania'])
+
+    assert.throws(() => zapiszWynik(magazyn, id, migawka({ minimum: 'abc', czyMinimum: true })), bladWyceny('wynik'))
+    assert.throws(() => zapiszWynik(magazyn, id, migawka({ minimum: -50, czyMinimum: true })), bladWyceny('wynik'))
+    assert.throws(() => zapiszWynik(magazyn, id, migawka({ minimum: 1e309, czyMinimum: true })), bladWyceny('wynik'))
+  })
+
   it('numer 01/10/2026 albo 1/10/26, cena ręczna 0, wykonanie z tempem 0 albo pustym id, adres 201 i termin 41 znaków → false', () => {
     const magazyn = nowyMagazyn()
     const zapisana = zMagazynu(magazyn, wycenaWStatusie(magazyn, ['do_wyslania']))
@@ -443,5 +475,243 @@ describe('jestWycena, jestMigawkaWyniku i RODZAJE_WYCENY', () => {
 
   it('rodzaje wyceny: szybka i dokladna', () => {
     assert.deepEqual(modulWycen.RODZAJE_WYCENY, ['szybka', 'dokladna'])
+  })
+})
+
+describe('dozwolonePrzejscia i czyAbonament', () => {
+  it('do wysłania: wysłanie i decyzja klienta; wykonana bez przejść; nieznany status bez przejść', () => {
+    assert.deepEqual(modulWycen.dozwolonePrzejscia('do_wyslania'), ['wyslana', 'przyjeta', 'odrzucona'])
+    assert.deepEqual(modulWycen.dozwolonePrzejscia('wykonana'), [])
+    assert.deepEqual(modulWycen.dozwolonePrzejscia(/** @type {any} */ ('archiwalna')), [])
+  })
+
+  it('abonament to więcej niż 1 wizyta w miesiącu; null i 1 wizyta to zlecenie jednorazowe', () => {
+    assert.deepEqual([4.33, 1, null].map((wizytWMiesiacu) => modulWycen.czyAbonament({ wizytWMiesiacu })), [true, false, false])
+  })
+})
+
+describe('zapiszWejscie z wynikiem', () => {
+  it('wejście i migawka w jednym zapisie; wynik null czyści migawkę szkicu', () => {
+    const magazyn = nowyMagazyn()
+    const { id } = utworzSzkic(magazyn, { rodzaj: 'dokladna', wejscie: WEJSCIE }, PAZDZIERNIK)
+
+    zapiszWejscie(magazyn, id, { ...WEJSCIE, dojazdKm: 3 }, { wynik: migawka({ cena: 270 }) })
+    const zWynikiem = zMagazynu(magazyn, id)
+    zapiszWejscie(magazyn, id, { ...WEJSCIE, pomieszczenia: [] }, { wynik: null })
+
+    assert.deepEqual([zWynikiem.wejscie.dojazdKm, zWynikiem.wynik?.cena], [3, 270])
+    assert.equal(zMagazynu(magazyn, id).wynik, null)
+  })
+
+  it('wycena z numerem i wynik null: BladWyceny pusty_zakres; zła migawka: BladWyceny wynik; nic się nie zapisuje', () => {
+    const magazyn = nowyMagazyn()
+    const id = wycenaWStatusie(magazyn, ['do_wyslania'])
+    const przed = stanMagazynu(magazyn)
+
+    assert.throws(() => zapiszWejscie(magazyn, id, WEJSCIE, { wynik: null }), bladWyceny('pusty_zakres'))
+    assert.throws(() => zapiszWejscie(magazyn, id, WEJSCIE, { wynik: migawka({ cena: -1 }) }), bladWyceny('wynik'))
+    assert.deepEqual(stanMagazynu(magazyn), przed)
+  })
+
+  it('wynik false, 0 albo pusty tekst: BladWyceny wynik; nic się nie zapisuje', () => {
+    const magazyn = nowyMagazyn()
+    const { id } = utworzSzkic(magazyn, { rodzaj: 'dokladna', wejscie: WEJSCIE }, PAZDZIERNIK)
+    const przed = stanMagazynu(magazyn)
+
+    assert.throws(() => zapiszWejscie(magazyn, id, WEJSCIE, { wynik: /** @type {never} */ (false) }), bladWyceny('wynik'))
+    assert.throws(() => zapiszWejscie(magazyn, id, WEJSCIE, { wynik: /** @type {never} */ (0) }), bladWyceny('wynik'))
+    assert.throws(() => zapiszWejscie(magazyn, id, WEJSCIE, { wynik: /** @type {never} */ ('') }), bladWyceny('wynik'))
+    assert.deepEqual(stanMagazynu(magazyn), przed)
+  })
+})
+
+describe('zapiszCeneReczna', () => {
+  it('cena ręczna i powrót do modelu; po wysłaniu inna kwota unieważnia ofertę, ta sama nie', () => {
+    const magazyn = nowyMagazyn()
+    const id = wycenaWStatusie(magazyn, ['do_wyslania', 'wyslana'])
+
+    modulWycen.zapiszCeneReczna(magazyn, id, 250)
+    const taSama = zMagazynu(magazyn, id)
+    modulWycen.zapiszCeneReczna(magazyn, id, 300)
+
+    assert.deepEqual([taSama.cenaReczna, taSama.oferta.nieaktualna], [250, false])
+    assert.deepEqual([zMagazynu(magazyn, id).cenaReczna, zMagazynu(magazyn, id).oferta.nieaktualna], [300, true])
+  })
+
+  it('kwota niedodatnia: cena_reczna; szkic bez wyniku: brak_wyniku; wykonana: tylko_odczyt', () => {
+    const magazyn = nowyMagazyn()
+    const { id: szkic } = utworzSzkic(magazyn, { rodzaj: 'dokladna', wejscie: WEJSCIE }, PAZDZIERNIK)
+    const wykonana = wycenaWStatusie(magazyn, ['do_wyslania', 'przyjeta'])
+    dodajWykonanie(magazyn, wykonana, { data: '2026-10-20', minuty: 200, tempoPlanu: 1.3 })
+
+    assert.throws(() => modulWycen.zapiszCeneReczna(magazyn, szkic, 0), bladWyceny('cena_reczna'))
+    assert.throws(() => modulWycen.zapiszCeneReczna(magazyn, szkic, 300), bladWyceny('brak_wyniku'))
+    assert.throws(() => modulWycen.zapiszCeneReczna(magazyn, wykonana, 300), bladWyceny('tylko_odczyt'))
+  })
+})
+
+describe('widełki szybkiej wyceny: stan i tryb z kontraktu silnika', () => {
+  it('nieznany tryb (pomieszczenia) albo stan (standard) widełek → szybka, bez zapisu', () => {
+    const magazyn = nowyMagazyn()
+    const szybka = { stan: 'typowy', od: 200, do: 300, tryb: 'widelki' }
+
+    assert.throws(() => utworzSzkic(magazyn, { rodzaj: 'szybka', wejscie: WEJSCIE, szybka: /** @type {never} */ ({ ...szybka, tryb: 'pomieszczenia' }) }),
+      bladWyceny('szybka'))
+    assert.throws(() => utworzSzkic(magazyn, { rodzaj: 'szybka', wejscie: WEJSCIE, szybka: /** @type {never} */ ({ ...szybka, stan: 'standard' }) }),
+      bladWyceny('szybka'))
+    assert.deepEqual(stanMagazynu(magazyn).wyceny, [])
+  })
+})
+
+describe('zapiszPolaWyceny', () => {
+  it('zapisuje odpowiedzi i widełki bez wejścia: wejście, wynik i oferta zostają, zmieniona = zegar', () => {
+    const magazyn = nowyMagazyn()
+    const id = wycenaWStatusie(magazyn, ['do_wyslania', 'wyslana'])
+    const szybka = { stan: 'mocny', od: 300, do: 360, tryb: /** @type {const} */ ('widelki') }
+
+    modulWycen.zapiszPolaWyceny(magazyn, id, () => ({ odpowiedzi: { termin: { wartosc: 'jutro' } }, szybka }), LISTOPAD)
+
+    const po = zMagazynu(magazyn, id)
+    assert.deepEqual([po.odpowiedzi, po.szybka, po.wejscie, po.wynik?.cena, po.oferta.nieaktualna, po.zmieniona],
+      [{ termin: { wartosc: 'jutro' } }, szybka, WEJSCIE, 250, false, '2026-11-12T10:00:00.000Z'])
+  })
+
+  it('nowe wejście z wynikiem po wysłaniu oznacza ofertę jako nieaktualną; fn dostaje świeżą wycenę i stan magazynu', () => {
+    const magazyn = nowyMagazyn()
+    const id = wycenaWStatusie(magazyn, ['do_wyslania', 'wyslana'])
+    const nowe = { ...WEJSCIE, pomieszczenia: [{ typ: 'pokoj', m2: 30 }] }
+    /** @type {unknown[]} */
+    const widziane = []
+
+    modulWycen.zapiszPolaWyceny(magazyn, id, (w, stan) => {
+      widziane.push(w.status, stan.wyceny.length)
+      return { wejscie: nowe, wynik: migawka({ cena: 300 }) }
+    })
+
+    const po = zMagazynu(magazyn, id)
+    assert.deepEqual(widziane, ['wyslana', 1])
+    assert.deepEqual([po.wejscie, po.wynik?.cena, po.oferta.nieaktualna], [nowe, 300, true])
+  })
+
+  it('odmowy: wykonana → tylko_odczyt, nieznana → brak_wyceny, wejście bez wyniku → wynik, pusty zakres z numerem → pusty_zakres, zły kształt → ksztalt', () => {
+    const magazyn = nowyMagazyn()
+    const wykonana = wycenaWStatusie(magazyn, ['do_wyslania', 'przyjeta', 'wykonana'])
+    const zNumerem = wycenaWStatusie(magazyn, ['do_wyslania'])
+    const przed = stanMagazynu(magazyn)
+
+    assert.throws(() => modulWycen.zapiszPolaWyceny(magazyn, wykonana, () => ({ odpowiedzi: {} })), bladWyceny('tylko_odczyt'))
+    assert.throws(() => modulWycen.zapiszPolaWyceny(magazyn, 'nie-ma', () => ({})), bladWyceny('brak_wyceny'))
+    assert.throws(() => modulWycen.zapiszPolaWyceny(magazyn, zNumerem, () => ({ wejscie: WEJSCIE })), bladWyceny('wynik'))
+    assert.throws(() => modulWycen.zapiszPolaWyceny(magazyn, zNumerem, () => ({ wejscie: WEJSCIE, wynik: null })), bladWyceny('pusty_zakres'))
+    assert.throws(() => modulWycen.zapiszPolaWyceny(magazyn, zNumerem, () => ({ szybka: /** @type {never} */ ({ od: 'dużo' }) })), bladWyceny('ksztalt'))
+    assert.deepEqual(stanMagazynu(magazyn), przed)
+  })
+})
+
+describe('oznaczWyslana', () => {
+  it('zmienia status z do_wyslania na wyslana, zapisuje datę wysłania i kasuje nieaktualna', () => {
+    const magazyn = nowyMagazyn()
+    const id = wycenaWStatusie(magazyn, ['do_wyslania'])
+    oznaczWyslana(magazyn, id, PAZDZIERNIK)
+    zmienStatus(magazyn, id, 'odrzucona', PAZDZIERNIK)
+    zmienStatus(magazyn, id, 'do_wyslania', PAZDZIERNIK)
+    zapiszWynik(magazyn, id, migawka({ cena: 300, netto: 300 }), PAZDZIERNIK)
+    const przed = zMagazynu(magazyn, id)
+
+    oznaczWyslana(magazyn, id, LISTOPAD)
+
+    const po = zMagazynu(magazyn, id)
+    assert.deepEqual([przed.status, przed.oferta.nieaktualna], ['do_wyslania', true])
+    assert.deepEqual([po.status, po.oferta.nieaktualna, po.oferta.wyslana], ['wyslana', false, '2026-11-12T10:00:00.000Z'])
+  })
+
+  it('przyjęta zostaje przyjęta; szkic i wykonana → BladWyceny', () => {
+    const magazyn = nowyMagazyn()
+    const przyjeta = wycenaWStatusie(magazyn, ['do_wyslania', 'przyjeta'])
+    const szkic = wycenaWStatusie(magazyn, [])
+    const wykonana = wycenaWStatusie(magazyn, ['do_wyslania', 'przyjeta'])
+    dodajWykonanie(magazyn, wykonana, { data: '2026-10-16', minuty: 180, tempoPlanu: 1.3 }, PAZDZIERNIK)
+
+    oznaczWyslana(magazyn, przyjeta, LISTOPAD)
+
+    assert.deepEqual([zMagazynu(magazyn, przyjeta).status, zMagazynu(magazyn, przyjeta).oferta.wyslana], ['przyjeta', '2026-11-12T10:00:00.000Z'])
+    assert.throws(() => oznaczWyslana(magazyn, szkic), bladWyceny('przejscie'))
+    assert.throws(() => oznaczWyslana(magazyn, wykonana), bladWyceny('tylko_odczyt'))
+    assert.throws(() => oznaczWyslana(magazyn, 'nie-ma'), bladWyceny('brak_wyceny'))
+  })
+})
+
+describe('zapiszOferte', () => {
+  it('zapisuje zakres z przyciętymi punktami, warunki, ważność i klienta tylko w tej wycenie', () => {
+    const magazyn = nowyMagazyn()
+    const id = wycenaWStatusie(magazyn, ['do_wyslania'])
+    const warunki = [{ id: 'zaliczka', tresc: ' Bez zaliczki. ', tylko_szybka: false }]
+
+    zapiszOferte(magazyn, id, { zakres: { wchodzi: [' Podłogi '], nie_wchodzi: [] }, warunki, waznaDo: '2026-11-30',
+      klient: { nazwa: ' Marzena Wróbel ' } }, LISTOPAD)
+
+    const w = zMagazynu(magazyn, id)
+    assert.deepEqual(w.oferta, { zakres: { wchodzi: ['Podłogi'], nie_wchodzi: [] }, warunki: [{ id: 'zaliczka', tresc: 'Bez zaliczki.', tylko_szybka: false }],
+      waznaDo: '2026-11-30', wyslana: null, nieaktualna: false })
+    assert.equal(w.klient.nazwa, 'Marzena Wróbel')
+  })
+
+  it('null wraca do zakresu i warunków z ustawień; zmiana po wysłaniu oznacza ofertę jako nieaktualną, ta sama wartość nie', () => {
+    const magazyn = nowyMagazyn()
+    const id = wycenaWStatusie(magazyn, ['do_wyslania'])
+    zapiszOferte(magazyn, id, { zakres: { wchodzi: ['Podłogi'], nie_wchodzi: [] } }, PAZDZIERNIK)
+    oznaczWyslana(magazyn, id, PAZDZIERNIK)
+
+    zapiszOferte(magazyn, id, { zakres: { wchodzi: ['Podłogi'], nie_wchodzi: [] } }, LISTOPAD)
+    const takSamo = zMagazynu(magazyn, id).oferta.nieaktualna
+    zapiszOferte(magazyn, id, { zakres: null, warunki: null }, LISTOPAD)
+
+    const po = zMagazynu(magazyn, id).oferta
+    assert.equal(takSamo, false)
+    assert.deepEqual([po.zakres, po.warunki, po.nieaktualna], [null, null, true])
+  })
+
+  it('nieznane pole, zła data, pusty punkt i szkic → błąd bez zapisu', () => {
+    const magazyn = nowyMagazyn()
+    const id = wycenaWStatusie(magazyn, ['do_wyslania'])
+    const szkic = wycenaWStatusie(magazyn, [])
+
+    assert.throws(() => zapiszOferte(magazyn, id, /** @type {never} */ ({ cena: 1 })), bladWyceny('oferta'))
+    assert.throws(() => zapiszOferte(magazyn, id, { waznaDo: '30.11.2026' }), bladWyceny('wazna_do'))
+    assert.throws(() => zapiszOferte(magazyn, id, { zakres: { wchodzi: ['  '], nie_wchodzi: [] } }),
+      { name: 'BladUstawien', kod: 'pusty', pole: 'oferta.zakres.wchodzi.0' })
+    assert.throws(() => zapiszOferte(magazyn, szkic, { waznaDo: '2026-11-30' }), bladWyceny('przejscie'))
+    assert.equal(zMagazynu(magazyn, id).oferta.zakres, null)
+  })
+})
+
+describe('zapiszOferte i oznaczWyslana: bramki statusu i strażnik oferty w wycenie', () => {
+  it('wykonana wycena → tylko_odczyt, odrzucona → przejscie (status spoza STATUSY_OFERTY); oferta bez zmian', () => {
+    const magazyn = nowyMagazyn()
+    const wykonana = wycenaWStatusie(magazyn, ['do_wyslania', 'przyjeta'])
+    dodajWykonanie(magazyn, wykonana, { data: '2026-10-16', minuty: 180, tempoPlanu: 1.3 }, PAZDZIERNIK)
+    const odrzucona = wycenaWStatusie(magazyn, ['do_wyslania', 'odrzucona'])
+
+    assert.throws(() => zapiszOferte(magazyn, wykonana, { waznaDo: '2026-11-30' }), bladWyceny('tylko_odczyt'))
+    assert.throws(() => zapiszOferte(magazyn, odrzucona, { waznaDo: '2026-11-30' }), bladWyceny('przejscie'))
+    assert.throws(() => oznaczWyslana(magazyn, odrzucona), bladWyceny('przejscie'))
+    assert.deepEqual([zMagazynu(magazyn, wykonana).oferta.waznaDo, zMagazynu(magazyn, odrzucona).oferta.waznaDo], [null, null])
+    assert.equal(zMagazynu(magazyn, odrzucona).oferta.wyslana, null)
+  })
+
+  it('czyStatusOferty: ofertę przygotowuje się z do_wyslania, wyslana i przyjeta (STATUSY_OFERTY)', () => {
+    assert.deepEqual(modulWycen.STATUSY_WYCENY.filter(modulWycen.czyStatusOferty), [...modulWycen.STATUSY_OFERTY])
+    assert.deepEqual(modulWycen.STATUSY_OFERTY, ['do_wyslania', 'wyslana', 'przyjeta'])
+  })
+
+  it('jestWycena odrzuca ofertę z datą ważności spoza RRRR-MM-DD, datą wysłania „wczoraj” i punktem zakresu ponad 500 znaków', () => {
+    const magazyn = nowyMagazyn()
+    const zapisana = zMagazynu(magazyn, wycenaWStatusie(magazyn, ['do_wyslania']))
+    const zOferta = (/** @type {object} */ zmiana) => ({ ...zapisana, oferta: { ...zapisana.oferta, ...zmiana } })
+
+    assert.equal(modulWycen.jestWycena(zOferta({ waznaDo: '2026-11-07', wyslana: '2026-10-15T10:00:00.000Z' })), true)
+    assert.equal(modulWycen.jestWycena(zOferta({ waznaDo: '7.11.2026' })), false)
+    assert.equal(modulWycen.jestWycena(zOferta({ wyslana: 'wczoraj' })), false)
+    assert.equal(modulWycen.jestWycena(zOferta({ zakres: { wchodzi: ['x'.repeat(501)], nie_wchodzi: [] } })), false)
   })
 })

@@ -106,9 +106,9 @@
         "max_m2": 14
       },
       "aneks": {
-        "udzial": 0.1,
-        "min_m2": 4,
-        "max_m2": 8
+        "udzial": 0.16,
+        "min_m2": 6,
+        "max_m2": 14
       },
       "przedpokoj": {
         "udzial": 0.12
@@ -127,7 +127,7 @@
           "m2": [8, 5]
         }
       ],
-      "zasady": "kuchnia (osobna) = udzial × metraż w granicach min_m2–max_m2; aneks liczy się tak samo z parametrami aneksu (założenie: aneks jest mniejszy od kuchni, różnica przechodzi do pokoi); przedpokój = udzial × metraż; łazienki = m2 z pierwszej pozycji listy, dla której metraż < do_m2 (null = bez górnej granicy); inna liczba łazienek skraca listę domyślną albo dokłada łazienki o metrażu ostatniej pozycji listy; pokoje = reszta metrażu."
+      "zasady": "kuchnia (osobna) = udzial × metraż w granicach min_m2–max_m2; aneks liczy się tak samo z parametrami aneksu (decyzja właściciela 2026-10-28: aneks jak osobna kuchnia, bo praca w kuchni to fronty, blat, zlew i AGD, a nie podłoga); przedpokój = udzial × metraż; łazienki = m2 z pierwszej pozycji listy, dla której metraż < do_m2 (null = bez górnej granicy); inna liczba łazienek skraca listę domyślną albo dokłada łazienki o metrażu ostatniej pozycji listy; pokoje = reszta metrażu."
     },
     "biuro": {
       "na_m2": 100,

@@ -64,12 +64,13 @@ describe('tekstOstatniejKopii', () => {
 })
 
 describe('etykietyPodsumowania', () => {
-  it('12 wycen, 7 zleceń i ustawienia firmy jak na makiecie', () => {
-    assert.deepEqual(etykietyPodsumowania({ wycen: 12, wykonan: 7, czyUstawienia: true }), ['12 wycen', '7 zleceń', 'ustawienia firmy'])
+  it('12 wycen, 7 wykonanych zleceń i ustawienia firmy (makieta z napisem „wykonanych”, decyzja właściciela 2026-10-28)', () => {
+    assert.deepEqual(etykietyPodsumowania({ wycen: 12, wykonan: 7, czyUstawienia: true }), ['12 wycen', '7 wykonanych zleceń', 'ustawienia firmy'])
   })
 
-  it('odmiana: 1 wycena, 3 zlecenia; bez ustawień bez trzeciego chipa', () => {
-    assert.deepEqual(etykietyPodsumowania({ wycen: 1, wykonan: 3, czyUstawienia: false }), ['1 wycena', '3 zlecenia'])
+  it('odmiana: 1 wycena, 1 wykonane zlecenie, 3 wykonane zlecenia; bez ustawień bez trzeciego chipa', () => {
+    assert.deepEqual(etykietyPodsumowania({ wycen: 1, wykonan: 3, czyUstawienia: false }), ['1 wycena', '3 wykonane zlecenia'])
+    assert.deepEqual(etykietyPodsumowania({ wycen: 2, wykonan: 1, czyUstawienia: false }), ['2 wyceny', '1 wykonane zlecenie'])
   })
 
   it('ujemna liczba wycen daje BladFormatu', () => {

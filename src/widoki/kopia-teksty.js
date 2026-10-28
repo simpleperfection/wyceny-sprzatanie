@@ -55,9 +55,13 @@ export function tekstOstatniejKopii(dni, ostatnia) {
   return `Ostatnia kopia: ${data(ostatnia)} (${dniTemu(Math.max(0, dni))})`
 }
 
-/** @param {PodsumowanieKopii} podsumowanie @returns {string[]} „12 wycen”, „7 zleceń”, „ustawienia firmy” */
+/**
+ * Liczba zlecen to wpisy czasu pracy, nie wyceny przyjete, stad „wykonanych” (decyzja wlasciciela 2026-10-28).
+ * @param {PodsumowanieKopii} podsumowanie
+ * @returns {string[]} „12 wycen”, „7 wykonanych zleceń”, „ustawienia firmy”
+ */
 export function etykietyPodsumowania({ wycen, wykonan, czyUstawienia }) {
-  const etykiety = [`${wycen} ${odmiana(wycen, FORMY.wycena)}`, `${wykonan} ${odmiana(wykonan, FORMY.zlecenie)}`]
+  const etykiety = [`${wycen} ${odmiana(wycen, FORMY.wycena)}`, `${wykonan} ${odmiana(wykonan, FORMY.wykonaneZlecenie)}`]
   return czyUstawienia ? [...etykiety, 'ustawienia firmy'] : etykiety
 }
 

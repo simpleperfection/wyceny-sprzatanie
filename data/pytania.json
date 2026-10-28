@@ -1,12 +1,12 @@
 {
   "meta": {
-    "wersja": "2026-10-24",
+    "wersja": "2026-10-28",
     "zatwierdzone": "2026-10-24 przez właściciela (przegląd: docs/operator/etap-5-pytania-i-zakresy.html)",
-    "opis": "Pytania do klienta przed wyceną (R13), osobne dla każdej usługi z data/ceny.json poza AGD (tylko_dodatek). Odpowiedzi zapisują się przy wycenie. Odpowiedź ze skutkiem sama ustawia wycenę: brud w pomieszczeniach albo kilometry dojazdu.",
+    "opis": "Pytania do klienta przed wyceną (R13), osobne dla każdej usługi z data/ceny.json poza AGD (tylko_dodatek). Odpowiedzi zapisują się przy wycenie. Odpowiedź ze skutkiem sama ustawia wycenę: brud w pomieszczeniach, kilometry dojazdu albo górną granicę widełek szybkiej wyceny.",
     "lista": "Lista pytań usługi = wspolne + uslugi[id usługi], w tej kolejności. Wspólne są tylko dojazd i termin, bo na początku rozmowy sprawdza się, czy firma dojedzie i ma wolny termin; reszta zależy od usługi.",
     "id": "Unikalne w liście pytań usługi (wspólne + usługa). To samo pytanie w kilku usługach ma to samo id oraz ten sam typ i opcje, więc odpowiedź zostaje po zmianie usługi (np. ze standardowego na gruntowne); treść i skutek mogą być dopasowane do usługi.",
     "typy": "tak_nie – odpowiedź „tak” albo „nie”; wybor – jedna z opcje; liczba – liczba z jednostka; tekst – dowolny tekst. Każda odpowiedź może mieć notatkę (np. „Tak, kot”, „12 km, parking pod blokiem”).",
-    "skutek": "brud: gdy odpowiedź = gdy („tak” albo jedna z opcji), ustaw brud (id z brud w data/normy.json) na poziom 1–3 w pomieszczeniu (typ z zestawy_pomieszczen albo * = wszystkie); działa tylko w usługach z pomieszczeniami. dojazd_km: liczba z odpowiedzi to kilometry dojazdu (tylko typ liczba).",
+    "skutek": "brud: gdy odpowiedź = gdy („tak” albo jedna z opcji), ustaw brud (id z brud w data/normy.json) na poziom 1–3 w pomieszczeniu (typ z zestawy_pomieszczen albo * = wszystkie); działa tylko w usługach z pomieszczeniami. dojazd_km: liczba z odpowiedzi to kilometry dojazdu (tylko typ liczba). gorna_granica: gdy odpowiedź = gdy, górna granica widełek szybkiej wyceny to cena pozycji × mnożnik poziomu 1–3 z poziomy_brudu w data/ceny.json zamiast poziomu 2; tylko usługi z pozycjami i szybka_wycena = widelki, wycena dokładna bez zmian (decyzja właściciela 2026-10-28: trudne plamy na tapicerce i dywanie, farba i klej na szybach – do +40%).",
     "zdjecia": "Podpowiedź na ekranie pytań i tekst prośby o zdjęcia do skopiowania klientowi, dla każdej usługi."
   },
   "wspolne": [
@@ -60,19 +60,19 @@
     "okna": [
       { "id": "okna_dostep", "tresc": "Czy któreś okna są trudno dostępne (wysoko, nieotwierane, za meblami)?", "typ": "tak_nie" },
       { "id": "okna_rolety", "tresc": "Czy myć też rolety, żaluzje lub moskitiery?", "typ": "tak_nie" },
-      { "id": "zachlapania", "tresc": "Czy na szybach są farba, klej lub naklejki po remoncie?", "typ": "tak_nie" },
+      { "id": "zachlapania", "tresc": "Czy na szybach są farba, klej lub naklejki po remoncie?", "typ": "tak_nie", "skutek": { "rodzaj": "gorna_granica", "poziom": 3, "gdy": "tak" } },
       { "id": "pietro", "tresc": "Piętro i winda", "typ": "tekst" },
       { "id": "zdjecia", "tresc": "Zdjęcia od klienta", "typ": "tak_nie" }
     ],
     "tapicerka": [
       { "id": "tkanina", "tresc": "Z czego jest tapicerka?", "typ": "wybor", "opcje": ["Tkanina", "Welur lub mikrofibra", "Skóra lub ekoskóra", "Nie wiadomo"] },
-      { "id": "plamy", "tresc": "Czy są trudne plamy (mocz, wino, krew, tłuszcz)?", "typ": "tak_nie" },
+      { "id": "plamy", "tresc": "Czy są trudne plamy (mocz, wino, krew, tłuszcz)?", "typ": "tak_nie", "skutek": { "rodzaj": "gorna_granica", "poziom": 3, "gdy": "tak" } },
       { "id": "zwierzeta", "tresc": "Czy w domu są zwierzęta?", "typ": "tak_nie" },
       { "id": "zdjecia", "tresc": "Zdjęcia od klienta", "typ": "tak_nie" }
     ],
     "dywany": [
       { "id": "dywan_rodzaj", "tresc": "Jaki to dywan?", "typ": "wybor", "opcje": ["Syntetyczny", "Wełniany", "Ręcznie tkany lub jedwabny", "Nie wiadomo"] },
-      { "id": "plamy", "tresc": "Czy są trudne plamy (mocz, wino, krew, tłuszcz)?", "typ": "tak_nie" },
+      { "id": "plamy", "tresc": "Czy są trudne plamy (mocz, wino, krew, tłuszcz)?", "typ": "tak_nie", "skutek": { "rodzaj": "gorna_granica", "poziom": 3, "gdy": "tak" } },
       { "id": "zwierzeta", "tresc": "Czy w domu są zwierzęta?", "typ": "tak_nie" },
       { "id": "meble_do_przesuniecia", "tresc": "Czy na wykładzinie stoją meble do przesunięcia?", "typ": "tak_nie" },
       { "id": "zdjecia", "tresc": "Zdjęcia od klienta", "typ": "tak_nie" }

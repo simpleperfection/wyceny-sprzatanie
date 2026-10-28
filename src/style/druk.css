@@ -1,0 +1,72 @@
+/*
+ * Wydruk oferty (oferta.html, media="print"): A4 z marginesami 15 mm, czarny tekst na bialym tle, bez przyciskow i banerow.
+ * Wiersz uslugi, kwota „Razem” i punkt zakresu nie dziela sie miedzy stronami.
+ */
+
+@page {
+  size: A4;
+  margin: 15mm;
+}
+
+html,
+body {
+  background: #fff;
+  color: #000;
+}
+
+.oferta {
+  display: block;
+  min-height: 0;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: #fff;
+}
+
+.oferta *,
+.oferta *::before,
+.oferta *::after {
+  color: #000 !important;
+  background: transparent !important;
+}
+
+.oferta__baner,
+.oferta__przyciski {
+  display: none;
+}
+
+.oferta__inicjaly {
+  border: 1.5px solid #000;
+}
+
+.oferta__pole {
+  border: 1px solid #000;
+}
+
+.oferta__wiersz {
+  border-bottom-color: #000;
+}
+
+.oferta__razem {
+  margin-top: 0;
+  border: 1.5px solid #000;
+}
+
+.oferta__firma,
+.oferta__wiersz,
+.oferta__razem,
+.oferta__pole,
+.oferta__lista li,
+.oferta__vat,
+.oferta__poza {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.oferta__tytul,
+.oferta__naglowek,
+.oferta__etykieta {
+  break-after: avoid;
+  page-break-after: avoid;
+}

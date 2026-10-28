@@ -1,0 +1,130 @@
+{
+  "wersja": 1,
+  "ustawienia": {
+    "wojewodztwoId": "mazowieckie",
+    "statusVat": "zwolniony",
+    "firma": {
+      "nazwa": "Usługi Sprzątające Monika Lis",
+      "telefon": "600 123 456",
+      "email": "",
+      "nip": ""
+    },
+    "tempo": {
+      "reczne": null
+    },
+    "koszty": {
+      "sprzet": {},
+      "dojazd": {}
+    },
+    "zakresy": {},
+    "warunki": null,
+    "przypomnienieKopiiDni": 7,
+    "kreatorZakonczony": true
+  },
+  "wyceny": [
+    {
+      "id": "e2e-zlecenie-przyjete",
+      "numer": "1/10/2026",
+      "utworzona": "2026-10-20T09:00:00.000Z",
+      "zmieniona": "2026-10-22T09:00:00.000Z",
+      "status": "przyjeta",
+      "rodzaj": "dokladna",
+      "klient": {
+        "nazwa": "Anna Kowalska, Mokotów",
+        "adres": "",
+        "termin": null
+      },
+      "wejscie": {
+        "uslugaId": "mieszkanie_standard",
+        "wojewodztwoId": "mazowieckie",
+        "pomieszczenia": [
+          {
+            "typ": "pokoj",
+            "m2": 32
+          },
+          {
+            "typ": "przedpokoj",
+            "m2": 6
+          },
+          {
+            "typ": "kuchnia",
+            "m2": 8
+          },
+          {
+            "typ": "lazienka",
+            "m2": 4
+          }
+        ],
+        "dojazdKm": 0
+      },
+      "szybka": null,
+      "odpowiedzi": {},
+      "wynik": {
+        "cena": 250,
+        "netto": 250,
+        "vat": 0,
+        "mediana": 250,
+        "widelki": {
+          "od": 120.0264,
+          "do": 450.09900000000005,
+          "pelne": true
+        },
+        "minutyNormowe": 230.82,
+        "linie": [
+          {
+            "rodzaj": "praca",
+            "klucz": null,
+            "opis": "Mieszkanie lub dom – sprzątanie standardowe",
+            "ilosc": 3.847,
+            "jednostka": "h",
+            "cenaJedn": 65,
+            "cenaBazowa": 65,
+            "mnoznikProgu": 1,
+            "kwota": 250.055,
+            "zakres": null,
+            "minuty": 230.82
+          }
+        ],
+        "propozycje": [],
+        "dojazd": {
+          "km": 0,
+          "kwota": 0
+        },
+        "wojewodztwo": {
+          "id": "mazowieckie",
+          "nazwa": "mazowieckie",
+          "stawka_h": 65,
+          "wsp": 1
+        },
+        "statusVat": "zwolniony",
+        "stawkaVatProc": 23,
+        "podstawaCeny": "brutto",
+        "wizytWMiesiacu": null,
+        "wersjaDanych": {
+          "ceny": "2026-10-23",
+          "normy": "2026-10-23",
+          "rynek": "2026-10-23"
+        }
+      },
+      "cenaReczna": null,
+      "wykonania": [],
+      "oferta": {
+        "zakres": null,
+        "warunki": null,
+        "waznaDo": null,
+        "wyslana": "2026-10-21T10:00:00.000Z",
+        "nieaktualna": false
+      }
+    }
+  ],
+  "licznikNumerow": {
+    "2026-10": 2
+  },
+  "kopia": {
+    "ostatnia": null,
+    "zmianaOd": "2026-10-20T09:00:00.000Z"
+  },
+  "preferencje": {
+    "iosInstrukcjaZamknieta": false
+  }
+}

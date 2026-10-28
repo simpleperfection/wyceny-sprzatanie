@@ -10,7 +10,7 @@ import { h, ikona } from '../h.js'
  * @typedef {{ id: string, etykieta: string, wartosc?: string, rodzaj?: RodzajPola, blad?: string | null, podpowiedz?: string,
  *   autocomplete?: string, naZmiane?: (wartosc: string) => void }} OpcjePola
  * @typedef {{ id: string, etykieta: string, wartosc: number, min?: number, max?: number, krok?: number, jednostka?: string,
- *   naZmiane: (wartosc: number) => void }} OpcjeLicznika
+ *   tekstBledu?: string, naZmiane: (wartosc: number) => void }} OpcjeLicznika tekstBledu: komunikat zlego wpisu zamiast ogolnego „Wpisz liczbę od … do …”
  * @typedef {{ id: string, etykieta: string, opis?: string, czyWlaczony: boolean, naZmiane: (czyWlaczony: boolean) => void }} OpcjePrzelacznika
  * @typedef {{ tekst: string, rodzaj?: 'glowny' | 'drugi' | 'tekstowy', ikona?: NazwaIkony, adres?: string, naKlik?: () => void,
  *   typ?: 'button' | 'submit', czyWylaczony?: boolean, etykieta?: string }} OpcjePrzycisku
@@ -64,7 +64,7 @@ export function pole(opcje) {
 const zaokraglij = (x) => Math.round(x * CYFRY_KROKU) / CYFRY_KROKU
 /** @param {OpcjeLicznika} opcje @returns {HTMLDivElement} karta z etykieta, wartoscia do wpisania i przyciskami − / + */
 export function licznik(opcje) {
-  const { id, etykieta, min = 0, max = Number.POSITIVE_INFINITY, krok = 1, jednostka, naZmiane } = opcje
+  const { id, etykieta, min = 0, max = Number.POSITIVE_INFINITY, krok = 1, jednostka, tekstBledu, naZmiane } = opcje
   let wartosc = opcje.wartosc
   if (!(wartosc >= min && wartosc <= max)) throw new RangeError(`Licznik ${id}: wartość ${wartosc} poza zakresem ${min}–${max}`)
   const ogloszenie = h('span', { class: 'wizualnie-ukryte', 'aria-live': 'polite' })
@@ -109,7 +109,7 @@ export function licznik(opcje) {
   function handleWpis() {
     dopasujSzerokosc()
     const liczba = parsujLiczbe(wejscie.value)
-    if (liczba === null || liczba < min || liczba > max) return pokazBlad(bladZakresu({ min, max }))
+    if (liczba === null || liczba < min || liczba > max) return pokazBlad(tekstBledu ?? bladZakresu({ min, max }))
     pokazBlad(null)
     wartosc = liczba
     odswiezPrzyciski()

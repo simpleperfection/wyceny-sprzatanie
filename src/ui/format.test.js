@@ -20,6 +20,7 @@ import {
   zl,
   zlGr,
 } from './format.js'
+import * as modulFormatu from './format.js'
 
 const NBSP = ' '
 
@@ -146,5 +147,36 @@ describe('tekstLiczby, bladZakresu i sprawdzDate', () => {
     assert.equal(sprawdzDate(dzis), dzis)
     assert.throws(() => sprawdzDate(new Date('x')), bladFormatu('zla_data'))
     assert.throws(() => sprawdzDate('2026-10-25'), bladFormatu('zla_data'))
+  })
+})
+
+describe('kwotaJednostki i nazwaJednostki', () => {
+  it('pełne złote bez groszy, inaczej z groszami; zaokrąglenie do grosza; NaN daje BladFormatu', () => {
+    assert.equal(modulFormatu.kwotaJednostki(30), '30 zł')
+    assert.equal(modulFormatu.kwotaJednostki(7.5), '7,50 zł')
+    assert.equal(modulFormatu.kwotaJednostki(2.034), '2,03 zł')
+    assert.throws(() => modulFormatu.kwotaJednostki(Number.NaN), BladFormatu)
+  })
+
+  it('m2 → „m²”, szt → „szt.”, inna jednostka z danych bez zmian', () => {
+    assert.deepEqual(['m2', 'szt', 'mb'].map(modulFormatu.nazwaJednostki), ['m²', 'szt.', 'mb'])
+  })
+})
+
+describe('tekstIlosci i terminKlienta (tekst oferty dla klienta)', () => {
+  it('tekstIlosci: jednostka z danych, tysiące z twardą spacją, ułamki z przecinkiem; NaN daje BladFormatu', () => {
+    assert.deepEqual([modulFormatu.tekstIlosci(50, 'm2'), modulFormatu.tekstIlosci(4, 'szt'), modulFormatu.tekstIlosci(1200, 'm2'),
+      modulFormatu.tekstIlosci(2.5, 'h')], ['50 m²', '4 szt.', `1${NBSP}200 m²`, '2,5 h'])
+    assert.throws(() => modulFormatu.tekstIlosci(Number.NaN, 'm2'), bladFormatu('nie_liczba'))
+  })
+
+  it('terminKlienta: data i godzina z pola formularza po polsku, sam dzień bez godziny, sekundy pomijane', () => {
+    assert.deepEqual(['2026-11-14T09:00', '2026-11-14T18:30:00', '2026-11-14'].map(modulFormatu.terminKlienta),
+      ['14 listopada 2026, 9:00', '14 listopada 2026, 18:30', '14 listopada 2026'])
+  })
+
+  it('terminKlienta: nieistniejący dzień, zła godzina i zwykły tekst zostają bez zmian', () => {
+    assert.deepEqual(['2026-02-30T09:00', '2026-11-14T24:00', 'jutro rano', ''].map(modulFormatu.terminKlienta),
+      ['2026-02-30T09:00', '2026-11-14T24:00', 'jutro rano', ''])
   })
 })

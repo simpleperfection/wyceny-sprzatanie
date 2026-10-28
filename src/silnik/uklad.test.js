@@ -50,10 +50,10 @@ describe('uklad mieszkania', () => {
     assert.deepEqual(uklad.filter((p) => p.typ === 'lazienka').map((p) => p.m2), [8])
   })
 
-  it('50 m² z aneksem: kuchnia 5 m² i pokój 35 m²', () => {
+  it('50 m² z aneksem: kuchnia 8 m² i pokój 32 m², jak przy osobnej kuchni (decyzja właściciela 2026-10-28)', () => {
     const uklad = ukladMieszkania(50, { kuchnia: 'aneks' }, uklady)
 
-    assert.deepEqual(uklad.slice(0, 3), [{ typ: 'pokoj', m2: 35 }, { typ: 'przedpokoj', m2: 6 }, { typ: 'kuchnia', m2: 5 }])
+    assert.deepEqual(uklad.slice(0, 3), [{ typ: 'pokoj', m2: 32 }, { typ: 'przedpokoj', m2: 6 }, { typ: 'kuchnia', m2: 8 }])
   })
 
   it('12 m² z trzema łazienkami rzuca BladWejscia z kodem metraz', () => {

@@ -1,9 +1,11 @@
 // Karta „Tempo pracy” ustawien firmy (R15, R17): zrodlo tempa, krotnosc normy rynkowej, czas mieszkania 50 m² z tempem
-// i wedlug normy, powrot do wartosci recznej albo liczenie z zlecen; wartosc reczna w arkuszu 0,5–3 co 0,05.
+// i wedlug normy, powrot do wartosci recznej albo liczenie z zlecen; wartosc reczna w arkuszu 0,5–3 co 0,05; pod spodem
+// lista „Plan a fakt” z ostatnich wpisow czasu pracy (R16), liczona przez src/kreator/zakonczenie.js.
 
 import { GRANICE_TEMPA } from '../dane/walidacja.js'
+import { historiaPlanuIFaktu } from '../kreator/zakonczenie.js'
 import { MIN_ZLECEN_TEMPA, tempoDoWyceny } from '../silnik/tempo.js'
-import { czas } from '../ui/format.js'
+import { czas, data, procent } from '../ui/format.js'
 import { h } from '../ui/h.js'
 import { licznik, przycisk } from '../ui/komponenty/formularz.js'
 import { karta } from '../ui/komponenty/uklad.js'
@@ -64,7 +66,20 @@ function akcjeTempa(dane, tempo) {
   return akcje
 }
 
-/** @param {DaneSekcji} dane @returns {HTMLElement} karta „Tempo pracy” */
+/** @param {DaneSekcji} dane @returns {HTMLElement} sekcja „Plan a fakt”: wiersz na wpis czasu, od najnowszego, albo zachęta przed pierwszym */
+function planAFakt({ wyceny, katalog }) {
+  const wiersze = historiaPlanuIFaktu(wyceny)
+  /** @param {string} id */
+  const nazwa = (id) => katalog.uslugi.find((u) => u.id === id)?.nazwa ?? id
+  return h('section', { class: 'plan-fakt-ustawienia', 'aria-labelledby': 'ustawienia-plan-fakt' },
+    h('h3', { class: 'plan-fakt-ustawienia__tytul', id: 'ustawienia-plan-fakt' }, 'Plan a fakt'),
+    wiersze.length === 0
+      ? h('p', { class: 'ustawienia__opis' }, 'Po pierwszym zleceniu z wpisanym czasem zobaczysz tu, jak Twój plan zbliża się do faktu.')
+      : h('ul', { class: 'plan-fakt-lista' }, wiersze.map((x) => h('li', { class: 'plan-fakt-lista__wiersz liczba' },
+        `${data(x.data)} · ${nazwa(x.uslugaId)} · plan ${czas(x.plan)} · fakt ${czas(x.fakt)} (${procent(x.procent)})`))))
+}
+
+/** @param {DaneSekcji} dane @returns {HTMLElement} karta „Tempo pracy” z lista „Plan a fakt” */
 export function kartaTempa(dane) {
   const { ustawienia, wyceny, domyslne, katalog } = dane
   const tempo = tempoDoWyceny(ustawienia, wyceny, null, domyslne)
@@ -80,5 +95,6 @@ export function kartaTempa(dane) {
     tempo.liczba < MIN_ZLECEN_TEMPA
       ? h('p', { class: 'ustawienia__opis' }, `Własne tempo policzymy po ${MIN_ZLECEN_TEMPA} zleceniach z wpisanym czasem.`)
       : null,
-    akcjeTempa(dane, tempo))
+    akcjeTempa(dane, tempo),
+    planAFakt(dane))
 }
