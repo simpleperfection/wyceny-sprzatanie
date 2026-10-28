@@ -51,6 +51,8 @@ const CYFRY_METRAZU = 100
 
 /** @param {string} uslugaId */
 const czyMieszkanie = (uslugaId) => RODZAJE_MIESZKANIA.some((r) => r.wartosc === uslugaId)
+/** Pola z licznikiem lazienek (uklad typowego mieszkania). @param {PolaSzybkiej} pola */
+const maLazienki = (pola) => pola === 'mieszkanie' || pola === 'ogledziny_pomieszczen'
 /** @param {unknown} stan @returns {stan is StanSzybkiej} */
 const jestStanem = (stan) => STANY_SZYBKIEJ.some((s) => s.id === stan)
 
@@ -79,16 +81,19 @@ export function polaUslugi(usluga) {
 }
 
 /**
- * Wejscie formularza po wyborze uslugi: metraz, stan i odpowiedzi zostaja; pozycje od zera (tylko uslugi z licznikami pozycji),
- * dodatki AGD tylko przy mieszkaniu. Brud i poziom gornej granicy z odpowiedzi znikaja, bo zaleza od pytan uslugi
- * (zBrudemOdpowiedzi liczy je od nowa).
+ * Wejscie formularza po wyborze uslugi: metraz, lazienki, stan i odpowiedzi zostaja; pola mieszkania bez lazienek (formularz
+ * z zapisanych pozycji, ogledzin pozycji albo biura) dostaja domyslna liczbe dla metrazu; pozycje od zera (tylko uslugi
+ * z licznikami pozycji), dodatki AGD tylko przy mieszkaniu. Brud i poziom gornej granicy z odpowiedzi znikaja, bo zaleza
+ * od pytan uslugi (zBrudemOdpowiedzi liczy je od nowa).
  * @param {FormularzSzybkiej} wejscie @param {string} uslugaId @param {Katalog} katalog @returns {FormularzSzybkiej}
  */
 export function zUsluga(wejscie, uslugaId, katalog) {
   const usluga = katalog.usluga(uslugaId)
   const pola = polaUslugi(usluga)
   const pozycje = pola === 'pozycje' ? pozycjeGlowne(usluga).map((p) => ({ id: p.id, ilosc: 0 })) : []
-  return { ...wejscie, uslugaId, pozycje, dodatki: pola === 'mieszkanie' ? wejscie.dodatki : [], brud: [], poziomGorny: null }
+  const czyBezLazienek = maLazienki(pola) && wejscie.lazienki === undefined && wejscie.m2 > 0
+  const lazienki = czyBezLazienek ? { lazienki: domyslneLazienki(wejscie.m2, katalog.uklady) } : {}
+  return { ...wejscie, ...lazienki, uslugaId, pozycje, dodatki: pola === 'mieszkanie' ? wejscie.dodatki : [], brud: [], poziomGorny: null }
 }
 
 /**
@@ -150,7 +155,8 @@ export function wynikFormularza(kontekst, wejscie) {
 
 /**
  * Formularz z zapisanej szybkiej wyceny (`?wycena=<id>`): metraz i lazienki z pomieszczen, kuchnia z nazwy aneksu, metraz
- * ogledzin z glownej pozycji (przy licznikach pozycji wzorcowy), stan, brud i poziom gornej granicy z odpowiedzi z widelek;
+ * ogledzin z glownej pozycji (przy licznikach pozycji wzorcowy), stan, brud i poziom gornej granicy z odpowiedzi z widelek
+ * (poziom spoza poziomy_brudu, np. z recznie zmienionej kopii, daje null, zeby widelki dalo sie policzyc);
  * odpowiedzi, dodatki, dojazd i wojewodztwo bez zmian.
  * @param {Wycena} wycena rodzaj `szybka` (inna daje BladWyceny `rodzaj`) @param {Katalog} katalog
  * @returns {FormularzSzybkiej}
@@ -166,12 +172,14 @@ export function wejscieZWyceny(wycena, katalog) {
   const m2 = pola === 'ogledziny_pozycji' ? pozycje[0]?.ilosc ?? 0
     : pola === 'pozycje' ? METRAZ_WZORCOWY : Math.round(opis.m2 * CYFRY_METRAZU) / CYFRY_METRAZU
   const stan = wycena.szybka?.stan
+  const poziomGorny = wycena.szybka?.poziomGorny
+  const czyZnanyPoziom = katalog.poziomyBrudu.some((p) => p.poziom === poziomGorny)
   return {
-    uslugaId: usluga.id, m2, lazienki: pola === 'mieszkanie' || pola === 'ogledziny_pomieszczen' ? opis.lazienki : undefined,
+    uslugaId: usluga.id, m2, lazienki: maLazienki(pola) ? opis.lazienki : undefined,
     kuchnia: opis.kuchnia === 'aneks' ? 'aneks' : 'osobna', stan: jestStanem(stan) ? stan : STAN_DOMYSLNY_SZYBKIEJ,
     pozycje: pola === 'pozycje' ? pozycje : [], dodatki: wejscie.dodatki ?? [], dojazdKm: wejscie.dojazdKm ?? 0,
     wojewodztwoId: wejscie.wojewodztwoId ?? null, odpowiedzi: { ...wycena.odpowiedzi }, brud: [...(wycena.szybka?.brud ?? [])],
-    poziomGorny: wycena.szybka?.poziomGorny ?? null,
+    poziomGorny: czyZnanyPoziom ? poziomGorny ?? null : null,
   }
 }
 
