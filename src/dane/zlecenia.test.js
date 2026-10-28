@@ -188,6 +188,28 @@ describe('zmienOdWizyty', () => {
       [['2026-11-23', '09:00', 300], ['2026-11-30', '11:00', 300], ['2026-12-07', '11:00', 300], ['2026-12-14', '11:00', 300]])
   })
 
+  it('zmiana cyklu na co dwa tygodnie od 16.11 usuwa późniejszy okres godziny od 23.11: wizyty 16.11, 30.11, 14.12', () => {
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')], zlecenia: [seriaTestowa('z1')] })
+    zmienOdWizyty(magazyn, 'z1', '2026-11-23', { godzina: '11:00' })
+
+    const stan = zmienOdWizyty(magazyn, 'z1', '2026-11-16', { cykl: { co: 'dwa_tygodnie', dni: [1] } })
+
+    const z = zlecenie(stan, 'z1')
+    assert.deepEqual(z?.okresy.map((o) => o.od), ['2026-11-02', '2026-11-16'])
+    assert.deepEqual(wystapienia(z, '2026-11-16', '2026-12-20').map((w) => [w.data, w.godzina]),
+      [['2026-11-16', '09:00'], ['2026-11-30', '09:00'], ['2026-12-14', '09:00']])
+  })
+
+  it('zmiana cyklu na co miesiąc od 16.11 przy późniejszym okresie od 30.11 daje jedną wizytę w miesiącu, 16. dnia', () => {
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')], zlecenia: [seriaTestowa('z1')] })
+    zmienOdWizyty(magazyn, 'z1', '2026-11-30', { cenaWizyty: 300 })
+
+    const stan = zmienOdWizyty(magazyn, 'z1', '2026-11-16', { cykl: { co: 'miesiac', dni: [] } })
+
+    assert.deepEqual(wystapienia(zlecenie(stan, 'z1'), '2026-11-16', '2027-01-31').map((w) => [w.data, w.okres.cenaWizyty]),
+      [['2026-11-16', 250], ['2026-12-16', 250], ['2027-01-16', 250]])
+  })
+
   it('seria co miesiąc od 31.01 po zmianie ceny od wizyty 28.02 dalej wypada 31.03, 30.04, 31.05', () => {
     const coMiesiac = zlecenieTestowe('z1', { start: '2026-01-31',
       okresy: [{ od: '2026-01-31', cykl: { co: 'miesiac', dni: [] }, godzina: null, cenaWizyty: 250, cenaMiesiaca: null }] })

@@ -212,8 +212,9 @@ function zmianaOkresu(zmiany) {
 
 /**
  * Zmiana ceny, godziny albo cyklu od wizyty z data pierwotna w przod (R13): w serii nowy okres od tego dnia (okres o tym samym
- * `od` zostaje zastapiony), a podane pola nadpisuja tez pozniejsze okresy (ich pozostale pola zostaja); w zleceniu
- * jednorazowym zmiana jedynego okresu (dodanie cyklu → `jednorazowe`).
+ * `od` zostaje zastapiony), a podane pola nadpisuja tez pozniejsze okresy (ich pozostale pola zostaja). Zmiana cyklu usuwa
+ * pozniejsze okresy: kazdy okres liczy kotwice cyklu od swojego `od` (tydzien dla `dwa_tygodnie`, dzien dla `miesiac`), wiec
+ * z nowym cyklem rozbilyby rytm nowego okresu. W zleceniu jednorazowym zmiana jedynego okresu (dodanie cyklu → `jednorazowe`).
  * @param {Magazyn} magazyn @param {string} id @param {string} dataPierwotna @param {ZmianaOkresu} zmiany @param {OpcjeZlecen} [opcje]
  * @returns {Stan}
  */
@@ -229,7 +230,9 @@ export function zmienOdWizyty(magazyn, id, dataPierwotna, zmiany, opcje = {}) {
     if (zmiana.cykl === null) throw new BladZlecenia('cykl', 'Seria musi mieć powtarzanie')
     const okres = okresZeZmiany(okresDnia(z.okresy, dataPierwotna), zmiana, z.rozliczenie, dataPierwotna)
     const wczesniejsze = z.okresy.filter((o) => porownajDni(o.od, dataPierwotna) < 0)
-    const pozniejsze = z.okresy.filter((o) => porownajDni(o.od, dataPierwotna) > 0).map((o) => okresZeZmiany(o, zmiana, z.rozliczenie, o.od))
+    const pozniejsze = zmiana.cykl === undefined
+      ? z.okresy.filter((o) => porownajDni(o.od, dataPierwotna) > 0).map((o) => okresZeZmiany(o, zmiana, z.rozliczenie, o.od))
+      : []
     return sprawdzony({ ...z, okresy: [...wczesniejsze, okres, ...pozniejsze] })
   })
 }
