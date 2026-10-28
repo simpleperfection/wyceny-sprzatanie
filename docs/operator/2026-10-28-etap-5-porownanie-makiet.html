@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Porównanie z makietami</title>
+<style>
+  :root {
+    --tlo: #f4f2ee;
+    --karta: #ffffff;
+    --tekst: #1d1d1f;
+    --slaby: #5b5b63;
+    --ramka: #dcd8d0;
+    --akcent: #2233a0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --tlo: #17171a;
+      --karta: #222226;
+      --tekst: #ececf0;
+      --slaby: #a5a5ae;
+      --ramka: #3a3a40;
+      --akcent: #9fb0ff;
+    }
+  }
+  :root[data-theme="dark"] {
+    --tlo: #17171a;
+    --karta: #222226;
+    --tekst: #ececf0;
+    --slaby: #a5a5ae;
+    --ramka: #3a3a40;
+    --akcent: #9fb0ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--tlo);
+    color: var(--tekst);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 1200px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 1.6rem; margin: 0 0 8px; }
+  .wstep { color: var(--slaby); margin: 0 0 24px; max-width: 70ch; }
+  nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+  nav a {
+    color: var(--akcent); text-decoration: none; border: 1px solid var(--ramka);
+    border-radius: 999px; padding: 4px 12px; background: var(--karta); font-size: .9rem;
+  }
+  section {
+    background: var(--karta); border: 1px solid var(--ramka); border-radius: 12px;
+    padding: 20px 16px; margin-bottom: 32px; scroll-margin-top: 16px;
+  }
+  h2 { font-size: 1.25rem; margin: 0 0 4px; }
+  .punkt { color: var(--slaby); font-size: .9rem; margin: 0 0 12px; }
+  ul { margin: 0 0 16px; padding-left: 20px; }
+  li { margin: 4px 0; }
+  .para { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  figure { margin: 0; min-width: 0; }
+  figcaption { font-weight: 600; font-size: .9rem; margin-bottom: 6px; }
+  img { display: block; width: 100%; height: auto; border: 1px solid var(--ramka); border-radius: 8px; background: #fff; }
+  .dodatek { margin-top: 16px; max-width: 50%; }
+  @media (max-width: 640px) {
+    .para { grid-template-columns: 1fr; }
+    .dodatek { max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Porównanie z makietami</h1>
+  <p class="wstep">Etap 5, smoke operatora (<code>docs/operator/2026-10-27-etap-5-aplikacja-wyceny-smoke.md</code>). Po lewej makieta z Figmy, po prawej zrzut aplikacji z E2E (szerokość 768 px). Kolory aplikacji idą za tokenami wariantu B, więc różnią się od makiety celowo; oceniaj układ, kolejność i teksty. Wynik każdej pary odhacz w pliku smoke'a.</p>
+
+  <nav>
+    <a href="#ustawienia">Ustawienia firmy</a>
+    <a href="#start">Ekran startowy</a>
+    <a href="#szybka">Szybka wycena</a>
+    <a href="#pytania">Pytania do klienta</a>
+    <a href="#oferta-edycja">Edycja oferty</a>
+    <a href="#oferta-klient">Oferta u klienta</a>
+    <a href="#zakonczenie">Zakończenie zlecenia</a>
+    <a href="#kopia">Kopia zapasowa</a>
+  </nav>
+
+  <section id="ustawienia">
+    <h2>Ustawienia firmy</h2>
+    <p class="punkt">Smoke, punkt 2 · trasa <code>#/ustawienia</code></p>
+    <ul>
+      <li>Sekcje dodane w późniejszych fazach: „Plan a fakt” pod „Tempo pracy” (po pierwszym wpisie czasu), „Zakres prac” i „Warunki oferty”.</li>
+      <li>Dolne menu w połowie zrzutu to artefakt zrzutu całej strony (<code>position: fixed</code>); na telefonie stoi na dole ekranu.</li>
+    </ul>
+    <div class="para">
+      <figure><figcaption>Makieta</figcaption><img src="../completed/etap-5-aplikacja-wyceny/visual-diff/ustawienia-firmy-figma.png" alt="Makieta ustawień firmy" loading="lazy"></figure>
+      <figure><figcaption>Aplikacja</figcaption><img src="../completed/etap-5-aplikacja-wyceny/visual-diff/ustawienia-firmy-actual.png" alt="Ustawienia firmy w aplikacji" loading="lazy"></figure>
+    </div>
+  </section>
+
+  <section id="start">
+    <h2>Ekran startowy</h2>
+    <p class="punkt">Smoke, punkt 4 · stan <code>wyceny-do-zrobienia</code></p>
+    <ul>
+      <li>Kolejność sekcji: nagłówek, dwa kafle wyceny, karta miesiąca z tempem, „Do zrobienia”, baner kopii, dolne menu.</li>
+      <li>Teksty i statusy jak w makiecie.</li>
+    </ul>
+    <div class="para">
+      <figure><figcaption>Makieta</figcaption><img src="../completed/etap-5-aplikacja-wyceny/visual-diff/ekran-startowy-figma.png" alt="Makieta ekranu startowego" loading="lazy"></figure>
+      <figure><figcaption>Aplikacja</figcaption><img src="../completed/etap-5-aplikacja-wyceny/visual-diff/ekran-startowy-actual.png" alt="Ekran startowy w aplikacji" loading="lazy"></figure>
+    </div>
+  </section>
+
+  <section id="szybka">
+    <h2>Szybka wycena</h2>
+    <p class="punkt">Smoke, punkt 5 · mieszkanie standard 50 m², typowy, mazowieckie</p>
+    <ul>
+      <li>Zaplanowane odstępstwa: pigułka „Zostaje ok. 47 zł/h” i zwijane „AGD i dodatki”.</li>
+    </ul>
+    <div class="para">
+      <figure><figcaption>Makieta</figcaption><img src="../completed/etap-5-aplikacja-wyceny/visual-diff/szybka-wycena-figma.png" alt="Makieta szybkiej wyceny" loading="lazy"></figure>
+      <figure><figcaption>Aplikacja</figcaption><img src="../completed/etap-5-aplikacja-wyceny/visual-diff/szybka-wycena-actual.png" alt="Szybka wycena w aplikacji" loading="lazy"></figure>
+    </div>
+  </section>
+
+  <section id="pytania">
+    <h2>Pytania do klienta</h2>
+    <p class="punkt">Smoke, punkt 6 · szybka wycena 50 m², zwierzęta „Tak”, dojazd 32 km</p>
+    <ul>
+      <li>Oceń kolejność pytań (z <code>data/pytania.json</code>) i pełną nazwę usługi w podtytule.</li>
+    </ul>
+    <div class="para">
+      <figure><figcaption>Makieta</figcaption><img src="../completed/etap-5-aplikacja-wyceny/visual-diff/pytania-do-klienta-figma.png" alt="Makieta pytań do klienta" loading="lazy"></figure>
+      <figure><figcaption>Aplikacja</figcaption><img src="../completed/etap-5-aplikacja-wyceny/visual-diff/pytania-do-klienta-actual.png" alt="Pytania do klienta w aplikacji" loading="lazy"></figure>
+    </div>
+  </section>
+
+  <section id="oferta-edycja">
+    <h2>Edycja oferty</h2>
+    <p class="punkt">Smoke, punkt 8 · stan <code>wyceny-do-zrobienia</code></p>
+    <ul>
+      <li>Karty „Twoja firma”, „Klient i termin”, „Zakres prac”, „Warunki”, „Oferta ważna do” i stopka „PDF” / „Kopiuj link”.</li>
+      <li>Brak karty „Dodatki” jest prawidłowy (wycena bez propozycji); makieta ma kolory spoza tokenów wariantu B.</li>
+    </ul>
+    <div class="para">
+      <figure><figcaption>Makieta</figcaption><img src="../completed/etap-5-aplikacja-wyceny/visual-diff/oferta-edycja-figma.png" alt="Makieta edycji oferty" loading="lazy"></figure>
+      <figure><figcaption>Aplikacja</figcaption><img src="../completed/etap-5-aplikacja-wyceny/visual-diff/oferta-edycja-actual.png" alt="Edycja oferty w aplikacji" loading="lazy"></figure>
+    </div>
+  </section>
+
+  <section id="oferta-klient">
+    <h2>Oferta u klienta</h2>
+    <p class="punkt">Smoke, punkt 9 · zrzut bez dojazdu i „Możesz dobrać”</p>
+    <ul>
+      <li>Zatwierdź brzmienie warunków albo spisz poprawki.</li>
+      <li>Pełny wariant (z dojazdem, dodatkami i po terminie ważności) jest pod parą.</li>
+    </ul>
+    <div class="para">
+      <figure><figcaption>Makieta</figcaption><img src="../completed/etap-5-aplikacja-wyceny/visual-diff/oferta-klient-figma.png" alt="Makieta oferty u klienta" loading="lazy"></figure>
+      <figure><figcaption>Aplikacja</figcaption><img src="../completed/etap-5-aplikacja-wyceny/visual-diff/oferta-klient-actual.png" alt="Oferta u klienta w aplikacji" loading="lazy"></figure>
+    </div>
+    <figure class="dodatek"><figcaption>Aplikacja, pełny wariant po terminie</figcaption><img src="../completed/etap-5-aplikacja-wyceny/oferta-po-terminie.png" alt="Oferta po terminie ważności" loading="lazy"></figure>
+  </section>
+
+  <section id="zakonczenie">
+    <h2>Zakończenie zlecenia</h2>
+    <p class="punkt">Smoke, punkt 10 · licznik 5 h 30 min</p>
+    <ul>
+      <li>Oceń, czy „Zostało dla Ciebie” 235 zł przy planie i przy fakcie, gdy zmienia się tylko stawka (47 → 43 zł/h), jest zrozumiałe.</li>
+    </ul>
+    <div class="para">
+      <figure><figcaption>Makieta</figcaption><img src="../completed/etap-5-aplikacja-wyceny/visual-diff/zakonczenie-zlecenia-figma.png" alt="Makieta zakończenia zlecenia" loading="lazy"></figure>
+      <figure><figcaption>Aplikacja</figcaption><img src="../completed/etap-5-aplikacja-wyceny/visual-diff/zakonczenie-zlecenia-actual.png" alt="Zakończenie zlecenia w aplikacji" loading="lazy"></figure>
+    </div>
+  </section>
+
+  <section id="kopia">
+    <h2>Kopia zapasowa</h2>
+    <p class="punkt">Smoke, punkt 11 · stan <code>wyceny-do-zrobienia</code></p>
+    <ul>
+      <li>Pigułka „0 zleceń” liczy tylko wyceny wykonane, więc przy jednej wycenie „Przyjęta” pokazuje 0. Zostaw albo zgłoś do zmiany.</li>
+    </ul>
+    <div class="para">
+      <figure><figcaption>Makieta</figcaption><img src="../completed/etap-5-aplikacja-wyceny/visual-diff/kopia-zapasowa-figma.png" alt="Makieta kopii zapasowej" loading="lazy"></figure>
+      <figure><figcaption>Aplikacja</figcaption><img src="../completed/etap-5-aplikacja-wyceny/visual-diff/kopia-zapasowa-actual.png" alt="Kopia zapasowa w aplikacji" loading="lazy"></figure>
+    </div>
+  </section>
+</main>
+</body>
+</html>

@@ -16,15 +16,20 @@ makiety celowo, więc tylko człowiek odróżni zamierzone odstępstwo od błęd
 ## 0. Przygotowanie (5 min)
 > Aplikacja nie ma backendu ani zmiennych środowiska (skrypt zmiennych gałęzi: brak nowych zmiennych). Dane leżą w `localStorage` przeglądarki, więc nie ma projektu ani konta testowego do wybrania. Zrzuty i makiety: po archiwizacji w `docs/completed/etap-5-aplikacja-wyceny/` (przed nią w `docs/active/etap-5-aplikacja-wyceny/`), makiety w `docs/plans/etap-5-aplikacja-wyceny-figma/` (PNG i opisy w `ekrany/`).
 
-- [ ] Aplikacja wstaje (dev server): `npm start` w katalogu projektu → `Serwer: http://127.0.0.1:5174/`, strona otwiera się w przeglądarce na komputerze, bez błędów w konsoli
+- [x] Aplikacja wstaje (dev server): `npm start` w katalogu projektu → `Serwer: http://127.0.0.1:5174/`, strona otwiera się w przeglądarce na komputerze, bez błędów w konsoli
+  - 2026-10-28 (Claude): serwer na porcie 5175 z czystym `localStorage` → kreator ustawień, po „Pomiń” ekran startowy; konsola pusta, service worker aktywny, w cache 91 plików.
+
+Pary „makieta / aplikacja” do punktów 2, 4, 5, 6, 8, 9, 10 i 11 są zebrane na jednej stronie `docs/operator/2026-10-28-etap-5-porownanie-makiet.html`, z uwagami o celowych odstępstwach. Otwieraj ją przez serwer (`npm start`, potem http://127.0.0.1:5174/docs/operator/2026-10-28-etap-5-porownanie-makiet.html), bo obrazki leżą w `docs/completed/`.
 - [ ] Telefon ma dostęp do aplikacji: serwer dev nasłuchuje tylko na 127.0.0.1, a instalacja PWA, service worker i schowek wymagają HTTPS (albo localhost). Do punktów **[fizyczne urządzenie]** przygotuj adres HTTPS dostępny z telefonu → aplikacja otwiera się na Androidzie i na iPhonie
 
 **Co będzie potrzebne w trakcie:** komputer z Chrome; telefon z Androidem (Chrome) i iPhone (Safari); drugi telefon do odebrania linku oferty; Messenger i WhatsApp; jedno prawdziwe (albo symulowane) zlecenie mieszkania z pełnymi danymi klienta; stoper.
 
 ## 1. Dane i silnik wyceny (IU-2)
 Wejście: terminal PowerShell w katalogu projektu.
-- [ ] Uruchom `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\kalibracja.ps1` → skrypt kończy się bez `throw`, „niezgodności katalogu” = 0, a `research/kalibracja-scenariusze.json` ma scenariusz „mieszkanie_standard, 50 m², stawka 65” z ceną 250 ± 1 zł
-- [ ] `git diff main -- data/normy.json` → jedyna zmiana to nowe pole `uklady`; wartości norm bez zmian
+- [x] Uruchom `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\kalibracja.ps1` → skrypt kończy się bez `throw`, „niezgodności katalogu” = 0, a `research/kalibracja-scenariusze.json` ma scenariusz „mieszkanie_standard, 50 m², stawka 65” z ceną 250 ± 1 zł
+  - 2026-10-28 (Claude): bez `throw`, niezgodności 0, scenariusz z sekcji 2 ma cenę 250,055 zł; pliki wygenerowane od nowa są identyczne z zapisanymi w repo.
+- [x] `git diff main -- data/normy.json` → jedyna zmiana to nowe pole `uklady`; wartości norm bez zmian
+  - 2026-10-28 (Claude): 58 linii dodanych (pole `uklady`: mieszkanie i biuro), 0 usuniętych ani zmienionych.
 
 ## 2. Pierwsze uruchomienie i ustawienia firmy (IU-11)
 Wejście: aplikacja na czystym telefonie → kreator ustawień; potem dolne menu → Ustawienia (`#/ustawienia`).
@@ -75,7 +80,8 @@ Wejście: dolne menu → Kopia (`#/kopia`).
 
 ## 12. PWA: offline i ekran początkowy (IU-13)
 Wejście: aplikacja otwarta raz z siecią.
-- [ ] Chrome DevTools → Network → „Offline”, przeładuj stronę → aplikacja otwiera się i liczy wycenę z danych w cache
+- [x] Chrome DevTools → Network → „Offline”, przeładuj stronę → aplikacja otwiera się i liczy wycenę z danych w cache
+  - 2026-10-28 (Claude): zamiast trybu offline w DevTools zatrzymany serwer (adres nie odpowiada). Po przeładowaniu `#/szybka` otwiera się z cache: 50 m² daje 250–300 zł, a po zmianie na 60 m² 290–360 zł; konsola bez błędów.
 - [ ] **[fizyczne urządzenie]** Dodaj aplikację do ekranu początkowego na Androidzie i na iPhonie → instaluje się, ikona zastępcza jest widoczna, aplikacja startuje bez paska przeglądarki
 
 ## 13. Przed publikacją (etap 6)
