@@ -10,7 +10,7 @@ import { sprawdzIlosc, sprawdzMetraz } from './walidacja.js'
 /** @typedef {import('./katalog.js').Pozycja} Pozycja */
 /**
  * @typedef {{ typ: string, nazwa?: string, m2: number, brud?: { id: string, poziom: number }[] }} PomieszczenieWyceny
- * @typedef {{ uslugaId: string, pozycjaId: string, ilosc: number, tryb: 'w_cenie' | 'propozycja' }} DodatekWyceny
+ * @typedef {{ uslugaId: string, pozycjaId: string, ilosc: number, tryb: typeof TRYBY_DODATKU[number] }} DodatekWyceny
  * @typedef {{ uslugaId: string, wojewodztwoId?: string | null, wariantId?: string | null, pomieszczenia?: PomieszczenieWyceny[],
  *   pozycje?: { id: string, ilosc: number }[], poziomBrudu?: number, dodatki?: DodatekWyceny[], dojazdKm?: number,
  *   dezynfekcja?: boolean }} WejscieWyceny
@@ -29,7 +29,8 @@ const MNOZNIK_NEUTRALNY = 1
 const POZIOM_BRUDU_DOMYSLNY = 1
 const JEDNOSTKA_M2 = 'm2'
 const JEDNOSTKA_GODZINY = 'h'
-const TRYBY_DODATKU = ['w_cenie', 'propozycja']
+/** Tryby dodatku z innej uslugi: wchodzi do ceny albo jest propozycja w ofercie („Możesz dobrać”); zrodlo stalej dla kreatora. */
+export const TRYBY_DODATKU = Object.freeze(/** @type {const} */ (['w_cenie', 'propozycja']))
 
 /**
  * Linia pozycji: kwota = ilosc × cena × wsp × prog × brud; zakres rynku tym samym mnoznikiem (null, gdy pozycja go nie ma).
@@ -94,6 +95,15 @@ function liniePozycji(usluga, wejscie, katalog) {
   return { linie, minutyPrzygotowania: linie.length > 0 ? katalog.przygotowanie(usluga.id) : 0, wariant: null }
 }
 
+/**
+ * Linie jednego dodatku z innej uslugi: ilosc × cena × wsp (bez progu i brudu) i material doliczany klientowi; zrodlo kwoty dodatku dla kreatora.
+ * @param {{ uslugaId: string, pozycja: Pozycja, ilosc: number, wsp: number, minuty?: number }} p
+ * @returns {LiniaWyceny[]} pierwsza linia to sam dodatek
+ */
+export function linieDodatku({ uslugaId, pozycja, ilosc, wsp, minuty = 0 }) {
+  return [liniaPozycji({ rodzaj: 'dodatek', uslugaId, pozycja, ilosc, mnoznik: wsp, prog: MNOZNIK_NEUTRALNY, minuty }), ...liniaMaterialu(uslugaId, pozycja, ilosc)]
+}
+
 /** Dodatki z innych uslug: ilosc × cena × wsp, bez minimum, przygotowania, progu i brudu. @param {WejscieWyceny} wejscie @param {Katalog} katalog */
 function linieDodatkow(wejscie, katalog) {
   const wsp = katalog.wojewodztwo(wejscie.wojewodztwoId ?? null).wsp
@@ -105,15 +115,19 @@ function linieDodatkow(wejscie, katalog) {
     const pozycja = katalog.pozycja(uslugaId, pozycjaId)
     if (ilosc === 0) continue
     const minuty = minutyDodatkow([{ uslugaId, pozycjaId, ilosc }], katalog)
-    const linie = [liniaPozycji({ rodzaj: 'dodatek', uslugaId, pozycja, ilosc, mnoznik: wsp, prog: MNOZNIK_NEUTRALNY, minuty }), ...liniaMaterialu(uslugaId, pozycja, ilosc)]
+    const linie = linieDodatku({ uslugaId, pozycja, ilosc, wsp, minuty })
     if (tryb === 'w_cenie') wCenie.push(...linie)
     else propozycje.push({ opis: pozycja.nazwa, ilosc, jednostka: pozycja.jednostka, kwota: linie.reduce((s, l) => s + l.kwota, 0) })
   }
   return { wCenie, propozycje }
 }
 
-/** @param {number} km @param {StawkiDojazdu} stawki */
-function dojazdKlienta(km, stawki) {
+/**
+ * Dojazd placony przez klienta: km ponad darmowy promien × stawka klienta; zrodlo modelu dojazdu dla kreatora.
+ * @param {number} km odleglosc w jedna strone @param {StawkiDojazdu} stawki
+ * @returns {{ km: number, kwota: number }}
+ */
+export function dojazdKlienta(km, stawki) {
   if (!Number.isFinite(km) || km < 0) throw new BladWejscia('dojazd', `Odległość dojazdu musi być nieujemna, jest ${km}`)
   return { km, kwota: Math.max(0, km - stawki.darmowy_promien_km) * stawki.klient_zl_km }
 }

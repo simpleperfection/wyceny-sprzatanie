@@ -1,23 +1,21 @@
 // Formularze ustawien firmy jako czyste funkcje: teksty pol → zmiana dla zapiszUstawienia i bledy do pokazania pod polami.
-// Do tego mieszkanie wzorcowe 50 m² (cena i czas normowy z silnika) dla kart „Rynek i VAT” i „Tempo pracy”.
+// Mieszkanie wzorcowe 50 m² dla kart „Rynek i VAT” i „Tempo pracy” liczy src/kreator/podpowiedzi.js (eksport dla sekcji ustawien).
 
 import { POLA_FIRMY } from '../dane/ksztalt.js'
 import { GRANICE_KOSZTOW, POLA_DOJAZDU, POLA_WYMAGANE_W_OFERCIE, WALIDATORY_FIRMY } from '../dane/ustawienia.js'
 import { GRANICE_TEMPA } from '../dane/walidacja.js'
-import { wycenUsluge } from '../silnik/cena.js'
-import { zBrudem } from '../silnik/czas.js'
-import { ukladMieszkania } from '../silnik/uklad.js'
 import { bladZakresu, parsujLiczbe } from '../ui/format.js'
 import { TEKSTY_BLEDOW } from './teksty-bledow.js'
 
 /** Wspolny format liczb i tekst granic pola (src/ui/format.js); eksport dla sekcji ustawien. */
 export { bladZakresu, tekstLiczby } from '../ui/format.js'
+/** Mieszkanie wzorcowe (jedno zrodlo z podpowiedziami cen kreatora); eksport dla sekcji ustawien. */
+export { METRAZ_WZORCOWY, mieszkanieWzorcowe } from '../kreator/podpowiedzi.js'
 
 /** @typedef {import('../dane/ustawienia.js').ZmianaUstawien} ZmianaUstawien */
 /** @typedef {import('../dane/ustawienia.js').ZmianaKosztow} ZmianaKosztow */
 /** @typedef {import('../dane/ustawienia.js').PoleDojazdu} PoleDojazdu */
 /** @typedef {import('../dane/magazyn.js').Firma} Firma */
-/** @typedef {import('../silnik/katalog.js').Katalog} Katalog */
 /**
  * @typedef {keyof Firma} PoleFirmy
  * @typedef {Partial<Record<PoleFirmy | PoleDojazdu | 'chemia_h' | 'tempo', string>> & { sprzet?: Record<string, string> }} PolaFormularza
@@ -29,8 +27,6 @@ export { bladZakresu, tekstLiczby } from '../ui/format.js'
 
 /** Nazwa firmy i telefon sa potrzebne dopiero w ofercie, wiec pusta wartosc to ostrzezenie, a nie blad. */
 const OSTRZEZENIE_OFERTY = 'Potrzebne w ofercie dla klienta.'
-const USLUGA_WZORCOWA = 'mieszkanie_standard'
-export const METRAZ_WZORCOWY = 50
 
 /**
  * Liczba z pola: pusty tekst = null (wraca wartosc domyslna z data/ceny.json), poza granicami albo nie liczba = blad.
@@ -100,17 +96,4 @@ export function zmianaZPol(pola) {
   dodajKoszty(pola, wynik)
   dodajTempo(pola, wynik)
   return wynik
-}
-
-/**
- * Typowe mieszkanie 50 m² (sprzatanie standardowe, uklad i brud domyslny) w wojewodztwie: cena modelu i czas normowy.
- * @param {Katalog} katalog
- * @param {string | null} wojewodztwoId null = srednia krajowa
- * @returns {{ cena: number, minuty: number }}
- */
-export function mieszkanieWzorcowe(katalog, wojewodztwoId) {
-  const usluga = katalog.usluga(USLUGA_WZORCOWA)
-  const pomieszczenia = zBrudem(ukladMieszkania(METRAZ_WZORCOWY, {}, katalog.uklady), usluga.brud_domyslny)
-  const wynik = wycenUsluge({ uslugaId: usluga.id, wojewodztwoId, pomieszczenia }, katalog)
-  return { cena: wynik.cena, minuty: wynik.minutyNormowe }
 }

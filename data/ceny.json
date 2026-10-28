@@ -6,6 +6,7 @@
     "zasada_wartosci": "cena = mediana punktów ze źródeł (cena firmy, średnia porównywarki albo środek widełek), zakres = min–max ze źródeł",
     "pewnosc": "wysoka: 10 i więcej punktów danych, średnia: 3–9, niska: 1–2 albo wartość wyliczona",
     "podstawa_ceny": "brutto = cena końcowa dla klienta indywidualnego (tak podaje rynek); netto = cena dla firm, do której doliczasz VAT. Stawkę VAT (zwolnienie, 8% lub 23%) ustala księgowy.",
+    "szybka_wycena": "tryb szybkiej wyceny przez telefon (R10–R12): widelki = przedział od–do ze spodziewanego stanu (biura: tylko jednorazowo), ogledziny = „orientacyjnie od” i cena po obejrzeniu; usługa bez pola (AGD) wchodzi do szybkiej wyceny tylko jako dodatek",
     "zrodla_szczegolowe": "research/ZRODLA.md, research/cenniki_firm.csv, research/ceny_nowe_uslugi.csv"
   },
   "zrodla": {
@@ -45,6 +46,7 @@
       "brud_domyslny": [],
       "dodatki": ["okna", "agd", "tapicerka", "dywany"],
       "minimum_zl": 150,
+      "szybka_wycena": "widelki",
       "zrodla": ["skan_firm"],
       "uwagi": "Punkt kalibracji norm: mieszkanie 50 m² = mediana rynkowa (data/rynek.json)."
     },
@@ -60,6 +62,7 @@
       "brud_domyslny": [],
       "dodatki": ["okna", "agd", "tapicerka", "dywany"],
       "minimum_zl": 150,
+      "szybka_wycena": "widelki",
       "zrodla": ["skan_firm"],
       "pewnosc": "niska",
       "wyliczenie": "gruntowne / standard w cennikach: CleanHome 220/150 = 1,47; Zielone Sprzątanie 250/160 = 1,56; OlympHome 800/230 = 3,48 → mediana 1,56. Mnożnik dotyczy czasu pomieszczeń (bez stałego czasu przygotowania), więc cała usługa wychodzi ok. 1,5× standard."
@@ -76,6 +79,7 @@
       "brud_domyslny": [{ "pomieszczenie": "*", "brud": "pyl_budowlany", "poziom": 2 }],
       "dodatki": ["okna", "agd", "tapicerka", "dywany"],
       "minimum_zl": 150,
+      "szybka_wycena": "ogledziny",
       "zrodla": ["skan_firm", "kb_po_remoncie"],
       "uwagi": "Zakres jak przy gruntownym + pył budowlany (poziom 2) we wszystkich pomieszczeniach. Norma pyłu jest kalibrowana do mediany ceny po remoncie za m²."
     },
@@ -94,6 +98,7 @@
       ],
       "dodatki": ["okna", "agd", "tapicerka", "dywany"],
       "minimum_zl": 150,
+      "szybka_wycena": "widelki",
       "zrodla": [],
       "pewnosc": "niska",
       "uwagi": "Założenie bez danych rynkowych: puste mieszkanie (szybciej niż gruntowne) + typowy tłuszcz w kuchni i kamień w łazience. Do weryfikacji na pierwszych zleceniach."
@@ -117,6 +122,7 @@
       "brud_domyslny": [],
       "dodatki": ["okna", "agd", "dywany"],
       "minimum_zl": 150,
+      "szybka_wycena": "widelki",
       "zrodla": ["kb_biura", "cleanconnect", "reefa"],
       "pewnosc": "niska",
       "rynek_odniesienia": [
@@ -134,6 +140,7 @@
       "tryb": "pozycje",
       "podstawa_ceny": "brutto",
       "minimum_zl": 150,
+      "szybka_wycena": "widelki",
       "pozycje": [
         { "id": "okno_1", "nazwa": "Okno 1-skrzydłowe", "jednostka": "szt", "cena": 30, "zakres": [10, 70], "pewnosc": "wysoka", "zrodla": ["skan_firm"], "wyliczenie": "mediana 39 cenników" },
         { "id": "okno_2", "nazwa": "Okno 2-skrzydłowe", "jednostka": "szt", "cena": 42, "zakres": [30, 80], "pewnosc": "niska", "zrodla": ["skan_firm"], "wyliczenie": "okno 1-skrz. × 1,4 (proporcja 2-skrz./1-skrz.: Stefpol 80/50 = 1,6; Łowcy Porządku 30/25 = 1,2)" },
@@ -164,6 +171,7 @@
       "tryb": "pozycje",
       "podstawa_ceny": "brutto",
       "minimum_zl": 150,
+      "szybka_wycena": "widelki",
       "pozycje": [
         { "id": "kanapa_3", "nazwa": "Kanapa 3-osobowa", "jednostka": "szt", "cena": 150, "zakres": [60, 240], "pewnosc": "wysoka", "zrodla": ["skan_firm"], "wyliczenie": "mediana 23 cenników", "sprzet": "ekstraktor", "koszt_chemii_szt": 6 },
         { "id": "kanapa_2", "nazwa": "Kanapa 2-osobowa", "jednostka": "szt", "cena": 120, "zakres": null, "pewnosc": "niska", "zrodla": ["skan_firm"], "wyliczenie": "Pranie Tapicerki Lublin: 120", "sprzet": "ekstraktor", "koszt_chemii_szt": 5 },
@@ -178,6 +186,7 @@
       "tryb": "pozycje",
       "podstawa_ceny": "brutto",
       "minimum_zl": 150,
+      "szybka_wycena": "widelki",
       "pozycje": [
         { "id": "dywan", "nazwa": "Dywan", "jednostka": "m2", "cena": 17.5, "zakres": [5, 27], "pewnosc": "wysoka", "zrodla": ["skan_firm"], "wyliczenie": "mediana 14 cenników", "sprzet": "ekstraktor", "koszt_chemii_m2": 0.6 },
         { "id": "wykladzina", "nazwa": "Wykładzina", "jednostka": "m2", "cena": 15, "zakres": null, "pewnosc": "niska", "zrodla": ["skan_firm"], "wyliczenie": "InBlask (Lublin) „od 15 zł/m²”", "sprzet": "ekstraktor", "koszt_chemii_m2": 0.5 }
@@ -191,6 +200,7 @@
       "podstawa_ceny": "netto",
       "progi": "maszynowe",
       "minimum_zl": 300,
+      "szybka_wycena": "ogledziny",
       "pozycje": [
         { "id": "mycie_maszynowe", "nazwa": "Mycie szorowarką (beton, żywica, PCV)", "jednostka": "m2", "cena": 1.8, "zakres": [0.6, 10], "pewnosc": "średnia", "zrodla": ["tanie_doczyszczanie", "czyszczenie_posadzek", "szoruj"], "wyliczenie": "0,60 (duże hale); 1,80; 10 (małe zlecenia) → mediana 1,80", "sprzet": "szorowarka", "koszt_chemii_m2": 0.05 },
         { "id": "mycie_plytek", "nazwa": "Mycie płytek razem z fugami", "jednostka": "m2", "cena": 4.0, "zakres": null, "pewnosc": "niska", "zrodla": ["czyszczenie_posadzek"], "sprzet": "szorowarka", "koszt_chemii_m2": 0.1 }
@@ -205,6 +215,7 @@
       "progi": "maszynowe",
       "poziomy_brudu": true,
       "minimum_zl": 300,
+      "szybka_wycena": "ogledziny",
       "pozycje": [
         { "id": "doczyszczanie_posadzki", "nazwa": "Doczyszczanie posadzki szorowarką jednotarczową", "jednostka": "m2", "cena": 10, "zakres": [4, 25], "pewnosc": "średnia", "zrodla": ["tanie_doczyszczanie", "czyszczenie_posadzek", "szoruj", "cleanconnect", "cenauslug_posadzki"], "wyliczenie": "4,00; 4,20; 10; 8–15 (środek 11,5); średnio 20 → mediana 10", "sprzet": "szorowarka", "koszt_chemii_m2": 0.8 },
         { "id": "doczyszczanie_fug", "nazwa": "Mechaniczne czyszczenie fug", "jednostka": "m2", "cena": 13.5, "zakres": [8, 25], "pewnosc": "niska", "zrodla": ["czyszczenie_posadzek", "cenauslug_fugi"], "wyliczenie": "od 8 (płytki z fugami); średnio 19 → mediana 13,5", "sprzet": "szorowarka", "koszt_chemii_m2": 1.0 },
@@ -221,6 +232,7 @@
       "podstawa_ceny": "brutto",
       "progi": "zewnetrzne",
       "minimum_zl": 300,
+      "szybka_wycena": "ogledziny",
       "pozycje": [
         { "id": "mycie", "nazwa": "Mycie ciśnieniowe", "jednostka": "m2", "cena": 15, "zakres": [8, 21], "pewnosc": "niska", "zrodla": ["szoruj", "cenauslug_kostka"], "wyliczenie": "Szoruj 13 (z chemią); cenauslug.pl średnio 17 → mediana 15", "sprzet": "myjka_cisnieniowa", "koszt_chemii_m2": 0.4 },
         { "id": "mech", "nazwa": "Usuwanie mchu z fug i ponowne piaskowanie", "jednostka": "m2", "cena": 7.5, "zakres": [5, 10], "pewnosc": "niska", "zrodla": ["cenauslug_kostka"], "koszt_chemii_m2": 1.5, "typ": "doplata", "uwagi": "Koszt piasku do fug wliczony w koszt chemii." },
@@ -237,6 +249,7 @@
       "podstawa_ceny": "brutto",
       "progi": "zewnetrzne",
       "minimum_zl": 300,
+      "szybka_wycena": "ogledziny",
       "uwagi": "Ceny dla elewacji do ok. 200 m² o zwykłej trudności. Praca na wysokości (podnośnik, rusztowanie) do doliczenia osobno.",
       "pozycje": [
         { "id": "atmosferyczne", "nazwa": "Brud atmosferyczny (kurz, osady)", "jednostka": "m2", "cena": 24.5, "zakres": [22.3, 28.9], "pewnosc": "średnia", "zrodla": ["kb_elewacja", "cleanconnect"], "wyliczenie": "kb.pl średnio 24,52; CleanConnect 15–35 (środek 25) → 24,5", "sprzet": "myjka_cisnieniowa", "koszt_chemii_m2": 0.5 },
@@ -253,6 +266,7 @@
       "progi": "maszynowe",
       "poziomy_brudu": true,
       "minimum_zl": 300,
+      "szybka_wycena": "ogledziny",
       "uwagi": "Biura, sklepy i gabinety wycenia usługa 'sprzatanie_biur'. Mycie posadzek hali – usługa 'mycie_posadzek'.",
       "pozycje": [
         { "id": "zamiatanie", "nazwa": "Zamiatanie maszynowe", "jednostka": "m2", "cena": 0.4, "zakres": [0.4, 0.7], "pewnosc": "niska", "zrodla": ["tanie_doczyszczanie"], "wyliczenie": "maszynowe 0,40; ręczne 0,70", "sprzet": "zamiatarka", "koszt_chemii_m2": 0 },

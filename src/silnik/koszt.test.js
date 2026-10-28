@@ -4,6 +4,7 @@ import { before, describe, it } from 'node:test'
 import { assertBlisko, czytajJson, daneTestowe, katalogTestowy, katalogZDanych, katalogZDysku } from '../../tests/pomocnicze.js'
 import { BladKatalogu, BladWejscia } from './bledy.js'
 import { wycenUsluge } from './cena.js'
+import * as modulKosztu from './koszt.js'
 import { kosztZlecenia } from './koszt.js'
 import { cenaDlaKlienta, zCenyRecznej } from './vat.js'
 
@@ -211,5 +212,15 @@ describe('kosztZlecenia: błędne wejście', () => {
       () => kosztZlecenia({ wynik, cenaKlienta: zCenyRecznej(500, 'zwolniony', STAWKA_VAT), tempo: 1, koszty, statusVat: 'zwolniony' }, katalog),
       { name: BladKatalogu.name, kod: 'brak_sprzetu' },
     )
+  })
+})
+
+describe('dojazdFirmy', () => {
+  it('24 km w jedną stronę: 48 km tam i z powrotem × 1,15 zł; ujemny dojazd daje BladWejscia', () => {
+    const wynik = modulKosztu.dojazdFirmy(24, { koszt_firmy_zl_km: 1.15 })
+
+    assert.deepEqual([wynik.km, wynik.kmRazem], [24, 48])
+    assertBlisko(wynik.kwota, 55.2)
+    assert.throws(() => modulKosztu.dojazdFirmy(-3, { koszt_firmy_zl_km: 1.15 }), (blad) => blad instanceof BladWejscia && blad.kod === 'dojazd')
   })
 })

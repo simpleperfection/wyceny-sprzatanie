@@ -3,9 +3,11 @@
 // Straznik jestWycena jest jedynym opisem zapisanej wyceny: uzywa go zapis tutaj i kopia zapasowa (eksport i odczyt pliku).
 
 import {
-  jestDataIso, jestDniem, jestListaTekstow, jestLiczba, jestObiektem, jestTekstemLubNull, jestWarunkiem, MAKS_DLUGOSC_TEKSTU, MAKS_ZAGLEBIENIE,
-  maKrotkieTeksty,
+  jestDataIso, jestDniem, jestLiczba, jestObiektem, jestTekstemLubNull, jestWarunkamiOferty, jestZakresemOferty, MAKS_DLUGOSC_TEKSTU,
+  MAKS_ZAGLEBIENIE, maKrotkieTeksty,
 } from './ksztalt.js'
+import { warunkiZeZmiany, zakresZeZmiany } from './ustawienia.js'
+import { STANY_SZYBKIEJ, TRYBY_SZYBKIEJ } from '../silnik/szybka.js'
 
 /** @typedef {import('./magazyn.js').Magazyn} Magazyn */
 /** @typedef {import('./magazyn.js').Stan} Stan */
@@ -14,11 +16,15 @@ import {
 /** @typedef {import('../silnik/cena.js').LiniaWyceny} LiniaWyceny */
 /** @typedef {import('../silnik/cena.js').Propozycja} Propozycja */
 /** @typedef {import('../silnik/cena.js').WejscieWyceny} WejscieWyceny */
+/** @typedef {import('../silnik/katalog.js').RegulaBrudu} RegulaBrudu */
+/** @typedef {import('../silnik/szybka.js').SzybkaWyceny} SzybkaWyceny */
 /** @typedef {import('../silnik/vat.js').StatusVat} StatusVat */
 /** @typedef {import('../silnik/widelki.js').WidelkiRynku} WidelkiRynku */
 
 /** Statusy wyceny w kolejnosci cyklu zycia; zrodlo stalej dla widokow i listy wycen. */
 export const STATUSY_WYCENY = Object.freeze(/** @type {const} */ (['szkic', 'do_wyslania', 'wyslana', 'przyjeta', 'odrzucona', 'wykonana']))
+/** Statusy, z ktorych przygotowuje sie i wysyla oferte; zrodlo reguly dla zapisu oferty i widokow (podsumowanie, ekran oferty). */
+export const STATUSY_OFERTY = Object.freeze(/** @type {const} */ (['do_wyslania', 'wyslana', 'przyjeta']))
 /** Najdluzsze wykonanie zlecenia w minutach (doba); zrodlo progu dla ekranu zakonczenia zlecenia. */
 export const MAKS_MINUT_WYKONANIA = 1440
 /** Rodzaje wyceny; zrodlo stalej dla zapisu, kopii zapasowej i widokow. */
@@ -30,12 +36,12 @@ export const MAKS_WYCEN = 5000
  * @typedef {typeof STATUSY_WYCENY[number]} StatusWyceny
  * @typedef {typeof RODZAJE_WYCENY[number]} RodzajWyceny
  * @typedef {{ nazwa: string, adres: string, termin: string | null }} KlientWyceny
- * @typedef {{ stan: string, od: number, do: number, tryb: string }} SzybkaWyceny widelki szybkiej wyceny, z ktorej powstala dokladna
  * @typedef {{ id: string | null, nazwa: string, stawka_h: number, wsp: number }} WojewodztwoMigawki id null = srednia krajowa
  * @typedef {{ cena: number, netto: number, vat: number, mediana: number, widelki: WidelkiRynku, minutyNormowe: number,
  *   linie: LiniaWyceny[], propozycje: Propozycja[], dojazd: { km: number, kwota: number }, wojewodztwo: WojewodztwoMigawki,
  *   statusVat: StatusVat, stawkaVatProc: number, podstawaCeny: string, wizytWMiesiacu: number | null,
- *   wersjaDanych: { ceny: string, normy: string, rynek: string } }} MigawkaWyniku wynik z chwili wyceny; abonament: za wizyte
+ *   wersjaDanych: { ceny: string, normy: string, rynek: string }, minimum?: number, czyMinimum?: boolean }} MigawkaWyniku wynik z chwili
+ *   wyceny; abonament: za wizyte; minimum zlecenia uslugi (kwota modelu) i czy podnioslo cene (brak w migawkach sprzed fazy 4)
  * @typedef {{ id: string, data: string, minuty: number, tempoPlanu: number }} Wykonanie data RRRR-MM-DD
  * @typedef {Omit<Wykonanie, 'id'> & { id?: string }} NoweWykonanie id nadaje ekran przy otwarciu (ponowny zapis tego wpisu nic nie zmienia)
  * @typedef {{ zakres: ZakresUslugi | null, warunki: WarunekOferty[] | null, waznaDo: string | null, wyslana: string | null,
@@ -46,7 +52,10 @@ export const MAKS_WYCEN = 5000
  * @typedef {{ rodzaj: RodzajWyceny, wejscie: WejscieWyceny, klient?: Partial<KlientWyceny>, szybka?: SzybkaWyceny | null,
  *   odpowiedzi?: Record<string, unknown> }} NowySzkic
  * @typedef {{ teraz?: () => Date }} OpcjeWycen zegar (do testow)
+ * @typedef {OpcjeWycen & { wynik?: MigawkaWyniku | null }} OpcjeWejscia wynik: przeliczenie zapisywane razem z wejsciem (null = pusty zakres)
  * @typedef {{ wycena: Wycena, licznikNumerow?: Record<string, number> }} ZmianaWyceny
+ * @typedef {{ wejscie?: WejscieWyceny, wynik?: MigawkaWyniku | null, rodzaj?: RodzajWyceny, szybka?: SzybkaWyceny | null,
+ *   odpowiedzi?: Record<string, unknown> }} PolaWyceny pola zmieniane razem; nowe wejscie wymaga wyniku (null = pusty zakres)
  */
 
 /** @type {Readonly<Record<StatusWyceny, readonly StatusWyceny[]>>} */
@@ -62,6 +71,7 @@ const DLUGOSC_KLIENTA = Object.freeze({ nazwa: 120, adres: 200, termin: 40 })
 const POLA_KLIENTA = /** @type {const} */ (['nazwa', 'adres', 'termin'])
 const POLA_KWOT = /** @type {const} */ (['cena', 'netto', 'vat'])
 const PUSTY_KLIENT = Object.freeze({ nazwa: '', adres: '', termin: null })
+const POLA_ZMIANY_OFERTY = /** @type {const} */ (['zakres', 'warunki', 'waznaDo', 'klient'])
 /** Numer `NN/MM/RRRR` nadawany przez zNumerem. */
 const NUMER_WYCENY = /^[1-9]\d*\/(0[1-9]|1[0-2])\/\d{4}$/
 /** Zlecenie jednorazowe ma w migawce null (uslugi bez wariantow) albo 1 wizyte (wariant `jednorazowe` biura); wiecej = abonament. */
@@ -90,9 +100,13 @@ const jestDodatnia = (x) => jestLiczba(x) && x > 0
 const jestMinutamiWykonania = (x) => jestDodatnia(x) && Number(x) <= MAKS_MINUT_WYKONANIA
 /** @param {unknown} x */
 const jestWejsciem = (x) => jestObiektem(x) && typeof x.uslugaId === 'string' && x.uslugaId !== ''
-/** @param {unknown} x widelki szybkiej wyceny albo null */
-const jestSzybka = (x) => x === null || (jestObiektem(x) && typeof x.stan === 'string' && typeof x.tryb === 'string' && jestLiczba(x.od) &&
-  jestLiczba(x.do))
+/** @param {unknown} x regula brudu `{ pomieszczenie, brud, poziom }` (skutek odpowiedzi klienta) */
+const jestRegulaBrudu = (x) => jestObiektem(x) && typeof x.pomieszczenie === 'string' && typeof x.brud === 'string' && Number.isInteger(x.poziom)
+/** @param {unknown} x widelki szybkiej wyceny (SzybkaWyceny ze znanym stanem i trybem) albo null */
+const jestSzybka = (x) => x === null || (jestObiektem(x) && STANY_SZYBKIEJ.some((s) => s.id === x.stan) &&
+  TRYBY_SZYBKIEJ.some((t) => t === x.tryb) && jestLiczba(x.od) &&
+  jestLiczba(x.do) && (x.brud === undefined || (Array.isArray(x.brud) && x.brud.every(jestRegulaBrudu))) &&
+  (x.poziomGorny === undefined || Number.isInteger(x.poziomGorny)))
 /** @param {unknown} x zapisany klient: teksty w granicach DLUGOSC_KLIENTA */
 const jestKlientem = (x) => jestObiektem(x) && typeof x.nazwa === 'string' && typeof x.adres === 'string' && jestTekstemLubNull(x.termin) &&
   POLA_KLIENTA.every((pole) => String(x[pole] ?? '').length <= DLUGOSC_KLIENTA[pole])
@@ -102,13 +116,13 @@ const jestWykonaniem = (x) => jestObiektem(x) && typeof x.id === 'string' && x.i
 
 /** @param {unknown} x */
 function jestOferta(x) {
-  return jestObiektem(x) && (x.zakres === null || (jestObiektem(x.zakres) && jestListaTekstow(x.zakres.wchodzi) &&
-    jestListaTekstow(x.zakres.nie_wchodzi))) && (x.warunki === null || (Array.isArray(x.warunki) && x.warunki.every(jestWarunkiem))) &&
-    jestTekstemLubNull(x.waznaDo) && jestTekstemLubNull(x.wyslana) && typeof x.nieaktualna === 'boolean'
+  return jestObiektem(x) && (x.zakres === null || jestZakresemOferty(x.zakres)) && (x.warunki === null || jestWarunkamiOferty(x.warunki)) &&
+    (x.waznaDo === null || jestDniem(x.waznaDo)) && (x.wyslana === null || jestDataIso(x.wyslana)) && typeof x.nieaktualna === 'boolean'
 }
 
 /**
- * Migawka wyniku do zapisu i z pliku kopii: kwoty nieujemne, dodatni czas normowy, liczba wizyt null albo dodatnia (abonament 4,33).
+ * Migawka wyniku do zapisu i z pliku kopii: kwoty nieujemne, dodatni czas normowy, liczba wizyt null albo dodatnia (abonament 4,33);
+ * minimum (gdy jest) nieujemne, czyMinimum (gdy jest) boolean.
  * @param {unknown} x
  * @returns {x is MigawkaWyniku}
  */
@@ -116,7 +130,8 @@ export function jestMigawkaWyniku(x) {
   return jestObiektem(x) && POLA_KWOT.every((p) => jestNieujemna(x[p])) && jestLiczba(x.mediana) && jestLiczba(x.stawkaVatProc) &&
     jestDodatnia(x.minutyNormowe) && (x.wizytWMiesiacu === null || jestDodatnia(x.wizytWMiesiacu)) && Array.isArray(x.linie) &&
     Array.isArray(x.propozycje) && jestObiektem(x.widelki) && jestObiektem(x.dojazd) && jestObiektem(x.wojewodztwo) &&
-    typeof x.statusVat === 'string' && typeof x.podstawaCeny === 'string' && jestObiektem(x.wersjaDanych)
+    typeof x.statusVat === 'string' && typeof x.podstawaCeny === 'string' && jestObiektem(x.wersjaDanych) &&
+    (x.minimum === undefined || jestNieujemna(x.minimum)) && (x.czyMinimum === undefined || typeof x.czyMinimum === 'boolean')
 }
 
 /**
@@ -181,8 +196,8 @@ function sprawdzWynik(wynik) {
   sprawdzDlugosc(wynik, 'Migawka wyniku')
 }
 
-/** @param {MigawkaWyniku} wynik */
-const czyAbonament = (wynik) => wynik.wizytWMiesiacu !== null && wynik.wizytWMiesiacu > WIZYT_ZLECENIA_JEDNORAZOWEGO
+/** Abonament (wiecej niz 1 wizyta w miesiacu); zrodlo reguly dla wykonan i podsumowania. @param {Pick<MigawkaWyniku, 'wizytWMiesiacu'>} wynik */
+export const czyAbonament = (wynik) => wynik.wizytWMiesiacu !== null && wynik.wizytWMiesiacu > WIZYT_ZLECENIA_JEDNORAZOWEGO
 
 /** @param {Wycena} w */
 function tylkoDoOdczytu(w) {
@@ -194,6 +209,12 @@ function wymagajWyniku(w) {
   if (w.wynik === null) throw new BladWyceny('brak_wyniku', `Wycena ${w.id} nie ma policzonej ceny`)
   return w.wynik
 }
+
+/**
+ * Statusy, do ktorych wolno przejsc z danego (PRZEJSCIA); zrodlo akcji wyceny w podsumowaniu.
+ * @param {StatusWyceny} status @returns {readonly StatusWyceny[]}
+ */
+export const dozwolonePrzejscia = (status) => PRZEJSCIA[status] ?? []
 
 /** Oferta mogla trafic do klienta: status `wyslana` albo data wyslania (po wyslaniu przyjeta lub odrzucona). @param {Wycena} w */
 const poWyslaniu = (w) => w.status === 'wyslana' || w.oferta.wyslana !== null
@@ -245,10 +266,10 @@ export function utworzSzkic(magazyn, dane, opcje = {}) {
   sprawdzWejscie(dane.wejscie)
   const klient = { ...PUSTY_KLIENT, ...klientZeZmiany(dane.klient ?? {}) }
   const szybka = dane.szybka ?? null
-  sprawdzSzybka(szybka)
   const odpowiedzi = dane.odpowiedzi ?? {}
-  if (!jestObiektem(odpowiedzi)) throw new BladWyceny('odpowiedzi', 'Odpowiedzi klienta muszą być obiektem')
   sprawdzDlugosc({ szybka, odpowiedzi }, 'Szkic wyceny')
+  sprawdzSzybka(szybka)
+  if (!jestObiektem(odpowiedzi)) throw new BladWyceny('odpowiedzi', 'Odpowiedzi klienta muszą być obiektem')
   const teraz = zegar(opcje).toISOString()
   /** @type {Wycena} */
   const nowa = { id: crypto.randomUUID(), numer: null, utworzona: teraz, zmieniona: teraz, status: 'szkic', rodzaj: dane.rodzaj, klient,
@@ -262,15 +283,47 @@ export function utworzSzkic(magazyn, dane, opcje = {}) {
 }
 
 /**
- * Nowe wejscie wyceny; po wyslaniu oferta staje sie nieaktualna, wykonana jest tylko do odczytu.
- * @param {Magazyn} magazyn @param {string} id @param {WejscieWyceny} wejscie @param {OpcjeWycen} [opcje]
+ * Nowe wejscie wyceny, z `opcje.wynik` razem z przeliczeniem w jednym zapisie; po wyslaniu oferta staje sie nieaktualna,
+ * wykonana jest tylko do odczytu. Wynik null (pusty zakres) czysci migawke szkicu; wycena z numerem musi miec zakres
+ * (BladWyceny `pusty_zakres`), bo poza szkicem zawsze ma wynik.
+ * @param {Magazyn} magazyn @param {string} id @param {WejscieWyceny} wejscie @param {OpcjeWejscia} [opcje]
  * @returns {Stan}
  */
 export function zapiszWejscie(magazyn, id, wejscie, opcje = {}) {
   sprawdzWejscie(wejscie)
+  const { wynik } = opcje
+  if (wynik !== undefined && wynik !== null) sprawdzWynik(wynik)
   return zmienWycene(magazyn, id, opcje, (w) => {
     tylkoDoOdczytu(w)
-    return { wycena: { ...w, wejscie, oferta: nieaktualnaPoWyslaniu(w) } }
+    const zWejsciem = { ...w, wejscie, oferta: nieaktualnaPoWyslaniu(w) }
+    if (wynik === undefined) return { wycena: zWejsciem }
+    if (wynik === null && w.status !== 'szkic') throw new BladWyceny('pusty_zakres', `Wycena ${w.numer ?? id} musi mieć zakres`)
+    return { wycena: { ...zWejsciem, wynik } }
+  })
+}
+
+/**
+ * Zmiana pol wyceny poza samym wejsciem (rodzaj, widelki szybkiej, odpowiedzi klienta) w jednym zapisie na swiezym stanie:
+ * `fn` dostaje swieza wycene i stan magazynu (ustawienia do przeliczenia) i moze rzucic (nic sie nie zapisuje). Nowe wejscie
+ * idzie razem z wynikiem jak w zapiszWejscie (null czysci migawke szkicu, wycena z numerem daje BladWyceny `pusty_zakres`)
+ * i po wyslaniu oznacza oferte jako nieaktualna; wykonana jest tylko do odczytu. Wynik o zlym ksztalcie albo za dlugim tekscie
+ * daje BladWyceny `ksztalt`.
+ * @param {Magazyn} magazyn @param {string} id @param {(w: Wycena, stan: Stan) => PolaWyceny} fn @param {OpcjeWycen} [opcje]
+ * @returns {Stan}
+ */
+export function zapiszPolaWyceny(magazyn, id, fn, opcje = {}) {
+  return zmienWycene(magazyn, id, opcje, (w, stan) => {
+    tylkoDoOdczytu(w)
+    const { wejscie, wynik, ...pola } = fn(w, stan)
+    /** @type {Wycena} */
+    let nowa = { ...w, ...pola }
+    if (wejscie !== undefined) {
+      if (wynik === undefined) throw new BladWyceny('wynik', `Nowe wejście wyceny ${id} wymaga przeliczenia`)
+      if (wynik === null && w.status !== 'szkic') throw new BladWyceny('pusty_zakres', `Wycena ${w.numer ?? id} musi mieć zakres`)
+      nowa = { ...nowa, wejscie, wynik, oferta: nieaktualnaPoWyslaniu(w) }
+    }
+    if (!jestWycena(nowa) || !maKrotkieTeksty(nowa)) throw new BladWyceny('ksztalt', `Zmiana wyceny ${id} daje zły kształt albo za długi tekst`)
+    return { wycena: nowa }
   })
 }
 
@@ -285,6 +338,21 @@ export function zapiszWynik(magazyn, id, wynik, opcje = {}) {
     tylkoDoOdczytu(w)
     const oferta = w.wynik?.cena === wynik.cena ? w.oferta : nieaktualnaPoWyslaniu(w)
     return { wycena: { ...w, wynik, oferta } }
+  })
+}
+
+/**
+ * Cena reczna dla klienta (null = cena z modelu); zmiana kwoty dla klienta po wyslaniu oznacza oferte jako nieaktualna.
+ * @param {Magazyn} magazyn @param {string} id @param {number | null} cenaReczna dodatnia albo null @param {OpcjeWycen} [opcje]
+ * @returns {Stan}
+ */
+export function zapiszCeneReczna(magazyn, id, cenaReczna, opcje = {}) {
+  if (cenaReczna !== null && !jestDodatnia(cenaReczna)) throw new BladWyceny('cena_reczna', `Cena ręczna musi być dodatnia, jest ${cenaReczna}`)
+  return zmienWycene(magazyn, id, opcje, (w) => {
+    tylkoDoOdczytu(w)
+    const { cena } = wymagajWyniku(w)
+    const czyInnaKwota = (w.cenaReczna ?? cena) !== (cenaReczna ?? cena)
+    return { wycena: { ...w, cenaReczna, oferta: czyInnaKwota ? nieaktualnaPoWyslaniu(w) : w.oferta } }
   })
 }
 
@@ -312,10 +380,75 @@ export function zapiszWycene(magazyn, id, dane = {}, opcje = {}) {
 export function zmienStatus(magazyn, id, nowy, opcje = {}) {
   if (!STATUSY_WYCENY.includes(nowy)) throw new BladWyceny('status', `Nieznany status wyceny: ${nowy}`)
   return zmienWycene(magazyn, id, opcje, (w, stan, teraz) => {
-    if (!PRZEJSCIA[w.status].includes(nowy)) throw new BladWyceny('przejscie', `Niedozwolone przejście ${w.status} → ${nowy}`)
+    if (!dozwolonePrzejscia(w.status).includes(nowy)) throw new BladWyceny('przejscie', `Niedozwolone przejście ${w.status} → ${nowy}`)
     if (w.status !== 'szkic') return { wycena: { ...w, status: nowy } }
     wymagajWyniku(w)
     return zNumerem({ ...w, status: nowy }, stan.licznikNumerow, teraz)
+  })
+}
+
+/** @param {StatusWyceny} status @returns {boolean} z wyceny o tym statusie przygotowuje sie oferte (STATUSY_OFERTY) */
+export const czyStatusOferty = (status) => STATUSY_OFERTY.some((s) => s === status)
+
+/** @param {Wycena} w oferta tylko z wyceny o statusie z STATUSY_OFERTY; inna (szkic, odrzucona) daje BladWyceny `przejscie` */
+function wymagajStatusuOferty(w) {
+  if (!czyStatusOferty(w.status)) {
+    throw new BladWyceny('przejscie', `Ofertę przygotowuje się z wyceny do wysłania, wysłanej albo przyjętej, ${w.numer ?? w.id} ma status ${w.status}`)
+  }
+}
+
+/**
+ * @param {unknown} zmiana
+ * @returns {{ zakres?: ZakresUslugi | null, warunki?: WarunekOferty[] | null, waznaDo?: string | null, klient: Partial<KlientWyceny> }}
+ */
+function zmianaOferty(zmiana) {
+  if (!jestObiektem(zmiana)) throw new BladWyceny('oferta', 'Zmiana oferty musi być obiektem')
+  const nieznane = Object.keys(zmiana).find((klucz) => !POLA_ZMIANY_OFERTY.some((pole) => pole === klucz))
+  if (nieznane !== undefined) throw new BladWyceny('oferta', `Nieznane pole oferty: ${nieznane}`)
+  const { zakres, warunki, waznaDo, klient } = zmiana
+  if (waznaDo !== undefined && waznaDo !== null && !jestDniem(waznaDo)) {
+    throw new BladWyceny('wazna_do', `Data ważności oferty musi mieć postać RRRR-MM-DD, jest ${String(waznaDo)}`)
+  }
+  return {
+    ...(zakres === undefined ? {} : { zakres: zakres === null ? null : zakresZeZmiany(zakres, 'oferta.zakres') }),
+    ...(warunki === undefined ? {} : { warunki: warunki === null ? null : warunkiZeZmiany(warunki, 'oferta.warunki') }),
+    ...(waznaDo === undefined ? {} : { waznaDo }),
+    klient: klient === undefined ? {} : klientZeZmiany(klient),
+  }
+}
+
+/**
+ * Oferta tylko tej wyceny (R19, R20, R18): zakres i warunki (null = wroc do ustawien albo domyslnych), data waznosci RRRR-MM-DD
+ * (null = dzis + oferta.waznosc_dni) i dane klienta. Zly zakres albo warunki daja BladUstawien (te same reguly co w ustawieniach),
+ * szkic i odrzucona (status spoza STATUSY_OFERTY) oraz wykonana daja BladWyceny; zmiana po wyslaniu oznacza oferte jako nieaktualna.
+ * @param {Magazyn} magazyn @param {string} id
+ * @param {{ zakres?: ZakresUslugi | null, warunki?: WarunekOferty[] | null, waznaDo?: string | null, klient?: Partial<KlientWyceny> }} zmiana
+ * @param {OpcjeWycen} [opcje]
+ * @returns {Stan}
+ */
+export function zapiszOferte(magazyn, id, zmiana, opcje = {}) {
+  const { klient, ...pola } = zmianaOferty(zmiana)
+  return zmienWycene(magazyn, id, opcje, (w) => {
+    tylkoDoOdczytu(w)
+    wymagajStatusuOferty(w)
+    const nowa = { ...w, klient: { ...w.klient, ...klient }, oferta: { ...w.oferta, ...pola } }
+    const czyZmiana = JSON.stringify([nowa.klient, nowa.oferta]) !== JSON.stringify([w.klient, w.oferta])
+    return { wycena: czyZmiana ? { ...nowa, oferta: nieaktualnaPoWyslaniu(nowa) } : w }
+  })
+}
+
+/**
+ * Oferta trafila do klienta (skopiowany albo udostepniony link, otwarta do druku): `do_wyslania` → `wyslana`, data wyslania
+ * = teraz, oferta znow aktualna; przyjeta i juz wyslana zostaja w swoim statusie. Szkic, odrzucona i wykonana daja BladWyceny.
+ * @param {Magazyn} magazyn @param {string} id @param {OpcjeWycen} [opcje]
+ * @returns {Stan}
+ */
+export function oznaczWyslana(magazyn, id, opcje = {}) {
+  return zmienWycene(magazyn, id, opcje, (w, _stan, teraz) => {
+    tylkoDoOdczytu(w)
+    wymagajStatusuOferty(w)
+    const status = w.status === 'do_wyslania' ? 'wyslana' : w.status
+    return { wycena: { ...w, status, oferta: { ...w.oferta, wyslana: teraz.toISOString(), nieaktualna: false } } }
   })
 }
 

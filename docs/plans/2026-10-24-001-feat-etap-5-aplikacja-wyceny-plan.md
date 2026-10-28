@@ -119,7 +119,7 @@ R1–R4 i R6 zostały usunięte ze źródła 2026-10-24 (cena minimalna z koszt�
 - Warstwy: `src/silnik/` (czyste funkcje wyceny, bez DOM i bez magazynu) → `src/dane/` (stan użytkownika w localStorage) → `src/kreator/` i `src/oferta/` (logika ekranów i oferty) → `src/widoki/` i `src/ui/` (DOM). Widok nie liczy ceny sam i nie czyta localStorage bezpośrednio.
 - Silnik czyta normy z `data/normy.json`, a układy typowego mieszkania i biura dostaje w strukturze `uklady` dopisanej do `normy.json` przez `scripts/kalibracja.ps1` — jedno źródło układu dla skryptu i aplikacji. Zgodność pilnuje test parytetu na pliku `research/kalibracja-scenariusze.json`, który skrypt zapisuje obok raportu (R27).
 - Szybka wycena mieszkania rozkłada metraż funkcją układu ze skryptu (kuchnia 16% w granicach 6–14 m², przedpokój 12%, łazienka 4 m² do 60 m², 5 m² do 100 m², 8 + 5 m² powyżej, reszta pokoje); domyślna liczba łazienek wynika z metrażu, więc szybka wycena 50 m² daje to samo co skrypt (odroczone pytanie źródła do R10). Inna liczba łazienek skraca listę domyślną albo dokłada łazienki o metrażu ostatniej pozycji. Aneks ma 10% metrażu w granicach 4–8 m² (założenie planu, do potwierdzenia przez właściciela), reszta przechodzi do pokoi.
-- Spodziewany stan w szybkiej wycenie (decyzja właściciela w `/dev-plan` 2026-10-24: „typowy = mediana”): poziom N = reguła brudu `kurz` na poziomie N we wszystkich pomieszczeniach (poziom 1 jest już w normie); typowy = widełki od poziomu 1 do 2, mocny = od 2 do 3, lekki = poziom 1 („ok. X zł”). Dla usług z pozycjami widełki od ceny do ceny × mnożnik poziomu 2 z `poziomy_brudu` w `data/ceny.json` (1,2). Granice zaokrąglane do 10 zł (dolna w dół, górna w górę).
+- Spodziewany stan w szybkiej wycenie (decyzja właściciela w `/dev-plan` 2026-10-24: „typowy = mediana”): poziom N = reguła brudu `kurz` na poziomie N we wszystkich pomieszczeniach (poziom 1 jest już w normie); typowy = widełki od poziomu 1 do 2, mocny = od 2 do 3, lekki = poziom 1 („ok. X zł”). Dla usług z pozycjami widełki od ceny do ceny × mnożnik poziomu 2 z `poziomy_brudu` w `data/ceny.json` (1,2); odpowiedź klienta ze skutkiem `gorna_granica` (trudne plamy na tapicerce i dywanie, farba i klej na szybach) podnosi górną granicę do poziomu 3 (1,4), a wycena dokładna zostaje bez zmian (decyzja właściciela 2026-10-28). Granice zaokrąglane do 10 zł (dolna w dół, górna w górę).
 - VAT (decyzja właściciela w `/dev-plan` 2026-10-24: „wg podstawy ceny”): firma zwolniona bierze kwotę modelu; czynny podatnik przy `podstawa_ceny: "brutto"` traktuje kwotę modelu jako brutto (netto = brutto / 1,23), a przy `"netto"` (biura, posadzki, doczyszczanie, hale) dolicza 23% na górze. „Zostaje dla Ciebie” czynnego podatnika liczy się od netto. Stawka VAT siedzi w `data/domyslne.json` (do potwierdzenia w źródłach; zmiana to zmiana danych).
 - Widełki rynku: usługi z pomieszczeniami — cena modelu × (zakres / mediana) z pozycji `kraj` w `data/rynek.json` wskazanej nowym polem `rynek_odniesienie` usługi; usługi z pozycjami — suma zakresów pozycji × wsp × próg × brud; pozycja z `zakres: null` wchodzi kwotą modelu na obu końcach i oznacza widełki jako niepełne.
 - Kolejność ceny: Σ linii usługi i dodatków „w cenie” → minimum zlecenia → dojazd klienta. Próg metrażu liczy się z ilości danej pozycji (jak `Prog` w skrypcie) i — tak jak mnożnik brudu z `poziomy_brudu` (cena i czas) — dotyczy tylko pozycji głównych; dopłaty (`typ: "doplata"`) idą po cenie × wsp (makieta `kreator-pozycje`: „dopłata · 40 m² × 7,50 zł”). Materiał doliczany klientowi (`doliczaj_material`) idzie bez wsp, progu i brudu. Dodatki z innych usług (np. okna przy mieszkaniu) mają tryb „w cenie” (bez własnego minimum i przygotowania) albo „zaproponuj w ofercie” (poza ceną i czasem, w ofercie jako „Możesz dobrać”; makieta `kreator-dodatki`). Abonament biura: cena, minimum i dojazd za wizytę, miesięcznie = × `wizyt_w_miesiacu`.
@@ -152,7 +152,7 @@ R1–R4 i R6 zostały usunięte ze źródła 2026-10-24 (cena minimalna z koszt�
 | `ETYKIETY_STATUSOW` | `{ szkic: 'Szkic', do_wyslania: 'Do wysłania', wyslana: 'Wysłana', przyjeta: 'Przyjęta', odrzucona: 'Odrzucona', wykonana: 'Wykonana' }` | `src/ui/statusy.js` | IU-10 | IU-10, IU-18, IU-19 |
 | `KROKI_KREATORA` | `[{ id: 'usluga', etykieta: 'Usługa' }, { id: 'zakres', etykieta: 'Zakres' }, { id: 'dodatki', etykieta: 'Dodatki' }, { id: 'chemia', etykieta: 'Chemia' }, { id: 'cena', etykieta: 'Cena' }]` | `src/kreator/stan.js` | IU-14 | IU-14, IU-15, IU-16, IU-17, IU-18, IU-21 |
 | `STANY_SZYBKIEJ` | `[{ id: 'lekki', etykieta: 'Lekki' }, { id: 'typowy', etykieta: 'Typowy' }, { id: 'mocny', etykieta: 'Mocny' }]` | `src/silnik/szybka.js` | IU-20 | IU-20, IU-21 |
-| `RODZAJE_SKUTKOW` | `['brud', 'dojazd_km']` | `src/silnik/pytania.js` | IU-20 | IU-20, IU-21 |
+| `RODZAJE_SKUTKOW` | `['brud', 'dojazd_km', 'gorna_granica']` | `src/silnik/pytania.js` | IU-20 | IU-20, IU-21 |
 | `TYPY_ODPOWIEDZI` | `['tak_nie', 'wybor', 'liczba', 'tekst']` | `src/silnik/pytania.js` | IU-20 | IU-20, IU-21 |
 | `MAKS_DLUGOSC_LINKU` | `2000` | `src/oferta/kodek.js` | IU-22 | IU-22, IU-23 |
 
@@ -174,15 +174,15 @@ R1–R4 i R6 zostały usunięte ze źródła 2026-10-24 (cena minimalna z koszt�
 - Netto czy brutto przy czynnym VAT: według `podstawa_ceny` usługi (decyzja właściciela 2026-10-24; odroczone pytanie źródła do R8).
 - Stan w szybkiej wycenie: typowy = mediana (decyzja właściciela 2026-10-24).
 - Rozkład metrażu w szybkiej wycenie: funkcja układu ze skryptu kalibracji (odroczone pytanie źródła do R10).
-- Liczenie własnego tempa: mediana z ostatnich 10 wpisów, wpisy poza 0,5–3× bez wpływu, progi 3 wpisów (odroczone pytanie źródła do R17).
+- Liczenie własnego tempa: mediana z ostatnich 10 wpisów, wpisy poza 0,5–3× bez wpływu, progi 3 wpisów (odroczone pytanie źródła do R17; potwierdzone przez właściciela 2026-10-28).
 - Oferta w linku bez serwera: fragment adresu z kompresją deflate-raw i base64url; PDF przez druk przeglądarki (odroczone pytanie źródła do R18, R22).
 - Statusy i numer wyceny przejęte z zaakceptowanych makiet (`ekran-startowy`, `oferta-klient`); „odrzucona” dodana, żeby lista „do zrobienia” nie zarastała.
-- Domyślne województwo po pominięciu kreatora: brak (średnia krajowa, stawka 65 zł/h, wsp 1,0) ze znacznikiem „ustawienia domyślne – uzupełnij”.
+- Domyślne województwo po pominięciu kreatora: brak (średnia krajowa, stawka 65 zł/h, wsp 1,0) ze znacznikiem „ustawienia domyślne – uzupełnij”. Potwierdzone przez właściciela 2026-10-28: wycena bez województwa liczy medianę krajową.
 
 ### Odroczone do implementacji
 
 - Brzmienie warunków oferty zostało zatwierdzone co do treści (2026-10-24); zdania w `data/domyslne.json` z IU-6 właściciel potwierdza w smoke'u.
-- Udział aneksu (10%, 4–8 m²) i liczenie dojazdu tam i z powrotem w koszcie firmy — założenia planu do potwierdzenia przez właściciela w smoke'u.
+- Udział aneksu i liczenie dojazdu tam i z powrotem w koszcie firmy — rozstrzygnięte w smoke'u 2026-10-28: aneks liczony jak osobna kuchnia (16% w granicach 6–14 m², zamiast założonych 10% i 4–8 m²), dojazd tam i z powrotem potwierdzony.
 - Czy `node --test` z wzorcem bez dopasowań kończy się błędem (pierwsza faza ma testy tylko w `scripts/` i `src/silnik/`) — builder IU-1 sprawdza i w razie potrzeby zawęża skrypt.
 - Dokładne wersje: `typescript` (aktualna stabilna) i paczki fontu Source Sans 3 — builder sprawdza w rejestrze npm i przypina dokładnie.
 - Zestaw ikon Tabler potrzebnych na ekranach — wynika z PNG przy implementacji (lista startowa w IU-9).
@@ -329,7 +329,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 
 **Scenariusze testowe:**
 - [Unit] `ukladMieszkania(50)` daje pokój 32, przedpokój 6, kuchnię 8 i łazienkę 4 m² (suma 50); dla 120 m² dwie łazienki 8 i 5 m²
-- [Unit] `ukladMieszkania(50, { lazienki: 2 })` daje dwie łazienki po 4 m², a `kuchnia: 'aneks'` kuchnię 5 m² i pokój 35 m²
+- [Unit] `ukladMieszkania(50, { lazienki: 2 })` daje dwie łazienki po 4 m², a `kuchnia: 'aneks'` kuchnię 8 m² i pokój 32 m², jak przy osobnej kuchni (decyzja właściciela 2026-10-28; wcześniej 5 i 35 m²)
 - [Unit] `ukladMieszkania(12, { lazienki: 3 })` rzuca `BladWejscia` z kodem `metraz`
 - [Unit] minuty 50 m² standard (układ typowy, mnożnik 1) zgadzają się z polem `minuty` scenariusza w `research/kalibracja-scenariusze.json` z dokładnością 0,01
 - [Unit] reguła brudu `pyl_budowlany` poziom 2 na `*` dokłada m² × norma pyłu do każdego pomieszczenia
@@ -370,7 +370,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - `cena.js`: `wycenUsluge(wejscie, katalog)`; `wejscie` (typ JSDoc `WejscieWyceny`): `uslugaId`, `wojewodztwoId` (null = średnia krajowa), `wariantId`, `pomieszczenia` (`{ typ, nazwa, m2, brud: [{ id, poziom }] }`), `pozycje` (`{ id, ilosc }`), `poziomBrudu` (1–3), `dodatki` (`{ uslugaId, pozycjaId, ilosc, tryb: 'w_cenie' | 'propozycja' }`), `dojazdKm`, `dezynfekcja`. Wynik `WynikWyceny`: `linie` (`{ rodzaj: 'praca' | 'pozycja' | 'doplata' | 'dodatek' | 'material', opis, ilosc, jednostka, cenaJedn, cenaBazowa, mnoznikProgu, kwota, zakres }`), `propozycje` (dodatki w trybie `propozycja`: `{ opis, ilosc, jednostka, kwota }`, poza ceną i czasem), `cenaUslugi`, `minimum`, `czyMinimum`, `dojazd: { km, kwota }`, `cena` (bez zaokrągleń), `cenaZaokraglona` (pełne zł), `minutyNormowe` (praca + dodatki, z przygotowaniem), `wizytWMiesiacu`, `cenaMiesieczna`, `podstawaCeny`.
 - Pomieszczenia: cena pracy = minuty / 60 × `stawka_h` województwa. Pozycje główne: ilość × (cena × wsp × próg × brud + materiał), próg z ilości pozycji m² przy usłudze z `progi`, brud z `poziomy_brudu` w `data/ceny.json` przy usłudze z `poziomy_brudu: true` (cena i czas). Dopłaty (`typ: "doplata"`): ilość × (cena × wsp + materiał), bez progu i brudu (makieta `kreator-pozycje`). Materiał (`doliczaj_material`) = `koszt_chemii_m2` bez wsp, progu i brudu. Dodatki `w_cenie`: ilość × cena × wsp, bez minimum i przygotowania; dodatki `propozycja` liczone tak samo, ale tylko do listy `propozycje`. Kolejność: Σ linii → `max(minimum_zl, Σ)` → + dojazd klienta = max(0, km − `darmowy_promien_km`) × `klient_zl_km` (stawki z `koszty_firmy.dojazd`, nadpisywalne parametrem `stawkiDojazdu`). Abonament biura: wszystko za wizytę, `cenaMiesieczna` = cena × `wizyt_w_miesiacu`.
 - Walidacja na wejściu: nieznana usługa albo pozycja, usługa `tylko_dodatek` jako główna, m² ≤ 0 albo > 100 000, ilość < 0, brak linii o dodatniej ilości → `BladWejscia` z kodem. Próg metrażu i sprawdzenie ilości są w `src/silnik/walidacja.js` (`sprawdzMetraz`, `sprawdzIlosc`; jedno źródło dla `cena.js`, `czas.js` i `uklad.js`, dodane w poprawkach po review fazy 1). To inny moduł niż `src/dane/walidacja.js` z IU-6 (pola formularzy: telefon, NIP, e-mail).
-- `widelki.js`: `widelkiRynku(wynik, wejscie, katalog)` → `{ od, do, pelne }`. Pomieszczenia: cena pracy × `zakres[i] / mediana` pozycji `kraj[rynek_odniesienie]` w `data/rynek.json`; pozycje i dodatki: Σ (zakres pozycji × wsp × próg × brud + materiał) × ilość, a pozycja z `zakres: null` wchodzi kwotą na obu końcach i ustawia `pelne: false`; na obu końcach minimum zlecenia (usługi z pozycjami oraz usługi z `rynek_odniesienie: "stawka_h"`, czyli biura, bo ich punkt rynku to cena godziny, a nie całego zlecenia; reguła w `czyWidelkiZMinimum`. Korekta z fazy 1: zakres rynku pozostałych usług z pomieszczeniami (mieszkania) to ceny całych zleceń, więc minimum by go zawyżyło, np. 150 zamiast 120 zł dla mieszkania 50 m²; do potwierdzenia przez właściciela), potem dojazd. Medianę i zakres rynku daje akcesor `katalog.rynekKraj(klucz)` (dopisany w `katalog.js` w IU-4).
+- `widelki.js`: `widelkiRynku(wynik, wejscie, katalog)` → `{ od, do, pelne }`. Pomieszczenia: cena pracy × `zakres[i] / mediana` pozycji `kraj[rynek_odniesienie]` w `data/rynek.json`; pozycje i dodatki: Σ (zakres pozycji × wsp × próg × brud + materiał) × ilość, a pozycja z `zakres: null` wchodzi kwotą na obu końcach i ustawia `pelne: false`; na obu końcach minimum zlecenia (usługi z pozycjami oraz usługi z `rynek_odniesienie: "stawka_h"`, czyli biura, bo ich punkt rynku to cena godziny, a nie całego zlecenia; reguła w `czyWidelkiZMinimum`. Korekta z fazy 1: zakres rynku pozostałych usług z pomieszczeniami (mieszkania) to ceny całych zleceń, więc minimum by go zawyżyło, np. 150 zamiast 120 zł dla mieszkania 50 m²; potwierdzone przez właściciela 2026-10-28), potem dojazd. Medianę i zakres rynku daje akcesor `katalog.rynekKraj(klucz)` (dopisany w `katalog.js` w IU-4).
 - `data/ceny.json`: pole `rynek_odniesienie` w usługach z pomieszczeniami — `mieszkanie_standard`, `mieszkanie_gruntowne`, `mieszkanie_po_wynajmie` → `"mieszkanie_50m2"`, `mieszkanie_po_remoncie` → `"po_remoncie_m2"`, `sprzatanie_biur` → `"stawka_h"`. Po zmianie skrypt kalibracji musi przejść bez wyjątku.
 - `parytet.test.js` czyta prawdziwe dane (`katalogZDysku()` z `tests/pomocnicze.js`) i `research/kalibracja-scenariusze.json`: dla każdego scenariusza `pomieszczenia` minuty i cena (przed minimum) z dokładnością 0,01; dla `pozycje` cena (z minimum, progiem i materiałem) i minuty z dokładnością 0,01.
 
@@ -901,7 +901,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 
 **Zależy od:** Faza 3
 
-- [ ] **IU-14: Stan kreatora i wybór usługi**
+- [x] **IU-14: Stan kreatora i wybór usługi**
 
 **Cel:** Szkic dokładnej wyceny zapisywany na bieżąco, przeliczanie migawki silnikiem i pierwszy krok kreatora: usługa, wariant i województwo.
 
@@ -927,7 +927,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 
 **Podejście:**
 - Stos: czysty JavaScript (moduły ES, JSDoc) i CSS; `src/kreator/` to logika bez DOM, `src/widoki/` to DOM.
-- `src/kreator/stan.js`: `KROKI_KREATORA` (źródło stałej, wartości jak w rejestrze). `nowySzkic(kontekst, { uslugaId, wariantId, wojewodztwoId })` → wycena `szkic` z wejściem startowym (pomieszczenia puste — nowe pomieszczenie dostaje kurz poziom 1 i reguły `brud_domyslny` usługi; pozycje z ilością 0, przy usługach m² z progami pierwsza pozycja główna włączona; dojazd 0) przez `utworzSzkic` (IU-7); `zmienWejscie(kontekst, id, fn)` (zapis + przeliczenie), `przelicz(wycena, kontekst)` → migawka: `wycenUsluge` + `widelkiRynku` (IU-4), `cenaDlaKlienta` (IU-5) z `podstawa_ceny` usługi, `wersjaDanych` katalogu; koszt zlecenia liczy podsumowanie, nie migawka. `bledyKroku(krok, wycena, katalog)` (zakres: co najmniej jedno pomieszczenie albo pozycja > 0). Zmiana usługi przy niepustym zakresie wymaga potwierdzenia i czyści zakres. Wycena `wykonana` → tylko odczyt (`BladWyceny('tylko_odczyt')` z IU-7).
+- `src/kreator/stan.js`: `KROKI_KREATORA` (źródło stałej, wartości jak w rejestrze). `nowySzkic(kontekst, { uslugaId, wariantId, wojewodztwoId })` → wycena `szkic` z wejściem startowym (pomieszczenia puste — nowe pomieszczenie dostaje kurz poziom 1 i reguły `brud_domyslny` usługi; pozycje z ilością 0, przy usługach m² z progami pierwsza pozycja główna włączona; dojazd 0) przez `utworzSzkic` (IU-7); `zmienWejscie(kontekst, id, fn)` (zapis + przeliczenie), `przelicz(wycena, kontekst)` → migawka: `wycenUsluge` + `widelkiRynku` (IU-4), `cenaDlaKlienta` (IU-5) z `podstawa_ceny` usługi, `wersjaDanych` katalogu; koszt zlecenia liczy podsumowanie, nie migawka. `bledyKroku(krok, wycena, katalog)` (zakres: co najmniej jedno pomieszczenie albo pozycja > 0). Zmiana usługi przy niepustym zakresie albo przy dodatkach spoza listy `dodatki` nowej usługi wymaga potwierdzenia (`czyZmianaCzysciZakres(wycena, uslugaId, katalog)`); czyści zakres i takie dodatki, dojazd zostaje. Wycena `wykonana` → tylko odczyt (`BladWyceny('tylko_odczyt')` z IU-7).
 - `kreator-wspolne.js`: rama kroku z makiet — nagłówek „Nowa wycena” (edycja zapisanej: „Wycena {numer}”) ze strzałką wstecz i podtytułem „Krok {n} z 5 · {opis kroku}” (krok zakresu: nazwa usługi), `pasekPostepu(KROKI_KREATORA, aktywny)` z IU-9, treść, stopka: na kroku usługi sam „Dalej”, na krokach zakresu i dodatków „Razem {kwota}” (z migawki) i „Dalej”, blokada przy `bledyKroku`. Wstecz to strzałka w nagłówku.
 - `kreator-usluga.js` (`#/kreator/usluga`, opcjonalnie `?wycena=<id>`, makieta `kreator-wybor-uslugi`): wiersz województwa (podpowiedziane z ustawień, 16 + „średnia krajowa”, wybór w arkuszu) ze stawką; dwie grupy wg trybu — usługi z pomieszczeniami i usługi z pozycjami — jako lista z przyciskami opcji, nazwą z `data/ceny.json` i podpowiedzią ceny z silnika (mieszkania: cena 50 m² w wybranym województwie; po remoncie: cena za m² z 50 m²; biura: tekst o wariantach; usługi z pozycjami: najniższa cena pozycji głównej × wsp za jednostkę); AGD (`tylko_dodatek`) poza listą, z notką pod listą; przy biurach po wybraniu chipy wariantów z `warianty`. „Dalej” tworzy szkic albo zapisuje zmiany i przechodzi do `#/kreator/zakres?wycena=<id>`. Klienta wpisuje się przy zapisie podsumowania (IU-18) albo w ofercie (IU-23).
 
@@ -940,7 +940,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - Notka pod listą: „AGD, szafki i balkon dodasz w kroku „Dodatki”.”
 - Wariant biur: nazwy z `data/ceny.json` (np. „Jednorazowo”, „Abonament 1× w tygodniu”)
 - Stopka: „Dalej”; na krokach zakresu i dodatków „Razem” z kwotą
-- Potwierdzenie zmiany usługi: „Zmiana usługi wyczyści wpisane pomieszczenia i pozycje. Zmienić?”
+- Potwierdzenie zmiany usługi: „Zmiana usługi wyczyści wpisane pomieszczenia i pozycje oraz dodatki, których nowa usługa nie ma. Zmienić?” (przy niepustym zakresie albo gdy znikają same dodatki)
 
 **Wzorce do naśladowania:**
 - `src/widoki/ustawienia-sekcje.js` (IU-11) — wybór województwa i chipy
@@ -955,7 +955,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - `node --test src/kreator/stan.test.js` przechodzi
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-15: Krok zakresu: pomieszczenia i brud**
+- [x] **IU-15: Krok zakresu: pomieszczenia i brud**
 
 **Cel:** Lista pomieszczeń z metrażem i poziomami brudu dla usług w trybie pomieszczeń, z czasem normowym na bieżąco.
 
@@ -1005,7 +1005,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - `node --test src/kreator/pomieszczenia.test.js` przechodzi
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-16: Kroki zakresu z pozycjami i dodatków z dojazdem**
+- [x] **IU-16: Kroki zakresu z pozycjami i dodatków z dojazdem**
 
 **Cel:** Ilości i metraże pozycji z dopłatami, progiem metrażu i poziomem brudu oraz krok dodatków (AGD, okna, tapicerka, dywany przy usłudze) z dojazdem.
 
@@ -1061,7 +1061,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - `node --test src/kreator/pozycje.test.js` przechodzi
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-17: Dobór chemii: krok kreatora i katalog**
+- [x] **IU-17: Dobór chemii: krok kreatora i katalog**
 
 **Cel:** Środki z bazy chemii dobrane do brudu i pozycji wyceny z kartą SDS oraz katalog środków z dolnego paska.
 
@@ -1116,7 +1116,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - `node --test src/silnik/chemia.test.js` przechodzi
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-18: Podsumowanie wyceny i zapisana wycena**
+- [x] **IU-18: Podsumowanie wyceny i zapisana wycena**
 
 **Cel:** Cena rynkowa z widełkami, ręczna zmiana ceny, VAT, koszt zlecenia i „zostaje dla Ciebie” na bieżąco, zapis wyceny oraz widok zapisanej wyceny ze zmianą statusu.
 
@@ -1178,13 +1178,13 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 
 **Operator checklist:**
 - [ ] Właściciel przechodzi dokładną wycenę mieszkania na telefonie i porównuje podsumowanie z makietą `podsumowanie-wyceny`
-- [ ] Właściciel potwierdza założenia: aneks 10% metrażu (4–8 m²) i koszt dojazdu tam i z powrotem
+- [x] Właściciel potwierdza założenia: aneks 10% metrażu (4–8 m²) i koszt dojazdu tam i z powrotem (2026-10-28: aneks jak osobna kuchnia, 16% w granicach 6–14 m²; dojazd tam i z powrotem potwierdzony)
 
 ### Faza 5 — Zlecenia, szybka wycena i pytania do klienta
 
 **Zależy od:** Faza 4
 
-- [ ] **IU-19: Zakończenie zlecenia i plan a fakt**
+- [x] **IU-19: Zakończenie zlecenia i plan a fakt**
 
 **Cel:** Wpis faktycznego czasu pracy, plan a fakt, realna stawka za godzinę, informacja o tempie i lista „plan a fakt” w ustawieniach.
 
@@ -1248,7 +1248,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 **Operator checklist:**
 - [ ] Właściciel wpisuje czas po prawdziwym zleceniu i porównuje ekran z makietą `zakonczenie-zlecenia`
 
-- [ ] **IU-20: Silnik szybkiej wyceny i pytań do klienta**
+- [x] **IU-20: Silnik szybkiej wyceny i pytań do klienta**
 
 **Cel:** Widełki i „orientacyjnie od” dla szybkiej wyceny, tekst dla klienta, zamiana w dokładną wycenę oraz pytania do klienta z automatycznymi skutkami w modelu.
 
@@ -1274,10 +1274,10 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 **Podejście:**
 - Stos: czysty JavaScript (moduły ES, JSDoc), bez DOM; korzysta z `ukladMieszkania`, `ukladBiura`, `domyslneLazienki` (IU-3), `wycenUsluge`, `widelkiRynku` (IU-4), `cenaDlaKlienta`, `kosztZlecenia` (IU-5).
 - `data/ceny.json`: pole `szybka_wycena` w usługach — `"widelki"`: `mieszkanie_standard`, `mieszkanie_gruntowne`, `mieszkanie_po_wynajmie`, `sprzatanie_biur` (tylko wariant jednorazowy), `okna`, `tapicerka`, `dywany`; `"ogledziny"`: `mieszkanie_po_remoncie`, `doczyszczanie`, `mycie_posadzek`, `mycie_kostki`, `mycie_elewacji`, `sprzatanie_firm`; AGD bez pola (w szybkiej wycenie mieszkania jako dodatki). Po zmianie skrypt kalibracji musi przejść.
-- `szybka.js`: `STANY_SZYBKIEJ` (źródło stałej, wartości jak w rejestrze). `szybkaWycena(wejscie, kontekst)`; `wejscie`: `uslugaId`, `m2`, `lazienki`, `kuchnia` (`osobna` | `aneks`), `stan`, `pozycje`, `dodatki`, `dojazdKm`, `wojewodztwoId`, `odpowiedzi`. Pomieszczenia (decyzja właściciela 2026-10-24: typowy = mediana): cena poziomu N = wycena układu z regułą `kurz` poziom N na `*` (N = 1 bez reguły); lekki → `[p1]`, typowy → `[p1, p2]`, mocny → `[p2, p3]`. Pozycje z `"widelki"` → `[cena, cena × mnożnik poziomu 2 z poziomy_brudu]`. `"ogledziny"` → `od` = cena poziomu 1 (pomieszczenia z `brud_domyslny`, pozycje: główna pozycja usługi bez dopłat przy podanym m²). Na obu końcach minimum i dojazd. Zaokrąglenie: `od` w dół do 10 zł, `do` w górę do 10 zł; lekki i równe granice → „ok. X zł” (zaokrąglone do 10 zł). Wynik: `{ tryb: 'widelki' | 'ok' | 'od', od, do, mediana, rynek (widelkiRynku p1), zostaje: { od, do, naGodzine: { od, do } }, tekst }`; ceny według statusu VAT jak w IU-5.
+- `szybka.js`: `STANY_SZYBKIEJ` (źródło stałej, wartości jak w rejestrze). `szybkaWycena(wejscie, kontekst)`; `wejscie`: `uslugaId`, `m2`, `lazienki`, `kuchnia` (`osobna` | `aneks`), `stan`, `pozycje`, `dodatki`, `dojazdKm`, `wojewodztwoId`, `odpowiedzi`, `poziomGorny`. Pomieszczenia (decyzja właściciela 2026-10-24: typowy = mediana): cena poziomu N = wycena układu z regułą `kurz` poziom N na `*` (N = 1 bez reguły); lekki → `[p1]`, typowy → `[p1, p2]`, mocny → `[p2, p3]`. Pozycje z `"widelki"` → `[cena, cena × mnożnik poziomu 2 z poziomy_brudu]`, a z `poziomGorny` (`poziomGornejGranicy` ze skutków odpowiedzi, zapisany w `szybka.poziomGorny`) — mnożnik tego poziomu. `"ogledziny"` → `od` = cena poziomu 1 (pomieszczenia z `brud_domyslny`, pozycje: główna pozycja usługi bez dopłat przy podanym m²). Na obu końcach minimum i dojazd. Zaokrąglenie: `od` w dół do 10 zł, `do` w górę do 10 zł; lekki i równe granice → „ok. X zł” (zaokrąglone do 10 zł). Wynik: `{ tryb: 'widelki' | 'ok' | 'od', od, do, mediana, rynek (widelkiRynku p1), zostaje: { od, do, naGodzine: { od, do } }, tekst }`; ceny według statusu VAT jak w IU-5.
 - `tekstDlaKlienta`: opis + kwoty + zastrzeżenie z `data/domyslne.json` (`szybka_wycena.zastrzezenie` = „Cena ostateczna po obejrzeniu lokalu lub zdjęć.”).
 - `naDokladna(szybkaWejscie, kontekst)` → `WejscieWyceny`: pomieszczenia z układu (typy i m²) z regułą `kurz` na dolnym poziomie stanu (lekki i typowy — bez reguły, mocny — poziom 2), pozycje, dodatki, dojazd, `odpowiedzi`; wycena dostaje `szybka: { stan, od, do, tryb }` (do ostrzeżenia w podsumowaniu).
-- `pytania.js`: `RODZAJE_SKUTKOW`, `TYPY_ODPOWIEDZI` (źródło stałych). Schemat `data/pytania.json`: `{ meta, wspolne: [Pytanie], uslugi: { [uslugaId]: [Pytanie] }, zdjecia?: { [uslugaId]: { podpowiedz, prosba } } }`, `Pytanie = { id, tresc, typ, opcje?, jednostka?, skutek? }`, `skutek` = `{ rodzaj: 'brud', brud, poziom, pomieszczenie, gdy }` (gdy = „tak” albo opcja) albo `{ rodzaj: 'dojazd_km' }` (tylko typ `liczba`); `zdjecia` — podpowiedź na ekranie pytań i tekst prośby o zdjęcia do skopiowania (makieta `pytania-do-klienta`). Odpowiedź: `{ wartosc, notatka }` (wartość wg typu, notatka opcjonalna, do 200 znaków). `pytaniaUslugi(uslugaId, pytania)` (wspólne + usługi), `opisOdpowiedzi(pytanie, odpowiedz)` (np. „Tak, kot”, „12 km, parking pod blokiem”), `zastosujOdpowiedzi(wejscie, odpowiedzi, pytania, katalog)` → `{ wejscie, skutki: [{ pytanieId, opis }] }` (opis np. „sierść, poziom 1 w pokojach”, „dojazd: 4 zł dla klienta”; brud tylko w trybie pomieszczeń, do istniejących i nowych pomieszczeń; dojazd ustawia `dojazdKm`; zmiana odpowiedzi stosuje skutek ponownie, ręczne zmiany w kreatorze po odpowiedzi wygrywają), `sprawdzPytania(pytania, katalog)` → lista błędów (nieznany brud albo usługa, skutek przy złym typie, usługa bez wpisu w `uslugi` poza `tylko_dodatek`, puste treści, powtórzone `id`).
+- `pytania.js`: `RODZAJE_SKUTKOW`, `TYPY_ODPOWIEDZI` (źródło stałych). Schemat `data/pytania.json`: `{ meta, wspolne: [Pytanie], uslugi: { [uslugaId]: [Pytanie] }, zdjecia?: { [uslugaId]: { podpowiedz, prosba } } }`, `Pytanie = { id, tresc, typ, opcje?, jednostka?, skutek? }`, `skutek` = `{ rodzaj: 'brud', brud, poziom, pomieszczenie, gdy }` (gdy = „tak” albo opcja) albo `{ rodzaj: 'dojazd_km' }` (tylko typ `liczba`), albo `{ rodzaj: 'gorna_granica', poziom, gdy }` (tylko usługi z pozycjami i widełkami: górna granica widełek szybkiej wyceny; decyzja właściciela 2026-10-28); `zdjecia` — podpowiedź na ekranie pytań i tekst prośby o zdjęcia do skopiowania (makieta `pytania-do-klienta`). Odpowiedź: `{ wartosc, notatka }` (wartość wg typu, notatka opcjonalna, do 200 znaków). `pytaniaUslugi(uslugaId, pytania)` (wspólne + usługi), `opisOdpowiedzi(pytanie, odpowiedz)` (np. „Tak, kot”, „12 km, parking pod blokiem”), `zastosujOdpowiedzi(wejscie, odpowiedzi, pytania, katalog)` → `{ wejscie, skutki: [{ pytanieId, opis }] }` (opis np. „sierść, poziom 1 w pokojach”, „dojazd: 4 zł dla klienta”; brud tylko w trybie pomieszczeń, do istniejących i nowych pomieszczeń; dojazd ustawia `dojazdKm`; zmiana odpowiedzi stosuje skutek ponownie, ręczne zmiany w kreatorze po odpowiedzi wygrywają), `sprawdzPytania(pytania, katalog)` → lista błędów (nieznany brud albo usługa, skutek przy złym typie, usługa bez wpisu w `uslugi` poza `tylko_dodatek`, puste treści, powtórzone `id`).
 - `sw.js`: `data/pytania.json` w liście wstępnego zapisu.
 
 **Wzorce do naśladowania:**
@@ -1299,7 +1299,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - `bash -c "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/kalibracja.ps1"` wypisuje „niezgodności katalogu: 0”
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-21: Ekrany szybkiej wyceny i pytań do klienta**
+- [x] **IU-21: Ekrany szybkiej wyceny i pytań do klienta**
 
 **Cel:** Formularz szybkiej wyceny do rozmowy telefonicznej z wynikiem, gotowym tekstem i przejściem do dokładnej wyceny oraz ekran pytań do klienta dostępny z szybkiej i dokładnej wyceny.
 
@@ -1364,7 +1364,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 
 **Zależy od:** Faza 5
 
-- [ ] **IU-22: Treść oferty, kodowanie linku i nadpisania zakresu i warunków**
+- [x] **IU-22: Treść oferty, kodowanie linku i nadpisania zakresu i warunków**
 
 **Cel:** Oferta z wyceny z białą listą pól, zakresem, warunkami i ważnością, zakodowana w linku bez serwera, oraz zapis nadpisań zakresu i warunków w ustawieniach i w wycenie.
 
@@ -1391,8 +1391,8 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 **Podejście:**
 - Stos: czysty JavaScript (moduły ES, JSDoc), bez DOM; `CompressionStream` i `DecompressionStream` są w przeglądarkach i w Node 24 (testy bez atrap).
 - Schemat `data/zakresy.json` (treść z osobnej sesji): `{ meta, uslugi: { [uslugaId]: { wchodzi: [string], nie_wchodzi: [string], warianty?: { [wariantId]: { wchodzi, nie_wchodzi } } } } }`.
-- `tresc.js`: `ofertaZWyceny(wycena, kontekst, dzis)` → `Oferta` = `{ v: 1, firma: { nazwa, telefon, email, nip }, numer, data, waznaDo, klient: { nazwa, adres, termin }, uslugi: [{ opis, kwota }], dojazd, razem: { od, do }, vat: { status, stawka, netto, kwotaVat }, dodatkiOpcjonalne: [{ opis, kwota }], zakres: { wchodzi, nie_wchodzi }, warunki: [string], szybka: boolean }`. Budowa z białej listy (R21: bez kosztów, tempa, czasu i „zostaje”). Zakres: `wycena.oferta.zakres` → `ustawienia.zakresy[uslugaId]` → `zakresy.uslugi[uslugaId]` (z nadpisaniem wariantu). Warunki: `wycena.oferta.warunki` → `ustawienia.warunki` → `domyslne.oferta.warunki`, z pominięciem `tylko_szybka` przy dokładnej wycenie (R20). Ważność: `wycena.oferta.waznaDo` albo dziś + `oferta.waznosc_dni` (14) z `data/domyslne.json`, ważna do końca tego dnia. Ręczna cena: kwota usługi = razem − dojazd − pozostałe linie. Szybka wycena: `razem` od–do. Dodatki opcjonalne = `wynik.propozycje` z migawki wyceny (dodatki w trybie „zaproponuj w ofercie” z kroku dodatków, IU-16). `czyWazna(oferta, dzis)`, `sprawdzZakresy(zakresy, katalog)` (każda usługa poza `tylko_dodatek` ma wpis, niepuste teksty).
-- `kodek.js`: `MAKS_DLUGOSC_LINKU = 2000` (źródło stałej). `zakodujOferte(oferta)` → `'v1.' + base64url(deflate-raw(UTF-8 JSON))`; `odkodujOferte(fragment)` → `{ ok: true, oferta }` albo `{ ok: false, powod: 'brak' | 'wersja' | 'uszkodzony' | 'przegladarka' }`; po dekodowaniu ścisła walidacja schematu (dozwolone klucze, typy, teksty do 500 znaków, listy do 50, kwoty skończone ≥ 0), bo link może sfabrykować każdy. `linkOferty(adresAplikacji, oferta)` → `{ url: '<katalog aplikacji>/oferta.html#<kod>', dlugosc, dlugi: dlugosc > MAKS_DLUGOSC_LINKU }`.
+- `tresc.js`: `ofertaZWyceny(wycena, kontekst, dzis)` → `Oferta` = `{ v: 1, firma: { nazwa, telefon, email, nip }, numer, data, waznaDo, klient: { nazwa, adres, termin }, uslugi: [{ opis, kwota }], dojazd, razem: { od, do }, trybCeny: 'stala' | 'widelki' | 'ok' | 'od', abonament: { wizyt, miesiecznie: { od, do } } | null, vat: { status, stawka, netto, kwotaVat }, dodatkiOpcjonalne: [{ opis, kwota }], zakres: { wchodzi, nie_wchodzi }, warunki: [string], szybka: boolean }` (`TRYBY_CENY` w `tresc.js`: `stala` plus tryby szybkiej wyceny z `src/silnik/szybka.js`). Budowa z białej listy (R21: bez kosztów, tempa, czasu i „zostaje”). Termin klienta trafia do oferty sformatowany po polsku (`terminKlienta` z `src/ui/format.js`, np. „14 listopada 2026, 9:00”) albo jako `null`. Zakres: `wycena.oferta.zakres` → zakres wariantu z `data/zakresy.json` (`zakresy.uslugi[uslugaId].warianty[wariantId]`, R19) → `ustawienia.zakresy[uslugaId]` → `zakresy.uslugi[uslugaId]`. Abonament: przy usłudze abonamentowej (`czyAbonament`) `razem` to kwota za wizytę, a `abonament.miesiecznie` = `razem` × `wizyt` w miesiącu (zaokrąglone do złotówki); poza abonamentem `null`. Warunki: `wycena.oferta.warunki` → `ustawienia.warunki` → `domyslne.oferta.warunki`, z pominięciem `tylko_szybka` przy dokładnej wycenie (R20). Ważność: `wycena.oferta.waznaDo` albo dziś + `oferta.waznosc_dni` (14) z `data/domyslne.json`, ważna do końca tego dnia. Ręczna cena: kwota usługi = razem − dojazd − pozostałe linie. Szybka wycena: `razem` od–do i `trybCeny` z trybu szybkiej wyceny (`widelki`, `ok` albo `od` przy oględzinach); `vat.netto` i `vat.kwotaVat` są liczone tylko przy jednej kwocie w trybie innym niż `od`, a przy widełkach i „od” są `null`. Dokładna wycena i cena ręczna mają `trybCeny: 'stala'`. Dodatki opcjonalne = `wynik.propozycje` z migawki wyceny (dodatki w trybie „zaproponuj w ofercie” z kroku dodatków, IU-16). `czyWazna(oferta, dzis)`, `sprawdzZakresy(zakresy, katalog)` (każda usługa poza `tylko_dodatek` ma wpis, niepuste teksty).
+- `kodek.js`: `MAKS_DLUGOSC_LINKU = 2000` (źródło stałej). `zakodujOferte(oferta)` → `'v1.' + base64url(deflate-raw(UTF-8 JSON))`; `odkodujOferte(fragment)` → `{ ok: true, oferta }` albo `{ ok: false, powod: 'brak' | 'wersja' | 'uszkodzony' | 'przegladarka' }`; po dekodowaniu ścisła walidacja schematu (dozwolone klucze, typy, teksty do 500 znaków, listy do 50, kwoty skończone ≥ 0, `trybCeny` z `TRYBY_CENY`, abonament `null` albo dodatnia liczba wizyt z kwotami od ≤ do, status VAT przez `jestStatusemVat` z `src/dane/magazyn.js`, stawka do `MAKS_STAWKI_VAT_PROC` z `src/silnik/vat.js`), bo link może sfabrykować każdy. `linkOferty(adresAplikacji, oferta)` → `{ url: '<katalog aplikacji>/oferta.html#<kod>', dlugosc, dlugi: dlugosc > MAKS_DLUGOSC_LINKU }`.
 - `src/dane/ustawienia.js`: `zapiszZakres(magazyn, uslugaId, zakres | null)`, `zapiszWarunki(magazyn, warunki | null)` (null = wróć do domyślnych). `src/dane/wyceny.js`: `zapiszOferte(kontekst, id, patch)` (zakres, warunki, ważność, klient), `oznaczWyslana(kontekst, id)` (status `wyslana` z `do_wyslania`, `oferta.wyslana` = teraz, `nieaktualna` = false).
 - `sw.js`: `data/zakresy.json` w liście wstępnego zapisu.
 
@@ -1402,7 +1402,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - `src/dane/kopia.js` (IU-8) — walidacja danych z zewnątrz i kody błędów
 
 **Scenariusze testowe:**
-- [Unit] oferta z wyceny mieszkania z ręczną ceną 290 zł i dojazdem 4 zł: `uslugi[0].kwota` 290, `dojazd` 4, `razem` 294 (od = do)
+- [Unit] oferta z wyceny mieszkania z ręczną ceną 290 zł i dojazdem 4 zł: `uslugi[0].kwota` 290, `dojazd` 4, `razem` 294 (od = do) — korekta z fazy 6: ręczna cena to kwota „razem” z dojazdem (jak `cenaKlienta` w `src/kreator/podsumowanie.js`), więc test podaje ręczną 294 (usługa 290 + dojazd 4), a ręczna 290 daje usługę 286 + dojazd 4
 - [Unit] `JSON.stringify(oferta)` nie zawiera kluczy `zostaje`, `tempo`, `koszt`, `minuty`, `chemia` ani `sprzet` (R21)
 - [Unit] zakres z wyceny wygrywa z ustawieniami, a ustawień z `data/zakresy.json`; warunek `stan_lokalu` jest tylko w ofercie z szybkiej wyceny
 - [Unit] ważność: oferta z 24.10.2026 jest ważna 7.11.2026 i nieważna 8.11.2026
@@ -1416,7 +1416,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 - `npm test` przechodzi
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-23: Edycja oferty oraz zakres prac i warunki w ustawieniach**
+- [x] **IU-23: Edycja oferty oraz zakres prac i warunki w ustawieniach**
 
 **Cel:** Ekran przygotowania oferty z wyceny (firma, klient i termin, zakres, dodatki do zaproponowania, warunki, ważność, link i PDF) i sekcje „Zakres prac” i „Warunki oferty” w ustawieniach.
 
@@ -1475,7 +1475,7 @@ Checklista etapu: `docs/operator/etap-5-aplikacja-wyceny-przygotowanie.md` (uzup
 **Operator checklist:**
 - [ ] Właściciel przygotowuje ofertę z prawdziwej wyceny, wysyła link do siebie przez SMS i komunikator i otwiera go na drugim telefonie
 
-- [ ] **IU-24: Strona oferty dla klienta i wydruk A4**
+- [x] **IU-24: Strona oferty dla klienta i wydruk A4**
 
 **Cel:** Strona `oferta.html` otwierana z linku bez logowania (oferta ważna, po terminie, uszkodzony link, stara przeglądarka) i wersja do druku A4.
 

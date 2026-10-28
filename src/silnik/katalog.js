@@ -7,17 +7,21 @@ const PLIKI = { ceny: 'data/ceny.json', normy: 'data/normy.json', rynek: 'data/r
 const NAZWA_SREDNIEJ_KRAJOWEJ = 'średnia krajowa'
 const WSP_KRAJOWY = 1
 const MNOZNIK_PROGU_DOMYSLNY = 1
+/** Pole `szybka_wycena` uslugi w data/ceny.json: widelki ze stanu albo „orientacyjnie od” po ogledzinach; zrodlo stalej dla szybkiej wyceny. */
+export const RODZAJE_SZYBKIEJ = Object.freeze(/** @type {const} */ (['widelki', 'ogledziny']))
 
 /**
  * @typedef {{ pomieszczenie: string, brud: string, poziom: number }} RegulaBrudu
+ * @typedef {typeof RODZAJE_SZYBKIEJ[number]} RodzajSzybkiej bez pola usluga wchodzi do szybkiej wyceny tylko jako dodatek
  * @typedef {{ id: string, nazwa: string, wizyt_w_miesiacu: number, mnoznik_zakresu: number }} Wariant
  * @typedef {{ id: string, nazwa: string, jednostka: string, cena: number, zakres: number[] | null, typ?: 'doplata',
  *   sprzet?: string, koszt_chemii_m2?: number, koszt_chemii_szt?: number, doliczaj_material?: boolean }} Pozycja
  * @typedef {{ id: string, nazwa: string, grupa: string, tryb: 'pomieszczenia' | 'pozycje', podstawa_ceny: string,
  *   minimum_zl?: number, zestaw_pomieszczen?: string, mnoznik_zakresu?: number, brud_domyslny?: RegulaBrudu[],
  *   dodatki?: string[], warianty?: Wariant[], pozycje?: Pozycja[], progi?: string, poziomy_brudu?: boolean,
- *   tylko_dodatek?: boolean, rynek_odniesienie?: string }} Usluga
+ *   tylko_dodatek?: boolean, rynek_odniesienie?: string, szybka_wycena?: RodzajSzybkiej }} Usluga
  * @typedef {{ od_m2: number, mnoznik: number }} Prog
+ * @typedef {{ od: number, do: number | null, mnoznik: number }} ProgMetrazu do: od_m2 nastepnego progu w danych (null przy ostatnim)
  * @typedef {{ poziom: number, nazwa: string, mnoznik: number }} PoziomBrudu
  * @typedef {{ praca?: { stawka_brutto_h: number, narzut_pracodawcy: number, koszt_h: number }, chemia_h: { wartosc: number },
  *   sprzet: Record<string, { nazwa: string, koszt_h: number } | string>,
@@ -43,7 +47,7 @@ const MNOZNIK_PROGU_DOMYSLNY = 1
  *   wojewodztwo: (id: string | null) => Wojewodztwo, rynekKraj: (klucz: string) => { mediana: number, zakres: [number, number] },
  *   normaPomieszczenia: (typ: string) => number,
  *   normaBrudu: (id: string, poziom: number) => number, zestaw: (id: string) => NormaPomieszczenia[],
- *   progMetrazu: (nazwa: string, m2: number) => number, normaPozycji: (klucz: string) => NormaPozycji,
+ *   progMetrazu: (nazwa: string, m2: number) => number, progDlaMetrazu: (nazwa: string, m2: number) => ProgMetrazu | null, normaPozycji: (klucz: string) => NormaPozycji,
  *   przygotowanie: (uslugaId: string) => number, przygotowanieMin: number, progiWydajnosciBiura: Prog[],
  *   uslugi: Usluga[], wojewodztwa: Wojewodztwo[], brud: Brud[], poziomy: Poziom[], poziomyBrudu: PoziomBrudu[],
  *   kosztyFirmy: KosztyFirmy, uklady: Uklady, wersjaDanych: { ceny: string, normy: string, rynek: string }
@@ -112,7 +116,7 @@ function jestPozycja(x) {
     brakAlbo(x.koszt_chemii_szt, jestLiczba) && brakAlbo(x.sprzet, jestTekstem)
 }
 
-/** Pola uslugi czytane przez silnik (tryb, minimum, mnoznik zakresu, warianty, pozycje, progi, rynek). @param {unknown} x */
+/** Pola uslugi czytane przez silnik (tryb, minimum, mnoznik zakresu, warianty, pozycje, progi, rynek, szybka wycena). @param {unknown} x */
 function jestUsluga(x) {
   const czyWariant = (/** @type {unknown} */ w) => maTeksty(w, ['id', 'nazwa']) && maLiczby(w, ['wizyt_w_miesiacu', 'mnoznik_zakresu'])
   const czyRegulaBrudu = (/** @type {unknown} */ r) => maTeksty(r, ['pomieszczenie', 'brud']) && maLiczby(r, ['poziom'])
@@ -120,7 +124,7 @@ function jestUsluga(x) {
     brakAlbo(x.minimum_zl, jestLiczba) && brakAlbo(x.mnoznik_zakresu, jestLiczba) && brakAlbo(x.zestaw_pomieszczen, jestTekstem) &&
     brakAlbo(x.progi, jestTekstem) && brakAlbo(x.rynek_odniesienie, jestTekstem) &&
     brakAlbo(x.pozycje, (p) => jestTablica(p, jestPozycja)) && brakAlbo(x.warianty, (w) => jestTablica(w, czyWariant)) &&
-    brakAlbo(x.brud_domyslny, (b) => jestTablica(b, czyRegulaBrudu))
+    brakAlbo(x.brud_domyslny, (b) => jestTablica(b, czyRegulaBrudu)) && brakAlbo(x.szybka_wycena, (r) => RODZAJE_SZYBKIEJ.some((z) => z === r))
 }
 
 /**
@@ -211,21 +215,29 @@ function znajdz(mapa, klucz, blad) {
   return wartosc
 }
 
-/** @param {Ceny} ceny @returns {Pick<Katalog, 'usluga' | 'pozycja' | 'progMetrazu'> & { czyPozycja: (klucz: string) => boolean }} */
+/** @param {Ceny} ceny @returns {Pick<Katalog, 'usluga' | 'pozycja' | 'progMetrazu' | 'progDlaMetrazu'> & { czyPozycja: (klucz: string) => boolean }} */
 function indeksyCen(ceny) {
   const uslugi = new Map(ceny.uslugi.map((u) => [u.id, u]))
   const pozycje = new Map(ceny.uslugi.flatMap((u) => (u.pozycje ?? []).map((p) => [`${u.id}.${p.id}`, p])))
   /** @param {string} id */
   const usluga = (id) => znajdz(uslugi, id, () => new BladWejscia('nieznana_usluga', `Nieznana usługa ${id}`))
+  /**
+   * Prog metrazu: ostatni w kolejnosci danych z od_m2 ≤ m²; jedna regula dla mnoznika ceny i banera progu w kreatorze.
+   * @param {string} nazwa @param {number} m2 @returns {ProgMetrazu | null} null, gdy zaden prog nie pasuje (mnoznik domyslny)
+   */
+  const progDlaMetrazu = (nazwa, m2) => {
+    const progi = ceny.progi_metrazu[nazwa]?.progi
+    if (!progi) throw new BladKatalogu('brak_progu', `Brak progów metrażu ${nazwa}`)
+    const indeks = progi.findLastIndex((p) => m2 >= p.od_m2)
+    const prog = progi[indeks]
+    return prog ? { od: prog.od_m2, do: progi[indeks + 1]?.od_m2 ?? null, mnoznik: prog.mnoznik } : null
+  }
   return {
     usluga,
     pozycja: (uslugaId, pozycjaId) => znajdz(pozycje, `${usluga(uslugaId).id}.${pozycjaId}`,
       () => new BladWejscia('nieznana_pozycja', `Nieznana pozycja ${pozycjaId} usługi ${uslugaId}`)),
-    progMetrazu: (nazwa, m2) => {
-      const progi = ceny.progi_metrazu[nazwa]
-      if (!progi) throw new BladKatalogu('brak_progu', `Brak progów metrażu ${nazwa}`)
-      return progi.progi.reduce((mnoznik, prog) => (m2 >= prog.od_m2 ? prog.mnoznik : mnoznik), MNOZNIK_PROGU_DOMYSLNY)
-    },
+    progMetrazu: (nazwa, m2) => progDlaMetrazu(nazwa, m2)?.mnoznik ?? MNOZNIK_PROGU_DOMYSLNY,
+    progDlaMetrazu,
     czyPozycja: (klucz) => pozycje.has(klucz),
   }
 }

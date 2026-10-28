@@ -10,6 +10,8 @@ const STATUSY_VAT = ['czynny', 'zwolniony']
 const PODSTAWY_CENY = ['brutto', 'netto']
 const PROCENT = 100
 const GROSZE_W_ZLOTYM = 100
+/** Najwyzsza stawka VAT w procentach; ta sama granica w silniku i w dekoderze linku oferty (src/oferta/kodek.js). */
+export const MAKS_STAWKI_VAT_PROC = PROCENT
 
 /** @param {number} kwota */
 function doGroszy(kwota) {
@@ -26,8 +28,8 @@ export function sprawdzStatusVat(status) {
 
 /** @param {number} stawkaVatProc */
 function sprawdzStawke(stawkaVatProc) {
-  if (!Number.isFinite(stawkaVatProc) || stawkaVatProc < 0 || stawkaVatProc > PROCENT) {
-    throw new BladWejscia('stawka_vat', `Stawka VAT musi być w przedziale [0, ${PROCENT}], jest ${stawkaVatProc}`)
+  if (!Number.isFinite(stawkaVatProc) || stawkaVatProc < 0 || stawkaVatProc > MAKS_STAWKI_VAT_PROC) {
+    throw new BladWejscia('stawka_vat', `Stawka VAT musi być w przedziale [0, ${MAKS_STAWKI_VAT_PROC}], jest ${stawkaVatProc}`)
   }
 }
 

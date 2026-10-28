@@ -1,5 +1,6 @@
 // Ekran ustawien firmy (`#/ustawienia`, makieta ustawienia-firmy): karty „Dane do oferty”, „Rynek i VAT”, „Tempo pracy”,
-// „Koszty zlecenia (szacunki do zmiany)” i wiersz „Kopia danych”; kazda zmiana zapisuje sie od razu z komunikatem „Zapisano”.
+// „Koszty zlecenia (szacunki do zmiany)”, „Zakres prac”, „Warunki oferty” i wiersz „Kopia danych”; kazda zmiana zapisuje sie
+// od razu z komunikatem „Zapisano”.
 
 import { dniOdKopii } from '../dane/kopia.js'
 import { wczytajStan } from '../dane/magazyn.js'
@@ -8,6 +9,7 @@ import { dniTemu } from '../ui/format.js'
 import { h } from '../ui/h.js'
 import { baner, dolnyPasek, karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
 import { sciezka } from '../ui/trasy.js'
+import { kartaWarunkowUstawien, kartaZakresowUstawien } from './ustawienia-oferta.js'
 import { kartaFirmy, kartaKosztow, kartaRynku } from './ustawienia-sekcje.js'
 import { kartaTempa } from './ustawienia-tempo.js'
 import { tekstBleduZapisu } from './teksty-bledow.js'
@@ -54,21 +56,23 @@ export const widokUstawien = {
       const stan = wczytajStan(magazyn)
       /** @type {DaneSekcji} */
       const dane = { ustawienia: stan.ustawienia ?? ustawieniaDomyslne(domyslne), katalog, domyslne, wyceny: stan.wyceny, zapisz }
-      tresc.replaceChildren(kartaFirmy(dane), kartaRynku(dane), kartaTempa(dane), kartaKosztow(dane), kartaKopii(stan, new Date()))
+      const daneOferty = { ustawienia: dane.ustawienia, katalog, domyslne, magazyn, wykonaj }
+      tresc.replaceChildren(kartaFirmy(dane), kartaRynku(dane), kartaTempa(dane), kartaKosztow(dane), kartaZakresowUstawien(daneOferty),
+        kartaWarunkowUstawien(daneOferty), kartaKopii(stan, new Date()))
       ustawFokus(tresc, fokus)
     }
 
     /**
-     * Zapis od razu po zmianie pola; sekcje rysuja sie od nowa po zamknieciu arkusza (mikrozadanie), takze po bledzie,
+     * Zapis od razu po zmianie; sekcje rysuja sie od nowa po zamknieciu arkusza (mikrozadanie), takze po bledzie,
      * zeby kontrolki pokazaly stan zapisany.
-     * @param {ZmianaUstawien} zmiana @param {string} [fokus]
+     * @param {() => unknown} operacja zapis ustawien (zapiszUstawienia, zapiszZakres, zapiszWarunki) @param {string} [fokus]
      * @returns {string | null}
      */
-    function zapisz(zmiana, fokus) {
+    function wykonaj(operacja, fokus) {
       /** @type {string | null} */
       let blad = null
       try {
-        zapiszUstawienia(magazyn, zmiana, domyslne)
+        operacja()
         pokazKomunikat(h('p', { class: 'baner baner--sukces' }, 'Zapisano'), true)
       } catch (wyjatek) {
         blad = tekstBleduZapisu(wyjatek)
@@ -78,6 +82,9 @@ export const widokUstawien = {
       queueMicrotask(() => rysuj(fokus))
       return blad
     }
+
+    /** @param {ZmianaUstawien} zmiana @param {string} [fokus] @returns {string | null} */
+    const zapisz = (zmiana, fokus) => wykonaj(() => zapiszUstawienia(magazyn, zmiana, domyslne), fokus)
 
     kontener.append(
       naglowek({ tytul: 'Twoja firma', podtytul: 'Ustawienia używane w każdej wycenie' }),

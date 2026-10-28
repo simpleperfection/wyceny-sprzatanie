@@ -1,0 +1,330 @@
+{
+  "wersja": 1,
+  "zadanie": "etap-5-aplikacja-wyceny",
+  "fazy": [
+    {
+      "numer": 1,
+      "nazwa": "Narzędzia i silnik wyceny",
+      "execute": "done",
+      "review": "done",
+      "fix": "done",
+      "otwarteFindingi": [],
+      "baza": "9ba61ff2705210e5c33a4ec4ba8fe52433239655",
+      "metryki": {
+        "liczniki": {
+          "p1": 0,
+          "p2": 8,
+          "p3": 7,
+          "operator": 1
+        },
+        "przebieg": {
+          "pominieci": [],
+          "e2eTryb": "przegladarka",
+          "znalezione": 17,
+          "poDedupJs": 17,
+          "poDedupSem": 16,
+          "weryfikowane": 8,
+          "obalone": 0,
+          "p3Odrzucone": 0,
+          "e2eCheckboxy": 0,
+          "e2eStatus": "wykonany — brak checkboxow [E2E] w fazie",
+          "e2ePass": 0,
+          "e2eFail": 0,
+          "e2eSkip": 0,
+          "e2eManual": 0,
+          "dossier": true,
+          "sceptycy": {
+            "p1": 0,
+            "p2Grupy": 2,
+            "p2Findingi": 8
+          },
+          "sceptyk": {
+            "agree": 8,
+            "disagree_evidence": 0,
+            "disagree_concern": 0,
+            "degradacje": 0
+          },
+          "tiery": {
+            "sceptykP2": "medium",
+            "sceptykP1": "high",
+            "reviewer": "high",
+            "spec": "medium",
+            "testCoverage": "medium",
+            "scribe": "low"
+          }
+        }
+      }
+    },
+    {
+      "numer": 2,
+      "nazwa": "Dane w przeglądarce",
+      "execute": "done",
+      "review": "done",
+      "fix": "done",
+      "otwarteFindingi": [],
+      "baza": "d2ef5d1c812560c5de9fa295e9f8e18451114e3a",
+      "metryki": {
+        "liczniki": {
+          "p1": 3,
+          "p2": 13,
+          "p3": 8,
+          "operator": 0
+        },
+        "przebieg": {
+          "pominieci": [],
+          "e2eTryb": "przegladarka",
+          "znalezione": 25,
+          "poDedupJs": 25,
+          "poDedupSem": 24,
+          "weryfikowane": 16,
+          "obalone": 0,
+          "p3Odrzucone": 0,
+          "e2eCheckboxy": 0,
+          "e2eStatus": "wykonany — brak checkboxow [E2E] w fazie",
+          "e2ePass": 0,
+          "e2eFail": 0,
+          "e2eSkip": 0,
+          "e2eManual": 0,
+          "dossier": true,
+          "sceptycy": {
+            "p1": 9,
+            "p2Grupy": 4,
+            "p2Findingi": 13
+          },
+          "sceptyk": {
+            "agree": 22,
+            "disagree_evidence": 0,
+            "disagree_concern": 0,
+            "degradacje": 0
+          },
+          "tiery": {
+            "sceptykP2": "medium",
+            "sceptykP1": "high",
+            "reviewer": "high",
+            "spec": "medium",
+            "testCoverage": "medium",
+            "scribe": "low"
+          }
+        }
+      }
+    },
+    {
+      "numer": 3,
+      "nazwa": "Szkielet aplikacji, start, ustawienia i kopia",
+      "execute": "done",
+      "review": "done",
+      "fix": "done",
+      "otwarteFindingi": [],
+      "baza": "e2bfda3c7f3c960d2e88f694fa6083762ca36dd1",
+      "metryki": {
+        "liczniki": {
+          "p1": 0,
+          "p2": 12,
+          "p3": 15,
+          "operator": 4
+        },
+        "przebieg": {
+          "pominieci": [],
+          "e2eTryb": "przegladarka",
+          "znalezione": 33,
+          "poDedupJs": 33,
+          "poDedupSem": 32,
+          "weryfikowane": 12,
+          "obalone": 0,
+          "p3Odrzucone": 1,
+          "e2eCheckboxy": 7,
+          "e2eStatus": "wykonany (tryb przegladarka)",
+          "e2ePass": 7,
+          "e2eFail": 0,
+          "e2eSkip": 0,
+          "e2eManual": 0,
+          "dossier": true,
+          "sceptycy": {
+            "p1": 0,
+            "p2Grupy": 3,
+            "p2Findingi": 12
+          },
+          "sceptyk": {
+            "agree": 12,
+            "disagree_evidence": 0,
+            "disagree_concern": 0,
+            "degradacje": 0
+          },
+          "tiery": {
+            "sceptykP2": "medium",
+            "sceptykP1": "high",
+            "reviewer": "high",
+            "spec": "medium",
+            "testCoverage": "medium",
+            "scribe": "low"
+          }
+        }
+      }
+    },
+    {
+      "numer": 4,
+      "nazwa": "Kreator dokładnej wyceny",
+      "execute": "done",
+      "review": "done",
+      "fix": "done",
+      "otwarteFindingi": [],
+      "baza": "2b8f675f496e220ea7d07b6ff4b799515b745109",
+      "metryki": {
+        "liczniki": {
+          "p1": 1,
+          "p2": 20,
+          "p3": 13,
+          "operator": 0
+        },
+        "przebieg": {
+          "pominieci": [],
+          "e2eTryb": "przegladarka",
+          "znalezione": 36,
+          "poDedupJs": 36,
+          "poDedupSem": 34,
+          "weryfikowane": 21,
+          "obalone": 0,
+          "p3Odrzucone": 0,
+          "e2eCheckboxy": 4,
+          "e2eStatus": "wykonany (tryb przegladarka)",
+          "e2ePass": 3,
+          "e2eFail": 1,
+          "e2eSkip": 0,
+          "e2eManual": 0,
+          "dossier": true,
+          "sceptycy": {
+            "p1": 3,
+            "p2Grupy": 5,
+            "p2Findingi": 20
+          },
+          "sceptyk": {
+            "agree": 23,
+            "disagree_evidence": 0,
+            "disagree_concern": 0,
+            "degradacje": 0
+          },
+          "tiery": {
+            "sceptykP2": "medium",
+            "sceptykP1": "high",
+            "reviewer": "high",
+            "spec": "medium",
+            "testCoverage": "medium",
+            "scribe": "low"
+          }
+        }
+      }
+    },
+    {
+      "numer": 5,
+      "nazwa": "Zlecenia, szybka wycena i pytania do klienta",
+      "execute": "done",
+      "review": "done",
+      "fix": "done",
+      "otwarteFindingi": [],
+      "baza": "db3275d3d69cb299855525b55a019a77ff771a3c",
+      "metryki": {
+        "liczniki": {
+          "p1": 0,
+          "p2": 15,
+          "p3": 8,
+          "operator": 4
+        },
+        "przebieg": {
+          "pominieci": [],
+          "e2eTryb": "przegladarka",
+          "znalezione": 28,
+          "poDedupJs": 28,
+          "poDedupSem": 27,
+          "weryfikowane": 16,
+          "obalone": 0,
+          "p3Odrzucone": 0,
+          "e2eCheckboxy": 4,
+          "e2eStatus": "wykonany (tryb przegladarka)",
+          "e2ePass": 4,
+          "e2eFail": 0,
+          "e2eSkip": 0,
+          "e2eManual": 0,
+          "dossier": true,
+          "sceptycy": {
+            "p1": 0,
+            "p2Grupy": 4,
+            "p2Findingi": 16
+          },
+          "sceptyk": {
+            "agree": 15,
+            "disagree_evidence": 0,
+            "disagree_concern": 1,
+            "degradacje": 1
+          },
+          "tiery": {
+            "sceptykP2": "medium",
+            "sceptykP1": "high",
+            "reviewer": "high",
+            "spec": "medium",
+            "testCoverage": "medium",
+            "scribe": "low"
+          }
+        }
+      }
+    },
+    {
+      "numer": 6,
+      "nazwa": "Oferta dla klienta",
+      "execute": "done",
+      "review": "done",
+      "fix": "done",
+      "otwarteFindingi": [],
+      "baza": "4aa07aa251e36ec777130abe039b2edeae2aa533",
+      "metryki": {
+        "liczniki": {
+          "p1": 1,
+          "p2": 13,
+          "p3": 8,
+          "operator": 3
+        },
+        "przebieg": {
+          "pominieci": [],
+          "e2eTryb": "przegladarka",
+          "znalezione": 27,
+          "poDedupJs": 27,
+          "poDedupSem": 25,
+          "weryfikowane": 14,
+          "obalone": 0,
+          "p3Odrzucone": 0,
+          "e2eCheckboxy": 4,
+          "e2eStatus": "wykonany (tryb przegladarka)",
+          "e2ePass": 4,
+          "e2eFail": 0,
+          "e2eSkip": 0,
+          "e2eManual": 0,
+          "dossier": true,
+          "sceptycy": {
+            "p1": 3,
+            "p2Grupy": 4,
+            "p2Findingi": 13
+          },
+          "sceptyk": {
+            "agree": 16,
+            "disagree_evidence": 0,
+            "disagree_concern": 0,
+            "degradacje": 0
+          },
+          "tiery": {
+            "sceptykP2": "medium",
+            "sceptykP1": "high",
+            "reviewer": "high",
+            "spec": "medium",
+            "testCoverage": "medium",
+            "scribe": "low"
+          }
+        }
+      }
+    }
+  ],
+  "zakonczenie": {
+    "walidacja": "done",
+    "complete": "done",
+    "compound": "done"
+  },
+  "bazaZielona": null
+}

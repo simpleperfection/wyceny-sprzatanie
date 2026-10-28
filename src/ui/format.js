@@ -1,12 +1,17 @@
 // Formatowanie liczb, kwot, czasu i dat po polsku (Intl `pl-PL`) oraz odmiana liczebnikow i nazw wojewodztw.
 // Tysiace grupuje twarda spacja takze przy liczbach czterocyfrowych (`useGrouping: 'always'`), jak na makietach.
 
-import { jestData } from '../dane/ksztalt.js'
+import { jestData, jestDniem } from '../dane/ksztalt.js'
 
 const JEZYK = 'pl-PL'
 const NBSP = ' '
 const MINUT_W_GODZINIE = 60
+const GROSZE_W_ZLOTYM = 100
+/** @type {Readonly<Record<string, string>>} */
+const NAZWY_JEDNOSTEK = Object.freeze({ m2: 'm²', szt: 'szt.' })
 const DZIEN_ISO = /^(\d{4})-(\d{2})-(\d{2})$/
+/** Termin z pola daty (RRRR-MM-DD) albo daty i godziny (RRRR-MM-DDTHH:mm, opcjonalnie z sekundami). */
+const TERMIN_ISO = /^(\d{4}-\d{2}-\d{2})(?:T([01]\d|2[0-3]):([0-5]\d)(?::[0-5]\d(?:\.\d+)?)?)?$/
 const LICZBA_DODATNIA = /^\d+(\.\d+)?$/
 const ODSTEPY = /[\s  ]/g
 
@@ -23,6 +28,7 @@ const formatDnia = new Intl.DateTimeFormat(JEZYK, { weekday: 'long', day: 'numer
 export const FORMY = Object.freeze({
   wycena: /** @type {const} */ (['wycena', 'wyceny', 'wycen']),
   zlecenie: /** @type {const} */ (['zlecenie', 'zlecenia', 'zleceń']),
+  wykonaneZlecenie: /** @type {const} */ (['wykonane zlecenie', 'wykonane zlecenia', 'wykonanych zleceń']),
   przyjeta: /** @type {const} */ (['przyjęta', 'przyjęte', 'przyjętych']),
 })
 
@@ -74,8 +80,23 @@ export const zl = (kwota) => `${formatZl.format(liczba(kwota))}${NBSP}zł`
 /** @param {number} kwota @returns {string} „1,15 zł” */
 export const zlGr = (kwota) => `${formatZlGr.format(liczba(kwota))}${NBSP}zł`
 
+/** @param {number} kwota cena za jednostke @returns {string} „30 zł” albo „7,50 zł” (grosze tylko, gdy sa) */
+export function kwotaJednostki(kwota) {
+  const wGroszach = Math.round(liczba(kwota) * GROSZE_W_ZLOTYM) / GROSZE_W_ZLOTYM
+  return Number.isInteger(wGroszach) ? zl(wGroszach) : zlGr(wGroszach)
+}
+
+/** @param {string} jednostka jednostka pozycji z data/ceny.json @returns {string} „m²”, „szt.” albo jednostka z danych */
+export const nazwaJednostki = (jednostka) => NAZWY_JEDNOSTEK[jednostka] ?? jednostka
+
 /** @param {number} metraz @returns {string} „50 m²” */
 export const m2 = (metraz) => `${formatM2.format(liczba(metraz))}${NBSP}m²`
+
+/**
+ * Ilosc z jednostka w tekscie oferty dla klienta (opis uslugi, dodatku): ten sam format liczby co metraz, tysiace z twarda spacja.
+ * @param {number} ilosc @param {string} jednostka jednostka z data/ceny.json @returns {string} „50 m²”, „4 szt.”, „1 200 m²”
+ */
+export const tekstIlosci = (ilosc, jednostka) => `${formatM2.format(liczba(ilosc))} ${nazwaJednostki(jednostka)}`
 
 /** @param {number} stosunek tempo jako stosunek do normy @returns {string} „1,18×” */
 export const tempo = (stosunek) => `${formatTempa.format(liczba(stosunek))}×`
@@ -109,6 +130,17 @@ function naDate(wartosc) {
 
 /** @param {Date | string} wartosc data albo tekst ISO @returns {string} „7 listopada 2026” */
 export const data = (wartosc) => formatDaty.format(naDate(wartosc))
+
+/**
+ * Termin klienta z pola daty albo daty i godziny po polsku; tekst spoza tego formatu (albo nieistniejacy dzien) zostaje bez zmian.
+ * @param {string} termin np. „2026-11-14T09:00” @returns {string} „14 listopada 2026, 9:00”, „14 listopada 2026”
+ */
+export function terminKlienta(termin) {
+  const czesci = TERMIN_ISO.exec(termin)
+  if (!czesci || !jestDniem(czesci[1])) return termin
+  const [, dzien = '', godzina, minuta] = czesci
+  return godzina === undefined ? data(dzien) : `${data(dzien)}, ${Number(godzina)}:${minuta}`
+}
 
 /** @param {Date | string} wartosc @returns {string} „Sobota, 24 października” */
 export function dataDnia(wartosc) {

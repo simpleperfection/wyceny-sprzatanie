@@ -287,76 +287,80 @@ Zależy od: Faza 3
 
 ### IU-14: Stan kreatora i wybór usługi (feature-builder-fullstack)
 
-- [ ] Stwórz: `src/kreator/stan.js`
-- [ ] Stwórz: `src/widoki/kreator-wspolne.js`
-- [ ] Stwórz: `src/widoki/kreator-usluga.js`
-- [ ] Modyfikuj: `src/widoki/indeks.js`
-- [ ] Test (unit): `src/kreator/stan.test.js`
-- [ ] Test: [Unit] `nowySzkic` dla `mieszkanie_po_remoncie` daje wycenę `szkic` z regułą brudu pył budowlany poziom 2 stosowaną do nowego pomieszczenia
-- [ ] Test: [Unit] `przelicz` dla 4 pomieszczeń układu 50 m² standard w mazowieckim daje migawkę z ceną 250, medianą 250 i widełkami 120–450
-- [ ] Test: [Unit] `bledyKroku('zakres')` dla wyceny bez pomieszczeń zwraca błąd; zmiana usługi czyści pomieszczenia
-- [ ] Test: [Unit] `zmienWejscie` na wycenie wykonanej rzuca `BladWyceny` z kodem `tylko_odczyt`
-- [ ] Weryfikacja: `node --test src/kreator/stan.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Stwórz: `src/kreator/stan.js`
+- [x] Stwórz: `src/widoki/kreator-wspolne.js`
+- [x] Stwórz: `src/widoki/kreator-usluga.js`
+- [x] Modyfikuj: `src/widoki/indeks.js`
+- [x] Test (unit): `src/kreator/stan.test.js`
+- [x] Test: [Unit] `nowySzkic` dla `mieszkanie_po_remoncie` daje wycenę `szkic` z regułą brudu pył budowlany poziom 2 stosowaną do nowego pomieszczenia
+- [x] Test: [Unit] `przelicz` dla 4 pomieszczeń układu 50 m² standard w mazowieckim daje migawkę z ceną 250, medianą 250 i widełkami 120–450
+- [x] Test: [Unit] `bledyKroku('zakres')` dla wyceny bez pomieszczeń zwraca błąd; zmiana usługi czyści pomieszczenia
+- [x] Test: [Unit] `zmienWejscie` na wycenie wykonanej rzuca `BladWyceny` z kodem `tylko_odczyt`
+- [x] Weryfikacja: `node --test src/kreator/stan.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-15: Krok zakresu: pomieszczenia i brud (feature-builder-fullstack)
 
-- [ ] Stwórz: `src/kreator/pomieszczenia.js`
-- [ ] Stwórz: `src/widoki/kreator-pomieszczenia.js`
-- [ ] Modyfikuj: `src/widoki/indeks.js`
-- [ ] Test (unit): `src/kreator/pomieszczenia.test.js`
-- [ ] Test: [Unit] dodanie kuchni i łazienki do wyceny po remoncie ustawia kurz 1 i pył budowlany poziom 2 w obu; nazwa łazienki „Łazienka”
-- [ ] Test: [Unit] `ustawMetraz` z 0 i 1500 zwraca kod błędu, z 12,5 zapisuje 12,5
-- [ ] Test: [Unit] `podsumowanieZakresu` dla układu 50 m² standard daje 50 m² i minuty ze scenariusza kalibracji
-- [ ] Weryfikacja: `node --test src/kreator/pomieszczenia.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Stwórz: `src/kreator/pomieszczenia.js`
+- [x] Stwórz: `src/widoki/kreator-pomieszczenia.js`
+- [x] Modyfikuj: `src/widoki/indeks.js`
+- [x] Test (unit): `src/kreator/pomieszczenia.test.js`
+- [x] Test: [Unit] dodanie kuchni i łazienki do wyceny po remoncie ustawia kurz 1 i pył budowlany poziom 2 w obu; nazwa łazienki „Łazienka”
+- [x] Test: [Unit] `ustawMetraz` z 0 i 1500 zwraca kod błędu, z 12,5 zapisuje 12,5
+- [x] Test: [Unit] `podsumowanieZakresu` dla układu 50 m² standard daje 50 m² i minuty ze scenariusza kalibracji
+- [x] Weryfikacja: `node --test src/kreator/pomieszczenia.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-16: Kroki zakresu z pozycjami i dodatków z dojazdem (feature-builder-fullstack)
 
-- [ ] Stwórz: `src/kreator/pozycje.js`
-- [ ] Stwórz: `src/widoki/kreator-pozycje.js`
-- [ ] Stwórz: `src/widoki/kreator-dodatki.js`
-- [ ] Modyfikuj: `src/widoki/indeks.js`
-- [ ] Test (unit): `src/kreator/pozycje.test.js`
-- [ ] Test: [Unit] `ustawIlosc` dla okna z 2,5 szt. zwraca błąd, z 4 zapisuje 4; `infoProgu` dla kostki 40 m² daje mnożnik 1,15, a dla 100 m² null
-- [ ] Test: [Unit] `ustawPowierzchnie(40)` z włączonymi myciem i mchem daje obu pozycjom 40 m²; wyłączenie jedynej pozycji głównej zwraca błąd
-- [ ] Test: [Unit] `infoDojazdu(12, domyślne stawki)` daje 4 zł dla klienta (2 km ponad 10 km) i 27,60 zł kosztu (24 km × 1,15 zł); `infoDojazdu(8)` — 0 zł dla klienta
-- [ ] Test: [Unit] `ustawDodatek` z trybem `propozycja` zapisuje dodatek poza ceną; ilość 0 usuwa dodatek
-- [ ] Test: [E2E] `kreator-okna-minimum` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, otwórz http://localhost:5174/#/kreator/usluga, wybierz „Mycie okien”, „Dalej”, ustaw „Okno 1-skrzydłowe” na 4, „Dalej”, „Dalej”, „Dalej” → podsumowanie z ceną 150 zł i informacją o minimum zlecenia
-- [ ] Weryfikacja: `node --test src/kreator/pozycje.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Stwórz: `src/kreator/pozycje.js`
+- [x] Stwórz: `src/widoki/kreator-pozycje.js`
+- [x] Stwórz: `src/widoki/kreator-dodatki.js`
+- [x] Modyfikuj: `src/widoki/indeks.js`
+- [x] Test (unit): `src/kreator/pozycje.test.js`
+- [x] Test: [Unit] `ustawIlosc` dla okna z 2,5 szt. zwraca błąd, z 4 zapisuje 4; `infoProgu` dla kostki 40 m² daje mnożnik 1,15, a dla 100 m² null
+- [x] Test: [Unit] `ustawPowierzchnie(40)` z włączonymi myciem i mchem daje obu pozycjom 40 m²; wyłączenie jedynej pozycji głównej zwraca błąd
+- [x] Test: [Unit] `infoDojazdu(12, domyślne stawki)` daje 4 zł dla klienta (2 km ponad 10 km) i 27,60 zł kosztu (24 km × 1,15 zł); `infoDojazdu(8)` — 0 zł dla klienta
+- [x] Test: [Unit] `ustawDodatek` z trybem `propozycja` zapisuje dodatek poza ceną; ilość 0 usuwa dodatek
+- [x] Test: [E2E] `kreator-okna-minimum` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, otwórz http://localhost:5174/#/kreator/usluga, wybierz „Mycie okien”, „Dalej”, ustaw „Okno 1-skrzydłowe” na 4, „Dalej”, „Dalej”, „Dalej” → podsumowanie z ceną 150 zł i informacją o minimum zlecenia
+- [x] Weryfikacja: `node --test src/kreator/pozycje.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-17: Dobór chemii: krok kreatora i katalog (feature-builder-fullstack)
 
-- [ ] Stwórz: `src/silnik/chemia.js`
-- [ ] Stwórz: `src/widoki/karta-produktu.js`
-- [ ] Stwórz: `src/widoki/dobor-chemii.js`
-- [ ] Stwórz: `src/widoki/katalog-chemii.js`
-- [ ] Modyfikuj: `src/widoki/indeks.js`
-- [ ] Test (unit): `src/silnik/chemia.test.js`
-- [ ] Test: [Unit] mieszkanie po remoncie daje kategorie uniwersalny (kurz) i poremontowy (pył budowlany); sierść poziom 1 nie dubluje kategorii uniwersalnej
-- [ ] Test: [Unit] sprzątanie hal z zamiataniem daje notkę „zamiatanie na sucho” bez kategorii; doczyszczanie z usuwaniem farby — notkę o zmywaczu farb
-- [ ] Test: [Unit] dezynfekcja jest w `kategorieDoRecznegoDodania`, a nie w `kategorieDlaWyceny`; produkt Buzil bez pH daje „pH: brak danych”
-- [ ] Test: [E2E] `dobor-chemii-po-remoncie` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, utwórz dokładną wycenę „Mieszkanie lub dom – sprzątanie po remoncie” z pokojem 20 m², przejdź do kroku „Chemia”, zrób screenshot, kliknij pierwszą „Karta SDS” → widać kategorię środków poremontowych z produktami, link SDS otwiera nową kartę z adresem z `data/chemia.json`
-- [ ] Weryfikacja: `node --test src/silnik/chemia.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Stwórz: `src/silnik/chemia.js`
+- [x] Stwórz: `src/widoki/karta-produktu.js`
+- [x] Stwórz: `src/widoki/dobor-chemii.js`
+- [x] Stwórz: `src/widoki/katalog-chemii.js`
+- [x] Modyfikuj: `src/widoki/indeks.js`
+- [x] Test (unit): `src/silnik/chemia.test.js`
+- [x] Test: [Unit] mieszkanie po remoncie daje kategorie uniwersalny (kurz) i poremontowy (pył budowlany); sierść poziom 1 nie dubluje kategorii uniwersalnej
+- [x] Test: [Unit] sprzątanie hal z zamiataniem daje notkę „zamiatanie na sucho” bez kategorii; doczyszczanie z usuwaniem farby — notkę o zmywaczu farb
+- [x] Test: [Unit] dezynfekcja jest w `kategorieDoRecznegoDodania`, a nie w `kategorieDlaWyceny`; produkt Buzil bez pH daje „pH: brak danych”
+- [x] Test: [E2E] `dobor-chemii-po-remoncie` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, utwórz dokładną wycenę „Mieszkanie lub dom – sprzątanie po remoncie” z pokojem 20 m², przejdź do kroku „Chemia”, zrób screenshot, kliknij pierwszą „Karta SDS” → widać kategorię środków poremontowych z produktami, link SDS otwiera nową kartę z adresem z `data/chemia.json`
+- [x] Weryfikacja: `node --test src/silnik/chemia.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-18: Podsumowanie wyceny i zapisana wycena (feature-builder-fullstack)
 
-- [ ] Stwórz: `src/kreator/podsumowanie.js`
-- [ ] Stwórz: `src/widoki/podsumowanie.js`
-- [ ] Stwórz: `src/widoki/podsumowanie-karty.js`
-- [ ] Modyfikuj: `src/widoki/indeks.js`
-- [ ] Test (unit): `src/kreator/podsumowanie.test.js`
-- [ ] Test: [Unit] wycena 250 zł, ręczna cena 290 zł: `polozenie: 'w'`, procent „+16%”, `zostaje` rośnie o 40 zł, czas bez zmian
-- [ ] Test: [Unit] czynny VAT przy mieszkaniu: brutto 250, netto 203,25, `zostaje` liczone od netto
-- [ ] Test: [Unit] migawka z `wersjaDanych` starszą niż katalog daje ostrzeżenie „Dane rynkowe zmieniły się…”; cena dokładna 380 zł przy szybkiej 250–300 zł daje ostrzeżenie o widełkach
-- [ ] Test: [Unit] abonament 1× w tygodniu: `abonament` z kwotą miesięczną i liczbą wizyt 4,33
-- [ ] Test: [E2E] `dokladna-wycena-mieszkania` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, otwórz http://localhost:5174/#/kreator/usluga, wybierz „Mieszkanie lub dom – sprzątanie standardowe”, „Dalej”, dodaj pokój 32, przedpokój 6, kuchnię 8 i łazienkę 4 m², przejdź „Dalej” przez dodatki i chemię, zrób screenshot podsumowania, kliknij „Zapisz”, w arkuszu wpisz klienta „Pani Test” i potwierdź „Zapisz” → cena 250 zł „w widełkach rynku”, „rynek od 120 zł do 450 zł”, karta „Zostaje dla Ciebie” z tempem 1,3×, po zapisie adres `#/wycena/<id>` i numer „1/<miesiąc>/<rok>” w podtytule
-- [ ] Test: [E2E] `podsumowanie-cena-reczna` — w zapisanej wycenie z poprzedniego scenariusza kliknij „Zmień”, wpisz 290 → kwota 290 zł, „Twoja cena 290 (+16%)”, kwota „Zostaje dla Ciebie” większa o 40 zł, „Przywróć cenę z modelu” wraca do 250 zł
-- [ ] Weryfikacja: `node --test src/kreator/podsumowanie.test.js` przechodzi
-- [ ] Weryfikacja: `npm test` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Stwórz: `src/kreator/podsumowanie.js`
+- [x] Stwórz: `src/widoki/podsumowanie.js`
+- [x] Stwórz: `src/widoki/podsumowanie-karty.js`
+- [x] Modyfikuj: `src/widoki/indeks.js`
+- [x] Test (unit): `src/kreator/podsumowanie.test.js`
+- [x] Test: [Unit] wycena 250 zł, ręczna cena 290 zł: `polozenie: 'w'`, procent „+16%”, `zostaje` rośnie o 40 zł, czas bez zmian
+- [x] Test: [Unit] czynny VAT przy mieszkaniu: brutto 250, netto 203,25, `zostaje` liczone od netto
+- [x] Test: [Unit] migawka z `wersjaDanych` starszą niż katalog daje ostrzeżenie „Dane rynkowe zmieniły się…”; cena dokładna 380 zł przy szybkiej 250–300 zł daje ostrzeżenie o widełkach
+- [x] Test: [Unit] abonament 1× w tygodniu: `abonament` z kwotą miesięczną i liczbą wizyt 4,33
+- [x] Test: [E2E] `dokladna-wycena-mieszkania` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, otwórz http://localhost:5174/#/kreator/usluga, wybierz „Mieszkanie lub dom – sprzątanie standardowe”, „Dalej”, dodaj pokój 32, przedpokój 6, kuchnię 8 i łazienkę 4 m², przejdź „Dalej” przez dodatki i chemię, zrób screenshot podsumowania, kliknij „Zapisz”, w arkuszu wpisz klienta „Pani Test” i potwierdź „Zapisz” → cena 250 zł „w widełkach rynku”, „rynek od 120 zł do 450 zł”, karta „Zostaje dla Ciebie” z tempem 1,3×, po zapisie adres `#/wycena/<id>` i numer „1/<miesiąc>/<rok>” w podtytule
+- [x] Test: [E2E] `podsumowanie-cena-reczna` — w zapisanej wycenie z poprzedniego scenariusza kliknij „Zmień”, wpisz 290 → kwota 290 zł, „Twoja cena 290 (+16%)”, kwota „Zostaje dla Ciebie” większa o 40 zł, „Przywróć cenę z modelu” wraca do 250 zł
+- [x] Weryfikacja: `node --test src/kreator/podsumowanie.test.js` przechodzi
+- [x] Weryfikacja: `npm test` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+
+## Do poprawy po review fazy 4
+
+Zamkniete cyklem fix: 21 pozycji — pelna tresc findingow i uzasadnienia w `review-faza-4.md`.
 
 ## Operator checklist faza 4
 
@@ -369,63 +373,71 @@ Zależy od: Faza 4
 
 ### IU-19: Zakończenie zlecenia i plan a fakt (feature-builder-fullstack)
 
-- [ ] Stwórz: `src/kreator/zakonczenie.js`
-- [ ] Stwórz: `src/widoki/zakonczenie.js`
-- [ ] Modyfikuj: `src/widoki/podsumowanie.js`
-- [ ] Modyfikuj: `src/widoki/ustawienia-tempo.js`
-- [ ] Modyfikuj: `src/widoki/indeks.js`
-- [ ] Stwórz: `e2e/stany/zlecenie-przyjete.json`
-- [ ] Test (unit): `src/kreator/zakonczenie.test.js`
-- [ ] Test: [Unit] `poprawnyCzas(330)` → null; `poprawnyCzas(0)` i `poprawnyCzas(1500)` → kod błędu; `czasStartowy` dla planu 266 min → 270
-- [ ] Test: [Unit] wycena 230,82 min normy, tempo planu 1,3, fakt 330 min: plan 300 min, różnica +10%, stosunek 1,43
-- [ ] Test: [Unit] fakt 800 min dla normy 230,82 daje flagę poza granicami; `infoTempa` po pierwszym wpisie daje „1 z 3”
-- [ ] Test: [E2E] `zakonczenie-zlecenia` — okno 360×800, wstrzyknij `e2e/stany/zlecenie-przyjete.json`, otwórz zapisaną wycenę z listy „Wyceny”, kliknij „Wpisz czas pracy”, ustaw licznikiem 5 h 30 min, zrób screenshot, kliknij „Zapisz”, wejdź w „Firma” → przed zapisem karta „Plan i fakt” z planem 5 h 0 min, faktem 5 h 30 min i zdaniem „Praca trwała 30 min dłużej niż plan (+10%).”, karta tempa z „Własne tempo policzymy po 3 zleceniach (1 z 3).”; po zapisie wycena ma status „Wykonana”, w ustawieniach lista „Plan a fakt” ma jeden wiersz
-- [ ] Weryfikacja: `node --test src/kreator/zakonczenie.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Stwórz: `src/kreator/zakonczenie.js`
+- [x] Stwórz: `src/widoki/zakonczenie.js`
+- [x] Modyfikuj: `src/widoki/podsumowanie.js`
+- [x] Modyfikuj: `src/widoki/ustawienia-tempo.js`
+- [x] Modyfikuj: `src/widoki/indeks.js`
+- [x] Stwórz: `e2e/stany/zlecenie-przyjete.json`
+- [x] Test (unit): `src/kreator/zakonczenie.test.js`
+- [x] Test: [Unit] `poprawnyCzas(330)` → null; `poprawnyCzas(0)` i `poprawnyCzas(1500)` → kod błędu; `czasStartowy` dla planu 266 min → 270
+- [x] Test: [Unit] wycena 230,82 min normy, tempo planu 1,3, fakt 330 min: plan 300 min, różnica +10%, stosunek 1,43
+- [x] Test: [Unit] fakt 800 min dla normy 230,82 daje flagę poza granicami; `infoTempa` po pierwszym wpisie daje „1 z 3”
+- [x] Test: [E2E] `zakonczenie-zlecenia` — okno 360×800, wstrzyknij `e2e/stany/zlecenie-przyjete.json`, otwórz zapisaną wycenę z listy „Wyceny”, kliknij „Wpisz czas pracy”, ustaw licznikiem 5 h 30 min, zrób screenshot, kliknij „Zapisz”, wejdź w „Firma” → przed zapisem karta „Plan i fakt” z planem 5 h 0 min, faktem 5 h 30 min i zdaniem „Praca trwała 30 min dłużej niż plan (+10%).”, karta tempa z „Własne tempo policzymy po 3 zleceniach (1 z 3).”; po zapisie wycena ma status „Wykonana”, w ustawieniach lista „Plan a fakt” ma jeden wiersz
+- [x] Weryfikacja: `node --test src/kreator/zakonczenie.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-20: Silnik szybkiej wyceny i pytań do klienta (feature-builder-data)
 
-- [ ] Stwórz: `src/silnik/szybka.js`
-- [ ] Stwórz: `src/silnik/pytania.js`
-- [ ] Modyfikuj: `data/ceny.json`
-- [ ] Modyfikuj: `sw.js`
-- [ ] Test (unit): `src/silnik/szybka.test.js`
-- [ ] Test (unit): `src/silnik/pytania.test.js`
-- [ ] Test: [Unit] mieszkanie 50 m² standard, mazowieckie, typowy: widełki 250–300 zł, `mediana` 250, rynek 120–450; mocny: 290–360 zł; lekki: „ok. 250 zł”
-- [ ] Test: [Unit] dolna granica typowego dla 50 m² równa się cenie dokładnej wyceny układu 50 m² ze scenariusza kalibracji (R14, R27)
-- [ ] Test: [Unit] mieszkanie 20 m² standard: obie granice ≥ 150 zł (minimum); dojazd 32 km dokłada 44 zł na obu końcach
-- [ ] Test: [Unit] okna 4 × okno 1-skrz.: 150 zł (minimum) — `tryb: 'ok'`; tapicerka kanapa 3-os. i fotel: widełki od ceny do ceny × 1,2
-- [ ] Test: [Unit] mieszkanie po remoncie 60 m²: `tryb: 'od'` i `od` = cena poziomu 1 z pyłem budowlanym, zaokrąglona w dół do 10 zł
-- [ ] Test: [Unit] tekst: „Sprzątanie mieszkania 50 m², standard: 250–300 zł. Cena ostateczna po obejrzeniu lokalu lub zdjęć.”
-- [ ] Test: [Unit] `naDokladna` dla mocnego stanu daje 4 pomieszczenia układu 50 m² z kurzem poziom 2 i te same odpowiedzi
-- [ ] Test: [Unit] odpowiedź „tak” na pytanie o zwierzęta ze skutkiem sierść poziom 2 na `*` dodaje sierść do wszystkich pomieszczeń; odpowiedź 32 na pytanie z `dojazd_km` ustawia `dojazdKm` 32
-- [ ] Test: [Unit] `sprawdzPytania` na prawdziwym `data/pytania.json` zwraca pustą listę; plik z nieznanym brudem `blotko` zwraca błąd
-- [ ] Weryfikacja: `node --test src/silnik/szybka.test.js src/silnik/pytania.test.js` przechodzi
-- [ ] Weryfikacja: `bash -c "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/kalibracja.ps1"` wypisuje „niezgodności katalogu: 0”
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Stwórz: `src/silnik/szybka.js`
+- [x] Stwórz: `src/silnik/pytania.js`
+- [x] Modyfikuj: `data/ceny.json`
+- [x] Modyfikuj: `sw.js`
+- [x] Test (unit): `src/silnik/szybka.test.js`
+- [x] Test (unit): `src/silnik/pytania.test.js`
+- [x] Test: [Unit] mieszkanie 50 m² standard, mazowieckie, typowy: widełki 250–300 zł, `mediana` 250, rynek 120–450; mocny: 290–360 zł; lekki: „ok. 250 zł”
+- [x] Test: [Unit] dolna granica typowego dla 50 m² równa się cenie dokładnej wyceny układu 50 m² ze scenariusza kalibracji (R14, R27)
+- [x] Test: [Unit] mieszkanie 20 m² standard: obie granice ≥ 150 zł (minimum); dojazd 32 km dokłada 44 zł na obu końcach
+- [x] Test: [Unit] okna 4 × okno 1-skrz.: 150 zł (minimum) — `tryb: 'ok'`; tapicerka kanapa 3-os. i fotel: widełki od ceny do ceny × 1,2
+- [x] Test: [Unit] mieszkanie po remoncie 60 m²: `tryb: 'od'` i `od` = cena poziomu 1 z pyłem budowlanym, zaokrąglona w dół do 10 zł
+- [x] Test: [Unit] tekst: „Sprzątanie mieszkania 50 m², standard: 250–300 zł. Cena ostateczna po obejrzeniu lokalu lub zdjęć.”
+- [x] Test: [Unit] `naDokladna` dla mocnego stanu daje 4 pomieszczenia układu 50 m² z kurzem poziom 2 i te same odpowiedzi
+- [x] Test: [Unit] odpowiedź „tak” na pytanie o zwierzęta ze skutkiem sierść poziom 2 na `*` dodaje sierść do wszystkich pomieszczeń; odpowiedź 32 na pytanie z `dojazd_km` ustawia `dojazdKm` 32
+- [x] Test: [Unit] `sprawdzPytania` na prawdziwym `data/pytania.json` zwraca pustą listę; plik z nieznanym brudem `blotko` zwraca błąd
+- [x] Weryfikacja: `node --test src/silnik/szybka.test.js src/silnik/pytania.test.js` przechodzi
+- [x] Weryfikacja: `bash -c "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/kalibracja.ps1"` wypisuje „niezgodności katalogu: 0”
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-21: Ekrany szybkiej wyceny i pytań do klienta (feature-builder-fullstack)
 
-- [ ] Stwórz: `src/widoki/szybka.js`
-- [ ] Stwórz: `src/widoki/szybka-wynik.js`
-- [ ] Stwórz: `src/widoki/pytania.js`
-- [ ] Modyfikuj: `src/kreator/stan.js`
-- [ ] Modyfikuj: `src/widoki/kreator-usluga.js`
-- [ ] Modyfikuj: `src/widoki/indeks.js`
-- [ ] Modyfikuj: `src/kreator/stan.test.js`
-- [ ] Test: [Unit] `zSzybkiej` zostawia `id` i numer, ustawia `rodzaj: 'dokladna'`, pomieszczenia z układu i pole `szybka` z widełkami
-- [ ] Test: [E2E] `szybka-wycena-mieszkania` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, otwórz http://localhost:5174/#/szybka, wybierz „Mieszkanie lub dom”, „Standard”, metraż 50, stan „Typowy”, zrób screenshot, kliknij „Kopiuj tekst”, potem „Dokładna wycena” → widełki „250–300 zł”, „Mediana w mazowieckim: 250 zł”, „Rynek: 120–450 zł”, cytat „Sprzątanie mieszkania 50 m², standard: 250–300 zł. Cena ostateczna po obejrzeniu lokalu lub zdjęć.”, „Skopiowano”, kreator otwiera krok pomieszczeń z czterema pomieszczeniami (pokój 32, przedpokój 6, kuchnia 8, łazienka 4 m²)
-- [ ] Test: [E2E] `szybka-wycena-ogledziny` — w `#/szybka` wybierz usługę „Mieszkanie lub dom – sprzątanie po remoncie”, metraż 60 → „Orientacyjnie od {x} zł” i zalecenie oględzin, bez widełek
-- [ ] Test: [E2E] `pytania-do-klienta-skutek` — w `#/szybka` dla mieszkania 50 m² kliknij „Pytania do klienta · 0 z {n}”, przy pytaniu o zwierzęta „+ Dodaj odpowiedź” → „tak”, przy pytaniu o dojazd wpisz 32, kliknij „Gotowe” → na ekranie pytań pigułki skutków (sierść, „dojazd: 44 zł dla klienta”), po powrocie licznik „2 z {n}” i widełki wyższe o dojazd 44 zł i sierść
-- [ ] Weryfikacja: `node --test src/kreator/stan.test.js` przechodzi
-- [ ] Weryfikacja: `npm test` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Stwórz: `src/widoki/szybka.js`
+- [x] Stwórz: `src/widoki/szybka-wynik.js`
+- [x] Stwórz: `src/widoki/pytania.js`
+- [x] Modyfikuj: `src/kreator/stan.js`
+- [x] Modyfikuj: `src/widoki/kreator-usluga.js`
+- [x] Modyfikuj: `src/widoki/indeks.js`
+- [x] Modyfikuj: `src/kreator/stan.test.js`
+- [x] Test: [Unit] `zSzybkiej` zostawia `id` i numer, ustawia `rodzaj: 'dokladna'`, pomieszczenia z układu i pole `szybka` z widełkami
+- [x] Test: [E2E] `szybka-wycena-mieszkania` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, otwórz http://localhost:5174/#/szybka, wybierz „Mieszkanie lub dom”, „Standard”, metraż 50, stan „Typowy”, zrób screenshot, kliknij „Kopiuj tekst”, potem „Dokładna wycena” → widełki „250–300 zł”, „Mediana w mazowieckim: 250 zł”, „Rynek: 120–450 zł”, cytat „Sprzątanie mieszkania 50 m², standard: 250–300 zł. Cena ostateczna po obejrzeniu lokalu lub zdjęć.”, „Skopiowano”, kreator otwiera krok pomieszczeń z czterema pomieszczeniami (pokój 32, przedpokój 6, kuchnia 8, łazienka 4 m²)
+- [x] Test: [E2E] `szybka-wycena-ogledziny` — w `#/szybka` wybierz usługę „Mieszkanie lub dom – sprzątanie po remoncie”, metraż 60 → „Orientacyjnie od {x} zł” i zalecenie oględzin, bez widełek
+- [x] Test: [E2E] `pytania-do-klienta-skutek` — w `#/szybka` dla mieszkania 50 m² kliknij „Pytania do klienta · 0 z {n}”, przy pytaniu o zwierzęta „+ Dodaj odpowiedź” → „tak”, przy pytaniu o dojazd wpisz 32, kliknij „Gotowe” → na ekranie pytań pigułki skutków (sierść, „dojazd: 44 zł dla klienta”), po powrocie licznik „2 z {n}” i widełki wyższe o dojazd 44 zł i sierść
+- [x] Weryfikacja: `node --test src/kreator/stan.test.js` przechodzi
+- [x] Weryfikacja: `npm test` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+
+## Do poprawy po review fazy 5
+
+Zamkniete cyklem fix: 15 pozycji — pelna tresc findingow i uzasadnienia w `review-faza-5.md`.
 
 ## Operator checklist faza 5
 
 - [ ] Operator: Właściciel wpisuje czas po prawdziwym zleceniu i porównuje ekran z makietą `zakonczenie-zlecenia` (IU-19)
 - [ ] Operator: Właściciel robi szybką wycenę mieszkania w trakcie symulowanej rozmowy i mierzy czas (cel źródła: poniżej minuty) (IU-21)
 - [ ] [Manual] „Kopiuj tekst” na iPhonie w Safari i w aplikacji z ekranu początkowego (IU-21)
+- [ ] Operator: [Manual] zakonczenie-zlecenia: visual review (układ się zgadza; do oceny: „Zostało dla Ciebie” 235 zł przy planie i fakcie, zmienia się tylko stawka 47 → 43 zł/h) — Operator action: otwórz visual-diff/zakonczenie-zlecenia-figma.png obok visual-diff/zakonczenie-zlecenia-actual.png (stan e2e/stany/zlecenie-przyjete.json, trasa #/wycena/e2e-zlecenie-przyjete/koniec, licznik 5 h 30 min)
+- [ ] Operator: [Manual] ustawienia-firmy: visual review (nowa lista „Plan a fakt” pod „Tempo pracy”; dolne menu w środku zrzutu to artefakt) — Operator action: otwórz visual-diff/ustawienia-firmy-figma.png obok visual-diff/ustawienia-firmy-actual.png (stan e2e/stany/zlecenie-przyjete.json po jednym wpisie czasu, trasa #/ustawienia)
+- [ ] Operator: [Manual] szybka-wycena: visual review (pigułka „Zostaje ok. 47 zł/h” i zwijane „AGD i dodatki” to zaplanowane odstępstwa) — Operator action: otwórz visual-diff/szybka-wycena-figma.png obok visual-diff/szybka-wycena-actual.png (stan e2e/stany/ustawienia-mazowieckie.json, trasa #/szybka, mieszkanie standard 50 m², typowy)
+- [ ] Operator: [Manual] pytania-do-klienta: visual review (do oceny: kolejność pytań z data/pytania.json i pełna nazwa usługi w podtytule) — Operator action: otwórz visual-diff/pytania-do-klienta-figma.png obok visual-diff/pytania-do-klienta-actual.png (szybka wycena 50 m², zwierzęta „Tak”, dojazd 32 km, trasa #/wycena/<id>/pytania)
 
 ## Faza 6 — Oferta dla klienta
 
@@ -433,53 +445,57 @@ Zależy od: Faza 5
 
 ### IU-22: Treść oferty, kodowanie linku i nadpisania zakresu i warunków (feature-builder-data)
 
-- [ ] Stwórz: `src/oferta/tresc.js`
-- [ ] Stwórz: `src/oferta/kodek.js`
-- [ ] Modyfikuj: `src/dane/ustawienia.js`
-- [ ] Modyfikuj: `src/dane/wyceny.js`
-- [ ] Modyfikuj: `sw.js`
-- [ ] Test (unit): `src/oferta/tresc.test.js`
-- [ ] Test (unit): `src/oferta/kodek.test.js`
-- [ ] Test: [Unit] oferta z wyceny mieszkania z ręczną ceną 290 zł i dojazdem 4 zł: `uslugi[0].kwota` 290, `dojazd` 4, `razem` 294 (od = do)
-- [ ] Test: [Unit] `JSON.stringify(oferta)` nie zawiera kluczy `zostaje`, `tempo`, `koszt`, `minuty`, `chemia` ani `sprzet` (R21)
-- [ ] Test: [Unit] zakres z wyceny wygrywa z ustawieniami, a ustawień z `data/zakresy.json`; warunek `stan_lokalu` jest tylko w ofercie z szybkiej wyceny
-- [ ] Test: [Unit] ważność: oferta z 24.10.2026 jest ważna 7.11.2026 i nieważna 8.11.2026
-- [ ] Test: [Unit] `zakodujOferte` → `odkodujOferte` zwraca tę samą ofertę; typowa oferta (fixture z 8 liniami zakresu i 4 warunkami) ma link krótszy niż 2000 znaków
-- [ ] Test: [Unit] fragment obcięty o 10 znaków, `v9.…` i JSON z kluczem spoza schematu albo tekstem 600 znaków dają `ok: false` z powodem `uszkodzony`, `wersja`, `uszkodzony`
-- [ ] Test: [Unit] `sprawdzZakresy` na prawdziwym `data/zakresy.json` zwraca pustą listę
-- [ ] Test: [Unit] `oznaczWyslana` zmienia status z `do_wyslania` na `wyslana` i kasuje `nieaktualna`
-- [ ] Weryfikacja: `node --test src/oferta/tresc.test.js src/oferta/kodek.test.js` przechodzi
-- [ ] Weryfikacja: `npm test` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Stwórz: `src/oferta/tresc.js`
+- [x] Stwórz: `src/oferta/kodek.js`
+- [x] Modyfikuj: `src/dane/ustawienia.js`
+- [x] Modyfikuj: `src/dane/wyceny.js`
+- [x] Modyfikuj: `sw.js`
+- [x] Test (unit): `src/oferta/tresc.test.js`
+- [x] Test (unit): `src/oferta/kodek.test.js`
+- [x] Test: [Unit] oferta z wyceny mieszkania z ręczną ceną 290 zł i dojazdem 4 zł: `uslugi[0].kwota` 290, `dojazd` 4, `razem` 294 (od = do)
+- [x] Test: [Unit] `JSON.stringify(oferta)` nie zawiera kluczy `zostaje`, `tempo`, `koszt`, `minuty`, `chemia` ani `sprzet` (R21)
+- [x] Test: [Unit] zakres z wyceny wygrywa z ustawieniami, a ustawień z `data/zakresy.json`; warunek `stan_lokalu` jest tylko w ofercie z szybkiej wyceny
+- [x] Test: [Unit] ważność: oferta z 24.10.2026 jest ważna 7.11.2026 i nieważna 8.11.2026
+- [x] Test: [Unit] `zakodujOferte` → `odkodujOferte` zwraca tę samą ofertę; typowa oferta (fixture z 8 liniami zakresu i 4 warunkami) ma link krótszy niż 2000 znaków
+- [x] Test: [Unit] fragment obcięty o 10 znaków, `v9.…` i JSON z kluczem spoza schematu albo tekstem 600 znaków dają `ok: false` z powodem `uszkodzony`, `wersja`, `uszkodzony`
+- [x] Test: [Unit] `sprawdzZakresy` na prawdziwym `data/zakresy.json` zwraca pustą listę
+- [x] Test: [Unit] `oznaczWyslana` zmienia status z `do_wyslania` na `wyslana` i kasuje `nieaktualna`
+- [x] Weryfikacja: `node --test src/oferta/tresc.test.js src/oferta/kodek.test.js` przechodzi
+- [x] Weryfikacja: `npm test` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-23: Edycja oferty oraz zakres prac i warunki w ustawieniach (feature-builder-ui)
 
-- [ ] Stwórz: `src/widoki/oferta-edycja.js`
-- [ ] Stwórz: `src/widoki/oferta-edycja-sekcje.js`
-- [ ] Stwórz: `src/widoki/edytor-listy.js`
-- [ ] Stwórz: `src/widoki/ustawienia-oferta.js`
-- [ ] Modyfikuj: `src/widoki/ustawienia.js`
-- [ ] Modyfikuj: `src/widoki/podsumowanie.js`
-- [ ] Modyfikuj: `src/widoki/indeks.js`
-- [ ] Test: [E2E] `oferta-link` — okno 360×800, wstrzyknij `e2e/stany/wyceny-do-zrobienia.json`, otwórz wycenę „Do wysłania”, kliknij „Przygotuj ofertę”, wpisz klienta „Marzena Wróbel”, w „Zakres prac” kliknij „Edytuj” i usuń jeden punkt „W cenie”, kliknij „Kopiuj link”, odczytaj link przez `agent-browser eval "navigator.clipboard.readText()"` i otwórz go w nowej karcie → „Link skopiowany”, status wyceny „Wysłana”, oferta pokazuje „Marzena Wróbel”, nazwę firmy, kwotę i zakres bez usuniętego punktu, a tekst strony nie zawiera „Zostaje”, „tempo” ani „Koszt zlecenia”
-- [ ] Test: [E2E] `oferta-brak-danych-firmy` — wyczyść localStorage, pomiń kreator, utwórz i zapisz wycenę okien, kliknij „Przygotuj ofertę” → baner „Uzupełnij nazwę firmy i telefon…”, „Kopiuj link” nieaktywny
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
-- [ ] Weryfikacja: `npm test` przechodzi
+- [x] Stwórz: `src/widoki/oferta-edycja.js`
+- [x] Stwórz: `src/widoki/oferta-edycja-sekcje.js`
+- [x] Stwórz: `src/widoki/edytor-listy.js`
+- [x] Stwórz: `src/widoki/ustawienia-oferta.js`
+- [x] Modyfikuj: `src/widoki/ustawienia.js`
+- [x] Modyfikuj: `src/widoki/podsumowanie.js`
+- [x] Modyfikuj: `src/widoki/indeks.js`
+- [x] Test: [E2E] `oferta-link` — okno 360×800, wstrzyknij `e2e/stany/wyceny-do-zrobienia.json`, otwórz wycenę „Do wysłania”, kliknij „Przygotuj ofertę”, wpisz klienta „Marzena Wróbel”, w „Zakres prac” kliknij „Edytuj” i usuń jeden punkt „W cenie”, kliknij „Kopiuj link”, odczytaj link przez `agent-browser eval "navigator.clipboard.readText()"` i otwórz go w nowej karcie → „Link skopiowany”, status wyceny „Wysłana”, oferta pokazuje „Marzena Wróbel”, nazwę firmy, kwotę i zakres bez usuniętego punktu, a tekst strony nie zawiera „Zostaje”, „tempo” ani „Koszt zlecenia”
+- [x] Test: [E2E] `oferta-brak-danych-firmy` — wyczyść localStorage, pomiń kreator, utwórz i zapisz wycenę okien, kliknij „Przygotuj ofertę” → baner „Uzupełnij nazwę firmy i telefon…”, „Kopiuj link” nieaktywny
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `npm test` przechodzi
 
 ### IU-24: Strona oferty dla klienta i wydruk A4 (feature-builder-ui)
 
-- [ ] Stwórz: `oferta.html`
-- [ ] Stwórz: `src/oferta-start.js`
-- [ ] Stwórz: `src/widoki/oferta-klient.js`
-- [ ] Stwórz: `src/style/oferta.css`
-- [ ] Stwórz: `src/style/druk.css`
-- [ ] Modyfikuj: `sw.js`
-- [ ] Stwórz: `e2e/stany/oferta-po-terminie.txt`
-- [ ] Test: [E2E] `oferta-po-terminie` — otwórz http://localhost:5174/oferta.html# z treścią `e2e/stany/oferta-po-terminie.txt`, zrób screenshot → baner „Oferta była ważna do 1 października 2026…” nad dokumentem z danymi firmy i kwotą
-- [ ] Test: [E2E] `oferta-uszkodzony-link` — otwórz http://localhost:5174/oferta.html#v1.zepsute → tylko komunikat „Ten link do oferty jest niepełny albo uszkodzony…”, konsola bez nieobsłużonych błędów, `localStorage.length` w eval równe 0
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
-- [ ] Weryfikacja: `npm test` przechodzi
-- [ ] Weryfikacja: `grep -n "localStorage\|serviceWorker" src/oferta-start.js src/widoki/oferta-klient.js` nie zwraca wyników
+- [x] Stwórz: `oferta.html`
+- [x] Stwórz: `src/oferta-start.js`
+- [x] Stwórz: `src/widoki/oferta-klient.js`
+- [x] Stwórz: `src/style/oferta.css`
+- [x] Stwórz: `src/style/druk.css`
+- [x] Modyfikuj: `sw.js`
+- [x] Stwórz: `e2e/stany/oferta-po-terminie.txt`
+- [x] Test: [E2E] `oferta-po-terminie` — otwórz http://localhost:5174/oferta.html# z treścią `e2e/stany/oferta-po-terminie.txt`, zrób screenshot → baner „Oferta była ważna do 1 października 2026…” nad dokumentem z danymi firmy i kwotą
+- [x] Test: [E2E] `oferta-uszkodzony-link` — otwórz http://localhost:5174/oferta.html#v1.zepsute → tylko komunikat „Ten link do oferty jest niepełny albo uszkodzony…”, konsola bez nieobsłużonych błędów, `localStorage.length` w eval równe 0
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `npm test` przechodzi
+- [x] Weryfikacja: `grep -n "localStorage\|serviceWorker" src/oferta-start.js src/widoki/oferta-klient.js` nie zwraca wyników
+
+## Do poprawy po review fazy 6
+
+Zamkniete cyklem fix: 14 pozycji — pelna tresc findingow i uzasadnienia w `review-faza-6.md`.
 
 ## Operator checklist faza 6
 
@@ -487,3 +503,6 @@ Zależy od: Faza 5
 - [ ] Operator: Właściciel porównuje ofertę na telefonie i wydruk z makietą `oferta-klient` i zatwierdza brzmienie warunków (IU-24)
 - [ ] [Manual] „Pobierz PDF” na Androidzie (Chrome) i iPhonie (Safari) zapisuje jedną stronę A4 bez przycisków (IU-24)
 - [ ] [Manual] link otwarty w przeglądarce wbudowanej Messengera i WhatsAppa (IU-24)
+- [ ] Operator: [Manual] oferta-edycja: visual review — Operator action: otwórz visual-diff/oferta-edycja-figma.png obok visual-diff/oferta-edycja-actual.png (viewport 768×2719); trasa #/wycena/e2e-wycena-do-wyslania/oferta ze stanem e2e/stany/wyceny-do-zrobienia.json; sprawdź karty Twoja firma, Klient i termin, Zakres prac, Warunki, Oferta ważna do i stopkę PDF/Kopiuj link (karty Dodatki brak, bo wycena nie ma propozycji; makieta ma kolory spoza tokenów wariantu B)
+- [ ] Operator: [Manual] oferta-klient: visual review — Operator action: otwórz visual-diff/oferta-klient-figma.png obok visual-diff/oferta-klient-actual.png (viewport 768×2279); zrzut z linku scenariusza oferta-link, bez dojazdu i Możesz dobrać; pełny wariant w docs/active/etap-5-aplikacja-wyceny/oferta-po-terminie.png
+- [ ] Operator: [Manual] ustawienia-firmy: visual review — Operator action: otwórz visual-diff/ustawienia-firmy-figma.png obok visual-diff/ustawienia-firmy-actual.png (viewport 768×2579); trasa #/ustawienia; w tej fazie doszły sekcje Zakres prac i Warunki oferty

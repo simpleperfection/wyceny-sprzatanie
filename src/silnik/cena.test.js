@@ -3,6 +3,7 @@ import { before, describe, it } from 'node:test'
 
 import { assertBlisko, katalogTestowy, katalogZDysku } from '../../tests/pomocnicze.js'
 import { BladWejscia } from './bledy.js'
+import * as modulCeny from './cena.js'
 import { wycenUsluge } from './cena.js'
 import { ukladBiura } from './uklad.js'
 
@@ -184,5 +185,28 @@ describe('wycenUsluge: walidacja i opcje (mały katalog)', () => {
     assert.equal(domyslne.dojazd.kwota, (25 - 10) * 2)
     assert.equal(wlasne.dojazd.kwota, (25 - 5) * 3)
     assertBlisko(wlasne.cena - domyslne.cena, 60 - 30)
+  })
+})
+
+describe('linieDodatku i dojazdKlienta', () => {
+  it('dopłata 10 m² w opolskim: 10 × 9,5 × wsp 1,07 bez progu; materiał doliczany bez wsp', async () => {
+    const katalog = await katalogTestowy()
+    const pozycja = katalog.pozycja('doczyszczanie', 'zabezpieczenie')
+
+    const [linia, ...reszta] = modulCeny.linieDodatku({ uslugaId: 'doczyszczanie', pozycja, ilosc: 10, wsp: 1.07 })
+    const zMaterialem = modulCeny.linieDodatku({ uslugaId: 'doczyszczanie', pozycja: { ...pozycja, doliczaj_material: true }, ilosc: 10, wsp: 1.07 })
+
+    assert.deepEqual([linia?.rodzaj, linia?.klucz, linia?.mnoznikProgu, reszta.length], ['dodatek', 'doczyszczanie.zabezpieczenie', 1, 0])
+    assertBlisko(linia?.kwota ?? Number.NaN, 101.65)
+    assertBlisko(linia?.cenaJedn ?? Number.NaN, 10.165)
+    assert.deepEqual(zMaterialem.map((l) => [l.rodzaj, l.kwota]), [['dodatek', linia?.kwota], ['material', 25]])
+  })
+
+  it('dojazd 24 km: 14 km ponad darmowy promień × 2 zł; w promieniu 0 zł; ujemny dojazd daje BladWejscia', () => {
+    const stawki = { klient_zl_km: 2, darmowy_promien_km: 10 }
+
+    assert.deepEqual(modulCeny.dojazdKlienta(24, stawki), { km: 24, kwota: 28 })
+    assert.deepEqual(modulCeny.dojazdKlienta(8, stawki), { km: 8, kwota: 0 })
+    assert.throws(() => modulCeny.dojazdKlienta(-1, stawki), bladWejscia('dojazd'))
   })
 })

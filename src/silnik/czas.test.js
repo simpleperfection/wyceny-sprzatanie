@@ -4,7 +4,7 @@ import { before, describe, it } from 'node:test'
 import { assertBlisko, czytajJson, katalogTestowy, katalogZDysku } from '../../tests/pomocnicze.js'
 import { BladWejscia } from './bledy.js'
 import { wycenUsluge } from './cena.js'
-import { brudPozycji, minutyDodatkow, minutyJednejPozycji, minutyPomieszczen, minutyPozycji, mnoznikBrudu, mnoznikZakresu, skalaBiura, zBrudem } from './czas.js'
+import { brudPozycji, minutyDodatkow, minutyJednejPozycji, minutyPomieszczen, minutyPozycji, mnoznikBrudu, mnoznikZakresu, skalaBiura, zBrudem, zPoziomemBrudu } from './czas.js'
 import { ukladBiura, ukladMieszkania } from './uklad.js'
 
 /** @typedef {import('./katalog.js').Katalog} Katalog */
@@ -97,6 +97,18 @@ describe('czas: brud, skala biura i pozycje (mały katalog)', () => {
     const wynik = zBrudem(uklad, [{ pomieszczenie: 'lazienka', brud: 'pyl_budowlany', poziom: 1 }])
 
     assert.deepEqual(wynik.map((p) => p.brud), [[{ id: 'kurz', poziom: 3 }], [{ id: 'pyl_budowlany', poziom: 1 }]])
+  })
+
+  it('zPoziomemBrudu zastępuje ten sam rodzaj brudu w pasujących pomieszczeniach, a inne zostawia bez zmian', () => {
+    const uklad = [{ typ: 'pokoj', m2: 10, brud: [{ id: 'siersc', poziom: 1 }, { id: 'kurz', poziom: 2 }] }, { typ: 'lazienka', m2: 4 }]
+
+    const wynik = zPoziomemBrudu(uklad, [{ pomieszczenie: '*', brud: 'siersc', poziom: 2 }, { pomieszczenie: 'lazienka', brud: 'kamien', poziom: 3 }])
+
+    assert.deepEqual(wynik.map((p) => p.brud), [
+      [{ id: 'kurz', poziom: 2 }, { id: 'siersc', poziom: 2 }],
+      [{ id: 'siersc', poziom: 2 }, { id: 'kamien', poziom: 3 }],
+    ])
+    assert.deepEqual(zPoziomemBrudu(uklad, []), uklad)
   })
 
   it('minutyPomieszczen: mnożnik zakresu mnoży normę pomieszczenia, a nie brud', () => {

@@ -1,9 +1,9 @@
 // Start aplikacji: wczytanie danych referencyjnych (data/*.json), magazyn stanu i router widokow w <main id="aplikacja">.
 
 import { utworzMagazyn } from './dane/magazyn.js'
+import { pobierzJson } from './dane/pobierz.js'
 import { wczytajDomyslne } from './dane/ustawienia.js'
 import { zarejestrujServiceWorker } from './pwa/rejestracja.js'
-import { BladKatalogu } from './silnik/bledy.js'
 import { wczytajKatalog } from './silnik/katalog.js'
 import { h } from './ui/h.js'
 import { przycisk } from './ui/komponenty/formularz.js'
@@ -18,22 +18,10 @@ import { pokazRatunek } from './widoki/ratunek.js'
 /** @typedef {import('./ui/router.js').Widok} Widok */
 /** @typedef {import('./ui/router.js').Widoki} Widoki */
 
-const LIMIT_POBIERANIA_MS = 10000
 /** Trasy dostepne przed pierwszymi ustawieniami (R24): sam kreator i przywracanie kopii danych. */
 const TRASY_PRZED_USTAWIENIAMI = new Set(['kreatorStartowy', 'kopia'])
 const BLAD_DANYCH = 'Nie udało się wczytać danych aplikacji. Sprawdź połączenie z internetem i odśwież stronę.'
 const BLAD_PAMIECI = 'Przeglądarka nie pozwala tej aplikacji zapisywać danych. Włącz zapisywanie danych witryn (pliki cookie) i odśwież stronę.'
-
-/**
- * Plik z serwera aplikacji (adres wzgledny, bo adres publikacji rozstrzyga etap 6) z limitem czasu.
- * @param {string} sciezka
- * @returns {Promise<unknown>}
- */
-async function pobierzJson(sciezka) {
-  const odpowiedz = await fetch(sciezka, { signal: AbortSignal.timeout(LIMIT_POBIERANIA_MS) })
-  if (!odpowiedz.ok) throw new BladKatalogu('brak_pliku', `${sciezka}: HTTP ${odpowiedz.status}`)
-  return odpowiedz.json()
-}
 
 /**
  * Widok, ktory przy braku ustawien w stanie (pierwsze uruchomienie, R24) pokazuje kreator startowy pod `#/ustawienia/start`.
