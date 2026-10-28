@@ -219,6 +219,23 @@ describe('zapis szybkiej wyceny', () => {
     assert.deepEqual([stan.wynik.od, stan.wynik.do], [150, 180])
   })
 
+  it('reguły brudu z rekordu z poziomem spoza poziomów albo nieznanym brudem formularz pomija; znane zostają, widełki się liczą', () => {
+    const kontekst = kontekstFirmy()
+    const zKotem = zBrudemOdpowiedzi({ ...mieszkanie50(), odpowiedzi: { zwierzeta: { wartosc: 'tak' } } }, pytania)
+    const { wejscie } = zapiszSzybka(kontekst, null, zKotem)
+    const brud = [{ pomieszczenie: 'pokoj', brud: 'siersc', poziom: 4 }, { pomieszczenie: '*', brud: 'tluszcz', poziom: 0 },
+      { pomieszczenie: '*', brud: 'smola', poziom: 2 }, ...zKotem.brud]
+    const zKopii = utworzSzkic(kontekst.magazyn, { rodzaj: 'szybka', wejscie, szybka: { stan: 'typowy', od: 250, do: 300, tryb: 'widelki', brud } })
+
+    const formularz = wejscieZWyceny(zKopii, katalog)
+    const stan = wynikFormularza(kontekst, formularz)
+    const oczekiwany = wynikFormularza(kontekst, zKotem)
+
+    assert.deepEqual(formularz.brud, [{ pomieszczenie: 'pokoj', brud: 'siersc', poziom: 1 }])
+    assert.ok(stan.stan === 'wynik' && oczekiwany.stan === 'wynik')
+    assert.deepEqual([stan.wynik.od, stan.wynik.do], [oczekiwany.wynik.od, oczekiwany.wynik.do])
+  })
+
   it('oględziny pozycji: formularz wraca z metrażu głównej pozycji, a tryb „od” trafia do widełek', () => {
     const kontekst = kontekstFirmy()
     const kostka = { ...zUsluga(mieszkanie50(), 'mycie_kostki', katalog), m2: 100 }
