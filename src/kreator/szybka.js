@@ -53,6 +53,11 @@ const CYFRY_METRAZU = 100
 const czyMieszkanie = (uslugaId) => RODZAJE_MIESZKANIA.some((r) => r.wartosc === uslugaId)
 /** Pola z licznikiem lazienek (uklad typowego mieszkania). @param {PolaSzybkiej} pola */
 const maLazienki = (pola) => pola === 'mieszkanie' || pola === 'ogledziny_pomieszczen'
+/**
+ * Regula brudu, ktora silnik policzy: rodzaj i poziom z data/normy.json.
+ * @param {Katalog} katalog @param {import('../silnik/katalog.js').RegulaBrudu} r
+ */
+const czyZnanaRegula = (katalog, r) => katalog.brud.some((b) => b.id === r.brud) && katalog.poziomy.some((p) => p.poziom === r.poziom)
 /** @param {unknown} stan @returns {stan is StanSzybkiej} */
 const jestStanem = (stan) => STANY_SZYBKIEJ.some((s) => s.id === stan)
 
@@ -156,7 +161,8 @@ export function wynikFormularza(kontekst, wejscie) {
 /**
  * Formularz z zapisanej szybkiej wyceny (`?wycena=<id>`): metraz i lazienki z pomieszczen, kuchnia z nazwy aneksu, metraz
  * ogledzin z glownej pozycji (przy licznikach pozycji wzorcowy), stan, brud i poziom gornej granicy z odpowiedzi z widelek
- * (poziom spoza poziomy_brudu, np. z recznie zmienionej kopii, daje null, zeby widelki dalo sie policzyc);
+ * (poziom spoza poziomy_brudu albo regula brudu z nieznanym rodzajem lub poziomem, np. z recznie zmienionej kopii, odpada,
+ * zeby widelki dalo sie policzyc);
  * odpowiedzi, dodatki, dojazd i wojewodztwo bez zmian.
  * @param {Wycena} wycena rodzaj `szybka` (inna daje BladWyceny `rodzaj`) @param {Katalog} katalog
  * @returns {FormularzSzybkiej}
@@ -178,7 +184,8 @@ export function wejscieZWyceny(wycena, katalog) {
     uslugaId: usluga.id, m2, lazienki: maLazienki(pola) ? opis.lazienki : undefined,
     kuchnia: opis.kuchnia === 'aneks' ? 'aneks' : 'osobna', stan: jestStanem(stan) ? stan : STAN_DOMYSLNY_SZYBKIEJ,
     pozycje: pola === 'pozycje' ? pozycje : [], dodatki: wejscie.dodatki ?? [], dojazdKm: wejscie.dojazdKm ?? 0,
-    wojewodztwoId: wejscie.wojewodztwoId ?? null, odpowiedzi: { ...wycena.odpowiedzi }, brud: [...(wycena.szybka?.brud ?? [])],
+    wojewodztwoId: wejscie.wojewodztwoId ?? null, odpowiedzi: { ...wycena.odpowiedzi },
+    brud: (wycena.szybka?.brud ?? []).filter((r) => czyZnanaRegula(katalog, r)),
     poziomGorny: czyZnanyPoziom ? poziomGorny ?? null : null,
   }
 }
