@@ -182,7 +182,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 
 **Zależy od:** Brak
 
-- [ ] **IU-1: Daty i wystąpienia wizyt**
+- [x] **IU-1: Daty i wystąpienia wizyt**
 
 **Cel:** Czyste funkcje dat `RRRR-MM-DD` i liczenia wizyt zlecenia w oknie dat z okresów, cyklu i wyjątków.
 
@@ -232,10 +232,10 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 - [Unit] `dzienWMiesiacu(2027, 2, 31)` → 2027-02-28; `dzienTygodnia('2026-11-01')` → 7
 
 **Weryfikacja:**
-- `node --test src/kalendarz/` przechodzi
+- `node --test "src/kalendarz/*.test.js"` przechodzi (na Node 24 katalog jako argument daje MODULE_NOT_FOUND; korekta z fazy 1)
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-2: Schemat v2: klienci i kształt zleceń**
+- [x] **IU-2: Schemat v2: klienci i kształt zleceń**
 
 **Cel:** Stan v2 z listami klientów i zleceń, rekord i operacje klienta, kształt zlecenia ze strażnikiem i strukturalny krok migracji v1 → v2.
 
@@ -287,7 +287,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 - `npm test` przechodzi (stare testy wycen i kopii zostają zielone)
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-3: Zapis zleceń, wizyt i zapłat**
+- [x] **IU-3: Zapis zleceń, wizyt i zapłat**
 
 **Cel:** Operacje zapisu zleceń (ręczne, z wyceny, zmiana od wizyty, zakończenie, usunięcie) i stanu wizyt (zrobione, zapłata, czas pracy, przesunięcie, odwołanie, zapłata miesięczna).
 
@@ -334,7 +334,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 - `node --test src/dane/zlecenia.test.js src/dane/wizyty.test.js` przechodzi
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-4: Zapytania dnia: wizyty, do zamknięcia i niezapłacone**
+- [x] **IU-4: Zapytania dnia: wizyty, do zamknięcia i niezapłacone**
 
 **Cel:** Czyste zapytania na stanie dla Start, kafli i kalendarza oraz stan E2E z zleceniami liczonymi względem dzisiejszego dnia.
 

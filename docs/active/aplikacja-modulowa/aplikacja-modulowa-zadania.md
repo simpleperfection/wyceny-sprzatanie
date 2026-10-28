@@ -12,75 +12,75 @@ Zależy od: Brak
 
 ### IU-1: Daty i wystąpienia wizyt (feature-builder-data)
 
-- [ ] Stwórz: `src/kalendarz/daty.js`
-- [ ] Stwórz: `src/kalendarz/wystapienia.js`
-- [ ] Test (unit): `src/kalendarz/daty.test.js`
-- [ ] Test (unit): `src/kalendarz/wystapienia.test.js`
-- [ ] Test: [Unit] co tydzień w pn i czw od czwartku 2026-10-29, okno 2026-10-26–2026-11-08 → 2026-10-29, 2026-11-02, 2026-11-05
-- [ ] Test: [Unit] co 2 tygodnie w pn od czwartku 2026-10-29 → pierwsza wizyta 2026-11-09, druga 2026-11-23
-- [ ] Test: [Unit] co miesiąc od 2026-01-31 → 2026-01-31, 2026-02-28, 2026-03-31, 2026-04-30
-- [ ] Test: [Unit] co tydzień w nd przez 2026-10-25 i 2027-03-28 (zmiana czasu) → kolejne niedziele bez przesunięcia o dzień
-- [ ] Test: [Unit] wizyta przesunięta z 2026-11-02 na 2026-11-10: w oknie 2026-11-08–2026-11-14 jest 2026-11-10 z godziną okresu daty pierwotnej, w oknie 2026-11-01–2026-11-07 nie ma jej 2026-11-02
-- [ ] Test: [Unit] zapisana wizyta z dnia, którego nowy okres z innym cyklem już nie daje, nadal jest w wyniku
-- [ ] Test: [Unit] nowy okres od 2026-11-16 z godziną 10:00 i dniem śr: wizyty przed 2026-11-16 mają stary okres, od 2026-11-16 nowy
-- [ ] Test: [Unit] `koniec` 2026-11-05: brak wizyt z reguły po tym dniu, ale zrobiona wizyta z 2026-11-09 zostaje
-- [ ] Test: [Unit] `najblizszaWizyta` serii z samymi odwołanymi wizytami zwraca null
-- [ ] Test: [Unit] `siatkaMiesiaca(2026, 11)`: pierwszy tydzień ma 6 pustych dni i niedzielę 1 listopada, ostatni dzień to 30 listopada
-- [ ] Test: [Unit] `dzienWMiesiacu(2027, 2, 31)` → 2027-02-28; `dzienTygodnia('2026-11-01')` → 7
+- [x] Stwórz: `src/kalendarz/daty.js`
+- [x] Stwórz: `src/kalendarz/wystapienia.js`
+- [x] Test (unit): `src/kalendarz/daty.test.js`
+- [x] Test (unit): `src/kalendarz/wystapienia.test.js`
+- [x] Test: [Unit] co tydzień w pn i czw od czwartku 2026-10-29, okno 2026-10-26–2026-11-08 → 2026-10-29, 2026-11-02, 2026-11-05
+- [x] Test: [Unit] co 2 tygodnie w pn od czwartku 2026-10-29 → pierwsza wizyta 2026-11-09, druga 2026-11-23
+- [x] Test: [Unit] co miesiąc od 2026-01-31 → 2026-01-31, 2026-02-28, 2026-03-31, 2026-04-30
+- [x] Test: [Unit] co tydzień w nd przez 2026-10-25 i 2027-03-28 (zmiana czasu) → kolejne niedziele bez przesunięcia o dzień
+- [x] Test: [Unit] wizyta przesunięta z 2026-11-02 na 2026-11-10: w oknie 2026-11-08–2026-11-14 jest 2026-11-10 z godziną okresu daty pierwotnej, w oknie 2026-11-01–2026-11-07 nie ma jej 2026-11-02
+- [x] Test: [Unit] zapisana wizyta z dnia, którego nowy okres z innym cyklem już nie daje, nadal jest w wyniku
+- [x] Test: [Unit] nowy okres od 2026-11-16 z godziną 10:00 i dniem śr: wizyty przed 2026-11-16 mają stary okres, od 2026-11-16 nowy
+- [x] Test: [Unit] `koniec` 2026-11-05: brak wizyt z reguły po tym dniu, ale zrobiona wizyta z 2026-11-09 zostaje
+- [x] Test: [Unit] `najblizszaWizyta` serii z samymi odwołanymi wizytami zwraca null
+- [x] Test: [Unit] `siatkaMiesiaca(2026, 11)`: pierwszy tydzień ma 6 pustych dni i niedzielę 1 listopada, ostatni dzień to 30 listopada
+- [x] Test: [Unit] `dzienWMiesiacu(2027, 2, 31)` → 2027-02-28; `dzienTygodnia('2026-11-01')` → 7
 - [ ] Weryfikacja: `node --test src/kalendarz/` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-2: Schemat v2: klienci i kształt zleceń (feature-builder-data)
 
-- [ ] Stwórz: `src/dane/klienci.js`
-- [ ] Stwórz: `src/dane/zlecenia-ksztalt.js`
-- [ ] Stwórz: `src/dane/migracja-v2.js`
-- [ ] Modyfikuj: `src/dane/magazyn.js`
-- [ ] Test (unit): `src/dane/klienci.test.js`
-- [ ] Test (unit): `src/dane/zlecenia-ksztalt.test.js`
-- [ ] Modyfikuj: `src/dane/magazyn.test.js`
-- [ ] Test: [Unit] stan v1 z `tests/fixtures/kopia-v1.json` po `zaktualizujStan` ma `wersja: 2`, puste `klienci` i `zlecenia`, a dwa wywołania dają równe wyniki (`deepEqual`)
-- [ ] Test: [Unit] `jestZlecenie` odrzuca kolejno: okresy w złej kolejności, pierwszy `od` różny od `start`, cykl tygodniowy bez dni, dzień tygodnia 8, `miesiecznie` w zleceniu jednorazowym, ujemną cenę, formę `'karta'`, `minutyPracy: 1441`, klucz wizyty `'jutro'`, `koniec` przed `start`
-- [ ] Test: [Unit] `jestStanem` odrzuca zlecenie z `klientId` nieistniejącego klienta i dwa zlecenia o tym samym id
-- [ ] Test: [Unit] `dodajKlienta` dwa razy z tym samym id zapisuje jednego klienta; nazwa 121 znaków i telefon „123” dają `BladKlienta` z polem; 5001. klient → `za_duzo`
-- [ ] Test: [Unit] `usunKlienta` klienta ze zleceniem rzuca `ma_historie`, klienta bez historii usuwa
-- [ ] Test: [Unit] `szukajKlientow(stan, 'kow')` znajduje „Anna Kowalska” i „KOWALSKI Jan”; `listaKlientow` stawia „Lucyna” przed „Łukasz”
-- [ ] Test: [Unit] `normalizujNazwe('  Anna   KOWALSKA ')` równa się `normalizujNazwe('anna kowalska')`; „Żaneta” w NFD i NFC daje ten sam wynik
-- [ ] Test: [Unit] `WERSJA_SCHEMATU` = 2, pusty stan magazynu ma `klienci: []` i `zlecenia: []`
+- [x] Stwórz: `src/dane/klienci.js`
+- [x] Stwórz: `src/dane/zlecenia-ksztalt.js`
+- [x] Stwórz: `src/dane/migracja-v2.js`
+- [x] Modyfikuj: `src/dane/magazyn.js`
+- [x] Test (unit): `src/dane/klienci.test.js`
+- [x] Test (unit): `src/dane/zlecenia-ksztalt.test.js`
+- [x] Modyfikuj: `src/dane/magazyn.test.js`
+- [x] Test: [Unit] stan v1 z `tests/fixtures/kopia-v1.json` po `zaktualizujStan` ma `wersja: 2`, puste `klienci` i `zlecenia`, a dwa wywołania dają równe wyniki (`deepEqual`)
+- [x] Test: [Unit] `jestZlecenie` odrzuca kolejno: okresy w złej kolejności, pierwszy `od` różny od `start`, cykl tygodniowy bez dni, dzień tygodnia 8, `miesiecznie` w zleceniu jednorazowym, ujemną cenę, formę `'karta'`, `minutyPracy: 1441`, klucz wizyty `'jutro'`, `koniec` przed `start`
+- [x] Test: [Unit] `jestStanem` odrzuca zlecenie z `klientId` nieistniejącego klienta i dwa zlecenia o tym samym id
+- [x] Test: [Unit] `dodajKlienta` dwa razy z tym samym id zapisuje jednego klienta; nazwa 121 znaków i telefon „123” dają `BladKlienta` z polem; 5001. klient → `za_duzo`
+- [x] Test: [Unit] `usunKlienta` klienta ze zleceniem rzuca `ma_historie`, klienta bez historii usuwa
+- [x] Test: [Unit] `szukajKlientow(stan, 'kow')` znajduje „Anna Kowalska” i „KOWALSKI Jan”; `listaKlientow` stawia „Lucyna” przed „Łukasz”
+- [x] Test: [Unit] `normalizujNazwe('  Anna   KOWALSKA ')` równa się `normalizujNazwe('anna kowalska')`; „Żaneta” w NFD i NFC daje ten sam wynik
+- [x] Test: [Unit] `WERSJA_SCHEMATU` = 2, pusty stan magazynu ma `klienci: []` i `zlecenia: []`
 - [ ] Weryfikacja: `node --test src/dane/klienci.test.js src/dane/zlecenia-ksztalt.test.js src/dane/magazyn.test.js` przechodzi
 - [ ] Weryfikacja: `npm test` przechodzi (stare testy wycen i kopii zostają zielone)
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-3: Zapis zleceń, wizyt i zapłat (feature-builder-data)
 
-- [ ] Stwórz: `src/dane/zlecenia.js`
-- [ ] Stwórz: `src/dane/wizyty.js`
-- [ ] Test (unit): `src/dane/zlecenia.test.js`
-- [ ] Test (unit): `src/dane/wizyty.test.js`
-- [ ] Test: [Unit] `zaplanujZWyceny` dla wyceny `do_wyslania` → `zly_status`; dla przyjętej wyceny biura z abonamentem daje zlecenie z `plan.minutyNormowe` z migawki i podanym tempem
-- [ ] Test: [Unit] `utworzZlecenie` dwa razy z tym samym id daje jedno zlecenie; zlecenie bez klienta → `brak_klienta`
-- [ ] Test: [Unit] `zmienOdWizyty(…, '2026-11-16', { cenaWizyty: 280 })` w serii od 2026-11-02: wizyta 2026-11-09 ma starą cenę, 2026-11-16 — 280; drugi zapis z tym samym dniem zastępuje okres zamiast dokładać
-- [ ] Test: [Unit] `przesunWizyte` na dzień pierwotny z godziną okresu usuwa przesunięcie, a wpis bez innego stanu znika z `wizyty`
-- [ ] Test: [Unit] `oznaczZaplacona` bez formy u klienta, którego ostatnia zapłata była BLIK-iem → forma `'blik'`, kwota = cena okresu z dnia pierwotnego, data = dzień z `teraz`
-- [ ] Test: [Unit] zapłata wizyty w serii miesięcznej rzuca `rozliczenie_miesieczne`; `oznaczZaplateMiesiaca(…, '2026-11')` zapisuje kwotę `cenaMiesiaca`
-- [ ] Test: [Unit] czas pracy 0 i 1441 → błąd; null usuwa czas
-- [ ] Test: [Unit] `doZaplanowania`: przyjęta jednorazowa ze zleceniem → false; przyjęty abonament z samymi zleceniami jednorazowymi → true
-- [ ] Test: [Unit] `czyWycenaZamknieta` true dla wyceny ze zleceniem, false bez
-- [ ] Test: [Unit] `zakonczSerie` z dniem przed `start` → błąd
+- [x] Stwórz: `src/dane/zlecenia.js`
+- [x] Stwórz: `src/dane/wizyty.js`
+- [x] Test (unit): `src/dane/zlecenia.test.js`
+- [x] Test (unit): `src/dane/wizyty.test.js`
+- [x] Test: [Unit] `zaplanujZWyceny` dla wyceny `do_wyslania` → `zly_status`; dla przyjętej wyceny biura z abonamentem daje zlecenie z `plan.minutyNormowe` z migawki i podanym tempem
+- [x] Test: [Unit] `utworzZlecenie` dwa razy z tym samym id daje jedno zlecenie; zlecenie bez klienta → `brak_klienta`
+- [x] Test: [Unit] `zmienOdWizyty(…, '2026-11-16', { cenaWizyty: 280 })` w serii od 2026-11-02: wizyta 2026-11-09 ma starą cenę, 2026-11-16 — 280; drugi zapis z tym samym dniem zastępuje okres zamiast dokładać
+- [x] Test: [Unit] `przesunWizyte` na dzień pierwotny z godziną okresu usuwa przesunięcie, a wpis bez innego stanu znika z `wizyty`
+- [x] Test: [Unit] `oznaczZaplacona` bez formy u klienta, którego ostatnia zapłata była BLIK-iem → forma `'blik'`, kwota = cena okresu z dnia pierwotnego, data = dzień z `teraz`
+- [x] Test: [Unit] zapłata wizyty w serii miesięcznej rzuca `rozliczenie_miesieczne`; `oznaczZaplateMiesiaca(…, '2026-11')` zapisuje kwotę `cenaMiesiaca`
+- [x] Test: [Unit] czas pracy 0 i 1441 → błąd; null usuwa czas
+- [x] Test: [Unit] `doZaplanowania`: przyjęta jednorazowa ze zleceniem → false; przyjęty abonament z samymi zleceniami jednorazowymi → true
+- [x] Test: [Unit] `czyWycenaZamknieta` true dla wyceny ze zleceniem, false bez
+- [x] Test: [Unit] `zakonczSerie` z dniem przed `start` → błąd
 - [ ] Weryfikacja: `node --test src/dane/zlecenia.test.js src/dane/wizyty.test.js` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-4: Zapytania dnia: wizyty, do zamknięcia i niezapłacone (feature-builder-data)
 
-- [ ] Stwórz: `src/zlecenia/zapytania.js`
-- [ ] Test (unit): `src/zlecenia/zapytania.test.js`
-- [ ] Stwórz: `e2e/stany/moduly-dzis.js`
-- [ ] Test: [Unit] na stanie z Z1–Z3: `liczbaDzis` = 2, `doZamkniecia` = 2 (najpierw Biuro sprzed 7 dni, potem Jan z wczoraj), `niezaplacone` = 1 (Jan, 180 zł)
-- [ ] Test: [Unit] seria co tydzień założona dziś ze startem 4 tygodnie wstecz nie daje pozycji w `doZamkniecia`
-- [ ] Test: [Unit] wizyta zrobiona i zapłacona wypada z `doZamkniecia`; zrobiona bez zapłaty z ceną 0 zł nie jest niezapłacona
-- [ ] Test: [Unit] seria miesięczna: poprzedni miesiąc ze zrobioną wizytą bez zapłaty → jedna pozycja `miesiac`; bieżący miesiąc nie jest niezapłacony
-- [ ] Test: [Unit] wizyta przesunięta z dziś na jutro nie liczy się w `liczbaDzis` dziś, a liczy jutro
-- [ ] Test: [Unit] skrypt `e2e/stany/moduly-dzis.js` uruchomiony w `node:vm` z atrapą `localStorage` i zegarem ustawionym na 2026-11-02 (pn), 2026-11-08 (nd) i 2026-12-01 daje stan, który przechodzi `jestStanem`, z liczbami jak wyżej
+- [x] Stwórz: `src/zlecenia/zapytania.js`
+- [x] Test (unit): `src/zlecenia/zapytania.test.js`
+- [x] Stwórz: `e2e/stany/moduly-dzis.js`
+- [x] Test: [Unit] na stanie z Z1–Z3: `liczbaDzis` = 2, `doZamkniecia` = 2 (najpierw Biuro sprzed 7 dni, potem Jan z wczoraj), `niezaplacone` = 1 (Jan, 180 zł)
+- [x] Test: [Unit] seria co tydzień założona dziś ze startem 4 tygodnie wstecz nie daje pozycji w `doZamkniecia`
+- [x] Test: [Unit] wizyta zrobiona i zapłacona wypada z `doZamkniecia`; zrobiona bez zapłaty z ceną 0 zł nie jest niezapłacona
+- [x] Test: [Unit] seria miesięczna: poprzedni miesiąc ze zrobioną wizytą bez zapłaty → jedna pozycja `miesiac`; bieżący miesiąc nie jest niezapłacony
+- [x] Test: [Unit] wizyta przesunięta z dziś na jutro nie liczy się w `liczbaDzis` dziś, a liczy jutro
+- [x] Test: [Unit] skrypt `e2e/stany/moduly-dzis.js` uruchomiony w `node:vm` z atrapą `localStorage` i zegarem ustawionym na 2026-11-02 (pn), 2026-11-08 (nd) i 2026-12-01 daje stan, który przechodzi `jestStanem`, z liczbami jak wyżej
 - [ ] Weryfikacja: `node --test src/zlecenia/zapytania.test.js` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 

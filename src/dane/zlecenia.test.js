@@ -1,0 +1,251 @@
+import assert from 'node:assert/strict'
+import { describe, it } from 'node:test'
+
+import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
+import { wystapienia } from '../kalendarz/wystapienia.js'
+import { KLUCZ_MAGAZYNU, utworzMagazyn, wczytajStan } from './magazyn.js'
+import {
+  BladZlecenia, czyWycenaZamknieta, doZaplanowania, usunZlecenie, utworzZlecenie, zakonczSerie, zaplanujZWyceny, zlecenie, zleceniaKlienta,
+  zleceniaWyceny, zmienOdWizyty,
+} from './zlecenia.js'
+import { MAKS_ZLECEN } from './zlecenia-ksztalt.js'
+
+const TERAZ = new Date('2026-11-02T08:00:00.000Z')
+const POZNIEJ = new Date('2026-11-05T17:30:00.000Z')
+const PUSTY_STAN = {
+  wersja: 2, ustawienia: null, wyceny: [], klienci: [], zlecenia: [], licznikNumerow: {}, kopia: { ostatnia: null, zmianaOd: null },
+  preferencje: { iosInstrukcjaZamknieta: false },
+}
+const TYDZIEN_PN = { co: 'tydzien', dni: [1] }
+
+/** @param {object} [stan] stan zapisany w magazynie przed testem */
+function magazynZeStanem(stan) {
+  const storage = new PamiecMagazynu()
+  const magazyn = utworzMagazyn(storage, { teraz: () => TERAZ, loguj: () => {}, poprosOTrwalosc: () => true })
+  if (stan) magazyn.zapiszCalosc(stan)
+  return { magazyn, storage }
+}
+
+/** @param {string} id */
+const klientTestowy = (id) => ({
+  id, nazwa: `Klient ${id}`, telefon: null, adres: null, notatki: null, utworzony: TERAZ.toISOString(), zmieniony: TERAZ.toISOString(),
+})
+
+/**
+ * Wycena z polami, ktore czyta planowanie (status, usluga, migawka); magazyn wymaga od wyceny tylko obiektu z id.
+ * @param {string} id @param {string} status @param {object | null} [wynik]
+ */
+const wycenaTestowa = (id, status, wynik = { cena: 120, minutyNormowe: 95, wizytWMiesiacu: 13 }) => ({
+  id, status, wejscie: { uslugaId: 'biura', wariantId: 'abonament_3' }, wynik,
+})
+
+/** @param {string} id @param {object} [zmiana] */
+const zlecenieTestowe = (id, zmiana = {}) => ({
+  id, klientId: 'k1', wycenaId: null, uslugaId: null, opis: 'Mycie okien', rozliczenie: 'za_wizyte', start: '2026-11-02', koniec: null,
+  plan: null, okresy: [{ od: '2026-11-02', cykl: null, godzina: null, cenaWizyty: 200, cenaMiesiaca: null }], wizyty: {},
+  zaplatyMiesieczne: {}, utworzone: TERAZ.toISOString(), zmienione: TERAZ.toISOString(), ...zmiana,
+})
+
+/** @param {string} id seria co tydzien w poniedzialki od 2026-11-02, 250 zl za wizyte */
+const seriaTestowa = (id, zmiana = {}) => zlecenieTestowe(id, {
+  okresy: [{ od: '2026-11-02', cykl: TYDZIEN_PN, godzina: '09:00', cenaWizyty: 250, cenaMiesiaca: null }], ...zmiana,
+})
+
+/** @param {string} kod */
+const blad = (kod) => ({ name: BladZlecenia.name, kod })
+
+const DANE_RECZNE = { klientId: 'k1', opis: '  Mycie okien ', rozliczenie: 'za_wizyte', start: '2026-11-10', cykl: null, godzina: '10:00', cenaWizyty: 180 }
+
+describe('utworzZlecenie', () => {
+  it('zapisuje zlecenie ręczne bez wyceny i planu, z przyciętym opisem i datami z zegara', () => {
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')] })
+
+    const zapisane = utworzZlecenie(magazyn, DANE_RECZNE, { id: 'z1', teraz: () => TERAZ })
+
+    const oczekiwane = zlecenieTestowe('z1', {
+      start: '2026-11-10', okresy: [{ od: '2026-11-10', cykl: null, godzina: '10:00', cenaWizyty: 180, cenaMiesiaca: null }],
+    })
+    assert.deepEqual(zapisane, oczekiwane)
+    assert.deepEqual(wczytajStan(magazyn).zlecenia, [oczekiwane])
+  })
+
+  it('dwa razy z tym samym id daje jedno zlecenie i oddaje pierwszy zapis', () => {
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')] })
+    utworzZlecenie(magazyn, DANE_RECZNE, { id: 'z1', teraz: () => TERAZ })
+
+    const drugie = utworzZlecenie(magazyn, { ...DANE_RECZNE, cenaWizyty: 999 }, { id: 'z1', teraz: () => POZNIEJ })
+
+    assert.equal(drugie.okresy[0].cenaWizyty, 180)
+    assert.deepEqual(wczytajStan(magazyn).zlecenia.map((z) => [z.id, z.okresy[0].cenaWizyty]), [['z1', 180]])
+  })
+
+  it('bez klienta i z nieznanym klientem → brak_klienta, bez zapisu', () => {
+    const { magazyn, storage } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')] })
+    const przed = storage.getItem(KLUCZ_MAGAZYNU)
+    const { klientId: _, ...bezKlienta } = DANE_RECZNE
+
+    assert.throws(() => utworzZlecenie(magazyn, bezKlienta, { id: 'z1' }), blad('brak_klienta'))
+    assert.throws(() => utworzZlecenie(magazyn, { ...DANE_RECZNE, klientId: 'k9' }, { id: 'z1' }), blad('brak_klienta'))
+    assert.equal(storage.getItem(KLUCZ_MAGAZYNU), przed)
+  })
+
+  it('złe wejście: bez usługi i opisu, miesięczne bez cyklu, cena nie do rozliczenia, zły cykl, godzina, id', () => {
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')] })
+    const opcje = { id: 'z1' }
+
+    assert.throws(() => utworzZlecenie(magazyn, { ...DANE_RECZNE, opis: '   ' }, opcje), blad('usluga'))
+    assert.throws(() => utworzZlecenie(magazyn, { ...DANE_RECZNE, rozliczenie: 'miesiecznie', cenaWizyty: null, cenaMiesiaca: 900 }, opcje),
+      blad('rozliczenie'))
+    assert.throws(() => utworzZlecenie(magazyn, { ...DANE_RECZNE, cenaMiesiaca: 900 }, opcje), blad('cena'))
+    assert.throws(() => utworzZlecenie(magazyn, { ...DANE_RECZNE, cenaWizyty: -1 }, opcje), blad('cena'))
+    assert.throws(() => utworzZlecenie(magazyn, { ...DANE_RECZNE, cykl: { co: 'tydzien', dni: [] } }, opcje), blad('cykl'))
+    assert.throws(() => utworzZlecenie(magazyn, { ...DANE_RECZNE, godzina: '25:00' }, opcje), blad('godzina'))
+    assert.throws(() => utworzZlecenie(magazyn, DANE_RECZNE, { id: '' }), blad('id'))
+    assert.deepEqual(wczytajStan(magazyn).zlecenia, [])
+  })
+
+  it(`${MAKS_ZLECEN + 1}. zlecenie → za_duzo`, () => {
+    const zlecenia = Array.from({ length: MAKS_ZLECEN }, (_, i) => zlecenieTestowe(`z${i}`))
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')], zlecenia })
+
+    assert.throws(() => utworzZlecenie(magazyn, DANE_RECZNE, { id: 'nowe' }), blad('za_duzo'))
+    assert.equal(wczytajStan(magazyn).zlecenia.length, MAKS_ZLECEN)
+  })
+})
+
+describe('zaplanujZWyceny', () => {
+  const daneAbonamentu = {
+    klientId: 'k1', rozliczenie: 'miesiecznie', start: '2026-11-02', cykl: { co: 'tydzien', dni: [1, 3, 5] }, godzina: '18:00',
+    cenaMiesiaca: 1560, tempo: 1.3,
+  }
+
+  it('wycena do_wyslania → zly_status, nieznana → brak_wyceny, bez zapisu', () => {
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')], wyceny: [wycenaTestowa('w1', 'do_wyslania')] })
+
+    assert.throws(() => zaplanujZWyceny(magazyn, 'w1', daneAbonamentu, { id: 'z1' }), blad('zly_status'))
+    assert.throws(() => zaplanujZWyceny(magazyn, 'w9', daneAbonamentu, { id: 'z1' }), blad('brak_wyceny'))
+    assert.deepEqual(wczytajStan(magazyn).zlecenia, [])
+  })
+
+  it('przyjęty abonament biura daje serię z usługą wyceny i planem z minut normowych migawki i podanego tempa', () => {
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')], wyceny: [wycenaTestowa('w1', 'przyjeta')] })
+
+    const zapisane = zaplanujZWyceny(magazyn, 'w1', daneAbonamentu, { id: 'z1', teraz: () => TERAZ })
+
+    assert.deepEqual(zapisane, zlecenieTestowe('z1', {
+      wycenaId: 'w1', uslugaId: 'biura', opis: null, rozliczenie: 'miesiecznie', plan: { minutyNormowe: 95, tempo: 1.3 },
+      okresy: [{ od: '2026-11-02', cykl: { co: 'tydzien', dni: [1, 3, 5] }, godzina: '18:00', cenaWizyty: null, cenaMiesiaca: 1560 }],
+    }))
+    assert.deepEqual(zlecenie(wczytajStan(magazyn), 'z1')?.plan, { minutyNormowe: 95, tempo: 1.3 })
+  })
+
+  it('wycena bez migawki daje plan null; migawka bez dodatniego tempa → tempo', () => {
+    const wyceny = [wycenaTestowa('w1', 'przyjeta', null), wycenaTestowa('w2', 'przyjeta')]
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')], wyceny })
+    const jednorazowe = { klientId: 'k1', rozliczenie: 'za_wizyte', start: '2026-11-10', cykl: null, godzina: null, cenaWizyty: 300 }
+
+    assert.equal(zaplanujZWyceny(magazyn, 'w1', jednorazowe, { id: 'z1' }).plan, null)
+    assert.throws(() => zaplanujZWyceny(magazyn, 'w2', jednorazowe, { id: 'z2' }), blad('tempo'))
+    assert.throws(() => zaplanujZWyceny(magazyn, 'w2', { ...jednorazowe, tempo: 0 }, { id: 'z2' }), blad('tempo'))
+  })
+})
+
+describe('zmienOdWizyty', () => {
+  /** @param {object} z @returns {[string, number | null][]} */
+  const cenyWizyt = (z) => wystapienia(z, '2026-11-02', '2026-11-23').map((w) => [w.dataPierwotna, w.okres.cenaWizyty])
+
+  it('w serii od 2026-11-02 cena 280 od 2026-11-16: 09.11 ma starą cenę, 16.11 i dalej — 280', () => {
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')], zlecenia: [seriaTestowa('z1')] })
+
+    const stan = zmienOdWizyty(magazyn, 'z1', '2026-11-16', { cenaWizyty: 280 }, { teraz: () => POZNIEJ })
+
+    const z = zlecenie(stan, 'z1')
+    assert.deepEqual(cenyWizyt(z), [['2026-11-02', 250], ['2026-11-09', 250], ['2026-11-16', 280], ['2026-11-23', 280]])
+    assert.deepEqual(z?.okresy[1], { od: '2026-11-16', cykl: TYDZIEN_PN, godzina: '09:00', cenaWizyty: 280, cenaMiesiaca: null })
+    assert.equal(z?.zmienione, POZNIEJ.toISOString())
+  })
+
+  it('drugi zapis z tym samym dniem zastępuje okres zamiast dokładać', () => {
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')], zlecenia: [seriaTestowa('z1')] })
+    zmienOdWizyty(magazyn, 'z1', '2026-11-16', { cenaWizyty: 280 })
+
+    const stan = zmienOdWizyty(magazyn, 'z1', '2026-11-16', { godzina: '11:00' })
+
+    assert.deepEqual(zlecenie(stan, 'z1')?.okresy.map((o) => [o.od, o.godzina, o.cenaWizyty]),
+      [['2026-11-02', '09:00', 250], ['2026-11-16', '11:00', 280]])
+  })
+
+  it('w zleceniu jednorazowym zmienia jedyny okres; dodanie cyklu → jednorazowe', () => {
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')], zlecenia: [zlecenieTestowe('z1')] })
+
+    const stan = zmienOdWizyty(magazyn, 'z1', '2026-11-02', { cenaWizyty: 220, godzina: '08:30' })
+
+    assert.deepEqual(zlecenie(stan, 'z1')?.okresy, [{ od: '2026-11-02', cykl: null, godzina: '08:30', cenaWizyty: 220, cenaMiesiaca: null }])
+    assert.throws(() => zmienOdWizyty(magazyn, 'z1', '2026-11-02', { cykl: TYDZIEN_PN }), blad('jednorazowe'))
+  })
+
+  it('wizyta przed startem → data, nieznane pole → nieznane_pole, seria bez cyklu → cykl, nieznane zlecenie → brak_zlecenia', () => {
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')], zlecenia: [seriaTestowa('z1')] })
+
+    assert.throws(() => zmienOdWizyty(magazyn, 'z1', '2026-10-26', { cenaWizyty: 280 }), blad('data'))
+    assert.throws(() => zmienOdWizyty(magazyn, 'z1', '2026-11-16', { cena: 280 }), blad('nieznane_pole'))
+    assert.throws(() => zmienOdWizyty(magazyn, 'z1', '2026-11-16', { cykl: null }), blad('cykl'))
+    assert.throws(() => zmienOdWizyty(magazyn, 'z9', '2026-11-16', { cenaWizyty: 280 }), blad('brak_zlecenia'))
+    assert.equal(zlecenie(wczytajStan(magazyn), 'z1')?.okresy.length, 1)
+  })
+})
+
+describe('zakonczSerie i usunZlecenie', () => {
+  it('zakonczSerie zapisuje ostatni dzień; dzień przed startem → koniec, zlecenie jednorazowe → jednorazowe', () => {
+    const { magazyn } = magazynZeStanem({
+      ...PUSTY_STAN, klienci: [klientTestowy('k1')], zlecenia: [seriaTestowa('z1'), zlecenieTestowe('z2')],
+    })
+
+    assert.throws(() => zakonczSerie(magazyn, 'z1', '2026-11-01'), blad('koniec'))
+    assert.throws(() => zakonczSerie(magazyn, 'z2', '2026-11-30'), blad('jednorazowe'))
+    assert.equal(zlecenie(zakonczSerie(magazyn, 'z1', '2026-11-30'), 'z1')?.koniec, '2026-11-30')
+  })
+
+  it('usunZlecenie usuwa tylko wskazane; nieznane → brak_zlecenia', () => {
+    const { magazyn } = magazynZeStanem({
+      ...PUSTY_STAN, klienci: [klientTestowy('k1')], zlecenia: [seriaTestowa('z1'), zlecenieTestowe('z2')],
+    })
+
+    assert.deepEqual(usunZlecenie(magazyn, 'z1').zlecenia.map((z) => z.id), ['z2'])
+    assert.throws(() => usunZlecenie(magazyn, 'z1'), blad('brak_zlecenia'))
+  })
+})
+
+describe('odczyty wycen i klientów', () => {
+  const stan = {
+    zlecenia: [
+      zlecenieTestowe('z1', { wycenaId: 'w1' }),
+      seriaTestowa('z2', { klientId: 'k2', wycenaId: 'w2' }),
+      zlecenieTestowe('z3', { klientId: 'k2' }),
+    ],
+  }
+
+  it('czyWycenaZamknieta: true dla wyceny ze zleceniem, false bez', () => {
+    assert.equal(czyWycenaZamknieta(stan, 'w1'), true)
+    assert.equal(czyWycenaZamknieta(stan, 'w3'), false)
+  })
+
+  it('zleceniaKlienta i zleceniaWyceny w kolejności zapisu', () => {
+    assert.deepEqual(zleceniaKlienta(stan, 'k2').map((z) => z.id), ['z2', 'z3'])
+    assert.deepEqual(zleceniaWyceny(stan, 'w2').map((z) => z.id), ['z2'])
+    assert.deepEqual(zleceniaWyceny(stan, 'w9'), [])
+  })
+
+  it('doZaplanowania: przyjęta jednorazowa ze zleceniem → false, bez zlecenia → true, nieprzyjęta → false', () => {
+    const jednorazowa = { cena: 300, minutyNormowe: 200, wizytWMiesiacu: 1 }
+
+    assert.equal(doZaplanowania(stan, wycenaTestowa('w1', 'przyjeta', jednorazowa)), false)
+    assert.equal(doZaplanowania(stan, wycenaTestowa('w3', 'przyjeta', jednorazowa)), true)
+    assert.equal(doZaplanowania(stan, wycenaTestowa('w3', 'wyslana', jednorazowa)), false)
+  })
+
+  it('doZaplanowania: przyjęty abonament z samymi zleceniami jednorazowymi → true, ze zleceniem z cyklem → false', () => {
+    assert.equal(doZaplanowania(stan, wycenaTestowa('w1', 'przyjeta')), true)
+    assert.equal(doZaplanowania(stan, wycenaTestowa('w2', 'przyjeta')), false)
+  })
+})

@@ -33,7 +33,7 @@ const szkicTestowy = (id, zmiana = {}) => wycenaTestowa(id, { numer: null, statu
 
 /** @param {object} [zmiana] @returns {any} */
 const stanTestowy = (zmiana = {}) => ({
-  wersja: 1, ustawienia: USTAWIENIA, wyceny: [wycenaTestowa('a')], licznikNumerow: { '2026-10': 1 },
+  wersja: 2, ustawienia: USTAWIENIA, wyceny: [wycenaTestowa('a')], klienci: [], zlecenia: [], licznikNumerow: { '2026-10': 1 },
   kopia: { ostatnia: null, zmianaOd: null }, preferencje: { iosInstrukcjaZamknieta: false }, ...zmiana,
 })
 
@@ -53,7 +53,7 @@ function zapisanyStan(magazyn) {
 }
 
 /** @param {object} koperta zmiany koperty pliku */
-const plik = (koperta) => JSON.stringify({ aplikacja: 'wyceny-sprzatanie', wersjaSchematu: 1, utworzona: TERAZ.toISOString(), stan: stanTestowy(), ...koperta })
+const plik = (koperta) => JSON.stringify({ aplikacja: 'wyceny-sprzatanie', wersjaSchematu: 2, utworzona: TERAZ.toISOString(), stan: stanTestowy(), ...koperta })
 /** @param {string} kod */
 const bladKopii = (kod) => ({ name: BladKopii.name, kod })
 
@@ -87,10 +87,10 @@ describe('odczytajKopie', () => {
     assert.deepEqual(stan.licznikNumerow, { '2026-10': 1 })
   })
 
-  it('„to nie json”, inna aplikacja i wersja 2 → zly_plik, zly_plik, nowsza_wersja', () => {
+  it('„to nie json”, inna aplikacja i wersja 3 → zly_plik, zly_plik, nowsza_wersja', () => {
     assert.throws(() => odczytajKopie('to nie json'), bladKopii('zly_plik'))
     assert.throws(() => odczytajKopie(plik({ aplikacja: 'inna' })), bladKopii('zly_plik'))
-    assert.throws(() => odczytajKopie(plik({ wersjaSchematu: 2, stan: { ...stanTestowy(), wersja: 2 } })), bladKopii('nowsza_wersja'))
+    assert.throws(() => odczytajKopie(plik({ wersjaSchematu: 3, stan: { ...stanTestowy(), wersja: 3 } })), bladKopii('nowsza_wersja'))
   })
 
   it('brak tablicy wyceny albo wersji schematu → zly_plik', () => {

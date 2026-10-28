@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
 import { describe, it, mock } from 'node:test'
 
 import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
@@ -6,9 +7,11 @@ import { BladMagazynu, jestStatusemVat, KLUCZ_MAGAZYNU, utworzMagazyn, WERSJA_SC
 
 const TERAZ = '2026-10-24T08:30:00.000Z'
 const PUSTY_STAN = {
-  wersja: 1,
+  wersja: 2,
   ustawienia: null,
   wyceny: [],
+  klienci: [],
+  zlecenia: [],
   licznikNumerow: {},
   kopia: { ostatnia: null, zmianaOd: null },
   preferencje: { iosInstrukcjaZamknieta: false },
@@ -26,19 +29,21 @@ function magazynTestowy(storage = new PamiecMagazynu(), opcje = {}) {
 const bladMagazynu = (kod) => ({ name: BladMagazynu.name, kod })
 
 describe('stałe magazynu', () => {
-  it('klucz z przedrostkiem aplikacji i wersja schematu 1', () => {
+  it('klucz z przedrostkiem aplikacji i wersja schematu 2', () => {
     assert.equal(KLUCZ_MAGAZYNU, 'wyceny-sprzatanie:stan')
-    assert.equal(WERSJA_SCHEMATU, 1)
+    assert.equal(WERSJA_SCHEMATU, 2)
   })
 })
 
 describe('wczytaj', () => {
-  it('pusty storage → stan v1 bez ustawień i bez wycen, bez zapisu', () => {
+  it('pusty storage → stan v2 bez ustawień, wycen, klientów i zleceń, bez zapisu', () => {
     const { magazyn, storage } = magazynTestowy()
 
     const wynik = magazyn.wczytaj()
 
     assert.deepEqual(wynik, { stan: PUSTY_STAN })
+    assert.deepEqual(wczytajStan(magazyn).klienci, [])
+    assert.deepEqual(wczytajStan(magazyn).zlecenia, [])
     assert.equal(storage.length, 0)
   })
 
@@ -78,9 +83,9 @@ describe('wczytaj', () => {
     }
   })
 
-  it('stan z wersją 2 → nowsza_wersja z oryginalnym tekstem', () => {
+  it('stan z wersją 3 → nowsza_wersja z oryginalnym tekstem', () => {
     const storage = new PamiecMagazynu()
-    const surowe = JSON.stringify({ ...PUSTY_STAN, wersja: 2 })
+    const surowe = JSON.stringify({ ...PUSTY_STAN, wersja: 3 })
     storage.setItem(KLUCZ_MAGAZYNU, surowe)
 
     assert.deepEqual(magazynTestowy(storage).magazyn.wczytaj(), { blad: 'nowsza_wersja', surowe })
@@ -189,7 +194,7 @@ describe('zapiszCalosc i wyczysc', () => {
   it('zapiszCalosc odrzuca stan innej wersji i zły kształt', () => {
     const { magazyn, storage } = magazynTestowy()
 
-    assert.throws(() => magazyn.zapiszCalosc({ ...PUSTY_STAN, wersja: 2 }), bladMagazynu('zly_stan'))
+    assert.throws(() => magazyn.zapiszCalosc({ ...PUSTY_STAN, wersja: 1 }), bladMagazynu('zly_stan'))
     assert.throws(() => magazyn.zapiszCalosc({ ...PUSTY_STAN, licznikNumerow: { '2026-10': -1 } }), bladMagazynu('zly_stan'))
     assert.equal(storage.length, 0)
   })
@@ -291,5 +296,93 @@ describe('wczytajStan', () => {
 describe('jestStatusemVat', () => {
   it('czynny i zwolniony → true; tekst ze spacją, inny status i liczba → false', () => {
     assert.deepEqual(['czynny', 'zwolniony', 'czynny ', 'ryczalt', 1].map(jestStatusemVat), [true, true, false, false, false])
+  })
+})
+
+describe('aktualizacja stanu v1 → v2', () => {
+  const FIXTURE_V1 = new URL('../../tests/fixtures/kopia-v1.json', import.meta.url)
+  /** @returns {Promise<Record<string, unknown>>} stan wersji 1 z pliku kopii */
+  const stanV1 = async () => JSON.parse(await readFile(FIXTURE_V1, 'utf8')).stan
+
+  it('stan z tests/fixtures/kopia-v1.json → wersja 2, puste klienci i zlecenia, reszta bez zmian', async () => {
+    const v1 = await stanV1()
+
+    const wynik = zaktualizujStan(v1)
+
+    assert.deepEqual(wynik, { stan: { ...v1, wersja: 2, klienci: [], zlecenia: [] } })
+  })
+
+  it('dwa wywołania na tym samym stanie dają równe wyniki, a wejście zostaje wersją 1', async () => {
+    const v1 = await stanV1()
+
+    const pierwszy = zaktualizujStan(v1)
+    const drugi = zaktualizujStan(v1)
+
+    assert.deepEqual(pierwszy, drugi)
+    assert.deepEqual(drugi, { stan: { ...v1, wersja: 2, klienci: [], zlecenia: [] } })
+    assert.equal(v1.wersja, 1)
+    assert.equal(Object.hasOwn(v1, 'klienci'), false)
+  })
+
+  it('stan v1 w magazynie wczytuje się jako v2 bez nadpisania zapisu', () => {
+    const storage = new PamiecMagazynu()
+    const v1 = { wersja: 1, ustawienia: null, wyceny: [], licznikNumerow: { '2026-10': 4 }, kopia: { ostatnia: null, zmianaOd: null },
+      preferencje: { iosInstrukcjaZamknieta: false } }
+    const surowe = JSON.stringify(v1)
+    storage.setItem(KLUCZ_MAGAZYNU, surowe)
+
+    const stan = wczytajStan(magazynTestowy(storage).magazyn)
+
+    assert.deepEqual(stan, { ...PUSTY_STAN, licznikNumerow: { '2026-10': 4 } })
+    assert.equal(storage.getItem(KLUCZ_MAGAZYNU), surowe)
+  })
+})
+
+describe('kształt stanu v2: klienci, zlecenia i odwołania', () => {
+  const UTWORZONY = '2026-11-02T08:00:00.000Z'
+  /** @param {string} id */
+  const klientTestowy = (id) => ({ id, nazwa: `Klient ${id}`, telefon: '600 100 200', adres: null, notatki: null,
+    utworzony: UTWORZONY, zmieniony: UTWORZONY })
+  /** @param {string} id @param {string} klientId @param {string | null} [wycenaId] */
+  const zlecenieTestowe = (id, klientId, wycenaId = null) => ({
+    id, klientId, wycenaId, uslugaId: null, opis: 'Mycie okien', rozliczenie: 'za_wizyte', start: '2026-11-10', koniec: null, plan: null,
+    okresy: [{ od: '2026-11-10', cykl: null, godzina: '10:00', cenaWizyty: 200, cenaMiesiaca: null }],
+    wizyty: {}, zaplatyMiesieczne: {}, utworzone: UTWORZONY, zmienione: UTWORZONY,
+  })
+  /** @param {object} zmiana */
+  const stanZ = (zmiana) => ({ ...PUSTY_STAN, klienci: [klientTestowy('k1')], ...zmiana })
+
+  it('klient ze zleceniem i zlecenie z wyceną, która istnieje → stan przyjęty', () => {
+    const stan = stanZ({ wyceny: [{ id: 'w1' }], zlecenia: [zlecenieTestowe('z1', 'k1', 'w1'), zlecenieTestowe('z2', 'k1')] })
+
+    assert.deepEqual(zaktualizujStan(stan), { stan })
+  })
+
+  it('zlecenie z klientId nieistniejącego klienta → uszkodzony przy odczycie, zly_stan przy zapisie', () => {
+    const stan = stanZ({ zlecenia: [zlecenieTestowe('z1', 'k2')] })
+    const { magazyn, storage } = magazynTestowy()
+
+    assert.deepEqual(zaktualizujStan(stan), { blad: 'uszkodzony' })
+    assert.throws(() => magazyn.zapiszCalosc(stan), bladMagazynu('zly_stan'))
+    assert.equal(storage.length, 0)
+  })
+
+  it('dwa zlecenia o tym samym id → uszkodzony', () => {
+    const stan = stanZ({ zlecenia: [zlecenieTestowe('z1', 'k1'), zlecenieTestowe('z1', 'k1')] })
+
+    assert.deepEqual(zaktualizujStan(stan), { blad: 'uszkodzony' })
+  })
+
+  it('dwaj klienci o tym samym id, wycenaId bez wyceny, zły kształt klienta i zlecenia → uszkodzony', () => {
+    const zle = [
+      stanZ({ klienci: [klientTestowy('k1'), klientTestowy('k1')] }),
+      stanZ({ zlecenia: [zlecenieTestowe('z1', 'k1', 'w9')] }),
+      stanZ({ klienci: [{ ...klientTestowy('k1'), nazwa: '' }] }),
+      stanZ({ zlecenia: [{ ...zlecenieTestowe('z1', 'k1'), start: '2026-11-09' }] }),
+      stanZ({ klienci: null }),
+      { ...PUSTY_STAN, zlecenia: {} },
+    ]
+
+    assert.deepEqual(zle.map(zaktualizujStan), zle.map(() => ({ blad: 'uszkodzony' })))
   })
 })
