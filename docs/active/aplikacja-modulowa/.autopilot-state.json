@@ -1,0 +1,155 @@
+{
+  "wersja": 1,
+  "zadanie": "aplikacja-modulowa",
+  "fazy": [
+    {
+      "numer": 1,
+      "nazwa": "Kalendarz i nowe dane",
+      "execute": "done",
+      "review": "done",
+      "fix": "done",
+      "otwarteFindingi": [],
+      "baza": "634fc314030f272206fc24e657c316709cfce8a1",
+      "metryki": {
+        "liczniki": {
+          "p1": 2,
+          "p2": 12,
+          "p3": 7,
+          "operator": 0
+        },
+        "przebieg": {
+          "pominieci": [
+            "e2e"
+          ],
+          "e2eTryb": "pominiety",
+          "znalezione": 22,
+          "poDedupJs": 22,
+          "poDedupSem": 20,
+          "weryfikowane": 13,
+          "obalone": 0,
+          "p3Odrzucone": 0,
+          "e2eCheckboxy": 0,
+          "e2eStatus": "pominiety przez routing",
+          "e2ePass": 0,
+          "e2eFail": 0,
+          "e2eSkip": 0,
+          "e2eManual": 0,
+          "dossier": true,
+          "sceptycy": {
+            "p1": 6,
+            "p2Grupy": 3,
+            "p2Findingi": 11
+          },
+          "sceptyk": {
+            "agree": 17,
+            "disagree_evidence": 0,
+            "disagree_concern": 0,
+            "degradacje": 0
+          },
+          "tiery": {
+            "sceptykP2": "medium",
+            "sceptykP1": "high",
+            "reviewer": "high",
+            "spec": "medium",
+            "testCoverage": "medium",
+            "scribe": "low"
+          }
+        }
+      }
+    },
+    {
+      "numer": 2,
+      "nazwa": "Przeniesienie wykonań i kopia v2",
+      "execute": "done",
+      "review": "done",
+      "fix": "done",
+      "otwarteFindingi": [],
+      "baza": "7d614d0e385a70d44995b25388882606d1f2de87",
+      "metryki": {
+        "liczniki": {
+          "p1": 1,
+          "p2": 5,
+          "p3": 5,
+          "operator": 0
+        },
+        "przebieg": {
+          "pominieci": [],
+          "e2eTryb": "przegladarka",
+          "znalezione": 10,
+          "poDedupJs": 10,
+          "poDedupSem": 10,
+          "weryfikowane": 5,
+          "obalone": 0,
+          "p3Odrzucone": 0,
+          "e2eCheckboxy": 1,
+          "e2eStatus": "wykonany (tryb przegladarka)",
+          "e2ePass": 1,
+          "e2eFail": 0,
+          "e2eSkip": 0,
+          "e2eManual": 0,
+          "dossier": true,
+          "sceptycy": {
+            "p1": 3,
+            "p2Grupy": 1,
+            "p2Findingi": 4
+          },
+          "sceptyk": {
+            "agree": 7,
+            "disagree_evidence": 0,
+            "disagree_concern": 0,
+            "degradacje": 0
+          },
+          "tiery": {
+            "sceptykP2": "medium",
+            "sceptykP1": "high",
+            "reviewer": "high",
+            "spec": "medium",
+            "testCoverage": "medium",
+            "scribe": "low"
+          }
+        }
+      }
+    },
+    {
+      "numer": 3,
+      "nazwa": "Nowy wygląd, szkielet i Start",
+      "execute": "pending",
+      "review": "pending",
+      "fix": "none",
+      "otwarteFindingi": []
+    },
+    {
+      "numer": 4,
+      "nazwa": "Klienci",
+      "execute": "pending",
+      "review": "pending",
+      "fix": "none",
+      "otwarteFindingi": []
+    },
+    {
+      "numer": 5,
+      "nazwa": "Zlecenia i kalendarz",
+      "execute": "pending",
+      "review": "pending",
+      "fix": "none",
+      "otwarteFindingi": []
+    },
+    {
+      "numer": 6,
+      "nazwa": "Wycena w nowym wyglądzie",
+      "execute": "pending",
+      "review": "pending",
+      "fix": "none",
+      "otwarteFindingi": []
+    }
+  ],
+  "zakonczenie": {
+    "walidacja": "pending",
+    "complete": "pending",
+    "compound": "pending"
+  },
+  "bazaZielona": {
+    "sha": "634fc31",
+    "wynik": "PASS"
+  }
+}
