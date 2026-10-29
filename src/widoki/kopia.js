@@ -21,6 +21,7 @@ import { tekstBleduZapisu } from './teksty-bledow.js'
 const ID_PRZYPOMNIEN = 'przypomnienie-kopii'
 const BLAD_ZAPISU_KOPII = 'Nie udało się zapisać kopii. Spróbuj jeszcze raz.'
 const BANER_INFORMACJI = 'Aplikacja nie ma konta ani serwera. Zapisz kopię do pliku i trzymaj ją np. w mailu albo w chmurze.'
+const DANE_KLIENTOW_W_PLIKU = 'Plik kopii zawiera dane klientów, także notatki. Trzymaj go w bezpiecznym miejscu.'
 
 /** @param {HTMLDialogElement} dialog @param {string} tryb @param {string} tytul @param {string} opis */
 function opcjaWczytania(dialog, tryb, tytul, opis) {
@@ -63,7 +64,9 @@ function kartaZapisu(stan, naZapis) {
     h('p', { class: 'kopia__opis' }, tekstOstatniejKopii(dni, stan.kopia.ostatnia)),
     h('ul', { class: 'kopia__podsumowanie', 'aria-label': 'Zawartość kopii' },
       etykietyPodsumowania(podsumowanieKopii(stan)).map((etykieta) => h('li', { class: 'pigulka' }, etykieta))),
-    h('div', { class: 'kopia__akcja', 'data-akcja': 'zapisz' }, przycisk({ tekst: 'Zapisz kopię', naKlik: naZapis })))
+    h('div', { class: 'pole kopia__akcja', 'data-akcja': 'zapisz' },
+      przycisk({ tekst: 'Zapisz kopię', naKlik: naZapis }),
+      h('p', { class: 'pole__podpowiedz' }, DANE_KLIENTOW_W_PLIKU)))
 }
 
 /** @param {() => void} naWybor */

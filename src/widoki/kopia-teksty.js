@@ -1,10 +1,12 @@
 // Teksty ekranu kopii danych i ekranu ratunkowego (R23): komunikaty bledow wg kodu, ostatnia kopia, chipy podsumowania,
 // komunikat po wczytaniu i nazwa pliku z surowymi danymi. Bez DOM, zeby dalo sie je sprawdzic testem w Node.
 
+import { MAKS_KLIENTOW } from '../dane/klienci.js'
 import { BladKopii } from '../dane/kopia.js'
 import { dzienLokalny, jestDataIso, jestObiektem } from '../dane/ksztalt.js'
 import { BladMagazynu } from '../dane/magazyn.js'
 import { MAKS_WYCEN } from '../dane/wyceny.js'
+import { MAKS_ZLECEN } from '../dane/zlecenia-ksztalt.js'
 import { data, dniTemu, FORMY, odmiana, sprawdzDate } from '../ui/format.js'
 import { BladPliku, MAKS_ROZMIAR_PLIKU } from '../ui/plik.js'
 
@@ -14,12 +16,16 @@ import { BladPliku, MAKS_ROZMIAR_PLIKU } from '../ui/plik.js'
 /** Pliki w oknie wyboru: kopie JSON (rozszerzenie dla systemow, ktore nie znaja typu MIME pliku). */
 export const PLIKI_KOPII = '.json,application/json'
 const BAJTOW_W_MB = 1024 * 1024
+/** Odmiana „klient” po liczbie: 1 klient, 2 klientów (rzeczownik meskoosobowy), 5 klientów. */
+const FORMY_KLIENTA = /** @type {const} */ (['klient', 'klientów', 'klientów'])
 /** Komunikaty bledow wczytania kopii wg kodu BladKopii. */
 const TEKSTY_BLEDOW_KOPII = Object.freeze({
   zly_plik: 'To nie jest plik kopii tej aplikacji.',
   nowsza_wersja: 'Ta kopia pochodzi z nowszej wersji aplikacji. Odśwież aplikację i spróbuj ponownie.',
   uszkodzony: 'Plik kopii jest uszkodzony.',
   za_duzo_wycen: `Po połączeniu byłoby ponad ${MAKS_WYCEN} wycen. Wczytaj kopię opcją „Zastąp”.`,
+  za_duzo_klientow: `W aplikacji może być najwyżej ${MAKS_KLIENTOW} klientów, a po wczytaniu tej kopii byłoby ich więcej.`,
+  za_duzo_zlecen: `W aplikacji może być najwyżej ${MAKS_ZLECEN} zleceń, a po wczytaniu tej kopii byłoby ich więcej.`,
 })
 const BLAD_ZA_DUZEGO_PLIKU = `Ten plik jest za duży na kopię tej aplikacji (ponad ${MAKS_ROZMIAR_PLIKU / BAJTOW_W_MB} MB).`
 const BLAD_ODCZYTU = 'Nie udało się odczytać pliku. Spróbuj jeszcze raz.'
@@ -56,12 +62,12 @@ export function tekstOstatniejKopii(dni, ostatnia) {
 }
 
 /**
- * Liczba zlecen to wpisy czasu pracy, nie wyceny przyjete, stad „wykonanych” (decyzja wlasciciela 2026-10-28).
  * @param {PodsumowanieKopii} podsumowanie
- * @returns {string[]} „12 wycen”, „7 wykonanych zleceń”, „ustawienia firmy”
+ * @returns {string[]} „12 wycen”, „2 klientów”, „5 zleceń”, „ustawienia firmy”
  */
-export function etykietyPodsumowania({ wycen, wykonan, czyUstawienia }) {
-  const etykiety = [`${wycen} ${odmiana(wycen, FORMY.wycena)}`, `${wykonan} ${odmiana(wykonan, FORMY.wykonaneZlecenie)}`]
+export function etykietyPodsumowania({ wycen, klientow, zlecen, czyUstawienia }) {
+  const etykiety = [`${wycen} ${odmiana(wycen, FORMY.wycena)}`, `${klientow} ${odmiana(klientow, FORMY_KLIENTA)}`,
+    `${zlecen} ${odmiana(zlecen, FORMY.zlecenie)}`]
   return czyUstawienia ? [...etykiety, 'ustawienia firmy'] : etykiety
 }
 
@@ -93,10 +99,11 @@ export function nazwaSurowegoPliku(dzis) {
 }
 
 /**
- * Wczytanie kopii pyta o „Połącz” / „Zastąp”, gdy w aplikacji sa wyceny albo ustawienia; pusta aplikacja od razu je zastepuje.
- * @param {Pick<Stan, 'wyceny' | 'ustawienia'>} stan obecny stan aplikacji
+ * Wczytanie kopii pyta o „Połącz” / „Zastąp”, gdy w aplikacji sa wyceny, klienci, zlecenia albo ustawienia; pusta aplikacja
+ * od razu je zastepuje.
+ * @param {Pick<Stan, 'wyceny' | 'klienci' | 'zlecenia' | 'ustawienia'>} stan obecny stan aplikacji
  * @returns {boolean}
  */
 export function czyPytacOTryb(stan) {
-  return stan.wyceny.length > 0 || stan.ustawienia !== null
+  return stan.wyceny.length > 0 || stan.klienci.length > 0 || stan.zlecenia.length > 0 || stan.ustawienia !== null
 }

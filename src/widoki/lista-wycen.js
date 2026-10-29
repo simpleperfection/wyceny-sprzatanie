@@ -1,12 +1,12 @@
 // Lista wszystkich wycen (`#/wyceny`): od ostatnio zmienionej, z numerem, klientem, kwota i pigulka statusu.
 
 import { wczytajStan } from '../dane/magazyn.js'
-import { listaWycen } from '../dane/wyceny.js'
+import { kwotaWyceny, listaWycen } from '../dane/wyceny.js'
 import { zl } from '../ui/format.js'
 import { h } from '../ui/h.js'
 import { dolnyPasek, karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
 import { pigulkaStatusu } from '../ui/statusy.js'
-import { adresWyceny, inicjal, kwotaWyceny } from './start-dane.js'
+import { adresWyceny, inicjal } from './start-dane.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../silnik/katalog.js').Katalog} Katalog */

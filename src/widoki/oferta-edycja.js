@@ -6,6 +6,7 @@
 import { BladMagazynu, wczytajStan } from '../dane/magazyn.js'
 import { BladUstawien, POLA_WYMAGANE_W_OFERCIE } from '../dane/ustawienia.js'
 import { BladWyceny, czyStatusOferty, oznaczWyslana, wycena as znajdzWycene, zapiszOferte } from '../dane/wyceny.js'
+import { czyWycenaZamknieta } from '../dane/zlecenia.js'
 import { BladKodeka, linkOferty } from '../oferta/kodek.js'
 import { BladOferty, ofertaZWyceny, warunkiZrodlowe } from '../oferta/tresc.js'
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
@@ -15,7 +16,7 @@ import { baner, naglowek } from '../ui/komponenty/uklad.js'
 import { kopiujDoSchowka } from '../ui/schowek.js'
 import { ETYKIETY_STATUSOW } from '../ui/statusy.js'
 import { sciezka } from '../ui/trasy.js'
-import { zglosBladKreatora } from './kreator-wspolne.js'
+import { WYCENA_ZAMKNIETA, zglosBladKreatora } from './kreator-wspolne.js'
 import { kartaDodatkow, kartaFirmy, kartaKlienta, kartaWarunkow, kartaZakresu, poZakresach, tekstKwoty } from './oferta-edycja-sekcje.js'
 import { tekstBleduZapisu } from './teksty-bledow.js'
 
@@ -292,11 +293,14 @@ export const widokOferty = {
     const id = parametry.id ?? ''
     let czyAktywny = true
     let sprzatanie = () => {}
-    const w = znajdzWycene(wczytajStan(kontekst.magazyn), id)
+    const stan = wczytajStan(kontekst.magazyn)
+    const w = znajdzWycene(stan, id)
     if (!w) return pokazStan(kontener, null, BRAK_WYCENY)
     if (!czyStatusOferty(w.status)) {
       return pokazStan(kontener, id, `Ofertę przygotujesz z wyceny do wysłania, wysłanej albo przyjętej. Ta ma status „${ETYKIETY_STATUSOW[w.status]}”.`)
     }
+    // Wycena ze zleceniem jest tylko do odczytu, a zapis oferty i jej wysłanie zmieniają wycenę.
+    if (czyWycenaZamknieta(stan, id)) return pokazStan(kontener, id, WYCENA_ZAMKNIETA)
     const tresc = h('div', { class: 'tresc' })
     kontener.replaceChildren(naglowek({ tytul: 'Oferta', wstecz: sciezka('wycena', { id }) }), tresc)
     void poZakresach(tresc, (zakresy) => { sprzatanie = uruchomOferte(kontener, kontekst, id, zakresy, () => czyAktywny) },

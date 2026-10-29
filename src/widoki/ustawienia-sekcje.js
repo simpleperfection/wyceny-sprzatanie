@@ -13,13 +13,14 @@ import { METRAZ_WZORCOWY, mieszkanieWzorcowe, tekstLiczby, zmianaZPol } from './
 /** @typedef {import('../dane/ustawienia.js').Domyslne} Domyslne */
 /** @typedef {import('../dane/ustawienia.js').ZmianaUstawien} ZmianaUstawien */
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
+/** @typedef {import('../dane/zlecenia-ksztalt.js').Zlecenie} Zlecenie */
 /** @typedef {import('../silnik/katalog.js').Katalog} Katalog */
 /** @typedef {import('../silnik/katalog.js').KosztyFirmy} KosztyFirmy */
 /** @typedef {import('../silnik/vat.js').StatusVat} StatusVat */
 /** @typedef {import('../ui/komponenty/formularz.js').RodzajPola} RodzajPola */
 /** @typedef {import('./ustawienia-formularz.js').PolaFormularza} PolaFormularza */
 /**
- * @typedef {{ ustawienia: Ustawienia, katalog: Katalog, domyslne: Domyslne, wyceny: readonly Wycena[],
+ * @typedef {{ ustawienia: Ustawienia, katalog: Katalog, domyslne: Domyslne, wyceny: Wycena[], zlecenia: Zlecenie[],
  *   zapisz: (zmiana: ZmianaUstawien, fokus?: string) => string | null }} DaneSekcji
  *   `zapisz` zwraca tekst bledu zapisu albo null; widok rysuje potem sekcje od nowa i ustawia fokus na selektorze `fokus`
  * @typedef {{ czyZamknac: true } | { czyZamknac: false, blad: string | null }} WynikZatwierdzenia

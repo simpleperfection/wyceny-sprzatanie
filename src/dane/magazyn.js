@@ -29,7 +29,7 @@ import { jestZlecenie } from './zlecenia-ksztalt.js'
  * @typedef {{ teraz?: () => Date, loguj?: (wpis: WpisLogu) => void, poprosOTrwalosc?: () => unknown,
  *   okno?: Pick<Window, 'addEventListener' | 'removeEventListener'> }} OpcjeMagazynu
  * @typedef {{ wczytaj: () => WynikWczytania, zmien: (fn: (stan: Stan) => Stan) => Stan, zapiszCalosc: (stan: Stan) => void,
- *   naZmiane: (callback: () => void) => () => void, wyczysc: () => void }} Magazyn
+ *   utrwalAktualizacje: () => boolean, naZmiane: (callback: () => void) => () => void, wyczysc: () => void }} Magazyn
  */
 
 export const KLUCZ_MAGAZYNU = 'wyceny-sprzatanie:stan'
@@ -95,15 +95,17 @@ function jestUstawieniami(x) {
 const maUnikalneId = (rekordy) => new Set(rekordy.map((r) => r.id)).size === rekordy.length
 
 /**
- * Odwolania miedzy rekordami: `zlecenie.klientId` wskazuje zapisanego klienta, `zlecenie.wycenaId` null albo zapisana wycene.
- * Operacje utrzymuja te spojnosc same; stan, ktory jej nie ma, magazyn i kopia odrzucaja.
- * @param {{ klienci: readonly Klient[], zlecenia: readonly Zlecenie[], wyceny: readonly unknown[] }} stan
+ * Odwolania miedzy rekordami: `zlecenie.klientId` wskazuje zapisanego klienta, `zlecenie.wycenaId` null albo zapisana wycene,
+ * `wycena.klientId` null albo zapisanego klienta. Operacje utrzymuja te spojnosc same; stan, ktory jej nie ma, magazyn i kopia
+ * odrzucaja.
+ * @param {{ klienci: readonly Klient[], zlecenia: readonly Zlecenie[], wyceny: readonly Record<string, unknown>[] }} stan
  * @returns {boolean}
  */
 function odwolaniaSpojne({ klienci, zlecenia, wyceny }) {
   const idKlientow = new Set(klienci.map((k) => k.id))
-  const idWycen = new Set(wyceny.map((w) => (jestObiektem(w) ? w.id : undefined)))
-  return zlecenia.every((z) => idKlientow.has(z.klientId) && (z.wycenaId === null || idWycen.has(z.wycenaId)))
+  const idWycen = new Set(wyceny.map((w) => w.id))
+  const wycenySpojne = wyceny.every((w) => w.klientId === null || (typeof w.klientId === 'string' && idKlientow.has(w.klientId)))
+  return wycenySpojne && zlecenia.every((z) => idKlientow.has(z.klientId) && (z.wycenaId === null || idWycen.has(z.wycenaId)))
 }
 
 /**
@@ -225,6 +227,27 @@ export function utworzMagazyn(storage = globalThis.localStorage, opcje = {}) {
     return oznaczony
   }
 
+  /**
+   * Zapis wyniku aktualizacji starszej wersji stanu (raz przy starcie aplikacji) bez oznaczania zmiany do kopii: `kopia.zmianaOd`
+   * zostaje z danych. Brak miejsca zostawia stary zapis i wpis w logu, a aktualizacja dziala dalej przy kazdym odczycie.
+   * @returns {boolean} czy zapisano stan biezacej wersji
+   */
+  function utrwalAktualizacje() {
+    const surowe = storage.getItem(KLUCZ_MAGAZYNU)
+    const dane = surowe === null ? undefined : parsuj(surowe)
+    if (!jestObiektem(dane) || dane.wersja === WERSJA_SCHEMATU) return false
+    const wynik = zaktualizujStan(dane)
+    if (!('stan' in wynik)) return false
+    try {
+      zapisz(wynik.stan)
+      return true
+    } catch (blad) {
+      if (!(blad instanceof BladMagazynu) || blad.kod !== 'pelny') throw blad
+      loguj({ kod: 'aktualizacja_niezapisana', przyczyna: blad.message })
+      return false
+    }
+  }
+
   /** @param {() => void} callback @returns {() => void} odpina callback */
   function naZmiane(callback) {
     /** @param {StorageEvent} zdarzenie */
@@ -235,7 +258,7 @@ export function utworzMagazyn(storage = globalThis.localStorage, opcje = {}) {
     return () => okno.removeEventListener('storage', obsluz)
   }
 
-  return { wczytaj, zmien, zapiszCalosc: zapisz, naZmiane, wyczysc: () => storage.removeItem(KLUCZ_MAGAZYNU) }
+  return { wczytaj, zmien, zapiszCalosc: zapisz, utrwalAktualizacje, naZmiane, wyczysc: () => storage.removeItem(KLUCZ_MAGAZYNU) }
 }
 
 /**

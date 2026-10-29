@@ -1,14 +1,15 @@
 // Karta „Tempo pracy” ustawien firmy (R15, R17): zrodlo tempa, krotnosc normy rynkowej, czas mieszkania 50 m² z tempem
 // i wedlug normy, powrot do wartosci recznej albo liczenie z zlecen; wartosc reczna w arkuszu 0,5–3 co 0,05; pod spodem
-// lista „Plan a fakt” z ostatnich wpisow czasu pracy (R16), liczona przez src/kreator/zakonczenie.js.
+// lista „Plan a fakt” z ostatnich wpisow czasu pracy wizyt (R16), liczona przez src/zlecenia/plan-fakt.js.
 
 import { GRANICE_TEMPA } from '../dane/walidacja.js'
-import { historiaPlanuIFaktu } from '../kreator/zakonczenie.js'
 import { MIN_ZLECEN_TEMPA, tempoDoWyceny } from '../silnik/tempo.js'
 import { czas, data, procent } from '../ui/format.js'
 import { h } from '../ui/h.js'
 import { licznik, przycisk } from '../ui/komponenty/formularz.js'
 import { karta } from '../ui/komponenty/uklad.js'
+import { daneTempa } from '../zlecenia/dane-tempa.js'
+import { historiaPlanuIFaktu } from '../zlecenia/plan-fakt.js'
 import { METRAZ_WZORCOWY, mieszkanieWzorcowe, tekstLiczby, zmianaZPol } from './ustawienia-formularz.js'
 import { otworzArkusz, zapiszWArkuszu } from './ustawienia-sekcje.js'
 
@@ -67,8 +68,8 @@ function akcjeTempa(dane, tempo) {
 }
 
 /** @param {DaneSekcji} dane @returns {HTMLElement} sekcja „Plan a fakt”: wiersz na wpis czasu, od najnowszego, albo zachęta przed pierwszym */
-function planAFakt({ wyceny, katalog }) {
-  const wiersze = historiaPlanuIFaktu(wyceny)
+function planAFakt({ ustawienia, wyceny, zlecenia, katalog }) {
+  const wiersze = historiaPlanuIFaktu({ ustawienia, wyceny, zlecenia }, katalog)
   /** @param {string} id */
   const nazwa = (id) => katalog.uslugi.find((u) => u.id === id)?.nazwa ?? id
   return h('section', { class: 'plan-fakt-ustawienia', 'aria-labelledby': 'ustawienia-plan-fakt' },
@@ -81,8 +82,8 @@ function planAFakt({ wyceny, katalog }) {
 
 /** @param {DaneSekcji} dane @returns {HTMLElement} karta „Tempo pracy” z lista „Plan a fakt” */
 export function kartaTempa(dane) {
-  const { ustawienia, wyceny, domyslne, katalog } = dane
-  const tempo = tempoDoWyceny(ustawienia, wyceny, null, domyslne)
+  const { ustawienia, domyslne, katalog } = dane
+  const tempo = tempoDoWyceny(ustawienia, daneTempa(dane), null, domyslne)
   const { minuty } = mieszkanieWzorcowe(katalog, ustawienia.wojewodztwoId)
   return karta({ klasa: 'karta-ustawien karta-tempa' },
     h('div', { class: 'karta-tempa__gora' },

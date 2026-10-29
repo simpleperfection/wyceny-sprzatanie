@@ -16,6 +16,11 @@ export const MAKS_ZAGLEBIENIE = 32
  * Jedno zrodlo dla zapisu zakresu i warunkow (ustawienia, wyceny) i dla dekodera linku oferty (src/oferta/kodek.js).
  */
 export const GRANICE_OFERTY = Object.freeze({ tekst: 500, lista: 50 })
+/**
+ * Termin klienta z pola daty (RRRR-MM-DD) albo daty i godziny (RRRR-MM-DDTHH:mm, opcjonalnie z sekundami); grupy: dzien, godzina,
+ * minuta. Zrodlo wzorca dla formatu terminu (src/ui/format.js) i migracji wycen do zlecen (src/dane/migracja-v2.js).
+ */
+export const TERMIN_ISO = /^(\d{4}-\d{2}-\d{2})(?:T([01]\d|2[0-3]):([0-5]\d)(?::[0-5]\d(?:\.\d+)?)?)?$/
 const DZIEN = /^\d{4}-\d{2}-\d{2}$/
 const MIESIAC = /^\d{4}-(0[1-9]|1[0-2])$/
 /** Identyfikator warunku oferty (jak w data/domyslne.json). */

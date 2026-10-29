@@ -25,7 +25,7 @@ const USTAWIENIA = {
 const wycenaTestowa = (id, zmiana = {}) => ({
   id, numer: '1/10/2026', utworzona: '2026-10-10T10:00:00.000Z', zmieniona: '2026-10-10T10:00:00.000Z', status: 'do_wyslania',
   rodzaj: 'dokladna', klient: { nazwa: 'Jan Kowalski', adres: 'Warszawa', termin: null }, wejscie: { uslugaId: 'mieszkanie_standard' },
-  szybka: null, odpowiedzi: {}, wynik: MIGAWKA, cenaReczna: null, wykonania: [],
+  klientId: null, szybka: null, odpowiedzi: {}, wynik: MIGAWKA, cenaReczna: null,
   oferta: { zakres: null, warunki: null, waznaDo: null, wyslana: null, nieaktualna: false }, ...zmiana,
 })
 /** @param {string} id @param {object} [zmiana] */
@@ -103,7 +103,8 @@ describe('odczytajKopie', () => {
       wycenaTestowa('a', { status: 'zaplacona' }),
       wycenaTestowa('a', { klient: { nazwa: 1, adres: '', termin: null } }),
       wycenaTestowa('a', { numer: null }),
-      wycenaTestowa('a', { wykonania: [{ id: 'w', data: '2026-10-20', minuty: '90', tempoPlanu: 1 }] }),
+      wycenaTestowa('a', { status: 'wykonana' }),
+      wycenaTestowa('a', { klientId: 7 }),
     ]
     for (const wycena of zle) {
       assert.throws(() => odczytajKopie(plik({ stan: stanTestowy({ wyceny: [wycena] }) })), bladKopii('uszkodzony'))
@@ -231,12 +232,12 @@ describe('przypomnienie o kopii', () => {
 })
 
 describe('podsumowanieKopii', () => {
-  it('liczy wyceny, wykonania i obecność ustawień', () => {
-    const wykonanie = { id: 'w', data: '2026-10-20', minuty: 90, tempoPlanu: 1 }
-    const stan = stanTestowy({ wyceny: [wycenaTestowa('a', { wykonania: [wykonanie, wykonanie] }), wycenaTestowa('b', { wykonania: [wykonanie] }), szkicTestowy('c')] })
+  it('liczy wyceny, klientów, zlecenia i obecność ustawień', () => {
+    const stan = stanTestowy({ wyceny: [wycenaTestowa('a'), wycenaTestowa('b'), szkicTestowy('c')], klienci: [{ id: 'k1' }, { id: 'k2' }],
+      zlecenia: [{ id: 'z1' }, { id: 'z2' }, { id: 'z3' }, { id: 'z4' }, { id: 'z5' }] })
 
-    assert.deepEqual(podsumowanieKopii(stan), { wycen: 3, wykonan: 3, czyUstawienia: true })
-    assert.deepEqual(podsumowanieKopii(stanTestowy({ ustawienia: null, wyceny: [] })), { wycen: 0, wykonan: 0, czyUstawienia: false })
+    assert.deepEqual(podsumowanieKopii(stan), { wycen: 3, klientow: 2, zlecen: 5, czyUstawienia: true })
+    assert.deepEqual(podsumowanieKopii(stanTestowy({ ustawienia: null, wyceny: [] })), { wycen: 0, klientow: 0, zlecen: 0, czyUstawienia: false })
   })
 })
 
@@ -292,17 +293,15 @@ describe('odczytajKopie: wartości ustawień i limity wycen jak przy zapisie', (
     assert.throws(() => odczytajKopie(tresc.replace('"KLUCZ"', '"__proto__"')), bladKopii('uszkodzony'))
   })
 
-  it('wykonanie 5000 min albo z datą „jutro”, nazwa klienta 121 znaków, licznik ponad 100 000 → uszkodzony', () => {
-    const wykonanie = { id: 'w', data: '2026-10-20', minuty: 240, tempoPlanu: 1.3 }
+  it('wycena v2 ze statusem wykonana albo klientem spoza listy, nazwa klienta 121 znaków, licznik ponad 100 000 → uszkodzony', () => {
     const zleStany = [
-      stanTestowy({ wyceny: [wycenaTestowa('a', { status: 'przyjeta', wykonania: [{ ...wykonanie, minuty: 5000 }] })] }),
-      stanTestowy({ wyceny: [wycenaTestowa('a', { status: 'przyjeta', wykonania: [{ ...wykonanie, data: 'jutro' }] })] }),
+      stanTestowy({ wyceny: [wycenaTestowa('a', { status: 'wykonana' })] }),
+      stanTestowy({ wyceny: [wycenaTestowa('a', { status: 'przyjeta', klientId: 'k-brak' })] }),
       stanTestowy({ wyceny: [wycenaTestowa('a', { klient: { nazwa: 'x'.repeat(121), adres: '', termin: null } })] }),
       stanTestowy({ licznikNumerow: { '2026-10': 100_001 } }),
     ]
 
-    assert.equal(odczytajKopie(plik({ stan: stanTestowy({ wyceny: [wycenaTestowa('a', { status: 'przyjeta', wykonania: [wykonanie] })] }) }))
-      .stan.wyceny[0].wykonania.length, 1)
+    assert.equal(odczytajKopie(plik({ stan: stanTestowy({ wyceny: [wycenaTestowa('a', { status: 'przyjeta' })] }) })).stan.wyceny[0].status, 'przyjeta')
     for (const stan of zleStany) assert.throws(() => odczytajKopie(plik({ stan })), bladKopii('uszkodzony'))
   })
 

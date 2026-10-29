@@ -304,12 +304,20 @@ describe('aktualizacja stanu v1 → v2', () => {
   /** @returns {Promise<Record<string, unknown>>} stan wersji 1 z pliku kopii */
   const stanV1 = async () => JSON.parse(await readFile(FIXTURE_V1, 'utf8')).stan
 
-  it('stan z tests/fixtures/kopia-v1.json → wersja 2, puste klienci i zlecenia, reszta bez zmian', async () => {
+  it('stan z tests/fixtures/kopia-v1.json → wersja 2 z klientką z nazwy wyceny i zleceniem na termin, reszta bez zmian', async () => {
     const v1 = await stanV1()
 
     const wynik = zaktualizujStan(v1)
 
-    assert.deepEqual(wynik, { stan: { ...v1, wersja: 2, klienci: [], zlecenia: [] } })
+    assert.ok('stan' in wynik)
+    const { stan } = wynik
+    assert.equal(stan.wersja, 2)
+    assert.deepEqual(stan.klienci.map((k) => [k.id, k.nazwa, k.adres]), [[`k-${v1.wyceny[0].id}`, 'Anna Nowak', 'ul. Lipowa 4, Warszawa']])
+    assert.deepEqual(stan.zlecenia.map((z) => [z.id, z.start, z.okresy[0].godzina, z.okresy[0].cenaWizyty]),
+      [[`z-${v1.wyceny[0].id}`, '2026-10-25', null, 250]])
+    assert.deepEqual(stan.wyceny.map((w) => w.klientId), [`k-${v1.wyceny[0].id}`, null])
+    assert.deepEqual([stan.ustawienia, stan.licznikNumerow, stan.kopia, stan.preferencje],
+      [v1.ustawienia, v1.licznikNumerow, v1.kopia, v1.preferencje])
   })
 
   it('dwa wywołania na tym samym stanie dają równe wyniki, a wejście zostaje wersją 1', async () => {
@@ -318,8 +326,9 @@ describe('aktualizacja stanu v1 → v2', () => {
     const pierwszy = zaktualizujStan(v1)
     const drugi = zaktualizujStan(v1)
 
+    assert.ok('stan' in drugi)
     assert.deepEqual(pierwszy, drugi)
-    assert.deepEqual(drugi, { stan: { ...v1, wersja: 2, klienci: [], zlecenia: [] } })
+    assert.equal(drugi.stan.zlecenia.length, 1)
     assert.equal(v1.wersja, 1)
     assert.equal(Object.hasOwn(v1, 'klienci'), false)
   })
@@ -338,6 +347,70 @@ describe('aktualizacja stanu v1 → v2', () => {
   })
 })
 
+describe('utrwalAktualizacje (start aplikacji)', () => {
+  const FIXTURE_V1 = new URL('../../tests/fixtures/stan-v1-pelny.json', import.meta.url)
+
+  /** @returns {Promise<{ storage: PamiecMagazynu, v1: Record<string, any> }>} storage ze stanem v1 z fixture */
+  async function storageV1() {
+    const tekst = await readFile(FIXTURE_V1, 'utf8')
+    const storage = new PamiecMagazynu()
+    storage.setItem(KLUCZ_MAGAZYNU, tekst)
+    return { storage, v1: JSON.parse(tekst) }
+  }
+
+  it('stan v1 zostaje zapisany jako wersja 2 równa odczytowi, a kopia.zmianaOd się nie zmienia', async () => {
+    const { storage, v1 } = await storageV1()
+    const { magazyn } = magazynTestowy(storage)
+
+    const czyZapisano = magazyn.utrwalAktualizacje()
+
+    const zapisany = JSON.parse(storage.getItem(KLUCZ_MAGAZYNU) ?? 'null')
+    assert.equal(czyZapisano, true)
+    assert.equal(zapisany.wersja, 2)
+    assert.equal(zapisany.kopia.zmianaOd, v1.kopia.zmianaOd)
+    assert.deepEqual(zapisany, zaktualizujStan(v1).stan)
+    assert.equal(zapisany.klienci.length, 3)
+  })
+
+  it('drugie wywołanie, stan już w wersji 2 i pusty magazyn niczego nie zapisują', async () => {
+    const { storage } = await storageV1()
+    const { magazyn } = magazynTestowy(storage)
+    magazyn.utrwalAktualizacje()
+    const poPierwszym = storage.getItem(KLUCZ_MAGAZYNU)
+    const pusty = magazynTestowy()
+
+    assert.equal(magazyn.utrwalAktualizacje(), false)
+    assert.equal(storage.getItem(KLUCZ_MAGAZYNU), poPierwszym)
+    assert.equal(pusty.magazyn.utrwalAktualizacje(), false)
+    assert.equal(pusty.storage.length, 0)
+  })
+
+  it('brak miejsca: stary zapis zostaje, wpis w logu, a odczyt nadal daje stan po aktualizacji', async () => {
+    const { storage, v1 } = await storageV1()
+    const surowe = storage.getItem(KLUCZ_MAGAZYNU)
+    storage.pelna = true
+    const { magazyn, loguj } = magazynTestowy(storage)
+
+    const czyZapisano = magazyn.utrwalAktualizacje()
+
+    assert.equal(czyZapisano, false)
+    assert.equal(storage.getItem(KLUCZ_MAGAZYNU), surowe)
+    assert.deepEqual(loguj.mock.calls.map((c) => c.arguments[0].kod), ['aktualizacja_niezapisana'])
+    assert.deepEqual(wczytajStan(magazyn), zaktualizujStan(v1).stan)
+  })
+
+  it('uszkodzony JSON i stan nowszej wersji zostają bez zmian (ekran ratunkowy po odczycie)', () => {
+    const storage = new PamiecMagazynu()
+    storage.setItem(KLUCZ_MAGAZYNU, '{"wersja":1,')
+    const nowszy = new PamiecMagazynu()
+    nowszy.setItem(KLUCZ_MAGAZYNU, JSON.stringify({ ...PUSTY_STAN, wersja: 3 }))
+
+    assert.equal(magazynTestowy(storage).magazyn.utrwalAktualizacje(), false)
+    assert.equal(magazynTestowy(nowszy).magazyn.utrwalAktualizacje(), false)
+    assert.equal(storage.getItem(KLUCZ_MAGAZYNU), '{"wersja":1,')
+  })
+})
+
 describe('kształt stanu v2: klienci, zlecenia i odwołania', () => {
   const UTWORZONY = '2026-11-02T08:00:00.000Z'
   /** @param {string} id */
@@ -353,9 +426,19 @@ describe('kształt stanu v2: klienci, zlecenia i odwołania', () => {
   const stanZ = (zmiana) => ({ ...PUSTY_STAN, klienci: [klientTestowy('k1')], ...zmiana })
 
   it('klient ze zleceniem i zlecenie z wyceną, która istnieje → stan przyjęty', () => {
-    const stan = stanZ({ wyceny: [{ id: 'w1' }], zlecenia: [zlecenieTestowe('z1', 'k1', 'w1'), zlecenieTestowe('z2', 'k1')] })
+    const stan = stanZ({ wyceny: [{ id: 'w1', klientId: 'k1' }, { id: 'w2', klientId: null }],
+      zlecenia: [zlecenieTestowe('z1', 'k1', 'w1'), zlecenieTestowe('z2', 'k1')] })
 
     assert.deepEqual(zaktualizujStan(stan), { stan })
+  })
+
+  it('wycena z klientId nieistniejącego klienta, liczbą albo bez pola → uszkodzony przy odczycie, zly_stan przy zapisie', () => {
+    const zle = [{ id: 'w1', klientId: 'k2' }, { id: 'w1', klientId: 1 }, { id: 'w1' }].map((w) => stanZ({ wyceny: [w] }))
+    const { magazyn, storage } = magazynTestowy()
+
+    assert.deepEqual(zle.map(zaktualizujStan), zle.map(() => ({ blad: 'uszkodzony' })))
+    assert.throws(() => magazyn.zapiszCalosc(zle[0]), bladMagazynu('zly_stan'))
+    assert.equal(storage.length, 0)
   })
 
   it('zlecenie z klientId nieistniejącego klienta → uszkodzony przy odczycie, zly_stan przy zapisie', () => {

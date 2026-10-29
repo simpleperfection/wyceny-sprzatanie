@@ -96,7 +96,7 @@ export const widokKreatoraStartowego = {
     /** @param {string} [fokus] selektor elementu do fokusu po narysowaniu */
     function rysuj(fokus) {
       /** @type {DaneSekcji} */
-      const dane = { ustawienia: szkic, katalog, domyslne, wyceny: stan.wyceny, zapisz }
+      const dane = { ustawienia: szkic, katalog, domyslne, wyceny: stan.wyceny, zlecenia: stan.zlecenia, zapisz }
       kontener.replaceChildren(
         naglowek({ tytul: 'Ustawienia firmy', podtytul: `Krok ${krok + 1} z ${KROKI.length}` }),
         pasekPostepu(KROKI, krok),

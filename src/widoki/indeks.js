@@ -23,7 +23,6 @@ import { widokPytan } from './pytania.js'
 import { widokStartu } from './start.js'
 import { widokSzybkiejWyceny } from './szybka.js'
 import { widokUstawien } from './ustawienia.js'
-import { widokZakonczeniaZlecenia } from './zakonczenie.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../ui/router.js').Widoki} Widoki */
@@ -64,7 +63,6 @@ export const WIDOKI = Object.freeze({
   kreator: widokKreatora({ usluga: widokKreatoraUslugi, zakres: widokKreatoraZakresu, dodatki: widokKreatoraDodatkow, chemia: widokDoboruChemii,
     cena: widokPodsumowaniaKreatora }, NIE_MA_EKRANU),
   wycena: widokZapisanejWyceny,
-  zakonczenie: widokZakonczeniaZlecenia,
   oferta: widokOferty,
   szybka: widokSzybkiejWyceny,
   pytania: widokPytan,

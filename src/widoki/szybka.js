@@ -8,6 +8,7 @@ import { wczytajStan } from '../dane/magazyn.js'
 import { pytaniaAplikacji } from '../dane/pytania.js'
 import { ustawieniaDomyslne } from '../dane/ustawienia.js'
 import { BladWyceny, wycena as znajdzWycene } from '../dane/wyceny.js'
+import { czyWycenaZamknieta } from '../dane/zlecenia.js'
 import { MAKS_ILOSCI, ustawDodatek, ustawIlosc } from '../kreator/pozycje.js'
 import { pozycjeGlowne } from '../kreator/stan.js'
 import {
@@ -23,7 +24,7 @@ import { chipy, licznik, przycisk } from '../ui/komponenty/formularz.js'
 import { arkusz, baner, karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
 import { kopiujDoSchowka } from '../ui/schowek.js'
 import { sciezka } from '../ui/trasy.js'
-import { adresKroku, zglosBladKreatora } from './kreator-wspolne.js'
+import { adresKroku, WYCENA_ZAMKNIETA, zglosBladKreatora } from './kreator-wspolne.js'
 import { tekstBleduPytan, wierszPytan } from './pytania.js'
 import { adresWyceny } from './start-dane.js'
 import { kartaWyniku } from './szybka-wynik.js'
@@ -145,8 +146,8 @@ export const widokSzybkiejWyceny = {
     if (zapytanie.wycena && !zapisana) {
       return pokazKomunikat(kontener, 'Nie ma tej wyceny. Mogła zostać usunięta.', { tekst: 'Nowa szybka wycena', adres: sciezka('szybka') })
     }
-    if (zapisana && (zapisana.rodzaj !== 'szybka' || zapisana.status === 'wykonana')) {
-      const tekst = zapisana.rodzaj === 'szybka' ? 'Ta wycena jest wykonana – można ją tylko przeglądać.' : JUZ_DOKLADNA
+    if (zapisana && (zapisana.rodzaj !== 'szybka' || czyWycenaZamknieta(stanMagazynu, zapisana.id))) {
+      const tekst = zapisana.rodzaj === 'szybka' ? WYCENA_ZAMKNIETA : JUZ_DOKLADNA
       return pokazKomunikat(kontener, tekst, { tekst: 'Pokaż wycenę', adres: adresWyceny(zapisana) })
     }
     const ustawienia = stanMagazynu.ustawienia ?? ustawieniaDomyslne(domyslne)

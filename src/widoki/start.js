@@ -4,7 +4,8 @@
 
 import { czyPrzypomniecOKopii, dniOdKopii } from '../dane/kopia.js'
 import { wczytajStan } from '../dane/magazyn.js'
-import { brakujeUstawien, scalKoszty } from '../dane/ustawienia.js'
+import { brakujeUstawien } from '../dane/ustawienia.js'
+import { kwotaWyceny } from '../dane/wyceny.js'
 import { czyPokazacInstrukcjeIos, srodowiskoPrzegladarki, zamknijInstrukcjeIos } from '../pwa/rejestracja.js'
 import { tempoDoWyceny } from '../silnik/tempo.js'
 import { dataDnia, dniTemu, FORMY, odmiana, zl } from '../ui/format.js'
@@ -12,7 +13,8 @@ import { h, ikona } from '../ui/h.js'
 import { baner, dolnyPasek, karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
 import { pigulkaStatusu } from '../ui/statusy.js'
 import { sciezka } from '../ui/trasy.js'
-import { adresWyceny, doZrobienia, inicjal, kwotaWyceny, nazwaMiesiaca, podsumowanieMiesiaca, wierszTempa } from './start-dane.js'
+import { daneTempa } from '../zlecenia/dane-tempa.js'
+import { adresWyceny, doZrobienia, inicjal, nazwaMiesiaca, podsumowanieMiesiaca, wierszTempa } from './start-dane.js'
 import { tekstBleduZapisu } from './teksty-bledow.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
@@ -39,17 +41,16 @@ const statystyka = (wartosc, etykieta) =>
   h('div', { class: 'statystyka' }, h('span', { class: 'statystyka__wartosc liczba' }, wartosc), h('span', { class: 'statystyka__etykieta' }, etykieta))
 
 /** @param {Stan} stan @param {Kontekst} kontekst @param {Date} dzis */
-function kartaMiesiaca(stan, { katalog, domyslne }, dzis) {
-  const koszty = scalKoszty(katalog.kosztyFirmy, stan.ustawienia)
-  const { wycen, przyjetych, stawka, pominiete } = podsumowanieMiesiaca(stan.wyceny, dzis, { katalog, koszty })
-  if (pominiete > 0) reportError(new RangeError(`Start: ${pominiete} wykonań bez realnej stawki (migawka spoza katalogu)`))
-  const tempo = wierszTempa(tempoDoWyceny(stan.ustawienia, stan.wyceny, null, domyslne))
+function kartaMiesiaca(stan, { domyslne }, dzis) {
+  const { wycen, przyjetych } = podsumowanieMiesiaca(stan.wyceny, dzis)
+  const tempo = wierszTempa(tempoDoWyceny(stan.ustawienia, daneTempa(stan), null, domyslne))
   return karta({ klasa: 'karta-miesiaca' },
     h('h2', { class: 'karta-miesiaca__miesiac' }, nazwaMiesiaca(dzis)),
     h('div', { class: 'statystyki' },
       statystyka(String(wycen), odmiana(wycen, FORMY.wycena)),
       statystyka(String(przyjetych), odmiana(przyjetych, FORMY.przyjeta)),
-      statystyka(stawka === null ? '—' : `${zl(stawka)}/h`, ZOSTAJE)),
+      // Realna stawka z wizyt wraca w nowym ekranie Start; do tego czasu karta pokazuje „—”.
+      statystyka('—', ZOSTAJE)),
     h('p', { class: 'karta-miesiaca__tempo' },
       h('span', { class: 'karta-miesiaca__etykieta' }, tempo.etykieta), ' ',
       h('span', { class: 'karta-miesiaca__wartosc' }, tempo.wartosc)))
@@ -126,7 +127,7 @@ function banerIos(stan, { magazyn }) {
 /** @param {Stan} stan @param {Kontekst} kontekst @param {Date} dzis @returns {(HTMLElement | null)[]} */
 function trescStartu(stan, kontekst, dzis) {
   if (stan.wyceny.length === 0) return [karta({}, h('p', { class: 'start-pusty' }, PUSTY_START))]
-  const zadania = doZrobienia(stan.wyceny, dzis)
+  const zadania = doZrobienia(stan.wyceny)
   return [kartaMiesiaca(stan, kontekst, dzis), zadania.length === 0 ? null : sekcjaZadan(zadania)]
 }
 

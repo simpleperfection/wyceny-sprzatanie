@@ -1,29 +1,19 @@
 import assert from 'node:assert/strict'
-import { before, describe, it } from 'node:test'
+import { describe, it } from 'node:test'
 
 import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
-import { czytajJson, katalogTestowy } from '../../tests/pomocnicze.js'
+import { czytajJson } from '../../tests/pomocnicze.js'
 import { odczytajKopie } from '../dane/kopia.js'
 import { KLUCZ_MAGAZYNU, utworzMagazyn } from '../dane/magazyn.js'
-import { brakujeUstawien, scalKoszty } from '../dane/ustawienia.js'
+import { brakujeUstawien } from '../dane/ustawienia.js'
 import { BladFormatu } from '../ui/format.js'
 import {
-  adresWyceny, doZrobienia, inicjal, kwotaWyceny, nazwaMiesiaca, podsumowanieMiesiaca, wierszTempa,
+  adresWyceny, doZrobienia, inicjal, nazwaMiesiaca, podsumowanieMiesiaca, wierszTempa,
 } from './start-dane.js'
 
-/** @typedef {import('./start-dane.js').DaneKosztow} DaneKosztow */
-
 const DZIS = new Date(2026, 9, 25, 12, 0)
-const USTAWIENIA = {
-  wojewodztwoId: 'mazowieckie', statusVat: 'zwolniony', firma: { nazwa: 'Lśniący Dom', telefon: '600100200', email: '', nip: '' },
-  tempo: { reczne: null }, koszty: { chemia_h: 6, sprzet: {}, dojazd: { koszt_firmy_zl_km: 1 } }, zakresy: {}, warunki: null,
-  przypomnienieKopiiDni: 7, kreatorZakonczony: true,
-}
 
-/**
- * Migawka z jedna linia pracy: chemia = 6 zl/h × minuty / 60, dojazd firmy = 2 × km × 1 zl (koszty z USTAWIENIA).
- * @param {{ cena: number, minuty: number, km?: number }} p
- */
+/** Migawka z jedna linia pracy. @param {{ cena: number, minuty: number, km?: number }} p */
 const migawka = ({ cena, minuty, km = 0 }) => ({
   cena, netto: cena, vat: 0, mediana: cena, widelki: { od: cena, do: cena, pelne: true }, minutyNormowe: minuty,
   linie: [{ rodzaj: 'praca', klucz: null, opis: 'Praca', ilosc: 1, jednostka: 'h', cenaJedn: cena, cenaBazowa: cena, mnoznikProgu: 1,
@@ -40,15 +30,12 @@ const migawka = ({ cena, minuty, km = 0 }) => ({
 const wycenaTestowa = (id, zmiana = {}) => ({
   id, numer: '1/10/2026', utworzona: '2026-10-10T10:00:00.000Z', zmieniona: '2026-10-10T10:00:00.000Z', status: 'do_wyslania',
   rodzaj: 'dokladna', klient: { nazwa: 'Jan Kowalski', adres: '', termin: null }, wejscie: { uslugaId: 'mieszkanie_standard' },
-  szybka: null, odpowiedzi: {}, wynik: migawka({ cena: 250, minuty: 180 }), cenaReczna: null, wykonania: [],
+  klientId: null, szybka: null, odpowiedzi: {}, wynik: migawka({ cena: 250, minuty: 180 }), cenaReczna: null,
   oferta: { zakres: null, warunki: null, waznaDo: null, wyslana: null, nieaktualna: false }, ...zmiana,
 })
 
 /** @param {string} id @param {string | null} termin @param {object} [zmiana] */
 const przyjeta = (id, termin, zmiana = {}) => wycenaTestowa(id, { status: 'przyjeta', klient: { nazwa: id, adres: '', termin }, ...zmiana })
-
-/** @param {string} id @param {string} data @param {number} minuty */
-const wykonanie = (id, data, minuty) => ({ id, data, minuty, tempoPlanu: 1.3 })
 
 /** @param {string} plikStanu sciezka wzgledem repo */
 async function tekstKopii(plikStanu) {
@@ -57,82 +44,49 @@ async function tekstKopii(plikStanu) {
 }
 
 describe('doZrobienia', () => {
-  it('do wysłania daje „Wyślij ofertę”, a z przyjętych tylko ta z terminem wczoraj „Wpisz czas pracy”', () => {
+  it('do wysłania daje „Wyślij ofertę”, a przyjęte (z terminem i bez) nie dają zadań, bo czas pracy wpisuje się przy wizycie', () => {
     const wyceny = [
       przyjeta('jutro', '2026-10-26T10:00'),
       przyjeta('wczoraj', '2026-10-24'),
+      przyjeta('bez-terminu', null),
       wycenaTestowa('do-wyslania', { utworzona: '2026-10-11T10:00:00.000Z' }),
     ]
 
-    const zadania = doZrobienia(wyceny, DZIS)
+    const zadania = doZrobienia(wyceny)
 
-    assert.deepEqual(zadania.map((z) => [z.tytul, z.wycena.id]), [['Wpisz czas pracy', 'wczoraj'], ['Wyślij ofertę', 'do-wyslania']])
+    assert.deepEqual(zadania.map((z) => [z.tytul, z.wycena.id]), [['Wyślij ofertę', 'do-wyslania']])
   })
 
-  it('przyjęta bez terminu i szkic dają zadania; kolejność od najstarszej, wysłana i wykonana bez zadań', () => {
+  it('szkic daje „Dokończ wycenę”; kolejność od najstarszej, wysłana i odrzucona bez zadań', () => {
     const wyceny = [
       wycenaTestowa('szkic', { status: 'szkic', numer: null, wynik: null, utworzona: '2026-10-20T08:00:00.000Z' }),
-      przyjeta('bez-terminu', null, { utworzona: '2026-10-02T08:00:00.000Z' }),
       wycenaTestowa('wyslana', { status: 'wyslana' }),
-      wycenaTestowa('wykonana', { status: 'wykonana' }),
-      przyjeta('dzis', '2026-10-25T18:00', { utworzona: '2026-10-05T08:00:00.000Z' }),
+      wycenaTestowa('odrzucona', { status: 'odrzucona' }),
+      wycenaTestowa('do-wyslania', { utworzona: '2026-10-02T08:00:00.000Z' }),
     ]
 
-    const zadania = doZrobienia(wyceny, DZIS)
+    const zadania = doZrobienia(wyceny)
 
-    assert.deepEqual(zadania.map((z) => [z.rodzaj, z.wycena.id]), [['czas', 'bez-terminu'], ['czas', 'dzis'], ['dokoncz', 'szkic']])
-    assert.equal(zadania[2]?.tytul, 'Dokończ wycenę')
-  })
-
-  it('bez daty dnia rzuca BladFormatu', () => {
-    assert.throws(() => doZrobienia([], new Date('nie data')), (blad) => blad instanceof BladFormatu && blad.kod === 'zla_data')
+    assert.deepEqual(zadania.map((z) => [z.rodzaj, z.tytul, z.wycena.id]), [['wyslij', 'Wyślij ofertę', 'do-wyslania'],
+      ['dokoncz', 'Dokończ wycenę', 'szkic']])
   })
 })
 
 describe('podsumowanieMiesiaca', () => {
-  /** @type {DaneKosztow} */
-  let dane
-
-  before(async () => {
-    const katalog = await katalogTestowy()
-    dane = { katalog, koszty: scalKoszty(katalog.kosztyFirmy, /** @type {any} */ (USTAWIENIA)) }
-  })
-
-  it('liczy wyceny z października bez szkiców, przyjęte i wykonane oraz średnią realną stawkę z wykonań października', () => {
+  it('liczy wyceny z października bez szkiców i z nich przyjęte; wyceny z września się nie liczą', () => {
     const wyceny = [
-      // 300 zl − chemia 6 × 3 h − dojazd 2 × 10 km = 262 zl za 4 h faktycznej pracy → 65,50 zl/h
-      wycenaTestowa('a', { status: 'wykonana', wynik: migawka({ cena: 300, minuty: 180, km: 10 }),
-        wykonania: [wykonanie('a1', '2026-10-03', 240)] }),
-      // reczna cena 200 zl − chemia 6 × 2 h = 188 zl za 2 h → 94 zl/h
-      wycenaTestowa('b', { status: 'wykonana', wynik: migawka({ cena: 260, minuty: 120 }), cenaReczna: 200,
-        wykonania: [wykonanie('b1', '2026-10-20', 120)] }),
-      przyjeta('c', null),
-      wycenaTestowa('d', { status: 'odrzucona' }),
+      przyjeta('a', null),
+      przyjeta('b', '2026-10-20'),
+      wycenaTestowa('c', { status: 'odrzucona' }),
       wycenaTestowa('szkic', { status: 'szkic', numer: null, wynik: null }),
-      // wyceny z wrzesnia: nie licza sie do wycen; wykonanie z wrzesnia nie liczy sie do stawki
-      wycenaTestowa('wrzesien', { status: 'wykonana', utworzona: '2026-09-15T10:00:00.000Z',
-        wykonania: [wykonanie('w1', '2026-09-30', 60)] }),
+      przyjeta('wrzesien', null, { utworzona: '2026-09-15T10:00:00.000Z' }),
     ]
 
-    const wynik = podsumowanieMiesiaca(wyceny, DZIS, dane)
-
-    assert.deepEqual({ ...wynik, stawka: Number(wynik.stawka?.toFixed(6)) }, { wycen: 4, przyjetych: 3, stawka: 79.75, pominiete: 0 })
-  })
-
-  it('bez wykonań w miesiącu daje stawkę null, a wykonanie z pozycją spoza katalogu pomija i liczy', () => {
-    const bezPozycji = migawka({ cena: 100, minuty: 60 })
-    const wyceny = [
-      przyjeta('c', null),
-      wycenaTestowa('nieznana', { status: 'wykonana', utworzona: '2026-09-01T10:00:00.000Z',
-        wynik: { ...bezPozycji, linie: [{ ...bezPozycji.linie[0], rodzaj: 'pozycja', klucz: 'brak.pozycji' }] },
-        wykonania: [wykonanie('n1', '2026-10-02', 60)] }),
-    ]
-
-    assert.deepEqual(podsumowanieMiesiaca(wyceny, DZIS, dane), { wycen: 1, przyjetych: 1, stawka: null, pominiete: 1 })
+    assert.deepEqual(podsumowanieMiesiaca(wyceny, DZIS), { wycen: 3, przyjetych: 2 })
   })
 
   it('bez daty dnia rzuca BladFormatu', () => {
-    assert.throws(() => podsumowanieMiesiaca([], /** @type {any} */ ('2026-10-25'), dane), BladFormatu)
+    assert.throws(() => podsumowanieMiesiaca([], /** @type {any} */ ('2026-10-25')), BladFormatu)
   })
 })
 
@@ -148,16 +102,10 @@ describe('wierszTempa', () => {
   })
 })
 
-describe('nazwaMiesiaca, kwotaWyceny, adresWyceny, inicjal', () => {
+describe('nazwaMiesiaca, adresWyceny, inicjal', () => {
   it('miesiąc wielką literą w mianowniku', () => {
     assert.equal(nazwaMiesiaca(DZIS), 'Październik')
     assert.throws(() => nazwaMiesiaca(new Date(Number.NaN)), BladFormatu)
-  })
-
-  it('kwota: ręczna wygrywa z migawką, szkic bez ceny daje null', () => {
-    assert.equal(kwotaWyceny(wycenaTestowa('a', { cenaReczna: 290 })), 290)
-    assert.equal(kwotaWyceny(wycenaTestowa('a')), 250)
-    assert.equal(kwotaWyceny(wycenaTestowa('a', { status: 'szkic', wynik: null })), null)
   })
 
   it('adres: zapisana do ekranu wyceny, szkic dokładnej do kreatora, szkic szybkiej do szybkiej wyceny', () => {
@@ -173,7 +121,7 @@ describe('nazwaMiesiaca, kwotaWyceny, adresWyceny, inicjal', () => {
 })
 
 describe('e2e/stany', () => {
-  it('wyceny-do-zrobienia.json przechodzi przez odczytajKopie i magazyn, a start ma dwa zadania i trzy statusy', async () => {
+  it('wyceny-do-zrobienia.json (wersja 1) przechodzi przez odczytajKopie i magazyn, a start ma jedno zadanie i trzy statusy', async () => {
     const { stan, tresc } = await tekstKopii('e2e/stany/wyceny-do-zrobienia.json')
     const storage = new PamiecMagazynu()
     storage.setItem(KLUCZ_MAGAZYNU, JSON.stringify(stan))
@@ -184,7 +132,8 @@ describe('e2e/stany', () => {
     assert.ok('stan' in zMagazynu, 'magazyn odrzucił stan')
     assert.deepEqual(zMagazynu.stan, zKopii)
     assert.deepEqual(zKopii.wyceny.map((w) => w.status), ['do_wyslania', 'wyslana', 'przyjeta'])
-    assert.deepEqual(doZrobienia(zKopii.wyceny, DZIS).map((z) => z.tytul), ['Wyślij ofertę', 'Wpisz czas pracy'])
+    assert.deepEqual(doZrobienia(zKopii.wyceny).map((z) => z.tytul), ['Wyślij ofertę'])
+    assert.equal(zKopii.wersja, 2)
     assert.deepEqual(zKopii.kopia, { ostatnia: null, zmianaOd: '2026-10-12T09:00:00.000Z' })
   })
 

@@ -36,7 +36,7 @@ const klientTestowy = (id) => ({
  * @param {string} id @param {string} status @param {object | null} [wynik]
  */
 const wycenaTestowa = (id, status, wynik = { cena: 120, minutyNormowe: 95, wizytWMiesiacu: 13 }) => ({
-  id, status, wejscie: { uslugaId: 'biura', wariantId: 'abonament_3' }, wynik,
+  id, status, klientId: null, wejscie: { uslugaId: 'biura', wariantId: 'abonament_3' }, wynik,
 })
 
 /** @param {string} id @param {object} [zmiana] */

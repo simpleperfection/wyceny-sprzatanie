@@ -1,7 +1,7 @@
 // Formatowanie liczb, kwot, czasu i dat po polsku (Intl `pl-PL`) oraz odmiana liczebnikow i nazw wojewodztw.
 // Tysiace grupuje twarda spacja takze przy liczbach czterocyfrowych (`useGrouping: 'always'`), jak na makietach.
 
-import { jestData, jestDniem } from '../dane/ksztalt.js'
+import { jestData, jestDniem, TERMIN_ISO } from '../dane/ksztalt.js'
 
 const JEZYK = 'pl-PL'
 const NBSP = ' '
@@ -10,8 +10,6 @@ const GROSZE_W_ZLOTYM = 100
 /** @type {Readonly<Record<string, string>>} */
 const NAZWY_JEDNOSTEK = Object.freeze({ m2: 'm²', szt: 'szt.' })
 const DZIEN_ISO = /^(\d{4})-(\d{2})-(\d{2})$/
-/** Termin z pola daty (RRRR-MM-DD) albo daty i godziny (RRRR-MM-DDTHH:mm, opcjonalnie z sekundami). */
-const TERMIN_ISO = /^(\d{4}-\d{2}-\d{2})(?:T([01]\d|2[0-3]):([0-5]\d)(?::[0-5]\d(?:\.\d+)?)?)?$/
 const LICZBA_DODATNIA = /^\d+(\.\d+)?$/
 const ODSTEPY = /[\s  ]/g
 

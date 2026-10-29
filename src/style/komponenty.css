@@ -766,10 +766,6 @@
   color: var(--sukces-tekst);
 }
 
-.pigulka--wykonana {
-  background: var(--status-wykonana-tlo);
-}
-
 /* Ekran startowy: kafle wycen, karta miesiaca, sekcja „Do zrobienia” */
 .kafle {
   display: flex;
@@ -1852,96 +1848,10 @@ span.wiersz-pozycji__nazwa {
   font-weight: 700;
 }
 
-/* Zakonczenie zlecenia i lista „Plan a fakt” (src/widoki/zakonczenie.js, ustawienia-tempo.js, podsumowanie.js; makiety
-   zakonczenie-zlecenia, ustawienia-firmy). Dlugosc paska z wlasciwosci --dlugosc ustawianej w JS przez CSSOM. */
-.zakonczenie__statusy {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.zakonczenie__statusy .pigulka {
-  padding: 4px 10px;
-  font-size: var(--tekst-maly);
-}
-
-.zakonczenie__strzalka {
-  width: 18px;
-  height: 18px;
-  color: var(--tekst-trzeci);
-  transform: scaleX(-1);
-}
-
-.licznik-czasu .licznik__wartosc {
-  font-size: 26px;
-}
-
+/* Jednostka w liczniku (src/ui/komponenty/formularz.js) i lista „Plan a fakt” (ustawienia-tempo.js, podsumowanie.js;
+   makieta ustawienia-firmy). */
 .licznik__jednostka {
   margin-right: 4px;
-}
-
-.zakonczenie__notka {
-  margin-top: -4px;
-  font-size: var(--tekst-maly);
-  color: var(--tekst-drugi);
-}
-
-.zakonczenie__karty {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.zakonczenie__karty:empty {
-  display: none;
-}
-
-.plan-fakt__wiersz {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 6px;
-  font-size: var(--tekst-podstawowy);
-  color: var(--tekst-drugi);
-}
-
-.plan-fakt__wiersz .liczba {
-  font-weight: 700;
-  color: var(--tekst-glowny);
-}
-
-.plan-fakt__tor {
-  height: 8px;
-  margin-top: 4px;
-}
-
-.plan-fakt__pasek {
-  width: var(--dlugosc, 100%);
-  height: 100%;
-  border-radius: 4px;
-}
-
-.plan-fakt__pasek--plan {
-  background: var(--linia-obrys);
-}
-
-.plan-fakt__pasek--fakt {
-  background: var(--marka-zielen);
-}
-
-.plan-fakt__pasek--dluzej {
-  background: var(--uwaga-tekst);
-}
-
-.plan-fakt__zdanie {
-  margin-top: 10px;
-  font-size: var(--tekst-podstawowy);
-  font-weight: 600;
-  text-wrap: pretty;
-}
-
-.plan-fakt__zdanie--dluzej {
-  color: var(--uwaga-tekst);
 }
 
 .plan-fakt-ustawienia {
@@ -1975,11 +1885,6 @@ span.wiersz-pozycji__nazwa {
 
 .karta--bez-odstepu > .plan-fakt-lista {
   padding: 0 14px 4px;
-}
-
-.licznik-czasu .licznik__wejscie {
-  min-width: 1ch;
-  text-align: right;
 }
 
 /* Szybka wycena (makieta szybka-wycena): pole „Usługa”, pola formularza, AGD, wiersz pytan i karta wyniku */

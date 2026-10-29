@@ -38,19 +38,19 @@
     linie: [praca('Sprzątanie biur i lokali usługowych – Abonament 1× w tygodniu', 2.7562500000000005, 179.15625000000003, 165.37500000000003)],
     podstawaCeny: 'netto', wizytWMiesiacu: 4.33 })
   const wyceny = [
-    { id: 'e2e-wycena-biuro', dzien: -16, status: 'przyjeta', klient: { nazwa: 'Biuro Rachunkowe Lis', adres: ADRES_BIURA },
+    { id: 'e2e-wycena-biuro', dzien: -16, status: 'przyjeta', klientId: 'e2e-klient-biuro', klient: { nazwa: 'Biuro Rachunkowe Lis', adres: ADRES_BIURA },
       wejscie: wejscie('sprzatanie_biur', { wariantId: 'abonament_1', pomieszczenia: [{ typ: 'biuro', m2: 90 }, { typ: 'sala', m2: 22.5 },
         { typ: 'kuchnia_socjalna', m2: 9 }, { typ: 'toaleta', m2: 7.5 }, { typ: 'korytarz', m2: 21 }] }), wynik: WYNIK_BIURA },
-    { id: 'e2e-wycena-mieszkanie', dzien: -4, status: 'przyjeta', klient: { nazwa: 'Anna Kowalska', adres: ADRES_ANNY },
+    { id: 'e2e-wycena-mieszkanie', dzien: -4, status: 'przyjeta', klientId: 'e2e-klient-anna', klient: { nazwa: 'Anna Kowalska', adres: ADRES_ANNY },
       wejscie: wejscie('mieszkanie_standard', { pomieszczenia: [{ typ: 'pokoj', m2: 32 }, { typ: 'przedpokoj', m2: 6 }, { typ: 'kuchnia', m2: 8 },
         { typ: 'lazienka', m2: 4 }] }),
       wynik: migawka(250, { widelki: { od: 120.0264, do: 450.09900000000005, pelne: true }, minutyNormowe: 230.82,
         linie: [praca('Mieszkanie lub dom – sprzątanie standardowe', 3.847, 250.055, 230.82)] }) },
-    { id: 'e2e-wycena-tapicerka', dzien: -3, status: 'wyslana', klient: { nazwa: 'Anna Kowalska', adres: ADRES_ANNY },
+    { id: 'e2e-wycena-tapicerka', dzien: -3, status: 'wyslana', klientId: 'e2e-klient-anna', klient: { nazwa: 'Anna Kowalska', adres: ADRES_ANNY },
       wejscie: wejscie('tapicerka', { pozycje: [{ id: 'kanapa_3', ilosc: 1 }] }),
       wynik: migawka(150, { widelki: { od: 150, do: 240, pelne: true }, minutyNormowe: 90,
         linie: [pozycja('tapicerka.kanapa_3', 'Kanapa 3-osobowa', 1, 150, [60, 240], 60)] }) },
-    { id: 'e2e-wycena-okna', dzien: -2, status: 'do_wyslania', klient: { nazwa: 'Jan Nowak', adres: '' },
+    { id: 'e2e-wycena-okna', dzien: -2, status: 'do_wyslania', klientId: 'e2e-klient-jan', klient: { nazwa: 'Jan Nowak', adres: '' },
       wejscie: wejscie('okna', { pozycje: [{ id: 'okno_1', ilosc: 6 }] }),
       wynik: migawka(180, { widelki: { od: 150, do: 420, pelne: true }, minutyNormowe: 120,
         linie: [pozycja('okna.okno_1', 'Okno 1-skrzydłowe', 6, 30, [60, 420], 90)] }) },
@@ -63,7 +63,7 @@
     const numer = `${licznikNumerow[mies]}/${mies.slice(5, 7)}/${mies.slice(0, 4)}`
     const wyslana = w.status === 'do_wyslania' ? null : iso(n, 11)
     return { ...w, numer, utworzona: iso(n, 10), zmieniona: wyslana ?? iso(n, 10), rodzaj: 'dokladna', klient: { ...w.klient, termin: null },
-      szybka: null, odpowiedzi: {}, cenaReczna: null, wykonania: [],
+      szybka: null, odpowiedzi: {}, cenaReczna: null,
       oferta: { zakres: null, warunki: null, waznaDo: null, wyslana, nieaktualna: false } }
   })
 

@@ -55,7 +55,8 @@ export const widokUstawien = {
     function rysuj(fokus) {
       const stan = wczytajStan(magazyn)
       /** @type {DaneSekcji} */
-      const dane = { ustawienia: stan.ustawienia ?? ustawieniaDomyslne(domyslne), katalog, domyslne, wyceny: stan.wyceny, zapisz }
+      const dane = { ustawienia: stan.ustawienia ?? ustawieniaDomyslne(domyslne), katalog, domyslne, wyceny: stan.wyceny,
+        zlecenia: stan.zlecenia, zapisz }
       const daneOferty = { ustawienia: dane.ustawienia, katalog, domyslne, magazyn, wykonaj }
       tresc.replaceChildren(kartaFirmy(dane), kartaRynku(dane), kartaTempa(dane), kartaKosztow(dane), kartaZakresowUstawien(daneOferty),
         kartaWarunkowUstawien(daneOferty), kartaKopii(stan, new Date()))

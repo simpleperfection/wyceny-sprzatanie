@@ -62,12 +62,14 @@ function pokazBlad(kontener, tekst) {
 
 /**
  * Magazyn ze stanem odczytanym przy starcie; null, gdy przegladarka blokuje localStorage (SecurityError przy zablokowanych
- * danych witryn).
+ * danych witryn). Dane starszej wersji zapisuja sie raz w biezacej wersji (bez oznaczania zmiany do kopii); brak miejsca nie
+ * blokuje startu, bo aktualizacja dziala tez przy kazdym odczycie.
  * @returns {{ magazyn: Magazyn, wynik: WynikWczytania } | null}
  */
 function otworzMagazyn() {
   try {
     const magazyn = utworzMagazyn()
+    magazyn.utrwalAktualizacje()
     return { magazyn, wynik: magazyn.wczytaj() }
   } catch (blad) {
     if (!(blad instanceof DOMException) || blad.name !== 'SecurityError') throw blad

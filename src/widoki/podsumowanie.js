@@ -1,20 +1,21 @@
 // Podsumowanie wyceny (makieta podsumowanie-wyceny), dwa tryby: krok `cena` kreatora (`#/kreator/cena?wycena=<id>`) z paskiem
 // postepu i „Zapisz” (arkusz z polem klienta → zapiszWycene: status `do_wyslania`, numer, przejscie do `#/wycena/<id>`) oraz
 // zapisana wycena (`#/wycena/<id>`) z akcjami wg statusu (Przygotuj ofertę, Edytuj, Klient przyjął, Klient zrezygnował, Usuń wycenę). Oba maja
-// te same karty (src/widoki/podsumowanie-karty.js), reczna cene i baner „Przelicz”; wykonana wycena jest tylko do odczytu.
+// te same karty (src/widoki/podsumowanie-karty.js), reczna cene i baner „Przelicz”; wycena ze zleceniem jest tylko do odczytu.
 // Liczy src/kreator/podsumowanie.js, zapisuje src/dane/wyceny.js; widok tylko rysuje.
 
 import { wczytajStan } from '../dane/magazyn.js'
 import { BladWyceny, czyStatusOferty, usunWycene, wycena as znajdzWycene, zapiszWycene, zmienStatus } from '../dane/wyceny.js'
+import { czyWycenaZamknieta, zleceniaWyceny } from '../dane/zlecenia.js'
 import { akcjeWyceny, przeliczWycene, widokPodsumowania } from '../kreator/podsumowanie.js'
 import { KROKI_KREATORA } from '../kreator/stan.js'
-import { historiaPlanuIFaktu } from '../kreator/zakonczenie.js'
 import { czas, data, procent, zl } from '../ui/format.js'
 import { h } from '../ui/h.js'
 import { pole, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
 import { arkusz, baner, dialogPotwierdzenia, karta, naglowek, pasekPostepu } from '../ui/komponenty/uklad.js'
 import { ETYKIETY_STATUSOW, pigulkaStatusu } from '../ui/statusy.js'
 import { sciezka } from '../ui/trasy.js'
+import { historiaPlanuIFaktu } from '../zlecenia/plan-fakt.js'
 import { adresKroku, wycenaKroku, zglosBladKreatora } from './kreator-wspolne.js'
 import { banery, kartaCeny, kartaKosztow, kartaRynku, kartaZostaje, notkaPropozycji, otworzEdycjeCeny } from './podsumowanie-karty.js'
 
@@ -81,9 +82,13 @@ function przyciskAkcji(w, akcja, { naStatus, naUsun }) {
   return usun
 }
 
-/** @param {Wycena} w @returns {HTMLElement | null} wpisy czasu pracy (wykonana wycena, wizyty abonamentu), od najnowszego */
-function kartaWpisowCzasu(w) {
-  const wpisy = historiaPlanuIFaktu([w])
+/**
+ * @param {Wycena} w @param {Kontekst} kontekst
+ * @returns {HTMLElement | null} wpisy czasu pracy wizyt zlecen z tej wyceny, od najnowszego
+ */
+function kartaWpisowCzasu(w, { magazyn, katalog }) {
+  const stan = wczytajStan(magazyn)
+  const wpisy = historiaPlanuIFaktu({ ...stan, zlecenia: zleceniaWyceny(stan, w.id) }, katalog)
   if (wpisy.length === 0) return null
   return karta({ tytul: 'Wpisany czas pracy', klasa: 'karta--bez-odstepu' }, h('ul', { class: 'plan-fakt-lista' },
     wpisy.map((x) => h('li', { class: 'plan-fakt-lista__wiersz liczba' },
@@ -91,28 +96,28 @@ function kartaWpisowCzasu(w) {
 }
 
 /**
- * @param {Wycena} w @param {ObslugaAkcji} obsluga
- * @returns {HTMLElement[]} „Wpisz czas pracy” przy przyjetej, „Przygotuj ofertę” (glowny przy wycenie do wysłania), potem akcje wg statusu
+ * @param {Wycena} w @param {boolean} czyZamknieta wycena ze zleceniem: bez oferty i edycji @param {ObslugaAkcji} obsluga
+ * @returns {HTMLElement[]} „Przygotuj ofertę” (glowny przy wycenie do wysłania), potem akcje wg statusu
  */
-function akcjeZapisanej(w, obsluga) {
-  const wpisCzasu = w.status === 'przyjeta' ? [przycisk({ tekst: 'Wpisz czas pracy', adres: sciezka('zakonczenie', { id: w.id }) })] : []
-  const oferta = czyStatusOferty(w.status)
+function akcjeZapisanej(w, czyZamknieta, obsluga) {
+  const oferta = czyStatusOferty(w.status) && !czyZamknieta
     ? [przycisk({ tekst: 'Przygotuj ofertę', rodzaj: w.status === 'do_wyslania' ? 'glowny' : 'drugi', ikona: 'file-text', adres: sciezka('oferta', { id: w.id }) })]
     : []
-  return [...wpisCzasu, ...oferta, ...akcjeWyceny(w.status).map((a) => przyciskAkcji(w, a, obsluga))]
+  return [...oferta, ...akcjeWyceny(w.status, czyZamknieta).map((a) => przyciskAkcji(w, a, obsluga))]
 }
 
 /**
  * Karty podsumowania; wycena bez ceny albo z migawka, ktorej nie da sie policzyc z biezacymi danymi — komunikat.
- * @param {Wycena} w @param {Kontekst} kontekst @param {TrybPodsumowania} tryb @param {ObslugaKart} obsluga
+ * @param {Wycena} w @param {Kontekst} kontekst @param {TrybPodsumowania} tryb @param {boolean} czyZamknieta wycena ze zleceniem
+ *   (bez „Przelicz” i „Zmień”) @param {ObslugaKart} obsluga
  * @returns {Node[]}
  */
-function karty(w, kontekst, tryb, { naPrzelicz, naZmien }) {
+function karty(w, kontekst, tryb, czyZamknieta, { naPrzelicz, naZmien }) {
   if (w.wynik === null) {
     return bezPustych([baner({ rodzaj: 'info', tekst: BRAK_CENY }),
       tryb === 'kreator' ? przycisk({ tekst: 'Przejdź do zakresu', rodzaj: 'drugi', adres: adresKroku('zakres', w.id) }) : null])
   }
-  const czyEdytowalna = w.status !== 'wykonana'
+  const czyEdytowalna = !czyZamknieta
   try {
     const widok = widokPodsumowania(w, kontekst)
     return bezPustych([...banery(widok.ostrzezenia, czyEdytowalna ? naPrzelicz : null),
@@ -125,11 +130,11 @@ function karty(w, kontekst, tryb, { naPrzelicz, naZmien }) {
 
 /**
  * Naglowek, pasek postepu (kreator), status (zapisana), region komunikatu, karty, akcje albo stopka z „Zapisz”.
- * @param {{ w: Wycena, kontekst: Kontekst, tryb: TrybPodsumowania, komunikat: OpcjeBanera | null, obslugaKart: ObslugaKart,
- *   obslugaAkcji: ObslugaAkcji }} opcje
+ * @param {{ w: Wycena, czyZamknieta: boolean, kontekst: Kontekst, tryb: TrybPodsumowania, komunikat: OpcjeBanera | null,
+ *   obslugaKart: ObslugaKart, obslugaAkcji: ObslugaAkcji }} opcje
  * @returns {Node[]}
  */
-function elementyEkranu({ w, kontekst, tryb, komunikat, obslugaKart, obslugaAkcji }) {
+function elementyEkranu({ w, czyZamknieta, kontekst, tryb, komunikat, obslugaKart, obslugaAkcji }) {
   const czyKreator = tryb === 'kreator'
   return bezPustych([
     naglowek({ tytul: 'Podsumowanie', podtytul: podtytul(w), wstecz: czyKreator ? adresKroku('chemia', w.id) : sciezka('wyceny') }),
@@ -137,9 +142,9 @@ function elementyEkranu({ w, kontekst, tryb, komunikat, obslugaKart, obslugaAkcj
     h('div', { class: 'tresc podsumowanie' },
       czyKreator ? null : h('div', { class: 'podsumowanie__status' }, pigulkaStatusu(w.status)),
       h('div', { class: 'podsumowanie__komunikat', 'aria-live': 'polite', tabIndex: -1 }, komunikat ? baner(komunikat) : null),
-      karty(w, kontekst, tryb, obslugaKart),
-      czyKreator ? null : kartaWpisowCzasu(w),
-      czyKreator ? null : h('div', { class: 'podsumowanie__akcje' }, akcjeZapisanej(w, obslugaAkcji))),
+      karty(w, kontekst, tryb, czyZamknieta, obslugaKart),
+      czyKreator ? null : kartaWpisowCzasu(w, kontekst),
+      czyKreator ? null : h('div', { class: 'podsumowanie__akcje' }, akcjeZapisanej(w, czyZamknieta, obslugaAkcji))),
     czyKreator ? h('div', { class: 'stopka-kreatora' }, przycisk({ tekst: 'Zapisz', naKlik: () => otworzZapis(kontekst, w) })) : null,
   ])
 }
@@ -204,9 +209,11 @@ function uruchomPodsumowanie(kontener, kontekst, id, tryb) {
   /** @param {string} [fokus] selektor elementu do fokusu po narysowaniu */
   function rysuj(fokus) {
     if (!czyAktywny) return
-    const w = znajdzWycene(wczytajStan(magazyn), id)
+    const stan = wczytajStan(magazyn)
+    const w = znajdzWycene(stan, id)
     if (!w) return pokazBrak(kontener)
-    kontener.replaceChildren(...elementyEkranu({ w, kontekst, tryb, komunikat, obslugaKart, obslugaAkcji }))
+    const czyZamknieta = czyWycenaZamknieta(stan, id)
+    kontener.replaceChildren(...elementyEkranu({ w, czyZamknieta, kontekst, tryb, komunikat, obslugaKart, obslugaAkcji }))
     const element = fokus ? kontener.querySelector(fokus) : null
     if (element instanceof HTMLElement) element.focus()
   }
@@ -223,7 +230,7 @@ function pokazBrak(kontener) {
       przycisk({ tekst: 'Wróć do listy wycen', rodzaj: 'drugi', adres: sciezka('wyceny') })))
 }
 
-/** Krok `cena` kreatora; brak wyceny albo wycena wykonana — komunikat z wycenaKroku. @type {Widok} */
+/** Krok `cena` kreatora; brak wyceny albo wycena ze zleceniem — komunikat z wycenaKroku. @type {Widok} */
 export const widokPodsumowaniaKreatora = {
   render(kontener, { zapytanie, kontekst }) {
     const wycena = wycenaKroku(kontener, zapytanie, kontekst)

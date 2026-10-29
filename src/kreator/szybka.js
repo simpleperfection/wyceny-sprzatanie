@@ -12,6 +12,7 @@ import { poziomGornejGranicy, regulyBrudu, zastosujOdpowiedzi } from '../silnik/
 import { naDokladna, STAN_DOMYSLNY_SZYBKIEJ, STANY_SZYBKIEJ, szybkaWycena } from '../silnik/szybka.js'
 import { tempoDoWyceny } from '../silnik/tempo.js'
 import { domyslneLazienki } from '../silnik/uklad.js'
+import { daneTempa } from '../zlecenia/dane-tempa.js'
 import { METRAZ_WZORCOWY } from './podpowiedzi.js'
 import { dodajPomieszczenie, opisPrzeniesienia, zmienNazwe } from './pomieszczenia.js'
 import { pozycjeGlowne, zapiszZmianyWyceny } from './stan.js'
@@ -134,7 +135,7 @@ export function kontekstSzybkiej(kontekst, uslugaId) {
   const ustawienia = stan.ustawienia ?? ustawieniaDomyslne(domyslne)
   return {
     katalog, statusVat: ustawienia.statusVat, stawkaVatProc: domyslne.stawka_vat_proc,
-    tempo: tempoDoWyceny(stan.ustawienia, stan.wyceny, uslugaId, domyslne).wartosc, koszty: scalKoszty(katalog.kosztyFirmy, stan.ustawienia),
+    tempo: tempoDoWyceny(stan.ustawienia, daneTempa(stan), uslugaId, domyslne).wartosc, koszty: scalKoszty(katalog.kosztyFirmy, stan.ustawienia),
     zastrzezenie: domyslne.szybka_wycena.zastrzezenie,
   }
 }

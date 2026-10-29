@@ -5,7 +5,7 @@
 import { jestGodzina, porownajDni } from '../kalendarz/daty.js'
 import { okresDnia } from '../kalendarz/wystapienia.js'
 import { jestDniem, jestId, jestKwota, jestLiczba, jestObiektem } from './ksztalt.js'
-import { czyAbonament, wycena } from './wyceny.js'
+import { czyAbonament, czyWycenaZamknieta, wycena } from './wyceny.js'
 import { DLUGOSC_OPISU, jestZlecenie, MAKS_WIZYT_ZLECENIA, MAKS_ZLECEN, ROZLICZENIA } from './zlecenia-ksztalt.js'
 
 /**
@@ -56,11 +56,8 @@ export const zleceniaWyceny = (stan, wycenaId) => stan.zlecenia.filter((z) => z.
 /** Seria (okresy z cyklem), a nie zlecenie jednorazowe. @param {Pick<Zlecenie, 'okresy'>} z @returns {boolean} */
 export const czySeria = (z) => z.okresy[0].cykl !== null
 
-/**
- * Wycena z co najmniej jednym zleceniem jest tylko do odczytu.
- * @param {Pick<Stan, 'zlecenia'>} stan @param {string} wycenaId @returns {boolean}
- */
-export const czyWycenaZamknieta = (stan, wycenaId) => stan.zlecenia.some((z) => z.wycenaId === wycenaId)
+/** Wycena z co najmniej jednym zleceniem jest tylko do odczytu; regula mieszka przy zapisie wycen, ktory ja egzekwuje. */
+export { czyWycenaZamknieta }
 
 /**
  * „Do zaplanowania”: przyjeta wycena bez zlecenia, a abonament (czyAbonament) — bez zlecenia z cyklem.

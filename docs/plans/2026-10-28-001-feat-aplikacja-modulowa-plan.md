@@ -382,7 +382,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 
 **Zależy od:** Faza 1
 
-- [ ] **IU-5: Tempo i „plan a fakt” z wizyt, bez ekranu zakończenia**
+- [x] **IU-5: Tempo i „plan a fakt” z wizyt, bez ekranu zakończenia**
 
 **Cel:** Własne tempo i lista „plan a fakt” liczą się z wizyt zleceń, a ekran zakończenia zlecenia przy wycenie znika.
 
@@ -416,7 +416,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 **Skills in play:** tailwind-react-guidelines, ux-ui-guidelines, supabase-dev-guidelines, security, sentry-integration
 
 **Podejście:**
-- `src/zlecenia/plan-fakt.js`: `daneTempa(stan)` → tablica w kształcie `WycenaTempa` dla `src/silnik/tempo.js` (silnik bez zmian): jeden element na zlecenie z `plan` i co najmniej jedną wizytą z `minutyPracy`; `wejscie.uslugaId` = `zlecenie.uslugaId`, `wynik.minutyNormowe` = `plan.minutyNormowe`, `wykonania` = wizyty z czasem pracy `{ id: '<id zlecenia>:<data pierwotna>', data: dzień wizyty (przesunięty albo pierwotny), minuty }` w kolejności dni, a w tym samym dniu według `zrobiona` (kolejność decyduje o oknie 10 wpisów). Zlecenia bez planu nie liczą się do tempa (R15: tylko wizyty z czasem pracy i planem z wyceny).
+- `src/zlecenia/plan-fakt.js` (korekta po fazie 2: `daneTempa` i `idWpisuWizyty` są w `src/zlecenia/dane-tempa.js`, bo plan-fakt.js importuje `src/kreator/podsumowanie.js`, który potrzebuje `daneTempa` — wspólny plik dałby cykl importów): `daneTempa(stan)` → tablica w kształcie `WycenaTempa` dla `src/silnik/tempo.js` (silnik bez zmian): jeden element na zlecenie z `plan` i co najmniej jedną wizytą z `minutyPracy`; `wejscie.uslugaId` = `zlecenie.uslugaId`, `wynik.minutyNormowe` = `plan.minutyNormowe`, `wykonania` = wizyty z czasem pracy `{ id: '<id zlecenia>:<data pierwotna>', data: dzień wizyty (przesunięty albo pierwotny), minuty }` w kolejności dni, a w tym samym dniu według `zrobiona` (kolejność decyduje o oknie 10 wpisów). Zlecenia bez planu nie liczą się do tempa (R15: tylko wizyty z czasem pracy i planem z wyceny).
 - Do `plan-fakt.js` przechodzą z `src/kreator/zakonczenie.js`: `historiaPlanuIFaktu` (liczona z wizyt, tempo planu = `plan.tempo` zlecenia), `czasStartowy`, `planZakonczenia`, `poprawnyCzas`, `KROK_CZASU = 15` (źródło stałej; użyje ich ekran wizyty w IU-17). Funkcji bez użytkownika po usunięciu ekranu nie przenosisz.
 - Wywołania `tempoDoWyceny` / `tempoWlasne` / `historiaPlanuIFaktu` w `src/kreator/podsumowanie.js`, `src/kreator/szybka.js`, `src/widoki/kreator-pomieszczenia.js`, `src/widoki/start.js`, `src/widoki/ustawienia-tempo.js`, `src/widoki/podsumowanie.js` dostają `daneTempa(stan)` zamiast `stan.wyceny`. Do migracji danych (IU-6) tempo liczy się z pustej listy zleceń — stan przejściowy w obrębie fazy.
 - Ekran `#/wycena/:id/koniec` znika: trasa `zakonczenie` z `TRASY`, widok z `WIDOKI`, przycisk „Wpisz czas pracy” z podsumowania zapisanej wyceny i sekcja CSS ekranu zakończenia (zostaje część używana przez listę „Plan a fakt”). Czas pracy wpisuje się odtąd przy wizycie (IU-17); stary adres pokazuje „Nie ma takiego ekranu.”.
@@ -437,7 +437,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 - `npm run typecheck` przechodzi bez błędów
 - `grep -rn "kreator/zakonczenie\|widokZakonczeniaZlecenia\|'zakonczenie'" src/` nie zwraca wyników
 
-- [ ] **IU-6: Wycena v2 i przeniesienie danych z wersji 1**
+- [x] **IU-6: Wycena v2 i przeniesienie danych z wersji 1**
 
 **Cel:** Wycena bez statusu „wykonana” i bez wykonań, z klientem z listy, oraz migracja danych v1: klienci z nazw, wykonania i przyjęte wyceny jako zlecenia.
 
@@ -509,9 +509,9 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 - `node --test src/dane/migracja-v2.test.js src/dane/wyceny.test.js src/dane/wyceny-statusy.test.js src/dane/magazyn.test.js` przechodzi
 - `npm test` przechodzi (w tym `src/dane/kopia.test.js` z `tests/fixtures/kopia-v1.json`)
 - `npm run typecheck` przechodzi bez błędów
-- `grep -rn "wykonana\|wykonania\|dodajWykonanie" src/ --include=*.js` zwraca tylko `src/dane/migracja-v2.js` i jego test
+- `grep -rn "wykonana\|wykonania\|dodajWykonanie" src/ --include=*.js` zwraca tylko `src/dane/migracja-v2.js` i jego test (korekta po fazie 2: trafiają też testy odmowy statusu „wykonana” w stanie v2 oraz kontrakt silnika tempa `WycenaTempa.wykonania` w `src/silnik/tempo.js`, `src/zlecenia/dane-tempa.js` i ich testach, bo silnik tempa zostaje bez zmian)
 
-- [ ] **IU-7: Kopia zapasowa v2 i ekran ratunkowy**
+- [x] **IU-7: Kopia zapasowa v2 i ekran ratunkowy**
 
 **Cel:** Kopia obejmuje klientów i zlecenia z tymi samymi strażnikami co magazyn, łączy je po id, a ekran ratunkowy pyta przed zastąpieniem danych.
 

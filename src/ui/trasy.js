@@ -7,7 +7,6 @@ export const TRASY = Object.freeze({
   szybka: '#/szybka',
   kreator: '#/kreator/:krok',
   wycena: '#/wycena/:id',
-  zakonczenie: '#/wycena/:id/koniec',
   oferta: '#/wycena/:id/oferta',
   pytania: '#/wycena/:id/pytania',
   ustawienia: '#/ustawienia',

@@ -96,26 +96,26 @@ Zależy od: Faza 1
 
 ### IU-5: Tempo i „plan a fakt” z wizyt, bez ekranu zakończenia (feature-builder-fullstack)
 
-- [ ] Stwórz: `src/zlecenia/plan-fakt.js`
-- [ ] Test (unit): `src/zlecenia/plan-fakt.test.js`
-- [ ] Usuń: `src/kreator/zakonczenie.js`
-- [ ] Usuń: `src/kreator/zakonczenie.test.js`
-- [ ] Usuń: `src/widoki/zakonczenie.js`
-- [ ] Usuń: `src/widoki/zakonczenie.test.js`
-- [ ] Modyfikuj: `src/widoki/indeks.js`
-- [ ] Modyfikuj: `src/ui/trasy.js`
-- [ ] Modyfikuj: `src/ui/router.test.js`
-- [ ] Modyfikuj: `src/kreator/podsumowanie.js`
-- [ ] Modyfikuj: `src/kreator/szybka.js`
-- [ ] Modyfikuj: `src/widoki/kreator-pomieszczenia.js`
-- [ ] Modyfikuj: `src/widoki/start.js`
-- [ ] Modyfikuj: `src/widoki/ustawienia-tempo.js`
-- [ ] Modyfikuj: `src/widoki/podsumowanie.js`
-- [ ] Modyfikuj: `src/style/komponenty.css`
-- [ ] Test: [Unit] `daneTempa` dla dwóch zleceń z planem (wizyty z czasem 270 i 300 min) i zlecenia ręcznego bez planu daje dwa elementy; `tempoWlasne` z trzech wizyt usługi `mieszkanie_standard` daje medianę stosunków czasu do minut normowych
-- [ ] Test: [Unit] dwie wizyty z czasem w tym samym dniu są w kolejności `zrobiona`
-- [ ] Test: [Unit] `historiaPlanuIFaktu` z wizyt pokazuje plan z `plan.tempo`, fakt i realną stawkę (przypadki przeniesione z `src/kreator/zakonczenie.test.js`)
-- [ ] Test: [Unit] `dopasuj('#/wycena/abc/koniec', TRASY)` zwraca null
+- [x] Stwórz: `src/zlecenia/plan-fakt.js`
+- [x] Test (unit): `src/zlecenia/plan-fakt.test.js`
+- [x] Usuń: `src/kreator/zakonczenie.js`
+- [x] Usuń: `src/kreator/zakonczenie.test.js`
+- [x] Usuń: `src/widoki/zakonczenie.js`
+- [x] Usuń: `src/widoki/zakonczenie.test.js`
+- [x] Modyfikuj: `src/widoki/indeks.js`
+- [x] Modyfikuj: `src/ui/trasy.js`
+- [x] Modyfikuj: `src/ui/router.test.js`
+- [x] Modyfikuj: `src/kreator/podsumowanie.js`
+- [x] Modyfikuj: `src/kreator/szybka.js`
+- [x] Modyfikuj: `src/widoki/kreator-pomieszczenia.js`
+- [x] Modyfikuj: `src/widoki/start.js`
+- [x] Modyfikuj: `src/widoki/ustawienia-tempo.js`
+- [x] Modyfikuj: `src/widoki/podsumowanie.js`
+- [x] Modyfikuj: `src/style/komponenty.css`
+- [x] Test: [Unit] `daneTempa` dla dwóch zleceń z planem (wizyty z czasem 270 i 300 min) i zlecenia ręcznego bez planu daje dwa elementy; `tempoWlasne` z trzech wizyt usługi `mieszkanie_standard` daje medianę stosunków czasu do minut normowych
+- [x] Test: [Unit] dwie wizyty z czasem w tym samym dniu są w kolejności `zrobiona`
+- [x] Test: [Unit] `historiaPlanuIFaktu` z wizyt pokazuje plan z `plan.tempo`, fakt i realną stawkę (przypadki przeniesione z `src/kreator/zakonczenie.test.js`)
+- [x] Test: [Unit] `dopasuj('#/wycena/abc/koniec', TRASY)` zwraca null
 - [ ] Weryfikacja: `node --test src/zlecenia/plan-fakt.test.js src/ui/router.test.js` przechodzi
 - [ ] Weryfikacja: `npm test` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
@@ -123,39 +123,39 @@ Zależy od: Faza 1
 
 ### IU-6: Wycena v2 i przeniesienie danych z wersji 1 (feature-builder-fullstack)
 
-- [ ] Modyfikuj: `src/dane/migracja-v2.js`
-- [ ] Test (unit): `src/dane/migracja-v2.test.js`
-- [ ] Stwórz: `tests/fixtures/stan-v1-pelny.json`
-- [ ] Modyfikuj: `src/dane/wyceny.js`
-- [ ] Modyfikuj: `src/dane/wyceny.test.js`
-- [ ] Stwórz: `src/dane/wyceny-statusy.test.js`
-- [ ] Modyfikuj: `src/dane/magazyn.js`
-- [ ] Modyfikuj: `src/dane/magazyn.test.js`
-- [ ] Modyfikuj: `src/dane/ksztalt.js`
-- [ ] Modyfikuj: `src/dane/kopia.js`
-- [ ] Modyfikuj: `src/app.js`
-- [ ] Modyfikuj: `src/ui/format.js`
-- [ ] Modyfikuj: `src/ui/statusy.js`
-- [ ] Modyfikuj: `src/kreator/podsumowanie.js`
-- [ ] Modyfikuj: `src/kreator/podsumowanie.test.js`
-- [ ] Modyfikuj: `src/kreator/stan.js`
-- [ ] Modyfikuj: `src/kreator/stan.test.js`
-- [ ] Modyfikuj: `src/widoki/kreator-wspolne.js`
-- [ ] Modyfikuj: `src/widoki/podsumowanie.js`
-- [ ] Modyfikuj: `src/widoki/pytania.js`
-- [ ] Modyfikuj: `src/widoki/szybka.js`
-- [ ] Modyfikuj: `src/widoki/start-dane.js`
-- [ ] Modyfikuj: `src/widoki/start-dane.test.js`
-- [ ] Modyfikuj: `src/style/komponenty.css`
-- [ ] Test: [Unit] fixture `tests/fixtures/stan-v1-pelny.json` (wykonana z jednym wykonaniem, abonament przyjęty z trzema wykonaniami, przyjęta z terminem „2026-11-14T09:00”, przyjęta z terminem „sobota rano”, szkic z nazwą „test”, wyceny „Anna Kowalska” i „anna  kowalska” z różnymi adresami, szybka bez klienta) po migracji: jeden klient Anna z adresem z nowszej wyceny, bez klienta „test”, cztery zlecenia z wykonań, jedno zlecenie na 2026-11-14 9:00, przyjęta z „sobota rano” i abonament w `doZaplanowania`
-- [ ] Test: [Unit] migracja dwa razy daje równe stany, a wynik przechodzi `jestStanem`
-- [ ] Test: [Unit] tempo przed migracją (wartość zapisana z charakteryzacji) = `tempoWlasne(daneTempa(stanPoMigracji))`
-- [ ] Test: [Unit] wizyty z migracji są zrobione, zapłacone z formą null i kwotą wyceny (cena ręczna wygrywa)
-- [ ] Test: [Unit] przejście `przyjeta → odrzucona` dozwolone; status `wykonana` w stanie v2 odrzuca `jestWycena`
-- [ ] Test: [Unit] `przypiszKlienta` kopiuje nazwę i adres; po wysłaniu oferty ustawia „nieaktualna”
-- [ ] Test: [Unit] `usunWycene` zeruje `wycenaId` w zleceniu, zlecenie zostaje
-- [ ] Test: [Unit] zapis wejścia wyceny ze zleceniem rzuca `tylko_odczyt`
-- [ ] Test: [Unit] stan z localStorage w wersji 1 zostaje zapisany jako wersja 2 przy starcie, a `kopia.zmianaOd` się nie zmienia
+- [x] Modyfikuj: `src/dane/migracja-v2.js`
+- [x] Test (unit): `src/dane/migracja-v2.test.js`
+- [x] Stwórz: `tests/fixtures/stan-v1-pelny.json`
+- [x] Modyfikuj: `src/dane/wyceny.js`
+- [x] Modyfikuj: `src/dane/wyceny.test.js`
+- [x] Stwórz: `src/dane/wyceny-statusy.test.js`
+- [x] Modyfikuj: `src/dane/magazyn.js`
+- [x] Modyfikuj: `src/dane/magazyn.test.js`
+- [x] Modyfikuj: `src/dane/ksztalt.js`
+- [x] Modyfikuj: `src/dane/kopia.js`
+- [x] Modyfikuj: `src/app.js`
+- [x] Modyfikuj: `src/ui/format.js`
+- [x] Modyfikuj: `src/ui/statusy.js`
+- [x] Modyfikuj: `src/kreator/podsumowanie.js`
+- [x] Modyfikuj: `src/kreator/podsumowanie.test.js`
+- [x] Modyfikuj: `src/kreator/stan.js`
+- [x] Modyfikuj: `src/kreator/stan.test.js`
+- [x] Modyfikuj: `src/widoki/kreator-wspolne.js`
+- [x] Modyfikuj: `src/widoki/podsumowanie.js`
+- [x] Modyfikuj: `src/widoki/pytania.js`
+- [x] Modyfikuj: `src/widoki/szybka.js`
+- [x] Modyfikuj: `src/widoki/start-dane.js`
+- [x] Modyfikuj: `src/widoki/start-dane.test.js`
+- [x] Modyfikuj: `src/style/komponenty.css`
+- [x] Test: [Unit] fixture `tests/fixtures/stan-v1-pelny.json` (wykonana z jednym wykonaniem, abonament przyjęty z trzema wykonaniami, przyjęta z terminem „2026-11-14T09:00”, przyjęta z terminem „sobota rano”, szkic z nazwą „test”, wyceny „Anna Kowalska” i „anna  kowalska” z różnymi adresami, szybka bez klienta) po migracji: jeden klient Anna z adresem z nowszej wyceny, bez klienta „test”, cztery zlecenia z wykonań, jedno zlecenie na 2026-11-14 9:00, przyjęta z „sobota rano” i abonament w `doZaplanowania`
+- [x] Test: [Unit] migracja dwa razy daje równe stany, a wynik przechodzi `jestStanem`
+- [x] Test: [Unit] tempo przed migracją (wartość zapisana z charakteryzacji) = `tempoWlasne(daneTempa(stanPoMigracji))`
+- [x] Test: [Unit] wizyty z migracji są zrobione, zapłacone z formą null i kwotą wyceny (cena ręczna wygrywa)
+- [x] Test: [Unit] przejście `przyjeta → odrzucona` dozwolone; status `wykonana` w stanie v2 odrzuca `jestWycena`
+- [x] Test: [Unit] `przypiszKlienta` kopiuje nazwę i adres; po wysłaniu oferty ustawia „nieaktualna”
+- [x] Test: [Unit] `usunWycene` zeruje `wycenaId` w zleceniu, zlecenie zostaje
+- [x] Test: [Unit] zapis wejścia wyceny ze zleceniem rzuca `tylko_odczyt`
+- [x] Test: [Unit] stan z localStorage w wersji 1 zostaje zapisany jako wersja 2 przy starcie, a `kopia.zmianaOd` się nie zmienia
 - [ ] Test: [E2E] `migracja-v1` — okno 360×800, wstrzyknij przez `agent-browser eval` treść `e2e/stany/wyceny-do-zrobienia.json` (stan v1) do `localStorage['wyceny-sprzatanie:stan']`, otwórz http://localhost:5174/#/start, potem #/wyceny, odczytaj `JSON.parse(localStorage['wyceny-sprzatanie:stan'])`, zrób screenshot → brak ekranu ratunkowego, lista ma trzy wyceny z pigułkami jak przed zmianą, zapisany stan ma `wersja: 2` i klientów z nazw wycen, konsola bez błędów
 - [ ] Weryfikacja: `node --test src/dane/migracja-v2.test.js src/dane/wyceny.test.js src/dane/wyceny-statusy.test.js src/dane/magazyn.test.js` przechodzi
 - [ ] Weryfikacja: `npm test` przechodzi (w tym `src/dane/kopia.test.js` z `tests/fixtures/kopia-v1.json`)
@@ -164,19 +164,19 @@ Zależy od: Faza 1
 
 ### IU-7: Kopia zapasowa v2 i ekran ratunkowy (feature-builder-fullstack)
 
-- [ ] Modyfikuj: `src/dane/kopia.js`
-- [ ] Modyfikuj: `src/dane/kopia.test.js`
-- [ ] Stwórz: `src/dane/kopia-v2.test.js`
-- [ ] Modyfikuj: `src/widoki/kopia-teksty.js`
-- [ ] Modyfikuj: `src/widoki/kopia-teksty.test.js`
-- [ ] Modyfikuj: `src/widoki/kopia.js`
-- [ ] Modyfikuj: `src/widoki/ratunek.js`
-- [ ] Test: [Unit] round-trip: stan v2 z klientem i serią (dwa okresy, wizyty ze stanem, zapłata miesięczna) → `utworzKopie` → `odczytajKopie` → równy stan
-- [ ] Test: [Unit] odmowa: zlecenie wskazujące nieistniejącego klienta → `uszkodzony`; 5001 klientów → `za_duzo_klientow`; zlecenie z formą `'karta'` → `uszkodzony`; eksport stanu ponad limitem odmawia tak samo jak import
-- [ ] Test: [Unit] plik `tests/fixtures/kopia-v1.json` wczytuje się jako stan v2 z klientami z nazw wycen
-- [ ] Test: [Unit] „połącz”: klient zmieniony później w pliku wygrywa; zlecenie tylko lokalne zostaje; zlecenie z pliku wchodzi razem ze swoim klientem z pliku
-- [ ] Test: [Unit] `czyPytacOTryb` = true dla stanu z samym klientem; `czyPrzypomniecOKopii` = true po 7 dniach od pierwszego zlecenia bez kopii
-- [ ] Test: [Unit] etykiety podsumowania: „1 klient”, „2 klientów”, „5 zleceń”
+- [x] Modyfikuj: `src/dane/kopia.js`
+- [x] Modyfikuj: `src/dane/kopia.test.js`
+- [x] Stwórz: `src/dane/kopia-v2.test.js`
+- [x] Modyfikuj: `src/widoki/kopia-teksty.js`
+- [x] Modyfikuj: `src/widoki/kopia-teksty.test.js`
+- [x] Modyfikuj: `src/widoki/kopia.js`
+- [x] Modyfikuj: `src/widoki/ratunek.js`
+- [x] Test: [Unit] round-trip: stan v2 z klientem i serią (dwa okresy, wizyty ze stanem, zapłata miesięczna) → `utworzKopie` → `odczytajKopie` → równy stan
+- [x] Test: [Unit] odmowa: zlecenie wskazujące nieistniejącego klienta → `uszkodzony`; 5001 klientów → `za_duzo_klientow`; zlecenie z formą `'karta'` → `uszkodzony`; eksport stanu ponad limitem odmawia tak samo jak import
+- [x] Test: [Unit] plik `tests/fixtures/kopia-v1.json` wczytuje się jako stan v2 z klientami z nazw wycen
+- [x] Test: [Unit] „połącz”: klient zmieniony później w pliku wygrywa; zlecenie tylko lokalne zostaje; zlecenie z pliku wchodzi razem ze swoim klientem z pliku
+- [x] Test: [Unit] `czyPytacOTryb` = true dla stanu z samym klientem; `czyPrzypomniecOKopii` = true po 7 dniach od pierwszego zlecenia bez kopii
+- [x] Test: [Unit] etykiety podsumowania: „1 klient”, „2 klientów”, „5 zleceń”
 - [ ] Weryfikacja: `node --test src/dane/kopia.test.js src/dane/kopia-v2.test.js src/widoki/kopia-teksty.test.js` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
