@@ -29,6 +29,8 @@ import { czasStartowy, historiaPlanuIFaktu, KROK_CZASU, planZakonczenia, poprawn
 const KURZ_1 = { id: 'kurz', poziom: 1 }
 const NORMA_MIESZKANIA_50 = 230.82
 const DOKLADNOSC_ZL = 1e-3
+/** Realna stawka wizyty 330 min mieszkania 50 m² przy cenie ręcznej 400 zł (zwolniony z VAT, mazowieckie). */
+const STAWKA_RECZNA_330 = 69.929
 
 /** @type {Katalog} */
 let katalog
@@ -258,5 +260,44 @@ describe('historiaPlanuIFaktu', () => {
 
     assert.deepEqual(historiaPlanuIFaktu(stan, katalog).map((x) => [x.zlecenieId, x.plan, x.fakt, procent(x.procent)]),
       [['z-wyc', 300, 330, '+10%']])
+  })
+})
+
+describe('poprawnyCzas: dolna granica wspólna z zapisem wizyty', () => {
+  it('0,5 min daje kod błędu jak wpiszCzasPracy, a 1 min przechodzi', () => {
+    assert.deepEqual([poprawnyCzas(0.5), poprawnyCzas(1)], ['czas_poza_zakresem', null])
+  })
+})
+
+describe('kosztPrzyTempie i stawka przy tempie', () => {
+  it('cena ręczna 400 zł podnosi „zostaje” o 400 zł minus cenę wyceny, a wiersz historii liczy stawkę z ceny ręcznej', () => {
+    const { stan, w } = stanZWycena((x) => [zlecenieRek({ id: 'z1', wycenaId: x.id, plan: planZ(x, 1.3),
+      wizyty: { '2026-10-21': wizyta({ minutyPracy: 330 }) } })])
+    const reczna = { ...w, cenaReczna: 400 }
+    const stanReczna = { ...stan, wyceny: stan.wyceny.map((x) => (x.id === w.id ? reczna : x)) }
+
+    const bez = kosztPrzyTempie(w, katalog, 1.3, stan.ustawienia)
+    const zReczna = kosztPrzyTempie(reczna, katalog, 1.3, stan.ustawienia)
+    const [wiersz] = historiaPlanuIFaktu(stanReczna, katalog)
+
+    assert.equal(zReczna.przychod, 400)
+    assertBlisko(zReczna.zostaje - bez.zostaje, 400 - (w.wynik?.cena ?? Number.NaN), DOKLADNOSC_ZL)
+    assertBlisko(wiersz?.stawka ?? Number.NaN, STAWKA_RECZNA_330, DOKLADNOSC_ZL)
+  })
+
+  it('wycena bez migawki daje BladWyceny brak_wyniku', () => {
+    const { stan, w } = stanZWycena(() => [])
+
+    assert.throws(() => kosztPrzyTempie({ ...w, wynik: null }, katalog, 1.3, stan.ustawienia), { kod: 'brak_wyniku' })
+  })
+
+  it('migawka z pozycją, której nie ma w katalogu, daje plan bez stawki zamiast błędu', () => {
+    const { stan, w } = stanZWycena((x) => [zlecenieRek({ id: 'z1', wycenaId: x.id, plan: planZ(x, 1.3) })])
+    const m = w.wynik
+    if (m === null) throw new Error('brak migawki w teście')
+    const zla = { ...w, wynik: { ...m, linie: [...m.linie, /** @type {never} */ ({ rodzaj: 'pozycja', klucz: 'brak.pozycji', minuty: 10 })] } }
+    const stanZly = { ...stan, wyceny: stan.wyceny.map((x) => (x.id === w.id ? zla : x)) }
+
+    assert.deepEqual(planZakonczenia(stanZly.zlecenia[0], stanZly, katalog), { plan: 300, tempoPlanu: 1.3, stawkaPlanu: null })
   })
 })

@@ -6,7 +6,7 @@
 import { DLUGOSCI_KLIENTA, normalizujNazwe } from './klienci.js'
 import { jestDataIso, jestDniem, jestId, jestKwota, jestLiczba, jestObiektem, TERMIN_ISO } from './ksztalt.js'
 import { czyAbonament, kwotaWyceny } from './kwota-wyceny.js'
-import { MAKS_MINUT_PRACY } from './zlecenia-ksztalt.js'
+import { MAKS_MINUT_PRACY, MIN_MINUT_PRACY } from './zlecenia-ksztalt.js'
 
 /**
  * @typedef {import('./klienci.js').Klient} Klient
@@ -134,7 +134,7 @@ function zleceniaZWykonan(w, klientId, kwota) {
   const termin = terminV1(w)
   const norma = jestObiektem(w.wynik) && jestLiczba(w.wynik.minutyNormowe) && w.wynik.minutyNormowe > 0 ? w.wynik.minutyNormowe : null
   return wykonaniaV1(w).map((e) => {
-    const minutyPracy = jestLiczba(e.minuty) && e.minuty >= 1 && e.minuty <= MAKS_MINUT_PRACY ? e.minuty : null
+    const minutyPracy = jestLiczba(e.minuty) && e.minuty >= MIN_MINUT_PRACY && e.minuty <= MAKS_MINUT_PRACY ? e.minuty : null
     const plan = norma !== null && jestLiczba(e.tempoPlanu) && e.tempoPlanu > 0 ? { minutyNormowe: norma, tempo: e.tempoPlanu } : null
     const wizyta = { przeniesiona: null, odwolana: false, zrobiona: `${e.data}${CHWILA_ZROBIENIA_V1}`,
       zaplata: { forma: null, data: e.data, kwota }, minutyPracy }

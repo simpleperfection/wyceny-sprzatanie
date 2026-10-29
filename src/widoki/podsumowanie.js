@@ -96,12 +96,14 @@ function kartaWpisowCzasu(w, { magazyn, katalog }) {
 }
 
 /**
- * @param {Wycena} w @param {boolean} czyZamknieta wycena ze zleceniem: bez oferty i edycji @param {ObslugaAkcji} obsluga
- * @returns {HTMLElement[]} „Przygotuj ofertę” (glowny przy wycenie do wysłania), potem akcje wg statusu
+ * @param {Wycena} w @param {boolean} czyZamknieta wycena ze zleceniem: bez edycji, oferta tylko do podglądu i wysłania
+ * @param {ObslugaAkcji} obsluga
+ * @returns {HTMLElement[]} „Przygotuj ofertę” („Pokaż ofertę” przy wycenie ze zleceniem; glowny przy wycenie do wysłania), potem
+ *   akcje wg statusu
  */
 function akcjeZapisanej(w, czyZamknieta, obsluga) {
-  const oferta = czyStatusOferty(w.status) && !czyZamknieta
-    ? [przycisk({ tekst: 'Przygotuj ofertę', rodzaj: w.status === 'do_wyslania' ? 'glowny' : 'drugi', ikona: 'file-text', adres: sciezka('oferta', { id: w.id }) })]
+  const oferta = czyStatusOferty(w.status)
+    ? [przycisk({ tekst: czyZamknieta ? 'Pokaż ofertę' : 'Przygotuj ofertę', rodzaj: w.status === 'do_wyslania' ? 'glowny' : 'drugi', ikona: 'file-text', adres: sciezka('oferta', { id: w.id }) })]
     : []
   return [...oferta, ...akcjeWyceny(w.status, czyZamknieta).map((a) => przyciskAkcji(w, a, obsluga))]
 }

@@ -16,6 +16,8 @@ export const MAKS_ZLECEN = 10000
 export const MAKS_WIZYT_ZLECENIA = 2000
 /** Najdluzszy czas pracy jednej wizyty w minutach (doba). */
 export const MAKS_MINUT_PRACY = 1440
+/** Najkrotszy czas pracy wizyty w minutach (wspolny dla zapisu, ksztaltu, migracji i ekranu wizyty). */
+export const MIN_MINUT_PRACY = 1
 /** Najdluzszy opis zlecenia (nazwa wyswietlana zamiast nazwy uslugi). */
 export const DLUGOSC_OPISU = 120
 
@@ -85,7 +87,7 @@ const jestZaplata = (x) => jestObiektem(x) && (x.forma === null || FORMY_ZAPLATY
 const jestPrzeniesieniem = (x) => x === null || (jestObiektem(x) && jestDniem(x.data) && (x.godzina === null || jestGodzina(x.godzina)))
 
 /** @param {unknown} x */
-const jestMinutamiPracy = (x) => x === null || (jestLiczba(x) && x >= 1 && x <= MAKS_MINUT_PRACY)
+const jestMinutamiPracy = (x) => x === null || (jestLiczba(x) && x >= MIN_MINUT_PRACY && x <= MAKS_MINUT_PRACY)
 
 /** @param {unknown} x @returns {x is StanWizyty} */
 const jestStanemWizyty = (x) => jestObiektem(x) && jestPrzeniesieniem(x.przeniesiona) && typeof x.odwolana === 'boolean' &&

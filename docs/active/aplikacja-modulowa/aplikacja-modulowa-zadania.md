@@ -116,10 +116,10 @@ Zależy od: Faza 1
 - [x] Test: [Unit] dwie wizyty z czasem w tym samym dniu są w kolejności `zrobiona`
 - [x] Test: [Unit] `historiaPlanuIFaktu` z wizyt pokazuje plan z `plan.tempo`, fakt i realną stawkę (przypadki przeniesione z `src/kreator/zakonczenie.test.js`)
 - [x] Test: [Unit] `dopasuj('#/wycena/abc/koniec', TRASY)` zwraca null
-- [ ] Weryfikacja: `node --test src/zlecenia/plan-fakt.test.js src/ui/router.test.js` przechodzi
-- [ ] Weryfikacja: `npm test` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
-- [ ] Weryfikacja: `grep -rn "kreator/zakonczenie\|widokZakonczeniaZlecenia\|'zakonczenie'" src/` nie zwraca wyników
+- [x] Weryfikacja: `node --test src/zlecenia/plan-fakt.test.js src/ui/router.test.js` przechodzi
+- [x] Weryfikacja: `npm test` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `grep -rn "kreator/zakonczenie\|widokZakonczeniaZlecenia\|'zakonczenie'" src/` nie zwraca wyników
 
 ### IU-6: Wycena v2 i przeniesienie danych z wersji 1 (feature-builder-fullstack)
 
@@ -156,11 +156,11 @@ Zależy od: Faza 1
 - [x] Test: [Unit] `usunWycene` zeruje `wycenaId` w zleceniu, zlecenie zostaje
 - [x] Test: [Unit] zapis wejścia wyceny ze zleceniem rzuca `tylko_odczyt`
 - [x] Test: [Unit] stan z localStorage w wersji 1 zostaje zapisany jako wersja 2 przy starcie, a `kopia.zmianaOd` się nie zmienia
-- [ ] Test: [E2E] `migracja-v1` — okno 360×800, wstrzyknij przez `agent-browser eval` treść `e2e/stany/wyceny-do-zrobienia.json` (stan v1) do `localStorage['wyceny-sprzatanie:stan']`, otwórz http://localhost:5174/#/start, potem #/wyceny, odczytaj `JSON.parse(localStorage['wyceny-sprzatanie:stan'])`, zrób screenshot → brak ekranu ratunkowego, lista ma trzy wyceny z pigułkami jak przed zmianą, zapisany stan ma `wersja: 2` i klientów z nazw wycen, konsola bez błędów
-- [ ] Weryfikacja: `node --test src/dane/migracja-v2.test.js src/dane/wyceny.test.js src/dane/wyceny-statusy.test.js src/dane/magazyn.test.js` przechodzi
-- [ ] Weryfikacja: `npm test` przechodzi (w tym `src/dane/kopia.test.js` z `tests/fixtures/kopia-v1.json`)
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
-- [ ] Weryfikacja: `grep -rn "wykonana\|wykonania\|dodajWykonanie" src/ --include=*.js` zwraca tylko `src/dane/migracja-v2.js` i jego test
+- [x] Test: [E2E] `migracja-v1` — okno 360×800, wstrzyknij przez `agent-browser eval` treść `e2e/stany/wyceny-do-zrobienia.json` (stan v1) do `localStorage['wyceny-sprzatanie:stan']`, otwórz http://localhost:5174/#/start, potem #/wyceny, odczytaj `JSON.parse(localStorage['wyceny-sprzatanie:stan'])`, zrób screenshot → brak ekranu ratunkowego, lista ma trzy wyceny z pigułkami jak przed zmianą, zapisany stan ma `wersja: 2` i klientów z nazw wycen, konsola bez błędów
+- [x] Weryfikacja: `node --test src/dane/migracja-v2.test.js src/dane/wyceny.test.js src/dane/wyceny-statusy.test.js src/dane/magazyn.test.js` przechodzi
+- [x] Weryfikacja: `npm test` przechodzi (w tym `src/dane/kopia.test.js` z `tests/fixtures/kopia-v1.json`)
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `grep -rln "wykonana\|wykonania\|dodajWykonanie" src/ --include=*.js` zwraca poza `src/dane/migracja-v2.js` i jego testem tylko kontrakt silnika tempa (`src/silnik/tempo.js` z `WycenaTempa.wykonania`, `src/zlecenia/dane-tempa.js`, który buduje go z wizyt, i ich testy `tempo.test.js`, `plan-fakt.test.js`) oraz testy odmowy statusu `wykonana` (`kopia.test.js`, `wyceny-statusy.test.js`); `dodajWykonanie` nie występuje (korekta planu w kontekście, fix fazy 2)
 
 ### IU-7: Kopia zapasowa v2 i ekran ratunkowy (feature-builder-fullstack)
 
@@ -177,8 +177,12 @@ Zależy od: Faza 1
 - [x] Test: [Unit] „połącz”: klient zmieniony później w pliku wygrywa; zlecenie tylko lokalne zostaje; zlecenie z pliku wchodzi razem ze swoim klientem z pliku
 - [x] Test: [Unit] `czyPytacOTryb` = true dla stanu z samym klientem; `czyPrzypomniecOKopii` = true po 7 dniach od pierwszego zlecenia bez kopii
 - [x] Test: [Unit] etykiety podsumowania: „1 klient”, „2 klientów”, „5 zleceń”
-- [ ] Weryfikacja: `node --test src/dane/kopia.test.js src/dane/kopia-v2.test.js src/widoki/kopia-teksty.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `node --test src/dane/kopia.test.js src/dane/kopia-v2.test.js src/widoki/kopia-teksty.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+
+## Do poprawy po review fazy 2
+
+Zamkniete cyklem fix: 6 pozycji — pelna tresc findingow i uzasadnienia w `review-faza-2.md`.
 
 ## Operator checklist faza 2
 

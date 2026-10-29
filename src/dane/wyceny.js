@@ -4,6 +4,7 @@
 // swiezego stanu, sprawdzenie i zapis w jednym synchronicznym kroku. Straznik jestWycena jest jedynym opisem zapisanej wyceny:
 // uzywa go zapis tutaj i kopia zapasowa (eksport i odczyt pliku).
 
+import { DLUGOSCI_KLIENTA } from './klienci.js'
 import {
   jestDataIso, jestDniem, jestId, jestLiczba, jestObiektem, jestTekstemLubNull, jestWarunkamiOferty, jestZakresemOferty, MAKS_DLUGOSC_TEKSTU,
   MAKS_ZAGLEBIENIE, maKrotkieTeksty,
@@ -70,7 +71,8 @@ const PRZEJSCIA = Object.freeze({
   przyjeta: ['odrzucona'],
   odrzucona: ['do_wyslania'],
 })
-const DLUGOSC_KLIENTA = Object.freeze({ nazwa: 120, adres: 200, termin: 40 })
+// Nazwa i adres wyceny trafiaja do klienta (zKlientemZListy, migracja v2), wiec granice sa te same co w kartotece klientow.
+const DLUGOSC_KLIENTA = Object.freeze({ nazwa: DLUGOSCI_KLIENTA.nazwa, adres: DLUGOSCI_KLIENTA.adres, termin: 40 })
 const POLA_KLIENTA = /** @type {const} */ (['nazwa', 'adres', 'termin'])
 const POLA_KWOT = /** @type {const} */ (['cena', 'netto', 'vat'])
 const PUSTY_KLIENT = Object.freeze({ nazwa: '', adres: '', termin: null })

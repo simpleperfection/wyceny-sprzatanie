@@ -4,7 +4,7 @@
 // z migawki wyceny zlecenia (kosztPrzyTempie z src/kreator/podsumowanie.js), a kolejnosc wpisow — jak w tempie wlasnym.
 
 import { wycena } from '../dane/wyceny.js'
-import { MAKS_MINUT_PRACY } from '../dane/zlecenia-ksztalt.js'
+import { MAKS_MINUT_PRACY, MIN_MINUT_PRACY } from '../dane/zlecenia-ksztalt.js'
 import { kosztPrzyTempie } from '../kreator/podsumowanie.js'
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
 import { wpisyTempa } from '../silnik/tempo.js'
@@ -55,12 +55,12 @@ function stawkaPrzyTempie(z, stan, katalog, tempo) {
 }
 
 /**
- * Czas pracy do sprawdzenia: null albo kod bledu `czas_poza_zakresem` (wymagane > 0 i ≤ MAKS_MINUT_PRACY, czyli doba).
+ * Czas pracy do sprawdzenia: null albo kod bledu `czas_poza_zakresem` (wymagane ≥ MIN_MINUT_PRACY i ≤ MAKS_MINUT_PRACY, czyli doba).
  * @param {number} minuty
  * @returns {null | 'czas_poza_zakresem'}
  */
 export function poprawnyCzas(minuty) {
-  return Number.isFinite(minuty) && minuty > 0 && minuty <= MAKS_MINUT_PRACY ? null : 'czas_poza_zakresem'
+  return Number.isFinite(minuty) && minuty >= MIN_MINUT_PRACY && minuty <= MAKS_MINUT_PRACY ? null : 'czas_poza_zakresem'
 }
 
 /**

@@ -6,7 +6,7 @@ import { jestGodzina, ostatniDzienMiesiaca, porownajDni } from '../kalendarz/dat
 import { okresDnia, wystapienia } from '../kalendarz/wystapienia.js'
 import { dzienLokalny, jestDniem, jestLiczba, jestMiesiacem } from './ksztalt.js'
 import { BladZlecenia, zleceniaKlienta, zmienZlecenie } from './zlecenia.js'
-import { FORMY_ZAPLATY, MAKS_MINUT_PRACY, MAKS_WIZYT_ZLECENIA } from './zlecenia-ksztalt.js'
+import { FORMY_ZAPLATY, MAKS_MINUT_PRACY, MAKS_WIZYT_ZLECENIA, MIN_MINUT_PRACY } from './zlecenia-ksztalt.js'
 
 /**
  * @typedef {import('./magazyn.js').Magazyn} Magazyn
@@ -23,8 +23,6 @@ import { FORMY_ZAPLATY, MAKS_MINUT_PRACY, MAKS_WIZYT_ZLECENIA } from './zlecenia
 const STAN_DOMYSLNY = Object.freeze({ przeniesiona: null, odwolana: false, zrobiona: null, zaplata: null, minutyPracy: null })
 /** Forma zaplaty klienta bez historii zaplat. */
 const FORMA_BEZ_HISTORII = 'gotowka'
-/** Najkrotszy czas pracy wizyty w minutach. */
-const MIN_MINUT_PRACY = 1
 
 /** @param {StanWizyty} w */
 const czyDomyslny = (w) => w.przeniesiona === null && !w.odwolana && w.zrobiona === null && w.zaplata === null && w.minutyPracy === null

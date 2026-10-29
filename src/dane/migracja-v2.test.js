@@ -77,6 +77,17 @@ describe('zV1DoV2 na tests/fixtures/stan-v1-pelny.json', () => {
     assert.deepEqual(stan.wyceny.filter((w) => doZaplanowania(stan, w)).map((w) => w.id), ['w-abonament', 'w-sobota'])
   })
 
+  it('przyjęty abonament z terminem ISO i bez wykonań nie dostaje zlecenia na termin i zostaje do zaplanowania', async () => {
+    const v1 = zWycena(await stanV1(), 'w-abonament', { wykonania: [],
+      klient: { nazwa: 'Biuro Rachunkowe Bilans', adres: 'ul. Długa 1, Warszawa', termin: '2026-11-20T08:00' } })
+
+    const stan = poMigracji(v1)
+
+    assert.equal(zlecenie(stan, 'z-w-abonament'), null)
+    assert.deepEqual(stan.zlecenia.filter((z) => z.wycenaId === 'w-abonament'), [])
+    assert.deepEqual(stan.wyceny.filter((w) => doZaplanowania(stan, w)).map((w) => w.id), ['w-abonament', 'w-sobota'])
+  })
+
   it('wykonana staje się przyjętą, wyceny tracą wykonania, a zmieniona i reszta pól zostają', async () => {
     const v1 = await stanV1()
 
