@@ -492,6 +492,23 @@ export function oznaczWyslana(magazyn, id, opcje = {}) {
 }
 
 /**
+ * Wyslanie oferty z ekranu oferty (link skopiowany albo udostepniony, PDF otwarty do druku), sprawdzane na swiezym stanie.
+ * Wycena ze zleceniem (takze powstalym w innej karcie po otwarciu ekranu) jest tylko do odczytu: wyslanie niczego nie zapisuje
+ * i nie daje bledu. Inaczej data waznosci z linku, gdy wycena jej nie miala, i oznaczWyslana.
+ * @param {Magazyn} magazyn @param {string} id @param {string | null} waznaDo data waznosci RRRR-MM-DD z wyslanego linku
+ * @param {OpcjeWycen} [opcje]
+ * @returns {boolean} czy zapisano wyslanie; false — wycena ze zleceniem
+ */
+export function zapiszWyslanieOferty(magazyn, id, waznaDo, opcje = {}) {
+  const wynik = magazyn.wczytaj()
+  const stan = 'stan' in wynik ? wynik.stan : null
+  if (stan && czyWycenaZamknieta(stan, id)) return false
+  if (stan && waznaDo !== null && wycena(stan, id)?.oferta.waznaDo === null) zapiszOferte(magazyn, id, { waznaDo }, opcje)
+  oznaczWyslana(magazyn, id, opcje)
+  return true
+}
+
+/**
  * Usuniecie wyceny; jej numer nie wraca do puli. Zlecenia z tej wyceny zostaja razem z planem, a ich `wycenaId` zeruje sie
  * w tym samym zapisie (spojnosc odwolan sprawdza magazyn).
  * @param {Magazyn} magazyn @param {string} id

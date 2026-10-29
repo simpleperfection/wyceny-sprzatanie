@@ -6,7 +6,7 @@ import { dodajKlienta } from './klienci.js'
 import { utworzMagazyn } from './magazyn.js'
 import {
   BladWyceny, czyAbonament, czyStatusOferty, dozwolonePrzejscia, jestWycena, oznaczWyslana, STATUSY_OFERTY, STATUSY_WYCENY, utworzSzkic,
-  przypiszKlienta, wycena, zapiszOferte, zapiszWejscie, zapiszWycene, zapiszWynik, zmienStatus,
+  przypiszKlienta, wycena, zapiszOferte, zapiszWejscie, zapiszWycene, zapiszWynik, zapiszWyslanieOferty, zmienStatus,
 } from './wyceny.js'
 import * as modulWycen from './wyceny.js'
 import { zaplanujZWyceny } from './zlecenia.js'
@@ -152,6 +152,60 @@ describe('oznaczWyslana', () => {
     assert.throws(() => oznaczWyslana(magazyn, szkic), bladWyceny('przejscie'))
     assert.throws(() => oznaczWyslana(magazyn, zeZleceniem), bladWyceny('tylko_odczyt'))
     assert.throws(() => oznaczWyslana(magazyn, 'nie-ma'), bladWyceny('brak_wyceny'))
+  })
+})
+
+describe('zapiszWyslanieOferty', () => {
+  it('wycena bez zlecenia: ważność z linku, gdy jej nie było, i status wyslana', () => {
+    const magazyn = nowyMagazyn()
+    const id = wycenaWStatusie(magazyn, ['do_wyslania'])
+
+    const czyZapisane = zapiszWyslanieOferty(magazyn, id, '2026-11-26', LISTOPAD)
+
+    const w = zMagazynu(magazyn, id)
+    assert.equal(czyZapisane, true)
+    assert.deepEqual([w.status, w.oferta.waznaDo, w.oferta.wyslana], ['wyslana', '2026-11-26', '2026-11-12T10:00:00.000Z'])
+  })
+
+  it('Kopiuj link w wycenie ze zleceniem: nic nie zapisuje i nie rzuca', () => {
+    const magazyn = nowyMagazyn()
+    const id = wycenaWStatusie(magazyn, ['do_wyslania', 'przyjeta'])
+    zapiszOferte(magazyn, id, { waznaDo: '2026-11-30' }, PAZDZIERNIK)
+    dodajKlienta(magazyn, { nazwa: 'Anna Kowalska' }, { id: 'k1' })
+    zaplanujZWyceny(magazyn, id, { klientId: 'k1', rozliczenie: 'za_wizyte', start: '2026-10-20', cenaWizyty: 250, tempo: 1.3 }, { id: `z-${id}` })
+    const przed = zMagazynu(magazyn, id)
+
+    const czyZapisane = zapiszWyslanieOferty(magazyn, id, '2026-11-30', LISTOPAD)
+
+    assert.equal(czyZapisane, false)
+    assert.deepEqual(zMagazynu(magazyn, id), przed)
+  })
+
+  it('zlecenie z drugiej karty po otwarciu ekranu oferty: wysłanie sprawdza świeży stan i nic nie zapisuje', () => {
+    const magazyn = nowyMagazyn()
+    const id = wycenaWStatusie(magazyn, ['do_wyslania', 'przyjeta'])
+    const przyOtwarciu = stanMagazynu(magazyn)
+    dodajKlienta(magazyn, { nazwa: 'Anna Kowalska' }, { id: 'k1' })
+    zaplanujZWyceny(magazyn, id, { klientId: 'k1', rozliczenie: 'za_wizyte', start: '2026-10-20', cenaWizyty: 250, tempo: 1.3 }, { id: `z-${id}` })
+    const przed = zMagazynu(magazyn, id)
+
+    const czyZapisane = zapiszWyslanieOferty(magazyn, id, '2026-11-26', LISTOPAD)
+
+    assert.deepEqual(przyOtwarciu.zlecenia, [])
+    assert.equal(czyZapisane, false)
+    assert.deepEqual(zMagazynu(magazyn, id), przed)
+  })
+
+  it('PDF z gotowym linkiem w wycenie ze zleceniem bez daty ważności: data z linku nie trafia do wyceny', () => {
+    const magazyn = nowyMagazyn()
+    const id = wycenaZeZleceniem(magazyn)
+    const przed = zMagazynu(magazyn, id)
+
+    const czyZapisane = zapiszWyslanieOferty(magazyn, id, '2026-11-26', LISTOPAD)
+
+    assert.equal(przed.oferta.waznaDo, null)
+    assert.equal(czyZapisane, false)
+    assert.deepEqual(zMagazynu(magazyn, id), przed)
   })
 })
 

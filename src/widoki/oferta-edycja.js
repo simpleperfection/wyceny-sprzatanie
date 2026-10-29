@@ -1,11 +1,11 @@
 // Przygotowanie oferty z zapisanej wyceny (`#/wycena/<id>/oferta`, makieta oferta-edycja): karty z oferta-edycja-sekcje.js,
 // banery (brak danych firmy, oferta nieaktualna, dlugi link) i stopka „PDF” / „Kopiuj link”. Tresc oferty liczy
-// src/oferta/tresc.js, link src/oferta/kodek.js, zapis src/dane/wyceny.js (zapiszOferte, oznaczWyslana); widok tylko rysuje.
+// src/oferta/tresc.js, link src/oferta/kodek.js, zapis src/dane/wyceny.js (zapiszOferte, zapiszWyslanieOferty); widok tylko rysuje.
 // Link liczy sie w tle po kazdej zmianie (numer wersji odrzuca wynik starszej), zeby schowek i nowa karta dostaly go od razu.
 
 import { BladMagazynu, wczytajStan } from '../dane/magazyn.js'
 import { BladUstawien, POLA_WYMAGANE_W_OFERCIE } from '../dane/ustawienia.js'
-import { BladWyceny, czyStatusOferty, oznaczWyslana, wycena as znajdzWycene, zapiszOferte } from '../dane/wyceny.js'
+import { BladWyceny, czyStatusOferty, wycena as znajdzWycene, zapiszOferte, zapiszWyslanieOferty } from '../dane/wyceny.js'
 import { czyWycenaZamknieta } from '../dane/zlecenia.js'
 import { BladKodeka, linkOferty } from '../oferta/kodek.js'
 import { BladOferty, ofertaZWyceny, warunkiZrodlowe } from '../oferta/tresc.js'
@@ -31,6 +31,8 @@ import { tekstBleduZapisu } from './teksty-bledow.js'
 /** @typedef {{ w: Wycena, stan: Stan, oferta: Oferta }} BiezacaOferta */
 
 const CZAS_KOMUNIKATU_MS = 3000
+/** Kontrolki kart oferty wylaczane w wycenie ze zleceniem (zablokujEdycje). */
+const KONTROLKI_EDYCJI = 'input, textarea, select, button'
 const BRAK_DANYCH_FIRMY = 'Uzupełnij nazwę firmy i telefon w ustawieniach, zanim wyślesz ofertę.'
 const NIEAKTUALNA = 'Wycena zmieniła się po wysłaniu oferty. Wysłany wcześniej link pokazuje starą wersję — wyślij nowy.'
 const OFERTA_ZAMKNIETA = 'Z tej wyceny powstało zlecenie – ofertę możesz przejrzeć, wysłać i wydrukować, ale nie zmienić.'
@@ -87,13 +89,13 @@ async function wyslijLink(url, zapasowy) {
 
 /**
  * Wycena ze zleceniem jest tylko do odczytu: pola i przyciski edycji kart oferty sa wylaczone, podglad tresci zostaje.
- * @param {HTMLElement[]} karty
+ * @param {Pick<ParentNode, 'querySelectorAll'>[]} karty
+ * @returns {void}
  */
-function zablokujEdycje(karty) {
+export function zablokujEdycje(karty) {
   for (const karta of karty) {
-    for (const element of karta.querySelectorAll('input, textarea, select, button')) {
-      if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement
-        || element instanceof HTMLButtonElement) element.disabled = true
+    for (const element of karta.querySelectorAll(KONTROLKI_EDYCJI)) {
+      if ('disabled' in element) element.disabled = true
     }
   }
 }
@@ -186,13 +188,10 @@ function uruchomOferte(kontener, kontekst, id, zakresy, czyAktywny) {
 
   /**
    * Oferta trafila do klienta: data waznosci zostaje taka jak w linku, status `wyslana`. Wycena ze zleceniem jest tylko
-   * do odczytu, wiec jej wyslanie niczego nie zapisuje.
+   * do odczytu, wiec jej wyslanie niczego nie zapisuje (zapiszWyslanieOferty).
    */
   function oznacz() {
-    const teraz = biezaca()
-    if (teraz && czyWycenaZamknieta(teraz.stan, id)) return
-    if (teraz && teraz.w.oferta.waznaDo === null) zapiszOferte(magazyn, id, { waznaDo: teraz.oferta.waznaDo })
-    oznaczWyslana(magazyn, id)
+    zapiszWyslanieOferty(magazyn, id, biezaca()?.oferta.waznaDo ?? null)
   }
 
   /** @param {() => Promise<void>} akcja wysylka linku; blad daje baner, a przyciski wracaja do uzycia */
