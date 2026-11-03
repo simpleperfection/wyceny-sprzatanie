@@ -3,13 +3,13 @@
 // Po zapisie adres formularza w historii zamienia sie na karte klienta (wstecz z karty nie otwiera pustego formularza).
 // Przy wpisywaniu nazwy podpowiedz, gdy klient o tej nazwie juz jest (podobnyKlient), z linkiem do jego karty.
 
-import { DLUGOSCI_KLIENTA, dodajKlienta, klient, zapiszKlienta } from '../dane/klienci.js'
+import { DLUGOSCI_KLIENTA } from '../dane/klienci.js'
 import { wczytajStan } from '../dane/magazyn.js'
 import { h } from '../ui/h.js'
 import { pole, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
 import { baner, naglowek } from '../ui/komponenty/uklad.js'
 import { sciezka } from '../ui/trasy.js'
-import { podobnyKlient } from './klienci-dane.js'
+import { klientFormularza, podobnyKlient, zapiszFormularzKlienta } from './klienci-dane.js'
 import { tekstBleduKlienta } from './teksty-bledow.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
@@ -63,9 +63,9 @@ export const widokFormularzaKlienta = {
   render(kontener, { parametry, kontekst }) {
     const { magazyn, nawiguj } = kontekst
     const stan = wczytajStan(magazyn)
-    const edytowanyId = parametry.id ?? null
-    const edytowany = edytowanyId === null ? null : klient(stan, edytowanyId)
-    if (edytowanyId !== null && edytowany === null) return ekranBrakuKlienta(kontener)
+    const doEdycji = klientFormularza(stan, parametry.id ?? null)
+    if (doEdycji.rodzaj === 'brak') return ekranBrakuKlienta(kontener)
+    const edytowany = doEdycji.rodzaj === 'edycja' ? doEdycji.klient : null
     const id = edytowany?.id ?? crypto.randomUUID()
 
     /** @type {Record<PoleKlienta, HTMLDivElement>} */
@@ -101,8 +101,7 @@ export const widokFormularzaKlienta = {
       const wartosc = (nazwa) => wejsciePola(pola[nazwa]).value
       const dane = { nazwa: wartosc('nazwa'), telefon: wartosc('telefon'), adres: wartosc('adres'), notatki: wartosc('notatki') }
       try {
-        if (edytowany === null) dodajKlienta(magazyn, dane, { id })
-        else zapiszKlienta(magazyn, id, dane)
+        zapiszFormularzKlienta(magazyn, edytowany, id, dane)
       } catch (blad) {
         const { tekst, pole: polePrzyczyny } = tekstBleduKlienta(blad)
         if (polePrzyczyny === null) return komunikat.replaceChildren(baner({ rodzaj: 'blad', tekst }))

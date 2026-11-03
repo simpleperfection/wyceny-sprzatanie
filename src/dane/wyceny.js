@@ -305,8 +305,9 @@ export function utworzSzkic(magazyn, dane, opcje = {}) {
 
 /**
  * Klient z listy dla wyceny (R19): kopiuje jego nazwe i adres do `wycena.klient` (termin zostaje), a po wyslaniu oferty zmiana
- * nazwy albo adresu oznacza oferte jako nieaktualna. Null odlacza klienta z listy i zostawia kopie nazwy i adresu. Nieznany
- * klient → BladWyceny `brak_klienta`, wycena ze zleceniem → `tylko_odczyt`; nic sie wtedy nie zapisuje.
+ * nazwy albo adresu oznacza oferte jako nieaktualna. Null („Bez klienta”) odlacza klienta z listy i czysci kopie nazwy i adresu
+ * (termin zostaje), zeby oferta nie pokazywala poprzedniego klienta. Nieznany klient → BladWyceny `brak_klienta`, wycena
+ * ze zleceniem → `tylko_odczyt`; nic sie wtedy nie zapisuje.
  * @param {Magazyn} magazyn @param {string} id @param {string | null} klientId @param {OpcjeWycen} [opcje]
  * @returns {Stan}
  */
@@ -314,8 +315,9 @@ export function przypiszKlienta(magazyn, id, klientId, opcje = {}) {
   const wybrany = klientId === null ? null : sprawdzKlientId(klientId)
   return zmienWycene(magazyn, id, opcje, (w, stan) => {
     tylkoDoOdczytu(w, stan)
-    if (wybrany === null) return { wycena: { ...w, klientId: null } }
-    const nowa = zKlientemZListy(w, stan, wybrany)
+    const nowa = wybrany === null
+      ? { ...w, klientId: null, klient: { ...w.klient, nazwa: '', adres: '' } }
+      : zKlientemZListy(w, stan, wybrany)
     const czyInnaKopia = nowa.klient.nazwa !== w.klient.nazwa || nowa.klient.adres !== w.klient.adres
     return { wycena: czyInnaKopia ? { ...nowa, oferta: nieaktualnaPoWyslaniu(nowa) } : nowa }
   })

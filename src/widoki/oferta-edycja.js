@@ -13,17 +13,18 @@ import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
 import { h } from '../ui/h.js'
 import { przycisk } from '../ui/komponenty/formularz.js'
 import { baner, naglowek } from '../ui/komponenty/uklad.js'
-import { wyborKlienta } from '../ui/komponenty/wybor-klienta.js'
 import { kopiujDoSchowka } from '../ui/schowek.js'
 import { ETYKIETY_STATUSOW } from '../ui/statusy.js'
 import { sciezka } from '../ui/trasy.js'
 import { zglosBladKreatora } from './kreator-wspolne.js'
 import { kartaDodatkow, kartaFirmy, kartaKlienta, kartaWarunkow, kartaZakresu, poZakresach, tekstKwoty } from './oferta-edycja-sekcje.js'
 import { tekstBleduZapisu } from './teksty-bledow.js'
+import { wyborKlienta } from './wybor-klienta.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../ui/router.js').Kontekst} Kontekst */
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
+/** @typedef {import('../dane/magazyn.js').Magazyn} Magazyn */
 /** @typedef {import('../dane/magazyn.js').Stan} Stan */
 /** @typedef {import('../oferta/kodek.js').LinkOferty} LinkOferty */
 /** @typedef {import('../oferta/tresc.js').Oferta} Oferta */
@@ -59,6 +60,21 @@ function tekstBleduZapisuOferty(blad) {
     return tekstBleduZapisu(blad)
   }
   return zglosBladKreatora(blad)
+}
+
+/**
+ * Wybor klienta w edycji oferty: przypiszKlienta i adres z kopii w wycenie do pola adresu karty (null, gdy wyceny juz nie ma).
+ * Odmowa albo awaria zapisu daje tekst bledu (tekstBleduZapisuOferty) i niczego nie zapisuje.
+ * @param {Magazyn} magazyn @param {string} id @param {string | null} klientId
+ * @returns {{ blad: string } | { blad: null, adres: string | null }}
+ */
+export function przypiszKlientaOferty(magazyn, id, klientId) {
+  try {
+    const w = znajdzWycene(przypiszKlienta(magazyn, id, klientId), id)
+    return { blad: null, adres: w?.klient.adres ?? null }
+  } catch (blad) {
+    return { blad: tekstBleduZapisuOferty(blad) }
+  }
 }
 
 /** @param {unknown} blad @returns {string} tekst bledu przygotowania oferty (brak ceny jest stanem oczekiwanym) */
@@ -192,14 +208,10 @@ function uruchomOferte(kontener, kontekst, id, zakresy, czyAktywny) {
    * @param {HTMLElement} karta karta „Klient i termin” @param {string | null} klientId @returns {string | null} tekst bledu albo null
    */
   function przypisz(karta, klientId) {
-    try {
-      przypiszKlienta(magazyn, id, klientId)
-    } catch (blad) {
-      return tekstBleduZapisuOferty(blad)
-    }
+    const wynik = przypiszKlientaOferty(magazyn, id, klientId)
+    if (wynik.blad !== null) return wynik.blad
     const adres = karta.querySelector('#oferta-adres')
-    const teraz = biezaca()
-    if (adres instanceof HTMLInputElement && teraz) adres.value = teraz.w.klient.adres
+    if (adres instanceof HTMLInputElement && wynik.adres !== null) adres.value = wynik.adres
     wersja += 1
     odswiezStan()
     przygotujLink()

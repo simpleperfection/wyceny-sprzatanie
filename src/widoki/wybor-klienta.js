@@ -3,18 +3,18 @@
 // formularzem w tym samym arkuszu i opcje „Bez klienta”, gdy wybor nie jest wymagany. Nowy klient zapisuje sie dopiero przy
 // „Zapisz klienta” (id nadane przy otwarciu formularza), wiec porzucony arkusz nie zostawia klienta. Zapis wyboru robi `naWybor`.
 
-import { DLUGOSCI_KLIENTA, dodajKlienta, klient as znajdzKlienta } from '../../dane/klienci.js'
-import { wczytajStan } from '../../dane/magazyn.js'
-import { inicjaly, opisWiersza, propozycjeKlientow } from '../../widoki/klienci-dane.js'
-import { tekstBleduKlienta } from '../../widoki/teksty-bledow.js'
-import { h } from '../h.js'
-import { pole, przycisk, ustawBlad } from './formularz.js'
-import { arkusz, baner, karta, wiersz } from './uklad.js'
+import { DLUGOSCI_KLIENTA, dodajKlienta, klient as znajdzKlienta } from '../dane/klienci.js'
+import { wczytajStan } from '../dane/magazyn.js'
+import { h } from '../ui/h.js'
+import { pole, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
+import { arkusz, baner, karta, wiersz } from '../ui/komponenty/uklad.js'
+import { inicjaly, opisWiersza, propozycjeKlientow } from './klienci-dane.js'
+import { tekstBleduKlienta } from './teksty-bledow.js'
 
 /**
- * @typedef {import('../../dane/magazyn.js').Magazyn} Magazyn
- * @typedef {import('../../dane/klienci.js').Klient} Klient
- * @typedef {import('../../dane/klienci.js').PoleKlienta} PoleKlienta
+ * @typedef {import('../dane/magazyn.js').Magazyn} Magazyn
+ * @typedef {import('../dane/klienci.js').Klient} Klient
+ * @typedef {import('../dane/klienci.js').PoleKlienta} PoleKlienta
  * @typedef {{ magazyn: Magazyn, wybranyId: string | null, wymagany?: boolean, naWybor: (klientId: string | null) => string | null,
  *   czyAktywny?: () => boolean, id?: string }} OpcjeWyboruKlienta naWybor: zapis wyboru (tekst bledu albo null); czyAktywny: ekran,
  *   ktory otworzyl arkusz, jest jeszcze otwarty; id: przedrostek id elementow (dwa wybory na jednym ekranie)

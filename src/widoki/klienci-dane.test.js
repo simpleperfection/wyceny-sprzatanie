@@ -1,8 +1,12 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
+import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
+import { BladKlienta, dodajKlienta, usunKlienta } from '../dane/klienci.js'
+import { utworzMagazyn, wczytajStan } from '../dane/magazyn.js'
 import {
-  czyMaHistorie, historiaWycen, inicjaly, linkMapy, linkTelefonu, opisWiersza, podobnyKlient, propozycjeKlientow,
+  czyMaHistorie, historiaWycen, inicjaly, klientFormularza, linkMapy, linkTelefonu, opisWiersza, podobnyKlient, propozycjeKlientow,
+  zapiszFormularzKlienta,
 } from './klienci-dane.js'
 
 const CHWILA = '2026-10-20T10:00:00.000Z'
@@ -166,5 +170,75 @@ describe('propozycjeKlientow', () => {
     assert.deepEqual(propozycje.map((k) => k.nazwa), [
       'Andrzej Kos', 'Anna Kowalska', 'Antoni Dąb', 'Biuro Rachunkowe Lis', 'Danuta Wanat', 'Hanna Bąk', 'Iwona Rak', 'Jan Nowak',
     ])
+  })
+})
+
+describe('propozycjeKlientow: przegląd kończy się po komplecie pierwszej grupy', () => {
+  it('więcej niż 8 klientów z nazwą od frazy: 8 pierwszych po nazwie, bez klientów pasujących w środku nazwy', () => {
+    const stan = { klienci: [...Array.from({ length: 10 }, (_, i) => klient(`k-${i}`, `Kowal ${String.fromCharCode(65 + i)}`)),
+      klient('k-anna', 'Anna Kowalska')] }
+
+    assert.deepEqual(propozycjeKlientow(stan, 'kowal').map((k) => k.nazwa),
+      ['Kowal A', 'Kowal B', 'Kowal C', 'Kowal D', 'Kowal E', 'Kowal F', 'Kowal G', 'Kowal H'])
+  })
+})
+
+/** Magazyn w pamieci z zapisanymi klientami Anna (k-anna) i Biuro (k-biuro). */
+function magazynZKlientami() {
+  const magazyn = utworzMagazyn(new PamiecMagazynu(), { loguj: () => {}, poprosOTrwalosc: () => true })
+  dodajKlienta(magazyn, { nazwa: 'Anna Kowalska', telefon: '600 100 200', adres: 'ul. Lipowa 3' }, { id: 'k-anna' })
+  dodajKlienta(magazyn, { nazwa: 'Biuro Rachunkowe Lis' }, { id: 'k-biuro' })
+  return magazyn
+}
+
+/** @param {string} kod */
+const bladKlienta = (kod) => ({ name: BladKlienta.name, kod })
+
+describe('klientFormularza', () => {
+  const stan = { klienci: [ANNA, BIURO] }
+
+  it('bez id formularz nowego klienta, z id zapisanego klienta edycja tego klienta', () => {
+    assert.deepEqual(klientFormularza(stan, null), { rodzaj: 'nowy' })
+    assert.deepEqual(klientFormularza(stan, 'k-anna'), { rodzaj: 'edycja', klient: ANNA })
+  })
+
+  it('id klienta, którego nie ma (usunięty w innej karcie, zły link), daje ekran braku klienta', () => {
+    assert.deepEqual(klientFormularza(stan, 'k-usuniety'), { rodzaj: 'brak' })
+  })
+})
+
+describe('zapiszFormularzKlienta', () => {
+  const PUSTE = { telefon: '', adres: '', notatki: '' }
+
+  it('edycja zmienia zapisanego klienta: nowa nazwa, puste pola opcjonalne jako null, bez nowego klienta', () => {
+    const magazyn = magazynZKlientami()
+    const anna = klientFormularza(wczytajStan(magazyn), 'k-anna')
+    assert.equal(anna.rodzaj, 'edycja')
+
+    const zapisany = zapiszFormularzKlienta(magazyn, anna.rodzaj === 'edycja' ? anna.klient : null, 'k-anna', { nazwa: 'Anna Nowak', ...PUSTE })
+
+    const { klienci } = wczytajStan(magazyn)
+    assert.deepEqual([zapisany.nazwa, zapisany.telefon, zapisany.adres], ['Anna Nowak', null, null])
+    assert.deepEqual(klienci.map((k) => [k.id, k.nazwa, k.telefon]), [['k-anna', 'Anna Nowak', null], ['k-biuro', 'Biuro Rachunkowe Lis', null]])
+  })
+
+  it('nowy klient z id ekranu zapisany dwa razy (podwójne „Zapisz”) daje jednego klienta', () => {
+    const magazyn = magazynZKlientami()
+
+    zapiszFormularzKlienta(magazyn, null, 'k-nowy', { nazwa: 'Jan Nowak', ...PUSTE })
+    zapiszFormularzKlienta(magazyn, null, 'k-nowy', { nazwa: 'Jan Nowak', ...PUSTE })
+
+    assert.deepEqual(wczytajStan(magazyn).klienci.map((k) => k.id), ['k-anna', 'k-biuro', 'k-nowy'])
+  })
+
+  it('edycja klienta usuniętego w innej karcie → BladKlienta brak_klienta, a błędny telefon → telefon; nic się nie zapisuje', () => {
+    const magazyn = magazynZKlientami()
+    const { klienci: [anna, biuro] } = wczytajStan(magazyn)
+    usunKlienta(magazyn, 'k-biuro')
+    const przed = wczytajStan(magazyn)
+
+    assert.throws(() => zapiszFormularzKlienta(magazyn, biuro, 'k-biuro', { nazwa: 'Biuro', ...PUSTE }), bladKlienta('brak_klienta'))
+    assert.throws(() => zapiszFormularzKlienta(magazyn, anna, 'k-anna', { nazwa: 'Anna', ...PUSTE, telefon: '123' }), bladKlienta('telefon'))
+    assert.deepEqual(wczytajStan(magazyn), przed)
   })
 })

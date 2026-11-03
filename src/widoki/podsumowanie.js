@@ -13,12 +13,12 @@ import { czas, data, procent, zl } from '../ui/format.js'
 import { h } from '../ui/h.js'
 import { przycisk } from '../ui/komponenty/formularz.js'
 import { arkusz, baner, dialogPotwierdzenia, karta, naglowek, pasekPostepu } from '../ui/komponenty/uklad.js'
-import { wyborKlienta } from '../ui/komponenty/wybor-klienta.js'
 import { ETYKIETY_STATUSOW, pigulkaStatusu } from '../ui/statusy.js'
 import { sciezka } from '../ui/trasy.js'
 import { historiaPlanuIFaktu } from '../zlecenia/plan-fakt.js'
 import { adresKroku, wycenaKroku, zglosBladKreatora } from './kreator-wspolne.js'
 import { banery, kartaCeny, kartaKosztow, kartaRynku, kartaZostaje, notkaPropozycji, otworzEdycjeCeny } from './podsumowanie-karty.js'
+import { wyborKlienta } from './wybor-klienta.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../ui/router.js').Kontekst} Kontekst */

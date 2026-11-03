@@ -1,21 +1,23 @@
-// Dane modulu Klienci (czyste funkcje, bez DOM): opis i inicjaly wiersza listy, linki telefonu i mapy na karcie klienta,
-// historia wycen klienta, podpowiedz duplikatu w formularzu i propozycje w wyborze klienta (R17, R18, R19). Wyszukiwanie
-// i zapis klienta sa w src/dane/klienci.js.
+// Dane modulu Klienci (bez DOM): opis i inicjaly wiersza listy, linki telefonu i mapy na karcie klienta, historia wycen
+// klienta, podpowiedz duplikatu w formularzu, klient formularza i jego zapis (nowy albo edycja) oraz propozycje w wyborze
+// klienta (R17, R18, R19). Wyszukiwanie i operacje na magazynie sa w src/dane/klienci.js.
 
-import { normalizujNazwe, szukajKlientow } from '../dane/klienci.js'
+import { dodajKlienta, dopasowanieFrazy, indeksKlientow, klient, normalizujNazwe, zapiszKlienta } from '../dane/klienci.js'
+import { bladTelefonu, numerTelefonu } from '../dane/walidacja.js'
 import { kwotaWyceny } from '../dane/wyceny.js'
 import { zl } from '../ui/format.js'
 
 /** @typedef {import('../dane/klienci.js').Klient} Klient */
+/** @typedef {import('../dane/klienci.js').ZmianaKlienta} ZmianaKlienta */
+/** @typedef {import('../dane/magazyn.js').Magazyn} Magazyn */
 /** @typedef {import('../dane/magazyn.js').Stan} Stan */
+/** @typedef {{ rodzaj: 'nowy' } | { rodzaj: 'edycja', klient: Klient } | { rodzaj: 'brak' }} KlientFormularza brak: klienta z adresu nie ma */
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
 /** @typedef {{ wycena: Wycena, kwota: number | null, opis: string }} PozycjaHistorii opis: „150 zł · 30 paź”, bez ceny sam dzien */
 
 const JEZYK = 'pl-PL'
 const SEPARATOR = ' · '
 const ADRES_MAPY = 'https://www.google.com/maps/search/?api=1&query='
-const SEPARATORY_TELEFONU = /[\s-]/gu
-const NUMER_TELEFONU = /^\+?\d+$/u
 /** Dzien utworzenia wyceny w czasie lokalnym: „30 paź”. */
 const formatDniaWyceny = new Intl.DateTimeFormat(JEZYK, { day: 'numeric', month: 'short' })
 /** Najwiecej propozycji w arkuszu wyboru klienta (wyborKlienta). */
@@ -35,13 +37,13 @@ export function inicjaly(nazwa) {
 }
 
 /**
- * Link do dzwonienia: numer bez spacji i myslnikow. Tekst bez cyfr albo z innymi znakami → RangeError.
+ * Link do dzwonienia: numer w zapisie zwartym (numerTelefonu). Numer, ktorego nie przyjmuje walidacja telefonu (bladTelefonu),
+ * → RangeError.
  * @param {string} telefon np. „+48 600-100-200” @returns {string} `tel:+48600100200`
  */
 export function linkTelefonu(telefon) {
-  const numer = telefon.normalize('NFKC').replace(SEPARATORY_TELEFONU, '')
-  if (!NUMER_TELEFONU.test(numer)) throw new RangeError(`To nie jest numer telefonu: ${telefon}`)
-  return `tel:${numer}`
+  if (bladTelefonu(telefon) !== null) throw new RangeError(`To nie jest numer telefonu: ${telefon}`)
+  return `tel:${numerTelefonu(telefon)}`
 }
 
 /**
@@ -77,12 +79,8 @@ export function historiaWycen(stan, klientId) {
     })
 }
 
-/**
- * Klient ma historie, gdy wskazuje go wycena albo zlecenie; takiego klienta nie da sie usunac (usunKlienta).
- * @param {Pick<Stan, 'wyceny' | 'zlecenia'>} stan @param {string} klientId @returns {boolean}
- */
-export const czyMaHistorie = (stan, klientId) =>
-  stan.wyceny.some((w) => w.klientId === klientId) || stan.zlecenia.some((z) => z.klientId === klientId)
+/** Regula „klient ma historie” (karta klienta: „Usuń klienta”) ma jedna definicje w src/dane/klienci.js. */
+export { czyMaHistorie } from '../dane/klienci.js'
 
 /**
  * Zapisany klient o tej samej nazwie (normalizujNazwe: wielkosc liter, spacje, NFC) do podpowiedzi duplikatu w formularzu;
@@ -97,15 +95,45 @@ export function podobnyKlient(stan, nazwa, pomijanyId = null) {
 }
 
 /**
+ * Klient formularza z parametru trasy: bez id nowy, z id zapisanego klienta edycja, z id, ktorego nie ma (usuniety w innej
+ * karcie, zly link), ekran braku klienta.
+ * @param {Pick<Stan, 'klienci'>} stan @param {string | null} id
+ * @returns {KlientFormularza}
+ */
+export function klientFormularza(stan, id) {
+  if (id === null) return { rodzaj: 'nowy' }
+  const zapisany = klient(stan, id)
+  return zapisany === null ? { rodzaj: 'brak' } : { rodzaj: 'edycja', klient: zapisany }
+}
+
+/**
+ * Zapis formularza klienta: nowy (`edytowany` null) przez dodajKlienta z id nadanym przy otwarciu ekranu (podwojne „Zapisz”
+ * nie dubluje klienta), edycja przez zapiszKlienta. Bledne pola → BladKlienta z dane/klienci.js.
+ * @param {Magazyn} magazyn @param {Klient | null} edytowany @param {string} id @param {ZmianaKlienta} dane
+ * @returns {Klient}
+ */
+export function zapiszFormularzKlienta(magazyn, edytowany, id, dane) {
+  return edytowany === null ? dodajKlienta(magazyn, dane, { id }) : zapiszKlienta(magazyn, id, dane)
+}
+
+/**
  * Propozycje w arkuszu wyboru klienta: pasujacy klienci (szukajKlientow: nazwa, telefon, adres), najpierw ci, ktorych nazwa
  * zaczyna sie od frazy, potem pozostali, w obu grupach po nazwie; najwyzej MAKS_PROPOZYCJI. Pusta fraza daje pierwszych po nazwie.
+ * Przeglad indeksu (indeksKlientow) konczy sie, gdy grupa, ktora idzie pierwsza, ma juz MAKS_PROPOZYCJI klientow.
  * @param {Pick<Stan, 'klienci'>} stan @param {string} fraza
  * @returns {Klient[]}
  */
 export function propozycjeKlientow(stan, fraza) {
-  const szukana = normalizujNazwe(fraza)
-  const pasujacy = szukajKlientow(stan, fraza)
-  /** @param {Klient} k */
-  const czyOdPoczatku = (k) => szukana !== '' && normalizujNazwe(k.nazwa).startsWith(szukana)
-  return [...pasujacy.filter(czyOdPoczatku), ...pasujacy.filter((k) => !czyOdPoczatku(k))].slice(0, MAKS_PROPOZYCJI)
+  const { szukana, pasuje } = dopasowanieFrazy(fraza)
+  /** @type {Klient[]} */
+  const odPoczatku = []
+  /** @type {Klient[]} */
+  const pozostali = []
+  for (const wpis of indeksKlientow(stan)) {
+    if (odPoczatku.length >= MAKS_PROPOZYCJI || (szukana === '' && pozostali.length >= MAKS_PROPOZYCJI)) break
+    if (!pasuje(wpis)) continue
+    if (szukana !== '' && wpis.nazwa.startsWith(szukana)) odPoczatku.push(wpis.klient)
+    else if (pozostali.length < MAKS_PROPOZYCJI) pozostali.push(wpis.klient)
+  }
+  return [...odPoczatku, ...pozostali].slice(0, MAKS_PROPOZYCJI)
 }

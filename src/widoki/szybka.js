@@ -9,13 +9,13 @@ import { wczytajStan } from '../dane/magazyn.js'
 import { pytaniaAplikacji } from '../dane/pytania.js'
 import { ustawieniaDomyslne } from '../dane/ustawienia.js'
 import { klient as znajdzKlienta } from '../dane/klienci.js'
-import { BladWyceny, przypiszKlienta, wycena as znajdzWycene } from '../dane/wyceny.js'
+import { BladWyceny, wycena as znajdzWycene } from '../dane/wyceny.js'
 import { czyWycenaZamknieta } from '../dane/zlecenia.js'
 import { MAKS_ILOSCI, ustawDodatek, ustawIlosc } from '../kreator/pozycje.js'
 import { pozycjeGlowne } from '../kreator/stan.js'
 import {
-  formularzDomyslny, opcjeUslug, oznaczWyslana, polaUslugi, RODZAJE_MIESZKANIA, wejscieZWyceny, wynikFormularza, zapiszSzybka,
-  zBrudemOdpowiedzi, zMetrazem, zSzybkiej, zUsluga,
+  formularzDomyslny, opcjeUslug, oznaczWyslana, polaUslugi, przypiszKlientaSzybkiej, RODZAJE_MIESZKANIA, wejscieZWyceny, wynikFormularza,
+  zapiszSzybka, zBrudemOdpowiedzi, zMetrazem, zSzybkiej, zUsluga,
 } from '../kreator/szybka.js'
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
 import { STANY_SZYBKIEJ } from '../silnik/szybka.js'
@@ -24,13 +24,13 @@ import { bladZakresu, nazwaJednostki } from '../ui/format.js'
 import { h } from '../ui/h.js'
 import { chipy, licznik, przycisk } from '../ui/komponenty/formularz.js'
 import { arkusz, baner, karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
-import { wyborKlienta } from '../ui/komponenty/wybor-klienta.js'
 import { kopiujDoSchowka } from '../ui/schowek.js'
 import { sciezka } from '../ui/trasy.js'
 import { adresKroku, WYCENA_ZAMKNIETA, zglosBladKreatora } from './kreator-wspolne.js'
 import { tekstBleduPytan, wierszPytan } from './pytania.js'
 import { adresWyceny } from './start-dane.js'
 import { kartaWyniku } from './szybka-wynik.js'
+import { wyborKlienta } from './wybor-klienta.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../ui/router.js').Kontekst} Kontekst */
@@ -254,8 +254,8 @@ export const widokSzybkiejWyceny = {
     }
 
     /**
-     * Wybor klienta: przed pierwszym zapisem tylko na ekranie, w zapisanym rekordzie od razu (przypiszKlienta). Znacznik zmiany
-     * idzie za zapisem tylko wtedy, gdy rekord nie zmienil sie wczesniej w innej karcie (ta zmiana ma dalej dac `nieaktualna`).
+     * Wybor klienta: przed pierwszym zapisem tylko na ekranie, w zapisanym rekordzie od razu (przypiszKlientaSzybkiej). Znacznik
+     * zmiany idzie za zapisem tylko wtedy, gdy rekord nie zmienil sie wczesniej w innej karcie (ta zmiana ma dalej dac `nieaktualna`).
      * @param {string | null} nowy @returns {string | null} tekst bledu albo null
      */
     function handleKlient(nowy) {
@@ -264,9 +264,7 @@ export const widokSzybkiejWyceny = {
         return null
       }
       try {
-        const przed = znajdzWycene(wczytajStan(magazyn), id)?.zmieniona
-        const po = znajdzWycene(przypiszKlienta(magazyn, id, nowy), id)
-        if (po && przed === zmieniona) zmieniona = po.zmieniona
+        zmieniona = przypiszKlientaSzybkiej(kontekst, id, nowy, zmieniona)
       } catch (blad) {
         return zglosBladKreatora(blad)
       }

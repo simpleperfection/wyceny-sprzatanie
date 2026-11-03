@@ -24,13 +24,20 @@ function bezSeparatorow(tekst) {
 }
 
 /**
+ * Numer telefonu w zapisie zwartym (jedno zrodlo reguly dla walidacji, linku `tel:` i wyszukiwania klientow): NFKC, bez spacji
+ * i myslnikow. Nie sprawdza poprawnosci (to robi bladTelefonu).
+ * @param {string} tekst np. „+48 600-100-200” @returns {string} „+48600100200”
+ */
+export const numerTelefonu = (tekst) => bezSeparatorow(tekst)
+
+/**
  * Telefon: 9 cyfr, opcjonalnie z +48; spacje i myslniki dozwolone.
  * @param {unknown} tekst
  * @returns {'telefon' | null}
  */
 export function bladTelefonu(tekst) {
   if (typeof tekst !== 'string') return 'telefon'
-  const zwarty = bezSeparatorow(tekst)
+  const zwarty = numerTelefonu(tekst)
   const numer = zwarty.startsWith(PRZEDROSTEK_POLSKI) ? zwarty.slice(PRZEDROSTEK_POLSKI.length) : zwarty
   return numer.length === CYFR_TELEFONU && TYLKO_CYFRY.test(numer) ? null : 'telefon'
 }

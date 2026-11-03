@@ -6,7 +6,7 @@
 import { klient } from '../dane/klienci.js'
 import { wczytajStan } from '../dane/magazyn.js'
 import { scalKoszty, ustawieniaDomyslne } from '../dane/ustawienia.js'
-import { BladWyceny, utworzSzkic, wycena as znajdzWycene, zmienStatus } from '../dane/wyceny.js'
+import { BladWyceny, przypiszKlienta, utworzSzkic, wycena as znajdzWycene, zmienStatus } from '../dane/wyceny.js'
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
 import { ZESTAW_BIURA } from '../silnik/czas.js'
 import { poziomGornejGranicy, regulyBrudu, zastosujOdpowiedzi } from '../silnik/pytania.js'
@@ -260,6 +260,20 @@ export function zapiszSzybka(kontekst, id, formularz, opcje = {}) {
     }
     return { wejscie, szybka, odpowiedzi }
   })
+}
+
+/**
+ * Klient zapisanego rekordu szybkiej wyceny (przypiszKlienta) i znacznik zmiany, ktory ekran ma widziec po zapisie: nowy tylko
+ * wtedy, gdy przed zapisem rekord mial znacznik z ekranu. Zmiana z innej karty zostawia stary znacznik, wiec nastepny
+ * zapiszSzybka dalej daje BladWyceny `nieaktualna` zamiast nadpisac nowsze dane. Bledy przypiszKlienta leca dalej.
+ * @param {DaneAplikacji} kontekst @param {string} id @param {string | null} klientId @param {string | null} zmieniona znacznik z ekranu
+ * @returns {string | null} znacznik dla ekranu
+ */
+export function przypiszKlientaSzybkiej(kontekst, id, klientId, zmieniona) {
+  const { magazyn } = kontekst
+  const przed = znajdzWycene(wczytajStan(magazyn), id)?.zmieniona
+  const po = znajdzWycene(przypiszKlienta(magazyn, id, klientId), id)
+  return po && przed === zmieniona ? po.zmieniona : zmieniona
 }
 
 /**
