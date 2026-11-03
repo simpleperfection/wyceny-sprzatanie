@@ -16,8 +16,6 @@ import { BladPliku, MAKS_ROZMIAR_PLIKU } from '../ui/plik.js'
 /** Pliki w oknie wyboru: kopie JSON (rozszerzenie dla systemow, ktore nie znaja typu MIME pliku). */
 export const PLIKI_KOPII = '.json,application/json'
 const BAJTOW_W_MB = 1024 * 1024
-/** Odmiana „klient” po liczbie: 1 klient, 2 klientów (rzeczownik meskoosobowy), 5 klientów. */
-const FORMY_KLIENTA = /** @type {const} */ (['klient', 'klientów', 'klientów'])
 /** Komunikaty bledow wczytania kopii wg kodu BladKopii. */
 const TEKSTY_BLEDOW_KOPII = Object.freeze({
   zly_plik: 'To nie jest plik kopii tej aplikacji.',
@@ -66,7 +64,7 @@ export function tekstOstatniejKopii(dni, ostatnia) {
  * @returns {string[]} „12 wycen”, „2 klientów”, „5 zleceń”, „ustawienia firmy”
  */
 export function etykietyPodsumowania({ wycen, klientow, zlecen, czyUstawienia }) {
-  const etykiety = [`${wycen} ${odmiana(wycen, FORMY.wycena)}`, `${klientow} ${odmiana(klientow, FORMY_KLIENTA)}`,
+  const etykiety = [`${wycen} ${odmiana(wycen, FORMY.wycena)}`, `${klientow} ${odmiana(klientow, FORMY.klient)}`,
     `${zlecen} ${odmiana(zlecen, FORMY.zlecenie)}`]
   return czyUstawienia ? [...etykiety, 'ustawienia firmy'] : etykiety
 }

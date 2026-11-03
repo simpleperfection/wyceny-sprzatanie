@@ -113,10 +113,80 @@
     {
       "numer": 3,
       "nazwa": "Nowy wygląd, szkielet i Start",
-      "execute": "pending",
-      "review": "pending",
-      "fix": "none",
-      "otwarteFindingi": []
+      "execute": "done",
+      "review": "done",
+      "fix": "pending",
+      "otwarteFindingi": [
+        {
+          "severity": "P2",
+          "typ": "TEST",
+          "plik": "src/app.js:88",
+          "opis": "odswiezajPoZmianieDnia bez testu; wydzielić do src/ui/zmiana-dnia.js z wstrzykiwanymi zależnościami i przetestować gałęzie (nowy dzień, ten sam dzień, hidden, hashchange)."
+        },
+        {
+          "severity": "P2",
+          "typ": "KOD",
+          "plik": "src/ui/format.js:39",
+          "opis": "FORMY.klient dubluje FORMY_KLIENTA z src/widoki/kopia-teksty.js:20; usunąć lokalną i użyć FORMY.klient."
+        },
+        {
+          "severity": "P2",
+          "typ": "KOD",
+          "plik": "src/widoki/lista-wycen-dane.js:51",
+          "opis": "doZaplanowania w pętli -> O(wyceny x zlecenia) na każdy render Start i #/wyceny; zbudować Map zleceniaPoWycenie."
+        },
+        {
+          "severity": "P2",
+          "typ": "KOD",
+          "plik": "src/widoki/start-dane.js:65",
+          "opis": "Reguła sekcji wycen zapisana dwa razy (stanWycen i sekcjaWyceny); liczyć stanWycen z sekcjeWycen(stan)."
+        }
+      ],
+      "baza": "8e46a30f184d735d07475f537cea4f0b6106b9d1",
+      "metryki": {
+        "liczniki": {
+          "p1": 0,
+          "p2": 4,
+          "p3": 11,
+          "operator": 0
+        },
+        "przebieg": {
+          "pominieci": [],
+          "e2eTryb": "przegladarka",
+          "znalezione": 15,
+          "poDedupJs": 15,
+          "poDedupSem": 15,
+          "weryfikowane": 4,
+          "obalone": 0,
+          "p3Odrzucone": 0,
+          "e2eCheckboxy": 6,
+          "e2eStatus": "wykonany (tryb przegladarka)",
+          "e2ePass": 6,
+          "e2eFail": 0,
+          "e2eSkip": 0,
+          "e2eManual": 0,
+          "dossier": true,
+          "sceptycy": {
+            "p1": 0,
+            "p2Grupy": 1,
+            "p2Findingi": 4
+          },
+          "sceptyk": {
+            "agree": 4,
+            "disagree_evidence": 0,
+            "disagree_concern": 0,
+            "degradacje": 0
+          },
+          "tiery": {
+            "sceptykP2": "medium",
+            "sceptykP1": "high",
+            "reviewer": "high",
+            "spec": "medium",
+            "testCoverage": "medium",
+            "scribe": "low"
+          }
+        }
+      }
     },
     {
       "numer": 4,

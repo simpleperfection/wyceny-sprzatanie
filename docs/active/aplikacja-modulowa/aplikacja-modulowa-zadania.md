@@ -219,11 +219,11 @@ Zależy od: Faza 2
 - [x] Test: [Unit] `naglowek` z `wsteczTekst: 'Start'` daje link z tekstem „Start” i ikoną; bez `wsteczTekst` — link z `aria-label="Wstecz"`
 - [x] Test: [Unit] `przelaczniki` ustawia `aria-current="page"` tylko na aktywnej pozycji
 - [x] Test: [Unit] `wiecej` daje `details` z `summary` „Więcej” i treścią w środku; `podpowiedz` ma `aria-label` „Wyjaśnienie: Mediana rynku”
-- [ ] Test: [E2E] `wyglad-podstawy` — okno 360×800, wstrzyknij przez `agent-browser eval` treść `e2e/stany/ustawienia-mazowieckie.json` do `localStorage['wyceny-sprzatanie:stan']`, otwórz http://localhost:5174/#/ustawienia, #/chemia i #/wyceny, na każdym przez eval zmierz `getComputedStyle` tekstu akapitów i wysokość widocznych `a, button, input, select, summary` w `main`, policz kontrast koloru tekstu przycisku głównego do jego tła, zrób screenshot → tekst podstawowy ≥ 17 px, każdy element klikalny ≥ 48 px wysokości, kontrast przycisku głównego ≥ 4,5:1, brak elementu dolnego paska, tło strony białe, konsola bez błędów
-- [ ] Weryfikacja: `node --test src/ui/komponenty/uklad.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
-- [ ] Weryfikacja: `grep -rn "dolnyPasek\|dolny-pasek" src/ index.html` nie zwraca wyników
-- [ ] Weryfikacja: `grep -c "src/style/zlecenia.css" index.html` zwraca 1
+- [x] Test: [E2E] `wyglad-podstawy` — okno 360×800, wstrzyknij przez `agent-browser eval` treść `e2e/stany/ustawienia-mazowieckie.json` do `localStorage['wyceny-sprzatanie:stan']`, otwórz http://localhost:5174/#/ustawienia, #/chemia i #/wyceny, na każdym przez eval zmierz `getComputedStyle` tekstu akapitów i wysokość widocznych `a, button, input, select, summary` w `main`, policz kontrast koloru tekstu przycisku głównego do jego tła, zrób screenshot → tekst podstawowy ≥ 17 px, każdy element klikalny ≥ 48 px wysokości, kontrast przycisku głównego ≥ 4,5:1, brak elementu dolnego paska, tło strony białe, konsola bez błędów
+- [x] Weryfikacja: `node --test src/ui/komponenty/uklad.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `grep -rn "dolnyPasek\|dolny-pasek" src/ index.html` nie zwraca wyników
+- [x] Weryfikacja: `grep -c "src/style/zlecenia.css" index.html` zwraca 1
 
 ### IU-9: Ekran Start z kaflami modułów (feature-builder-ui)
 
@@ -241,9 +241,9 @@ Zależy od: Faza 2
 - [x] Test: [Unit] `stanKafla('wycena', …)` daje „1 do wysłania”, bez niej „1 do zaplanowania”, bez wycen „Zrób pierwszą wycenę”
 - [x] Test: [Unit] `banerStartu` przy braku kopii i ustawieniach domyślnych zwraca tylko baner kopii
 - [x] Test: [Unit] `kiedy('2026-11-03', '09:00', '2026-11-02')` → „jutro 9:00”; `kiedy('2026-11-06', '09:00', '2026-11-02')` → „pt 6 lis, 9:00”
-- [ ] Test: [E2E] `start-moduly` — okno 360×800, uruchom w stronie przez `agent-browser eval` skrypt `e2e/stany/moduly-dzis.js`, otwórz http://localhost:5174/#/start, zrób screenshot, kliknij kafel „Wycena”, potem „Szybka wycena” → nagłówek „Dzień dobry, Usługi Sprzątające Monika Lis”, zdanie „Dziś 2 zlecenia · 1 niezapłacone”, kafel „Wycena” z linią „1 do wysłania” i kafel „Chemia”, kafle w dwóch kolumnach, jeden baner („Nie masz jeszcze kopii danych…”), odnośnik „Ustawienia firmy”, brak dolnego paska, po dwóch dotknięciach adres #/szybka
-- [ ] Weryfikacja: `node --test src/widoki/start-dane.test.js src/ui/format.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Test: [E2E] `start-moduly` — okno 360×800, uruchom w stronie przez `agent-browser eval` skrypt `e2e/stany/moduly-dzis.js`, otwórz http://localhost:5174/#/start, zrób screenshot, kliknij kafel „Wycena”, potem „Szybka wycena” → nagłówek „Dzień dobry, Usługi Sprzątające Monika Lis”, zdanie „Dziś 2 zlecenia · 1 niezapłacone”, kafel „Wycena” z linią „1 do wysłania” i kafel „Chemia”, kafle w dwóch kolumnach, jeden baner („Nie masz jeszcze kopii danych…”), odnośnik „Ustawienia firmy”, brak dolnego paska, po dwóch dotknięciach adres #/szybka
+- [x] Weryfikacja: `node --test src/widoki/start-dane.test.js src/ui/format.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-10: Moduł Wycena: ekran główny (feature-builder-ui)
 
@@ -254,9 +254,9 @@ Zależy od: Faza 2
 - [x] Modyfikuj: `src/style/komponenty.css`
 - [x] Test: [Unit] `sekcjeWycen` na stanie z `e2e/stany/moduly-dzis.js`: kolejność „Do wysłania” (Jan Nowak), „Do zaplanowania” (Anna Kowalska), „Czekają na odpowiedź” (Anna Kowalska), „Pozostałe” (Biuro Rachunkowe Lis)
 - [x] Test: [Unit] przyjęty abonament z samymi zleceniami jednorazowymi jest w „Do zaplanowania”; wycena bez klienta ma tytuł z nazwą usługi
-- [ ] Test: [E2E] `wycena-modul` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz http://localhost:5174/#/start, kliknij kafel „Wycena”, zrób screenshot → nagłówek „Wycena” z powrotem „Start”, przyciski „Szybka wycena” i „Dokładna wycena” na górze, sekcje w kolejności „Do wysłania”, „Do zaplanowania”, „Czekają na odpowiedź”, „Pozostałe”, każdy wiersz w najwyżej dwóch liniach
-- [ ] Weryfikacja: `node --test src/widoki/lista-wycen-dane.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Test: [E2E] `wycena-modul` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz http://localhost:5174/#/start, kliknij kafel „Wycena”, zrób screenshot → nagłówek „Wycena” z powrotem „Start”, przyciski „Szybka wycena” i „Dokładna wycena” na górze, sekcje w kolejności „Do wysłania”, „Do zaplanowania”, „Czekają na odpowiedź”, „Pozostałe”, każdy wiersz w najwyżej dwóch liniach
+- [x] Weryfikacja: `node --test src/widoki/lista-wycen-dane.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-11: Moduł Chemia w nowym wyglądzie (feature-builder-ui)
 
@@ -265,9 +265,9 @@ Zależy od: Faza 2
 - [x] Modyfikuj: `src/widoki/dobor-chemii.js`
 - [x] Modyfikuj: `src/style/chemia.css`
 - [x] Modyfikuj: `src/style/komponenty.css`
-- [ ] Test: [E2E] `chemia-modul` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, otwórz http://localhost:5174/#/start, kliknij kafel „Chemia”, wybierz pierwszą kategorię, rozwiń „Więcej” przy pierwszym produkcie, zrób screenshot → nagłówek „Chemia” z powrotem „Start”, w kategorii powrót „Chemia”, wiersze w najwyżej dwóch liniach, tekst ≥ 17 px, opis widoczny dopiero po „Więcej”
-- [ ] Weryfikacja: `npm test` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Test: [E2E] `chemia-modul` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, otwórz http://localhost:5174/#/start, kliknij kafel „Chemia”, wybierz pierwszą kategorię, rozwiń „Więcej” przy pierwszym produkcie, zrób screenshot → nagłówek „Chemia” z powrotem „Start”, w kategorii powrót „Chemia”, wiersze w najwyżej dwóch liniach, tekst ≥ 17 px, opis widoczny dopiero po „Więcej”
+- [x] Weryfikacja: `npm test` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-12: Ustawienia, kreator startowy i kopia w nowym wyglądzie (feature-builder-ui)
 
@@ -280,10 +280,14 @@ Zależy od: Faza 2
 - [x] Modyfikuj: `src/widoki/ratunek.js`
 - [x] Modyfikuj: `src/style/ustawienia.css`
 - [x] Modyfikuj: `src/style/komponenty.css`
-- [ ] Test: [E2E] `ustawienia-kopia-wyglad` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz http://localhost:5174/#/start, kliknij „Ustawienia firmy”, potem wiersz „Kopia danych”, zrób screenshot → tytuł „Ustawienia firmy” z powrotem „Start”, na kopii powrót „Ustawienia firmy”, chipy podsumowania „4 wyceny”, „3 klientów”, „3 zlecenia” i zdanie „Plik kopii zawiera dane klientów, także notatki. Trzymaj go w bezpiecznym miejscu.”
-- [ ] Test: [E2E] `kreator-startowy-wyglad` — okno 360×800, wyczyść localStorage, otwórz http://localhost:5174/, przejdź kreator z województwem mazowieckim i kliknij „Gotowe”, zrób screenshot → kreator w nowym wyglądzie, po „Gotowe” ekran Start z powitaniem „Dzień dobry”
-- [ ] Weryfikacja: `npm test` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Test: [E2E] `ustawienia-kopia-wyglad` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz http://localhost:5174/#/start, kliknij „Ustawienia firmy”, potem wiersz „Kopia danych”, zrób screenshot → tytuł „Ustawienia firmy” z powrotem „Start”, na kopii powrót „Ustawienia firmy”, chipy podsumowania „4 wyceny”, „3 klientów”, „3 zlecenia” i zdanie „Plik kopii zawiera dane klientów, także notatki. Trzymaj go w bezpiecznym miejscu.”
+- [x] Test: [E2E] `kreator-startowy-wyglad` — okno 360×800, wyczyść localStorage, otwórz http://localhost:5174/, przejdź kreator z województwem mazowieckim i kliknij „Gotowe”, zrób screenshot → kreator w nowym wyglądzie, po „Gotowe” ekran Start z powitaniem „Dzień dobry”
+- [x] Weryfikacja: `npm test` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+
+## Do poprawy po review fazy 3
+
+Zamkniete cyklem fix: 4 pozycji — pelna tresc findingow i uzasadnienia w `review-faza-3.md`.
 
 ## Operator checklist faza 3
 

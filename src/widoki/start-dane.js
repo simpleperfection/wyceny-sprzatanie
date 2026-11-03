@@ -4,17 +4,18 @@
 
 import { czyPrzypomniecOKopii } from '../dane/kopia.js'
 import { brakujeUstawien } from '../dane/ustawienia.js'
-import { doZaplanowania } from '../dane/zlecenia.js'
 import { czyPokazacInstrukcjeIos } from '../pwa/rejestracja.js'
 import { FORMY, kiedy, odmiana } from '../ui/format.js'
 import { sciezka } from '../ui/trasy.js'
 import { doZamkniecia, liczbaDzis, najblizsza, niezaplacone } from '../zlecenia/zapytania.js'
+import { sekcjeWycen } from './lista-wycen-dane.js'
 
 /** @typedef {import('../dane/magazyn.js').Stan} Stan */
 /** @typedef {import('../dane/ustawienia.js').Ustawienia} Ustawienia */
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
 /** @typedef {import('../pwa/rejestracja.js').Srodowisko} Srodowisko */
 /** @typedef {import('../ui/moduly.js').IdModulu} IdModulu */
+/** @typedef {import('./lista-wycen-dane.js').IdSekcji} IdSekcji */
 /**
  * @typedef {{ tekst: string, czyAkcja: boolean }} StanKafla czyAkcja: linia wymaga dzialania (wyrozniona na kaflu)
  * @typedef {{ rodzaj: 'ios' } | { rodzaj: 'kopia' } | { rodzaj: 'ustawienia' }} BanerStartu
@@ -61,15 +62,21 @@ function stanZlecen(stan, dzis) {
   return stan.zlecenia.length === 0 ? akcja('Dodaj pierwsze zlecenie') : informacja('Brak zaplanowanych wizyt')
 }
 
-/** @param {Pick<Stan, 'wyceny' | 'zlecenia'>} stan @returns {StanKafla} */
+/**
+ * Kafel Wycena liczy z sekcji ekranu `#/wyceny` (sekcjeWycen), wiec pokazuje te same liczby co lista.
+ * @param {Pick<Stan, 'wyceny' | 'zlecenia'>} stan @returns {StanKafla}
+ */
 function stanWycen(stan) {
   const { wyceny } = stan
   if (wyceny.length === 0) return akcja('Zrób pierwszą wycenę')
-  const doWyslania = wyceny.filter((w) => w.status === 'do_wyslania').length
+  const sekcje = sekcjeWycen(stan)
+  /** @param {IdSekcji} id @returns {number} */
+  const ile = (id) => sekcje.find((s) => s.id === id)?.wyceny.length ?? 0
+  const doWyslania = ile('do_wyslania')
   if (doWyslania > 0) return akcja(`${doWyslania} do wysłania`)
-  const zaplanowania = wyceny.filter((w) => doZaplanowania(stan, w)).length
+  const zaplanowania = ile('do_zaplanowania')
   if (zaplanowania > 0) return akcja(`${zaplanowania} do zaplanowania`)
-  const czekaja = wyceny.filter((w) => w.status === 'wyslana').length
+  const czekaja = ile('czekaja')
   if (czekaja > 0) return informacja(`${czekaja} ${odmiana(czekaja, FORMY.czeka)} na odpowiedź`)
   return informacja(`${wyceny.length} ${odmiana(wyceny.length, FORMY.wycena)}`)
 }
