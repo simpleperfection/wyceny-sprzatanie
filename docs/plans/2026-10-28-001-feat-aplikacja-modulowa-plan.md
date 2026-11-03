@@ -999,7 +999,8 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 **Teksty (verbatim):**
 - Tytuł: „Zlecenia”; przełączniki: „Dzień”, „Tydzień”, „Miesiąc”
 - Nawigacja: „Dziś”; etykiety dla czytnika: „Poprzedni dzień”, „Następny dzień”, „Poprzedni tydzień”, „Następny tydzień”, „Poprzedni miesiąc”, „Następny miesiąc”
-- Sekcja: „Do zamknięcia”
+- Sekcje: „Do zamknięcia”; nad wizytami dnia, gdy wyżej jest „Do zamknięcia”: „Wizyty dnia”
+- Wiersz w „Do zamknięcia” (zaległa wizyta z innego dnia): pierwsza linia „{klient}”, druga „{dzień}, {godzina} · {kwota}” (np. „nd 1 lis, 10:00 · 180 zł”) zamiast adresu
 - Przyciski wiersza: „Zrobione”, „Zapłacone”; pigułka „Odwołana”; kwota w serii miesięcznej: „w abonamencie”
 - Pusty dzień: „Brak wizyt tego dnia.” z przyciskiem „Nowe zlecenie”; pusty dzień w tygodniu: „Brak wizyt”
 - Wiersz bez godziny: „Bez godziny · {klient}”
@@ -1118,7 +1119,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 - Tytuł „Wizyta”; wiersze „Klient”, „Adres”, „Termin”, „Kwota”, „Usługa”
 - Przyciski: „Zrobione”, „Cofnij”, „Zapłacone”, „Zmień formę”, „Dopisz czas pracy”, „Zapisz czas”, „Przesuń”, „Zapisz nowy termin”, „Odwołaj wizytę”, „Przywróć wizytę”, „Zmień od tej wizyty”, „Zlecenie”, „Wycena {numer}”
 - Stan zapłaty: „Zapłacone · {forma} · {data}”; bez formy: „Zapłacone”; kwota w abonamencie: „w abonamencie”
-- Formy: „Gotówka”, „Przelew”, „BLIK”
+- Formy: „Gotówka”, „Przelew”, „BLIK”; podpis nad chipami formy: „Jak zapłacił klient?”
 - Plan i fakt: „Plan {czas}”, „Fakt {czas}”, „Zostaje {kwota}/h”
 - Dialog odwołania: „Odwołać wizytę {data}?”, „Odwołaj”, „Anuluj”
 - Pigułki: „Zrobione”, „Zapłacone”, „Niezapłacone”, „Odwołana”, „Przesunięta”
