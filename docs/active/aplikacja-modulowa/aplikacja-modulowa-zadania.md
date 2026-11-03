@@ -300,40 +300,40 @@ Zależy od: Faza 3
 
 ### IU-13: Lista, karta i formularz klienta (feature-builder-ui)
 
-- [ ] Modyfikuj: `src/ui/trasy.js`
-- [ ] Modyfikuj: `src/ui/router.test.js`
-- [ ] Modyfikuj: `src/widoki/indeks.js`
-- [ ] Modyfikuj: `src/ui/moduly.js`
-- [ ] Stwórz: `src/widoki/klienci-lista.js`
-- [ ] Stwórz: `src/widoki/klient-karta.js`
-- [ ] Stwórz: `src/widoki/klient-formularz.js`
-- [ ] Stwórz: `src/widoki/klienci-dane.js`
-- [ ] Test (unit): `src/widoki/klienci-dane.test.js`
-- [ ] Modyfikuj: `src/style/klienci.css`
-- [ ] Test: [Unit] `linkTelefonu('600 100 200')` → `tel:600100200`; `linkTelefonu('+48 600-100-200')` → `tel:+48600100200`; `linkMapy('ul. Lipowa 3, Warszawa')` koduje spacje i przecinek
-- [ ] Test: [Unit] `podobnyKlient(stan, '  anna KOWALSKA')` znajduje „Anna Kowalska”, a z `pomijanyId` tej klientki — nie
-- [ ] Test: [Unit] `historiaWycen` zwraca wyceny klienta od najnowszej z kwotą
-- [ ] Test: [Unit] `dopasuj('#/klienci/nowy', TRASY)` → `nowyKlient`; `dopasuj('#/klienci/k-1/edycja', TRASY)` → `edycjaKlienta` z `id: 'k-1'`
+- [x] Modyfikuj: `src/ui/trasy.js`
+- [x] Modyfikuj: `src/ui/router.test.js`
+- [x] Modyfikuj: `src/widoki/indeks.js`
+- [x] Modyfikuj: `src/ui/moduly.js`
+- [x] Stwórz: `src/widoki/klienci-lista.js`
+- [x] Stwórz: `src/widoki/klient-karta.js`
+- [x] Stwórz: `src/widoki/klient-formularz.js`
+- [x] Stwórz: `src/widoki/klienci-dane.js`
+- [x] Test (unit): `src/widoki/klienci-dane.test.js`
+- [x] Modyfikuj: `src/style/klienci.css`
+- [x] Test: [Unit] `linkTelefonu('600 100 200')` → `tel:600100200`; `linkTelefonu('+48 600-100-200')` → `tel:+48600100200`; `linkMapy('ul. Lipowa 3, Warszawa')` koduje spacje i przecinek
+- [x] Test: [Unit] `podobnyKlient(stan, '  anna KOWALSKA')` znajduje „Anna Kowalska”, a z `pomijanyId` tej klientki — nie
+- [x] Test: [Unit] `historiaWycen` zwraca wyceny klienta od najnowszej z kwotą
+- [x] Test: [Unit] `dopasuj('#/klienci/nowy', TRASY)` → `nowyKlient`; `dopasuj('#/klienci/k-1/edycja', TRASY)` → `edycjaKlienta` z `id: 'k-1'`
 - [ ] Test: [E2E] `klienci-dodaj-karta` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz http://localhost:5174/#/start, kliknij kafel „Klienci”, „Dodaj klienta”, wpisz „Ewa Zielińska”, telefon „601 202 303”, adres „ul. Polna 5, Kraków”, kliknij „Zapisz”, wróć do listy, wpisz w wyszukiwanie „ziel”, zrób screenshot → Start ma kafel „Klienci” z „3 klientów”, po zapisie karta „Ewa Zielińska” z linkiem `tel:601202303` i linkiem mapy z adresem, lista po wyszukaniu ma jedną pozycję, przycisk wstecz przeglądarki z karty nie otwiera ponownie pustego formularza
 - [ ] Weryfikacja: `node --test src/widoki/klienci-dane.test.js src/ui/router.test.js` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-14: Wybór klienta w wycenie (feature-builder-fullstack)
 
-- [ ] Stwórz: `src/ui/komponenty/wybor-klienta.js`
-- [ ] Modyfikuj: `src/widoki/klienci-dane.js`
-- [ ] Modyfikuj: `src/widoki/klienci-dane.test.js`
-- [ ] Modyfikuj: `src/widoki/podsumowanie.js`
-- [ ] Modyfikuj: `src/widoki/oferta-edycja-sekcje.js`
-- [ ] Modyfikuj: `src/widoki/oferta-edycja.js`
-- [ ] Modyfikuj: `src/kreator/stan.js`
-- [ ] Modyfikuj: `src/kreator/stan.test.js`
-- [ ] Modyfikuj: `src/widoki/kreator-usluga.js`
-- [ ] Modyfikuj: `src/kreator/szybka.js`
-- [ ] Modyfikuj: `src/widoki/szybka.js`
-- [ ] Modyfikuj: `src/style/klienci.css`
-- [ ] Test: [Unit] `propozycjeKlientow(stan, 'an')` zwraca najwyżej 8 klientów, najpierw tych, których nazwa zaczyna się od frazy
-- [ ] Test: [Unit] szkic utworzony z parametrem `klient` ma `klientId` i nazwę klienta w `wycena.klient`; nieistniejący klient daje szkic bez klienta
+- [x] Stwórz: `src/ui/komponenty/wybor-klienta.js`
+- [x] Modyfikuj: `src/widoki/klienci-dane.js`
+- [x] Modyfikuj: `src/widoki/klienci-dane.test.js`
+- [x] Modyfikuj: `src/widoki/podsumowanie.js`
+- [x] Modyfikuj: `src/widoki/oferta-edycja-sekcje.js`
+- [x] Modyfikuj: `src/widoki/oferta-edycja.js`
+- [x] Modyfikuj: `src/kreator/stan.js`
+- [x] Modyfikuj: `src/kreator/stan.test.js`
+- [x] Modyfikuj: `src/widoki/kreator-usluga.js`
+- [x] Modyfikuj: `src/kreator/szybka.js`
+- [x] Modyfikuj: `src/widoki/szybka.js`
+- [x] Modyfikuj: `src/style/klienci.css`
+- [x] Test: [Unit] `propozycjeKlientow(stan, 'an')` zwraca najwyżej 8 klientów, najpierw tych, których nazwa zaczyna się od frazy
+- [x] Test: [Unit] szkic utworzony z parametrem `klient` ma `klientId` i nazwę klienta w `wycena.klient`; nieistniejący klient daje szkic bez klienta
 - [ ] Test: [E2E] `wycena-klient-z-listy` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz http://localhost:5174/#/klienci, otwórz kartę „Anna Kowalska”, kliknij „Nowa wycena”, przejdź kreator mieszkania 50 m² do podsumowania i kliknij „Zapisz”; potem otwórz ekran Wycena, „Szybka wycena”, kliknij „Wybierz klienta”, wpisz „Piotr Wiśniewski”, kliknij „Dodaj nowego klienta: Piotr Wiśniewski” i zamknij arkusz bez zapisu, otwórz listę klientów, zrób screenshot → zapisana wycena ma klienta „Anna Kowalska” bez wpisywania nazwy, na karcie Anny w „Wyceny” jest nowa wycena, a na liście klientów nie ma „Piotr Wiśniewski” (porzucony arkusz nie dodał klienta)
 - [ ] Weryfikacja: `node --test src/widoki/klienci-dane.test.js src/kreator/stan.test.js` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów

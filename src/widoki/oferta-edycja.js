@@ -5,7 +5,7 @@
 
 import { BladMagazynu, wczytajStan } from '../dane/magazyn.js'
 import { BladUstawien, POLA_WYMAGANE_W_OFERCIE } from '../dane/ustawienia.js'
-import { BladWyceny, czyStatusOferty, wycena as znajdzWycene, zapiszOferte, zapiszWyslanieOferty } from '../dane/wyceny.js'
+import { BladWyceny, czyStatusOferty, przypiszKlienta, wycena as znajdzWycene, zapiszOferte, zapiszWyslanieOferty } from '../dane/wyceny.js'
 import { czyWycenaZamknieta } from '../dane/zlecenia.js'
 import { BladKodeka, linkOferty } from '../oferta/kodek.js'
 import { BladOferty, ofertaZWyceny, warunkiZrodlowe } from '../oferta/tresc.js'
@@ -13,6 +13,7 @@ import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
 import { h } from '../ui/h.js'
 import { przycisk } from '../ui/komponenty/formularz.js'
 import { baner, naglowek } from '../ui/komponenty/uklad.js'
+import { wyborKlienta } from '../ui/komponenty/wybor-klienta.js'
 import { kopiujDoSchowka } from '../ui/schowek.js'
 import { ETYKIETY_STATUSOW } from '../ui/statusy.js'
 import { sciezka } from '../ui/trasy.js'
@@ -187,6 +188,25 @@ function uruchomOferte(kontener, kontekst, id, zakresy, czyAktywny) {
   }
 
   /**
+   * Klient z listy (wyborKlienta): kopia jego nazwy i adresu w wycenie, nowy adres w polu adresu karty.
+   * @param {HTMLElement} karta karta „Klient i termin” @param {string | null} klientId @returns {string | null} tekst bledu albo null
+   */
+  function przypisz(karta, klientId) {
+    try {
+      przypiszKlienta(magazyn, id, klientId)
+    } catch (blad) {
+      return tekstBleduZapisuOferty(blad)
+    }
+    const adres = karta.querySelector('#oferta-adres')
+    const teraz = biezaca()
+    if (adres instanceof HTMLInputElement && teraz) adres.value = teraz.w.klient.adres
+    wersja += 1
+    odswiezStan()
+    przygotujLink()
+    return null
+  }
+
+  /**
    * Oferta trafila do klienta: data waznosci zostaje taka jak w linku, status `wyslana`. Wycena ze zleceniem jest tylko
    * do odczytu, wiec jej wyslanie niczego nie zapisuje (zapiszWyslanieOferty).
    */
@@ -259,7 +279,9 @@ function uruchomOferte(kontener, kontekst, id, zakresy, czyAktywny) {
   /** @param {BiezacaOferta} poczatek stan przy otwarciu (zapasowo, gdy swiezego nie da sie odczytac) */
   function rysuj(poczatek) {
     const { w, stan, oferta } = poczatek
-    const klient = kartaKlienta(w.klient, zapisz)
+    const wybor = wyborKlienta({ magazyn, wybranyId: w.klientId, czyAktywny, id: 'oferta-klient',
+      naWybor: (klientId) => przypisz(klient, klientId) })
+    const klient = kartaKlienta(w.klient, zapisz, wybor.element)
     const zakres = kartaZakresu({ zapisz, pobierz: () => {
       const teraz = biezaca() ?? poczatek
       return { zakres: teraz.oferta.zakres, czyZmieniony: teraz.w.oferta.zakres !== null }

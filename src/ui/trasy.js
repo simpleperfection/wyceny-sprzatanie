@@ -13,6 +13,11 @@ export const TRASY = Object.freeze({
   kreatorStartowy: '#/ustawienia/start',
   kopia: '#/kopia',
   chemia: '#/chemia',
+  klienci: '#/klienci',
+  // Przed `klient`: router bierze pierwsze dopasowanie, a `nowy` pasuje tez do wzorca `#/klienci/:id`.
+  nowyKlient: '#/klienci/nowy',
+  klient: '#/klienci/:id',
+  edycjaKlienta: '#/klienci/:id/edycja',
 })
 
 /** @typedef {keyof typeof TRASY} NazwaTrasy */

@@ -3,6 +3,7 @@
 // w dokladna wycene (zSzybkiej). Rekord ma w `wejscie` wejscie dolnej granicy z naDokladna (pomieszczenia ukladu albo pozycje),
 // wiec podsumowanie, lista i oferta czytaja go jak kazda wycene; formularz odtwarza z niego wejscieZWyceny. Bez DOM.
 
+import { klient } from '../dane/klienci.js'
 import { wczytajStan } from '../dane/magazyn.js'
 import { scalKoszty, ustawieniaDomyslne } from '../dane/ustawienia.js'
 import { BladWyceny, utworzSzkic, wycena as znajdzWycene, zmienStatus } from '../dane/wyceny.js'
@@ -242,13 +243,16 @@ export function zSkutkamiOdpowiedzi(formularz, pytania, k) {
  * widelki w `szybka`, odpowiedzi klienta i migawka wyniku w jednym zapisie. Formularz z bledem (np. za maly metraz) daje
  * BladWejscia i nic nie zapisuje.
  * @param {DaneAplikacji} kontekst @param {string | null} id @param {FormularzSzybkiej} formularz
- * @param {{ zmieniona?: string | null }} [opcje] zmieniona: znacznik rekordu widziany na ekranie; inny w magazynie (zmiana
- *   w innej karcie, np. odpowiedzi klienta) daje BladWyceny `nieaktualna` zamiast nadpisania nowszych danych starszymi
+ * @param {{ zmieniona?: string | null, klientId?: string | null }} [opcje] zmieniona: znacznik rekordu widziany na ekranie; inny
+ *   w magazynie (zmiana w innej karcie, np. odpowiedzi klienta) daje BladWyceny `nieaktualna` zamiast nadpisania nowszych danych
+ *   starszymi. klientId: klient wybrany przed pierwszym zapisem (nowy szkic z nim, klienta, ktorego nie ma, pomija); klienta
+ *   zapisanego rekordu zmienia przypiszKlienta
  * @returns {Wycena}
  */
 export function zapiszSzybka(kontekst, id, formularz, opcje = {}) {
   const { wejscie, szybka, odpowiedzi } = dokladnaZFormularza(formularz, kontekstSzybkiej(kontekst, formularz.uslugaId))
-  const docelowe = id ?? utworzSzkic(kontekst.magazyn, { rodzaj: 'szybka', wejscie, szybka, odpowiedzi }).id
+  const zapisany = id === null && opcje.klientId ? klient(wczytajStan(kontekst.magazyn), opcje.klientId) : null
+  const docelowe = id ?? utworzSzkic(kontekst.magazyn, { rodzaj: 'szybka', wejscie, szybka, odpowiedzi, klientId: zapisany?.id ?? null }).id
   return zapiszZmianyWyceny(kontekst, docelowe, (w) => {
     if (w.rodzaj !== 'szybka') throw new BladWyceny('rodzaj', `Wycena ${w.numer ?? w.id} nie jest szybką wyceną`)
     if (id !== null && opcje.zmieniona && w.zmieniona !== opcje.zmieniona) {

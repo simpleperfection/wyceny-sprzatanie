@@ -3,6 +3,7 @@ import { before, describe, it } from 'node:test'
 
 import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
 import { czytajJson, katalogZDysku } from '../../tests/pomocnicze.js'
+import { dodajKlienta } from '../dane/klienci.js'
 import { BladMagazynu, utworzMagazyn } from '../dane/magazyn.js'
 import { wczytajDomyslne, zapiszUstawienia } from '../dane/ustawienia.js'
 import { BladWyceny, utworzSzkic, wycena, zmienStatus } from '../dane/wyceny.js'
@@ -164,6 +165,17 @@ describe('zapis szybkiej wyceny', () => {
     assert.deepEqual(odtworzony, formularz)
     assert.equal(zapisana(kontekst, id).wejscie.pomieszczenia?.find((p) => p.typ === 'kuchnia')?.nazwa, 'Aneks kuchenny')
     assert.deepEqual([po.id, wejscieZWyceny(po, katalog).m2], [id, 70])
+  })
+
+  it('klient wybrany przed pierwszym zapisem trafia do nowego szkicu; klienta, którego nie ma, zapis pomija', () => {
+    const kontekst = kontekstFirmy()
+    dodajKlienta(kontekst.magazyn, { nazwa: 'Anna Kowalska', adres: 'ul. Lipowa 3' }, { id: 'k-anna' })
+
+    const zKlientem = zapiszSzybka(kontekst, null, mieszkanie50(), { klientId: 'k-anna' })
+    const bezKlienta = zapiszSzybka(kontekst, null, mieszkanie50(), { klientId: 'k-usuniety' })
+
+    assert.deepEqual([zKlientem.klientId, zKlientem.klient.nazwa, zKlientem.klient.adres], ['k-anna', 'Anna Kowalska', 'ul. Lipowa 3'])
+    assert.deepEqual([bezKlienta.klientId, bezKlienta.klient.nazwa], [null, ''])
   })
 
   it('zapis ze znacznikiem starszym niż rekord (zmiana w innej karcie) daje BladWyceny nieaktualna i nie nadpisuje odpowiedzi', () => {

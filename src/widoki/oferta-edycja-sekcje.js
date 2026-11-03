@@ -175,8 +175,11 @@ function zapisujPole(element, zmiana, zapisz) {
   return element
 }
 
-/** @param {KlientWyceny} klient @param {ZapisOferty} zapisz @returns {HTMLElement} karta „Klient i termin” */
-export function kartaKlienta(klient, zapisz) {
+/**
+ * Karta „Klient i termin”: wybor klienta z listy (element z wyborKlienta), adres i termin tej wyceny zapisywane po wyjsciu z pola.
+ * @param {KlientWyceny} klient @param {ZapisOferty} zapisz @param {HTMLElement} wybor @returns {HTMLElement}
+ */
+export function kartaKlienta(klient, zapisz, wybor) {
   const id = 'oferta-termin'
   const termin = h('div', { class: 'pole' },
     h('label', { class: 'pole__etykieta', for: id }, 'Termin (opcjonalnie)'),
@@ -184,7 +187,7 @@ export function kartaKlienta(klient, zapisz) {
     h('p', { class: 'pole__blad', id: `${id}-blad`, role: 'alert' }))
   ustawBlad(termin, null)
   return karta({ tytul: 'Klient i termin', klasa: 'karta-oferty' },
-    zapisujPole(pole({ id: 'oferta-klient', etykieta: 'Klient', wartosc: klient.nazwa, autocomplete: 'name' }), (nazwa) => ({ klient: { nazwa } }), zapisz),
+    wybor,
     zapisujPole(pole({ id: 'oferta-adres', etykieta: 'Adres (opcjonalnie)', wartosc: klient.adres, autocomplete: 'street-address' }),
       (adres) => ({ klient: { adres } }), zapisz),
     zapisujPole(termin, (wartosc) => ({ klient: { termin: wartosc === '' ? null : wartosc } }), zapisz))

@@ -1,4 +1,156 @@
 /*
  * Modul Klienci: lista, karta i formularz klienta. Arkusz wypelnia IU-13: style ekranow modulu, takze przeniesione tu z komponenty.css.
  * Dolaczony w index.html po komponenty.css; inne jednostki go nie zmieniaja.
+ * Wymiary z makiet „Lista klientów” i „Karta klienta” w docs/operator/aplikacja-modulowa-makiety.html (20 px naglowka sekcji
+ * i 26 px inicjalow karty: skala tekstu nie ma tych stopni, tak jak w wyceny.css i start.css).
  */
+
+/* Lista: wyszukiwanie, brak klientow i brak wynikow */
+.klienci-szukaj {
+  display: block;
+}
+
+.klienci-pusto {
+  margin: 0;
+  color: var(--tekst-drugi);
+}
+
+/* Karta klienta: „Edytuj” po prawej w gornym pasku, inicjale nad nazwa */
+.karta-klienta__naglowek .naglowek__gora {
+  justify-content: space-between;
+}
+
+.karta-klienta__awatar {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  margin-top: 8px;
+  border-radius: 50%;
+  background: var(--marka-zielen-tlo);
+  color: var(--marka-zielen-ciemna);
+  font-size: 26px;
+  font-weight: 800;
+}
+
+/* Telefon i adres: ikona w zielonym kwadracie, akcja („Zadzwoń”, „Pokaż na mapie”) zielona w drugiej linii */
+.karta-klienta__kontakt .wiersz__ikona {
+  background: var(--marka-zielen-tlo);
+  color: var(--marka-zielen);
+}
+
+.karta-klienta__kontakt .wiersz__opis {
+  color: var(--marka-zielen);
+  font-weight: 700;
+}
+
+.karta-klienta__notatki {
+  margin: 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.karta-klienta__akcje {
+  display: flex;
+  gap: 10px;
+}
+
+.karta-klienta__akcje > * {
+  flex: 1;
+}
+
+/* Sekcja „Wyceny”: naglowek nad karta z wierszami */
+.karta-klienta__sekcja {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.karta-klienta__tytul-sekcji {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.karta-klienta__pusto {
+  margin: 0;
+  color: var(--tekst-drugi);
+}
+
+/* „Usuń klienta”: przycisk tekstowy w kolorze bledu na dole karty */
+.karta-klienta__usun {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.karta-klienta__usun .przycisk--tekstowy {
+  color: var(--blad-tekst);
+}
+
+.karta-klienta__usun .przycisk--tekstowy:hover:not(:disabled) {
+  background: var(--blad-tlo);
+}
+
+/* Formularz klienta */
+.klient-formularz__notatki {
+  min-height: calc(4lh + 24px);
+  line-height: 1.4;
+  resize: vertical;
+}
+
+.klient-formularz__duplikat:empty,
+.klient-formularz__komunikat:empty,
+.karta-klienta__komunikat:empty {
+  display: none;
+}
+
+/* Wybor klienta w wycenie, ofercie i zleceniu (src/ui/komponenty/wybor-klienta.js): wiersz „Klient” z nazwa i „Zmień”
+   (uklad pola wyboru z szybkiej wyceny) albo przycisk „Wybierz klienta”, a w arkuszu wyszukiwanie i lista wierszy */
+.wybor-klienta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wybor-klienta__wybrany {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-right: 4px;
+  cursor: default;
+}
+
+.wybor-klienta__wybrany:hover {
+  background: var(--tlo-karta);
+}
+
+.wybor-klienta__tresc {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.wybor-klienta.pole--blad .wybor-pola {
+  border-color: var(--blad-tekst);
+}
+
+.wybor-klienta__arkusz {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wybor-klienta__lista:empty {
+  display: none;
+}
+
+/* Klient wybrany teraz: tlo marki w wierszu listy arkusza (aria-current) */
+.wybor-klienta__lista .wiersz[aria-current='true'] {
+  background: var(--marka-zielen-tlo);
+}

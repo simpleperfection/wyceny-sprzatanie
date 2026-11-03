@@ -1,7 +1,7 @@
-// Pierwszy krok kreatora dokladnej wyceny (`#/kreator/usluga`, opcjonalnie `?wycena=<id>`, makieta kreator-wybor-uslugi):
-// wojewodztwo (podpowiedziane z ustawien) ze stawka, uslugi w dwoch grupach wg trybu z podpowiedzia ceny z silnika, warianty biur.
-// „Dalej” tworzy szkic albo zapisuje zmiane wyboru i przechodzi do kroku zakresu. Po utworzeniu szkicu pod uslugami jest wiersz
-// „Pytania do klienta · a z n” do ekranu pytan.
+// Pierwszy krok kreatora dokladnej wyceny (`#/kreator/usluga`, opcjonalnie `?wycena=<id>` albo `?klient=<id>` z karty klienta,
+// makieta kreator-wybor-uslugi): wojewodztwo (podpowiedziane z ustawien) ze stawka, uslugi w dwoch grupach wg trybu z podpowiedzia
+// ceny z silnika, warianty biur. „Dalej” tworzy szkic (z klientem z adresu) albo zapisuje zmiane wyboru i przechodzi do kroku
+// zakresu. Po utworzeniu szkicu pod uslugami jest wiersz „Pytania do klienta · a z n” do ekranu pytan.
 
 import { wczytajStan } from '../dane/magazyn.js'
 import { ustawieniaDomyslne } from '../dane/ustawienia.js'
@@ -92,6 +92,8 @@ export const widokKreatoraUslugi = {
   render(kontener, { zapytanie, kontekst }) {
     const { magazyn, katalog, domyslne, nawiguj } = kontekst
     const id = zapytanie.wycena ?? null
+    /** Klient z karty klienta („Nowa wycena”, `?klient=<id>`); nowySzkic pomija klienta, ktorego nie ma. */
+    const klientId = zapytanie.klient ?? null
     const zapisana = id === null ? null : wycenaKroku(kontener, zapytanie, kontekst)
     if (id !== null && !zapisana) return
     const stan = wczytajStan(magazyn)
@@ -162,7 +164,7 @@ export const widokKreatoraUslugi = {
      * @returns {Promise<string | null>} id wyceny albo null, gdy uzytkownik nie potwierdzil zmiany uslugi
      */
     async function zapiszWybor(doZapisu) {
-      if (id === null) return nowySzkic(kontekst, doZapisu).id
+      if (id === null) return nowySzkic(kontekst, doZapisu, klientId).id
       const obecna = znajdzWycene(wczytajStan(magazyn), id)
       if (!obecna) throw new BladWyceny('brak_wyceny', `Nie ma wyceny ${id}`)
       const { uslugaId, wariantId = null, wojewodztwoId = null } = obecna.wejscie

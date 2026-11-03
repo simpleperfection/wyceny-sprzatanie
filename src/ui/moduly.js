@@ -12,5 +12,6 @@
 /** Rejestr stalych planu aplikacji modulowej (zrodlo: IU-9; konsumenci IU-9, IU-13, IU-15). @type {readonly Readonly<Modul>[]} */
 export const MODULY = Object.freeze([
   Object.freeze({ id: 'wycena', nazwa: 'Wycena', ikona: 'file-text', trasa: 'wyceny' }),
+  Object.freeze({ id: 'klienci', nazwa: 'Klienci', ikona: 'users', trasa: 'klienci' }),
   Object.freeze({ id: 'chemia', nazwa: 'Chemia', ikona: 'flask', trasa: 'chemia' }),
 ])

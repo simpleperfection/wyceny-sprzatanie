@@ -8,6 +8,9 @@ import { przycisk } from '../ui/komponenty/formularz.js'
 import { sciezka } from '../ui/trasy.js'
 import { widokDoboruChemii } from './dobor-chemii.js'
 import { widokKataloguChemii } from './katalog-chemii.js'
+import { widokListyKlientow } from './klienci-lista.js'
+import { widokFormularzaKlienta } from './klient-formularz.js'
+import { widokKartyKlienta } from './klient-karta.js'
 import { widokKopii } from './kopia.js'
 import { widokKreatoraDodatkow } from './kreator-dodatki.js'
 import { widokKreatoraPomieszczen } from './kreator-pomieszczenia.js'
@@ -58,6 +61,10 @@ export const WIDOKI = Object.freeze({
   kreatorStartowy: widokKreatoraStartowego,
   kopia: widokKopii,
   chemia: widokKataloguChemii,
+  klienci: widokListyKlientow,
+  nowyKlient: widokFormularzaKlienta,
+  klient: widokKartyKlienta,
+  edycjaKlienta: widokFormularzaKlienta,
   kreator: widokKreatora({ usluga: widokKreatoraUslugi, zakres: widokKreatoraZakresu, dodatki: widokKreatoraDodatkow, chemia: widokDoboruChemii,
     cena: widokPodsumowaniaKreatora }, NIE_MA_EKRANU),
   wycena: widokZapisanejWyceny,

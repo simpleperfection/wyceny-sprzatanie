@@ -27,6 +27,13 @@ describe('dopasuj', () => {
     assert.equal(dopasuj('#/ustawienia/start', TRASY)?.nazwa, 'kreatorStartowy')
   })
 
+  it('odróżnia nowego klienta, kartę i edycję klienta', () => {
+    assert.deepEqual(dopasuj('#/klienci/nowy', TRASY), { nazwa: 'nowyKlient', parametry: {}, zapytanie: {} })
+    assert.deepEqual(dopasuj('#/klienci/k-1', TRASY), { nazwa: 'klient', parametry: { id: 'k-1' }, zapytanie: {} })
+    assert.deepEqual(dopasuj('#/klienci/k-1/edycja', TRASY), { nazwa: 'edycjaKlienta', parametry: { id: 'k-1' }, zapytanie: {} })
+    assert.equal(dopasuj('#/klienci', TRASY)?.nazwa, 'klienci')
+  })
+
   it('zwraca null dla nieznanej trasy', () => {
     assert.equal(dopasuj('#/nic', TRASY), null)
   })

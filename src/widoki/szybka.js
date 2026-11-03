@@ -1,13 +1,15 @@
 // Szybka wycena przez telefon (`#/szybka`, opcjonalnie `?wycena=<id>`, makieta szybka-wycena): pole „Usługa” z arkuszem, pola
 // wg uslugi (mieszkanie: rodzaj, metraz, lazienki, kuchnia, stan, AGD; biuro: metraz i stan; okna, tapicerka, dywany: liczniki
-// pozycji; ogledziny: metraz), wiersz pytan do klienta i karta wyniku liczona przy kazdej zmianie. Bez „Zapisz” (makieta):
+// pozycji; ogledziny: metraz), opcjonalny klient z listy (wyborKlienta; `?klient=<id>` z karty klienta), wiersz pytan do klienta
+// i karta wyniku liczona przy kazdej zmianie. Bez „Zapisz” (makieta):
 // zapisuje „Kopiuj tekst” (status wyslana) i „Dokładna wycena” (zamiana w dokladna i krok zakresu kreatora), a zapisany rekord
 // zapisuje sie przy kazdej zmianie. Logika w src/kreator/szybka.js, widok tylko rysuje.
 
 import { wczytajStan } from '../dane/magazyn.js'
 import { pytaniaAplikacji } from '../dane/pytania.js'
 import { ustawieniaDomyslne } from '../dane/ustawienia.js'
-import { BladWyceny, wycena as znajdzWycene } from '../dane/wyceny.js'
+import { klient as znajdzKlienta } from '../dane/klienci.js'
+import { BladWyceny, przypiszKlienta, wycena as znajdzWycene } from '../dane/wyceny.js'
 import { czyWycenaZamknieta } from '../dane/zlecenia.js'
 import { MAKS_ILOSCI, ustawDodatek, ustawIlosc } from '../kreator/pozycje.js'
 import { pozycjeGlowne } from '../kreator/stan.js'
@@ -22,6 +24,7 @@ import { bladZakresu, nazwaJednostki } from '../ui/format.js'
 import { h } from '../ui/h.js'
 import { chipy, licznik, przycisk } from '../ui/komponenty/formularz.js'
 import { arkusz, baner, karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
+import { wyborKlienta } from '../ui/komponenty/wybor-klienta.js'
 import { kopiujDoSchowka } from '../ui/schowek.js'
 import { sciezka } from '../ui/trasy.js'
 import { adresKroku, WYCENA_ZAMKNIETA, zglosBladKreatora } from './kreator-wspolne.js'
@@ -155,6 +158,8 @@ export const widokSzybkiejWyceny = {
     /** @type {string | null} znacznik zmiany rekordu widziany na ekranie (ochrona przed nadpisaniem zmian z innej karty) */
     let zmieniona = zapisana?.zmieniona ?? null
     let formularz = zapisana ? wejscieZWyceny(zapisana, katalog) : formularzDomyslny(katalog, ustawienia.wojewodztwoId)
+    /** Klient wyceny; przed pierwszym zapisem z `?klient=<id>` (klienta, ktorego nie ma, pomija), zapisuje sie z rekordem. */
+    let klientId = zapisana ? zapisana.klientId : znajdzKlienta(stanMagazynu, zapytanie.klient ?? '')?.id ?? null
     let czyLazienkiReczne = formularz.lazienki !== undefined && formularz.lazienki !== domyslneLazienki(formularz.m2, katalog.uklady)
     let czyDodatkiOtwarte = false
     let czySkopiowano = false
@@ -165,6 +170,7 @@ export const widokSzybkiejWyceny = {
     /** @type {HTMLElement | null} */
     let cytat = null
     const pola = h('div', { class: 'szybka__pola' })
+    const miejsceKlienta = h('div', { class: 'szybka__klient' })
     const miejsceLazienek = h('div', { class: 'szybka__lazienki' })
     const miejsceWyniku = h('div', { class: 'szybka__wynik' })
     const komunikat = h('div', { class: 'kreator__komunikat', 'aria-live': 'polite' })
@@ -224,8 +230,9 @@ export const widokSzybkiejWyceny = {
 
     /** Zapis formularza (nowy rekord albo zmiana zapisanego) bez nadpisania zmian z innej karty. @returns {Wycena} */
     function zapisz() {
-      const w = zapiszSzybka(kontekst, id, formularz, { zmieniona })
+      const w = zapiszSzybka(kontekst, id, formularz, { zmieniona, klientId })
       zmieniona = w.zmieniona
+      klientId = w.klientId
       ustawId(w.id)
       return w
     }
@@ -238,10 +245,38 @@ export const widokSzybkiejWyceny = {
       if (swieza.rodzaj !== 'szybka') return pokazBlad(JUZ_DOKLADNA)
       formularz = wejscieZWyceny(swieza, katalog)
       zmieniona = swieza.zmieniona
+      klientId = swieza.klientId
+      rysujKlienta()
       stanWyniku = wynikFormularza(kontekst, formularz)
       rysujPola()
       rysujWynik()
       komunikat.replaceChildren(baner({ rodzaj: 'info', tekst: NIEAKTUALNA }))
+    }
+
+    /**
+     * Wybor klienta: przed pierwszym zapisem tylko na ekranie, w zapisanym rekordzie od razu (przypiszKlienta). Znacznik zmiany
+     * idzie za zapisem tylko wtedy, gdy rekord nie zmienil sie wczesniej w innej karcie (ta zmiana ma dalej dac `nieaktualna`).
+     * @param {string | null} nowy @returns {string | null} tekst bledu albo null
+     */
+    function handleKlient(nowy) {
+      if (id === null) {
+        klientId = nowy
+        return null
+      }
+      try {
+        const przed = znajdzWycene(wczytajStan(magazyn), id)?.zmieniona
+        const po = znajdzWycene(przypiszKlienta(magazyn, id, nowy), id)
+        if (po && przed === zmieniona) zmieniona = po.zmieniona
+      } catch (blad) {
+        return zglosBladKreatora(blad)
+      }
+      klientId = nowy
+      return null
+    }
+
+    function rysujKlienta() {
+      miejsceKlienta.replaceChildren(wyborKlienta({ magazyn, wybranyId: klientId, naWybor: handleKlient, czyAktywny: () => czyAktywny,
+        id: 'szybka-klient' }).element)
     }
 
     /** @param {number} m2 */
@@ -349,7 +384,8 @@ export const widokSzybkiejWyceny = {
     }
 
     kontener.replaceChildren(naglowek({ tytul: 'Szybka wycena', podtytul: 'Rozmowa z klientem', wstecz: sciezka('start') }),
-      h('div', { class: 'tresc szybka' }, pola, miejsceWyniku, komunikat))
+      h('div', { class: 'tresc szybka' }, miejsceKlienta, pola, miejsceWyniku, komunikat))
+    rysujKlienta()
     rysujPola()
     rysujWynik()
     return () => { czyAktywny = false }

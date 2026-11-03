@@ -843,7 +843,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 
 **Zależy od:** Faza 3
 
-- [ ] **IU-13: Lista, karta i formularz klienta**
+- [x] **IU-13: Lista, karta i formularz klienta**
 
 **Cel:** Moduł Klienci: lista z wyszukiwaniem, formularz dodania i edycji, karta z telefonem, mapą, notatkami i historią wycen.
 
@@ -901,7 +901,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 **Operator checklist:**
 - [ ] Na telefonie dotknięcie numeru na karcie klienta otwiera dzwonienie, a adresu — mapę
 
-- [ ] **IU-14: Wybór klienta w wycenie**
+- [x] **IU-14: Wybór klienta w wycenie**
 
 **Cel:** W wycenie klienta wybiera się z listy albo dodaje w tym samym arkuszu, a „Nowa wycena” z karty klienta zaczyna wycenę z tym klientem.
 
@@ -932,6 +932,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 
 **Podejście:**
 - `wyborKlienta({ stan, wybranyId, wymagany, naWybor })`: wiersz-przycisk z wybranym klientem albo „Wybierz klienta”; otwiera `arkusz` z polem wyszukiwania, listą pasujących (`propozycjeKlientow(stan, fraza)`, najwyżej 8), wierszem „Dodaj nowego klienta: {tekst}” (w tym samym arkuszu krótki formularz: nazwa wypełniona wpisanym tekstem, telefon, adres) i opcją „Bez klienta”, gdy wybór nie jest wymagany. Nowy klient zapisuje się (`dodajKlienta`, id z `crypto.randomUUID()` przy otwarciu formularza) dopiero przy „Zapisz klienta”; porzucony arkusz nie zostawia klienta. Arkusz sprawdza `czyAktywny`.
+- Korekta po implementacji (faza 4, 2026-11-03): sygnatura to `wyborKlienta({ magazyn, wybranyId, wymagany, naWybor, czyAktywny, id })` → `{ element, sprawdz }`. Komponent dostaje `magazyn` (potrzebny `dodajKlienta`, arkusz czyta świeży stan przy otwarciu), `naWybor(klientId)` zwraca tekst błędu albo `null` (przy błędzie arkusz zostaje otwarty z banerem), a `sprawdz()` pokazuje „Wybierz klienta.” przy wymaganym wyborze (IU-16).
 - Wycena: wybór woła `przypiszKlienta(magazyn, wycenaId, klientId)` z `src/dane/wyceny.js` (kopiuje nazwę i adres do `wycena.klient`; decyzja planu: zmiana karty nie zmienia kopii). Pole „Klient (np. imię i dzielnica)” w arkuszu „Zapisz” podsumowania i pole „Klient” w karcie „Klient i termin” edycji oferty zastępuje `wyborKlienta`; pole adresu w ofercie zostaje i zmienia tylko wycenę; termin bez zmian.
 - Klient opcjonalny w szybkiej i dokładnej wycenie (R19); wymagany przy „Zaplanuj” (IU-16). Szybka wycena dostaje opcjonalny wiersz `wyborKlienta` (bez wymogu), a wybór zapisuje się do jej rekordu tak jak inne pola szybkiej wyceny.
 - `#/kreator/usluga?klient=<id>` i `#/szybka?klient=<id>` (karta klienta → „Nowa wycena”, R18): szkic powstaje z `klientId` (`utworzSzkic` z IU-6), nieistniejący klient w parametrze jest pomijany.

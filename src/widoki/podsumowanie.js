@@ -1,18 +1,19 @@
 // Podsumowanie wyceny (makieta podsumowanie-wyceny), dwa tryby: krok `cena` kreatora (`#/kreator/cena?wycena=<id>`) z paskiem
-// postepu i „Zapisz” (arkusz z polem klienta → zapiszWycene: status `do_wyslania`, numer, przejscie do `#/wycena/<id>`) oraz
+// postepu i „Zapisz” (arkusz z wyborem klienta → zapiszWycene: status `do_wyslania`, numer, przejscie do `#/wycena/<id>`) oraz
 // zapisana wycena (`#/wycena/<id>`) z akcjami wg statusu (Przygotuj ofertę, Edytuj, Klient przyjął, Klient zrezygnował, Usuń wycenę). Oba maja
 // te same karty (src/widoki/podsumowanie-karty.js), reczna cene i baner „Przelicz”; wycena ze zleceniem jest tylko do odczytu.
 // Liczy src/kreator/podsumowanie.js, zapisuje src/dane/wyceny.js; widok tylko rysuje.
 
 import { wczytajStan } from '../dane/magazyn.js'
-import { BladWyceny, czyStatusOferty, usunWycene, wycena as znajdzWycene, zapiszWycene, zmienStatus } from '../dane/wyceny.js'
+import { BladWyceny, czyStatusOferty, przypiszKlienta, usunWycene, wycena as znajdzWycene, zapiszWycene, zmienStatus } from '../dane/wyceny.js'
 import { czyWycenaZamknieta, zleceniaWyceny } from '../dane/zlecenia.js'
 import { akcjeWyceny, przeliczWycene, widokPodsumowania } from '../kreator/podsumowanie.js'
 import { KROKI_KREATORA } from '../kreator/stan.js'
 import { czas, data, procent, zl } from '../ui/format.js'
 import { h } from '../ui/h.js'
-import { pole, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
+import { przycisk } from '../ui/komponenty/formularz.js'
 import { arkusz, baner, dialogPotwierdzenia, karta, naglowek, pasekPostepu } from '../ui/komponenty/uklad.js'
+import { wyborKlienta } from '../ui/komponenty/wybor-klienta.js'
 import { ETYKIETY_STATUSOW, pigulkaStatusu } from '../ui/statusy.js'
 import { sciezka } from '../ui/trasy.js'
 import { historiaPlanuIFaktu } from '../zlecenia/plan-fakt.js'
@@ -31,7 +32,6 @@ import { banery, kartaCeny, kartaKosztow, kartaRynku, kartaZostaje, notkaPropozy
  */
 
 const ZMIENIONA_W_INNEJ_KARCIE = 'Status tej wyceny zmienił się w innej karcie przeglądarki. Widzisz teraz aktualne dane.'
-const ZA_DLUGI_KLIENT = 'Opis klienta jest za długi. Skróć go.'
 const BRAK_CENY = 'Ta wycena nie ma jeszcze ceny. Dodaj zakres prac, żeby ją policzyć.'
 const INDEKS_KROKU_CENY = KROKI_KREATORA.findIndex((k) => k.id === 'cena')
 const REGION_KOMUNIKATU = '.podsumowanie__komunikat'
@@ -46,30 +46,39 @@ const tekstBledu = (blad) => (blad instanceof BladWyceny && blad.kod === 'przejs
 const bezPustych = (lista) => lista.filter((x) => x !== null)
 
 /**
- * Arkusz „Zapisz”: opcjonalny klient, potem zapiszWycene (szkic → `do_wyslania` z numerem) i przejscie do zapisanej wyceny.
+ * Arkusz „Zapisz”: opcjonalny klient z listy (wyborKlienta; wybor od razu kopiuje nazwe i adres klienta do wyceny przez
+ * przypiszKlienta), potem zapiszWycene (szkic → `do_wyslania` z numerem) i przejscie do zapisanej wyceny.
  * @param {Kontekst} kontekst @param {Wycena} w
  */
 function otworzZapis({ magazyn, nawiguj }, w) {
-  let nazwa = w.klient.nazwa
-  const poleKlienta = pole({ id: 'podsumowanie-klient', etykieta: 'Klient (np. imię i dzielnica)', wartosc: nazwa, naZmiane: (t) => { nazwa = t } })
   const bladArkusza = h('div', { class: 'arkusz__komunikat', 'aria-live': 'polite' })
-  const formularz = h('form', { class: 'arkusz__formularz', novalidate: true }, poleKlienta, bladArkusza, przycisk({ tekst: 'Zapisz', typ: 'submit' }))
+  /** @param {string | null} klientId @returns {string | null} */
+  const naWybor = (klientId) => {
+    try {
+      przypiszKlienta(magazyn, w.id, klientId)
+      return null
+    } catch (blad) {
+      return tekstBledu(blad)
+    }
+  }
+  const { klientId } = znajdzWycene(wczytajStan(magazyn), w.id) ?? w
+  const wybor = wyborKlienta({ magazyn, wybranyId: klientId, naWybor, czyAktywny: () => dialog.open, id: 'podsumowanie-klient' })
+  const formularz = h('form', { class: 'arkusz__formularz', novalidate: true }, wybor.element, bladArkusza, przycisk({ tekst: 'Zapisz', typ: 'submit' }))
   const dialog = arkusz({ tytul: 'Zapisz wycenę' }, formularz)
   formularz.addEventListener('submit', (zdarzenie) => {
     zdarzenie.preventDefault()
     try {
-      zapiszWycene(magazyn, w.id, { klient: { nazwa } })
+      zapiszWycene(magazyn, w.id)
       dialog.close()
       nawiguj(sciezka('wycena', { id: w.id }))
     } catch (blad) {
-      if (blad instanceof BladWyceny && blad.kod === 'klient') return ustawBlad(poleKlienta, ZA_DLUGI_KLIENT)
       bladArkusza.replaceChildren(baner({ rodzaj: 'blad', tekst: tekstBledu(blad) }))
     }
   })
   dialog.addEventListener('close', () => dialog.remove())
   document.body.append(dialog)
   dialog.showModal()
-  poleKlienta.querySelector('input')?.focus()
+  wybor.element.querySelector('button')?.focus()
 }
 
 /** @param {Wycena} w @param {AkcjaWyceny} akcja @param {ObslugaAkcji} obsluga @returns {HTMLElement} */
