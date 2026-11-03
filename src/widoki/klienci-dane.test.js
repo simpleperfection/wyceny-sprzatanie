@@ -34,6 +34,11 @@ describe('linkTelefonu', () => {
     assert.equal(linkTelefonu('+48 600-100-200'), 'tel:+48600100200')
   })
 
+  it('nie sprawdza długości numeru: 10 cyfr i numer zagraniczny dają link', () => {
+    assert.equal(linkTelefonu('60 010 020 01'), 'tel:6001002001')
+    assert.equal(linkTelefonu('+49 151 2345 6789'), 'tel:+4915123456789')
+  })
+
   it('tekst, który nie jest numerem, daje RangeError', () => {
     assert.throws(() => linkTelefonu('600 100 200 wew. 5'), RangeError)
     assert.throws(() => linkTelefonu(' - '), RangeError)

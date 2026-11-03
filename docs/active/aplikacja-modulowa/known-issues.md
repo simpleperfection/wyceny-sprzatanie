@@ -31,3 +31,13 @@
 - 🟡 [P3] src/ui/format.test.js:112 — test SKROTY_DNI przepina stałą; zastąpić asercjami `kiedy` dla śr/czw/sb/wt.
 - 🟡 [P3] src/widoki/karta-produktu.test.js:120 — brak testów gałęzi `linkKarty`: `czyFormularz` i karta bez daty (bez dopisku „Karta z …”).
 - 🟡 [P3] src/style/komponenty.css:179 — `.postep__krok` z `flex: 1` ucina „Województwo” do „Wojewód…” przy 360 px; `flex: 1 1 auto`.
+
+## P3 faza 4
+
+- 🟡 [P3] src/widoki/klienci-dane.js:20 — `formatDniaWyceny`/`dzienWyceny` to kopia `formatDniaZmiany`/`dzienZmiany` z lista-wycen-dane.js; wspólny `dzienKrotki(chwilaIso)` w src/ui/format.js. (sceptyk: P2 → P3)
+- 🟡 [P3] src/widoki/wybor-klienta.js:96 — `wybranyKlient()` czyta cały magazyn przy każdym `rysuj()`; przekazywać obiekt Klient do `rysuj(k)`.
+- 🟡 [P3] src/widoki/oferta-edycja.js:200 — odświeżenie adresu przez `querySelector('#oferta-adres')` z id z innego modułu; `kartaKlienta` niech zwraca `ustawAdres`.
+- 🟡 [P3] src/widoki/klient-karta.js:37 — `naglowekKarty` wchodzi w klasy `naglowek` przez querySelector; dodać opcje `akcja` i `nadTytulem` w uklad.js.
+- 🟡 [P3] src/widoki/teksty-bledow.js:46 — `tekstBleduKlienta` daje „Spróbuj jeszcze raz” także dla trwałych `za_duzo` i `brak_klienta`; dodać osobne teksty.
+- 🟡 [P3] src/widoki/kreator-usluga.js:192 — po szkicu z `?klient=` historia bez `?wycena=`; wstecz i „Dalej” tworzy drugi szkic; `history.replaceState` jak w szybka.js:185.
+- 🟡 [P3] src/widoki/klient-karta.js:28 — `tekstBleduUsuniecia` bez testów trzech gałęzi; przenieść do teksty-bledow.js jako `tekstBleduUsunieciaKlienta` i dopisać asercje.

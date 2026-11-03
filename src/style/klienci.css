@@ -107,7 +107,7 @@
   display: none;
 }
 
-/* Wybor klienta w wycenie, ofercie i zleceniu (src/ui/komponenty/wybor-klienta.js): wiersz „Klient” z nazwa i „Zmień”
+/* Wybor klienta w wycenie, ofercie i zleceniu (src/widoki/wybor-klienta.js): wiersz „Klient” z nazwa i „Zmień”
    (uklad pola wyboru z szybkiej wyceny) albo przycisk „Wybierz klienta”, a w arkuszu wyszukiwanie i lista wierszy */
 .wybor-klienta {
   display: flex;

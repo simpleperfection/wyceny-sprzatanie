@@ -3,7 +3,7 @@
 // klienta (R17, R18, R19). Wyszukiwanie i operacje na magazynie sa w src/dane/klienci.js.
 
 import { dodajKlienta, dopasowanieFrazy, indeksKlientow, klient, normalizujNazwe, zapiszKlienta } from '../dane/klienci.js'
-import { bladTelefonu, numerTelefonu } from '../dane/walidacja.js'
+import { numerTelefonu } from '../dane/walidacja.js'
 import { kwotaWyceny } from '../dane/wyceny.js'
 import { zl } from '../ui/format.js'
 
@@ -18,6 +18,7 @@ import { zl } from '../ui/format.js'
 const JEZYK = 'pl-PL'
 const SEPARATOR = ' · '
 const ADRES_MAPY = 'https://www.google.com/maps/search/?api=1&query='
+const NUMER_TELEFONU = /^\+?\d+$/u
 /** Dzien utworzenia wyceny w czasie lokalnym: „30 paź”. */
 const formatDniaWyceny = new Intl.DateTimeFormat(JEZYK, { day: 'numeric', month: 'short' })
 /** Najwiecej propozycji w arkuszu wyboru klienta (wyborKlienta). */
@@ -37,13 +38,14 @@ export function inicjaly(nazwa) {
 }
 
 /**
- * Link do dzwonienia: numer w zapisie zwartym (numerTelefonu). Numer, ktorego nie przyjmuje walidacja telefonu (bladTelefonu),
- * → RangeError.
+ * Link do dzwonienia: numer w zapisie zwartym (numerTelefonu: bez spacji i myslnikow). Tekst bez cyfr albo z innymi znakami
+ * niz cyfry i wiodacy plus → RangeError; dlugosci numeru nie sprawdza (to robi bladTelefonu przy zapisie klienta).
  * @param {string} telefon np. „+48 600-100-200” @returns {string} `tel:+48600100200`
  */
 export function linkTelefonu(telefon) {
-  if (bladTelefonu(telefon) !== null) throw new RangeError(`To nie jest numer telefonu: ${telefon}`)
-  return `tel:${numerTelefonu(telefon)}`
+  const numer = numerTelefonu(telefon)
+  if (!NUMER_TELEFONU.test(numer)) throw new RangeError(`To nie jest numer telefonu: ${telefon}`)
+  return `tel:${numer}`
 }
 
 /**
@@ -117,7 +119,7 @@ export function zapiszFormularzKlienta(magazyn, edytowany, id, dane) {
 }
 
 /**
- * Propozycje w arkuszu wyboru klienta: pasujacy klienci (szukajKlientow: nazwa, telefon, adres), najpierw ci, ktorych nazwa
+ * Propozycje w arkuszu wyboru klienta: pasujacy klienci (dopasowanieFrazy: nazwa, telefon, adres), najpierw ci, ktorych nazwa
  * zaczyna sie od frazy, potem pozostali, w obu grupach po nazwie; najwyzej MAKS_PROPOZYCJI. Pusta fraza daje pierwszych po nazwie.
  * Przeglad indeksu (indeksKlientow) konczy sie, gdy grupa, ktora idzie pierwsza, ma juz MAKS_PROPOZYCJI klientow.
  * @param {Pick<Stan, 'klienci'>} stan @param {string} fraza
