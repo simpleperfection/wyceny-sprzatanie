@@ -1,5 +1,6 @@
 // Start aplikacji: wczytanie danych referencyjnych (data/*.json), magazyn stanu i router widokow w <main id="aplikacja">.
 
+import { dzienLokalny } from './dane/ksztalt.js'
 import { utworzMagazyn } from './dane/magazyn.js'
 import { pobierzJson } from './dane/pobierz.js'
 import { wczytajDomyslne } from './dane/ustawienia.js'
@@ -15,6 +16,7 @@ import { pokazRatunek } from './widoki/ratunek.js'
 
 /** @typedef {import('./dane/magazyn.js').Magazyn} Magazyn */
 /** @typedef {import('./dane/magazyn.js').WynikWczytania} WynikWczytania */
+/** @typedef {import('./ui/router.js').Router} Router */
 /** @typedef {import('./ui/router.js').Widok} Widok */
 /** @typedef {import('./ui/router.js').Widoki} Widoki */
 
@@ -78,6 +80,25 @@ function otworzMagazyn() {
   }
 }
 
+/**
+ * Po polnocy otwarta aplikacja pokazuje nowy dzien: przy powrocie do karty (`visibilitychange`, `focus`) odswieza widok,
+ * gdy dzien lokalny rozni sie od dnia ostatniego renderu (start routera, zmiana adresu albo poprzednie odswiezenie).
+ * @param {Router} router
+ */
+function odswiezajPoZmianieDnia(router) {
+  let dzienRenderu = dzienLokalny(new Date())
+  const handlePowrot = () => {
+    if (document.visibilityState !== 'visible') return
+    const dzis = dzienLokalny(new Date())
+    if (dzis === dzienRenderu) return
+    dzienRenderu = dzis
+    router.odswiez()
+  }
+  window.addEventListener('hashchange', () => { dzienRenderu = dzienLokalny(new Date()) })
+  document.addEventListener('visibilitychange', handlePowrot)
+  window.addEventListener('focus', handlePowrot)
+}
+
 /** Uszkodzone dane daja ekran ratunkowy zamiast routera (przed pobraniem danych referencyjnych). @param {HTMLElement} kontener */
 async function uruchom(kontener) {
   const otwarty = otworzMagazyn()
@@ -93,6 +114,7 @@ async function uruchom(kontener) {
     const [katalog, domyslne] = await Promise.all([wczytajKatalog(pobierzJson), wczytajDomyslne(pobierzJson)])
     const router = uruchomRouter(kontener, zKreatoremStartowym(WIDOKI), { katalog, domyslne, magazyn })
     magazyn.naZmiane(() => ('stan' in magazyn.wczytaj() ? router.odswiez() : location.reload()))
+    odswiezajPoZmianieDnia(router)
   } catch (blad) {
     pokazBlad(kontener, BLAD_DANYCH)
     reportError(blad)

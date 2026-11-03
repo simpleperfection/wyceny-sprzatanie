@@ -194,31 +194,31 @@ Zależy od: Faza 2
 
 ### IU-8: Tokeny, komponenty i nagłówek modułu bez dolnego paska (feature-builder-ui)
 
-- [ ] Modyfikuj: `src/style/tokeny.css`
-- [ ] Modyfikuj: `src/style/baza.css`
-- [ ] Modyfikuj: `src/style/komponenty.css`
-- [ ] Stwórz: `src/style/start.css`
-- [ ] Stwórz: `src/style/wyceny.css`
-- [ ] Stwórz: `src/style/chemia.css`
-- [ ] Stwórz: `src/style/ustawienia.css`
-- [ ] Stwórz: `src/style/klienci.css`
-- [ ] Stwórz: `src/style/zlecenia.css`
-- [ ] Stwórz: `src/style/kreator.css`
-- [ ] Stwórz: `src/style/szybka.css`
-- [ ] Stwórz: `src/style/podsumowanie.css`
-- [ ] Modyfikuj: `index.html`
-- [ ] Modyfikuj: `manifest.webmanifest`
-- [ ] Modyfikuj: `src/ui/komponenty/uklad.js`
-- [ ] Test (unit): `src/ui/komponenty/uklad.test.js`
-- [ ] Modyfikuj: `src/ui/ikony.js`
-- [ ] Modyfikuj: `src/widoki/indeks.js`
-- [ ] Modyfikuj: `src/widoki/lista-wycen.js`
-- [ ] Modyfikuj: `src/widoki/katalog-chemii.js`
-- [ ] Modyfikuj: `src/widoki/ustawienia.js`
-- [ ] Modyfikuj: `src/widoki/start.js`
-- [ ] Test: [Unit] `naglowek` z `wsteczTekst: 'Start'` daje link z tekstem „Start” i ikoną; bez `wsteczTekst` — link z `aria-label="Wstecz"`
-- [ ] Test: [Unit] `przelaczniki` ustawia `aria-current="page"` tylko na aktywnej pozycji
-- [ ] Test: [Unit] `wiecej` daje `details` z `summary` „Więcej” i treścią w środku; `podpowiedz` ma `aria-label` „Wyjaśnienie: Mediana rynku”
+- [x] Modyfikuj: `src/style/tokeny.css`
+- [x] Modyfikuj: `src/style/baza.css`
+- [x] Modyfikuj: `src/style/komponenty.css`
+- [x] Stwórz: `src/style/start.css`
+- [x] Stwórz: `src/style/wyceny.css`
+- [x] Stwórz: `src/style/chemia.css`
+- [x] Stwórz: `src/style/ustawienia.css`
+- [x] Stwórz: `src/style/klienci.css`
+- [x] Stwórz: `src/style/zlecenia.css`
+- [x] Stwórz: `src/style/kreator.css`
+- [x] Stwórz: `src/style/szybka.css`
+- [x] Stwórz: `src/style/podsumowanie.css`
+- [x] Modyfikuj: `index.html`
+- [x] Modyfikuj: `manifest.webmanifest`
+- [x] Modyfikuj: `src/ui/komponenty/uklad.js`
+- [x] Test (unit): `src/ui/komponenty/uklad.test.js`
+- [x] Modyfikuj: `src/ui/ikony.js`
+- [x] Modyfikuj: `src/widoki/indeks.js`
+- [x] Modyfikuj: `src/widoki/lista-wycen.js`
+- [x] Modyfikuj: `src/widoki/katalog-chemii.js`
+- [x] Modyfikuj: `src/widoki/ustawienia.js`
+- [x] Modyfikuj: `src/widoki/start.js`
+- [x] Test: [Unit] `naglowek` z `wsteczTekst: 'Start'` daje link z tekstem „Start” i ikoną; bez `wsteczTekst` — link z `aria-label="Wstecz"`
+- [x] Test: [Unit] `przelaczniki` ustawia `aria-current="page"` tylko na aktywnej pozycji
+- [x] Test: [Unit] `wiecej` daje `details` z `summary` „Więcej” i treścią w środku; `podpowiedz` ma `aria-label` „Wyjaśnienie: Mediana rynku”
 - [ ] Test: [E2E] `wyglad-podstawy` — okno 360×800, wstrzyknij przez `agent-browser eval` treść `e2e/stany/ustawienia-mazowieckie.json` do `localStorage['wyceny-sprzatanie:stan']`, otwórz http://localhost:5174/#/ustawienia, #/chemia i #/wyceny, na każdym przez eval zmierz `getComputedStyle` tekstu akapitów i wysokość widocznych `a, button, input, select, summary` w `main`, policz kontrast koloru tekstu przycisku głównego do jego tła, zrób screenshot → tekst podstawowy ≥ 17 px, każdy element klikalny ≥ 48 px wysokości, kontrast przycisku głównego ≥ 4,5:1, brak elementu dolnego paska, tło strony białe, konsola bez błędów
 - [ ] Weryfikacja: `node --test src/ui/komponenty/uklad.test.js` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
@@ -227,59 +227,59 @@ Zależy od: Faza 2
 
 ### IU-9: Ekran Start z kaflami modułów (feature-builder-ui)
 
-- [ ] Stwórz: `src/ui/moduly.js`
-- [ ] Modyfikuj: `src/widoki/start.js`
-- [ ] Modyfikuj: `src/widoki/start-dane.js`
-- [ ] Modyfikuj: `src/widoki/start-dane.test.js`
-- [ ] Modyfikuj: `src/ui/format.js`
-- [ ] Modyfikuj: `src/ui/format.test.js`
-- [ ] Modyfikuj: `src/app.js`
-- [ ] Modyfikuj: `src/style/start.css`
-- [ ] Modyfikuj: `src/style/komponenty.css`
-- [ ] Test: [Unit] `zdanieDnia` na stanie z `e2e/stany/moduly-dzis.js` (zegar 2026-11-02) → „Dziś 2 zlecenia · 1 niezapłacone”; bez zleceń → „Dziś nie masz zleceń”; bez wizyt dziś, z jedną niezapłaconą → „Dziś nie masz zleceń · 1 niezapłacone”; 5 niezapłaconych → „· 5 niezapłaconych”
-- [ ] Test: [Unit] `stanKafla('zlecenia', …)` daje „2 do zamknięcia”, po zamknięciu obu — „2 dziś”, bez dzisiejszych — „Najbliższe: jutro 9:00”, bez zleceń — „Dodaj pierwsze zlecenie”
-- [ ] Test: [Unit] `stanKafla('wycena', …)` daje „1 do wysłania”, bez niej „1 do zaplanowania”, bez wycen „Zrób pierwszą wycenę”
-- [ ] Test: [Unit] `banerStartu` przy braku kopii i ustawieniach domyślnych zwraca tylko baner kopii
-- [ ] Test: [Unit] `kiedy('2026-11-03', '09:00', '2026-11-02')` → „jutro 9:00”; `kiedy('2026-11-06', '09:00', '2026-11-02')` → „pt 6 lis, 9:00”
+- [x] Stwórz: `src/ui/moduly.js`
+- [x] Modyfikuj: `src/widoki/start.js`
+- [x] Modyfikuj: `src/widoki/start-dane.js`
+- [x] Modyfikuj: `src/widoki/start-dane.test.js`
+- [x] Modyfikuj: `src/ui/format.js`
+- [x] Modyfikuj: `src/ui/format.test.js`
+- [x] Modyfikuj: `src/app.js`
+- [x] Modyfikuj: `src/style/start.css`
+- [x] Modyfikuj: `src/style/komponenty.css`
+- [x] Test: [Unit] `zdanieDnia` na stanie z `e2e/stany/moduly-dzis.js` (zegar 2026-11-02) → „Dziś 2 zlecenia · 1 niezapłacone”; bez zleceń → „Dziś nie masz zleceń”; bez wizyt dziś, z jedną niezapłaconą → „Dziś nie masz zleceń · 1 niezapłacone”; 5 niezapłaconych → „· 5 niezapłaconych”
+- [x] Test: [Unit] `stanKafla('zlecenia', …)` daje „2 do zamknięcia”, po zamknięciu obu — „2 dziś”, bez dzisiejszych — „Najbliższe: jutro 9:00”, bez zleceń — „Dodaj pierwsze zlecenie”
+- [x] Test: [Unit] `stanKafla('wycena', …)` daje „1 do wysłania”, bez niej „1 do zaplanowania”, bez wycen „Zrób pierwszą wycenę”
+- [x] Test: [Unit] `banerStartu` przy braku kopii i ustawieniach domyślnych zwraca tylko baner kopii
+- [x] Test: [Unit] `kiedy('2026-11-03', '09:00', '2026-11-02')` → „jutro 9:00”; `kiedy('2026-11-06', '09:00', '2026-11-02')` → „pt 6 lis, 9:00”
 - [ ] Test: [E2E] `start-moduly` — okno 360×800, uruchom w stronie przez `agent-browser eval` skrypt `e2e/stany/moduly-dzis.js`, otwórz http://localhost:5174/#/start, zrób screenshot, kliknij kafel „Wycena”, potem „Szybka wycena” → nagłówek „Dzień dobry, Usługi Sprzątające Monika Lis”, zdanie „Dziś 2 zlecenia · 1 niezapłacone”, kafel „Wycena” z linią „1 do wysłania” i kafel „Chemia”, kafle w dwóch kolumnach, jeden baner („Nie masz jeszcze kopii danych…”), odnośnik „Ustawienia firmy”, brak dolnego paska, po dwóch dotknięciach adres #/szybka
 - [ ] Weryfikacja: `node --test src/widoki/start-dane.test.js src/ui/format.test.js` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-10: Moduł Wycena: ekran główny (feature-builder-ui)
 
-- [ ] Modyfikuj: `src/widoki/lista-wycen.js`
-- [ ] Stwórz: `src/widoki/lista-wycen-dane.js`
-- [ ] Test (unit): `src/widoki/lista-wycen-dane.test.js`
-- [ ] Modyfikuj: `src/style/wyceny.css`
-- [ ] Modyfikuj: `src/style/komponenty.css`
-- [ ] Test: [Unit] `sekcjeWycen` na stanie z `e2e/stany/moduly-dzis.js`: kolejność „Do wysłania” (Jan Nowak), „Do zaplanowania” (Anna Kowalska), „Czekają na odpowiedź” (Anna Kowalska), „Pozostałe” (Biuro Rachunkowe Lis)
-- [ ] Test: [Unit] przyjęty abonament z samymi zleceniami jednorazowymi jest w „Do zaplanowania”; wycena bez klienta ma tytuł z nazwą usługi
+- [x] Modyfikuj: `src/widoki/lista-wycen.js`
+- [x] Stwórz: `src/widoki/lista-wycen-dane.js`
+- [x] Test (unit): `src/widoki/lista-wycen-dane.test.js`
+- [x] Modyfikuj: `src/style/wyceny.css`
+- [x] Modyfikuj: `src/style/komponenty.css`
+- [x] Test: [Unit] `sekcjeWycen` na stanie z `e2e/stany/moduly-dzis.js`: kolejność „Do wysłania” (Jan Nowak), „Do zaplanowania” (Anna Kowalska), „Czekają na odpowiedź” (Anna Kowalska), „Pozostałe” (Biuro Rachunkowe Lis)
+- [x] Test: [Unit] przyjęty abonament z samymi zleceniami jednorazowymi jest w „Do zaplanowania”; wycena bez klienta ma tytuł z nazwą usługi
 - [ ] Test: [E2E] `wycena-modul` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz http://localhost:5174/#/start, kliknij kafel „Wycena”, zrób screenshot → nagłówek „Wycena” z powrotem „Start”, przyciski „Szybka wycena” i „Dokładna wycena” na górze, sekcje w kolejności „Do wysłania”, „Do zaplanowania”, „Czekają na odpowiedź”, „Pozostałe”, każdy wiersz w najwyżej dwóch liniach
 - [ ] Weryfikacja: `node --test src/widoki/lista-wycen-dane.test.js` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-11: Moduł Chemia w nowym wyglądzie (feature-builder-ui)
 
-- [ ] Modyfikuj: `src/widoki/katalog-chemii.js`
-- [ ] Modyfikuj: `src/widoki/karta-produktu.js`
-- [ ] Modyfikuj: `src/widoki/dobor-chemii.js`
-- [ ] Modyfikuj: `src/style/chemia.css`
-- [ ] Modyfikuj: `src/style/komponenty.css`
+- [x] Modyfikuj: `src/widoki/katalog-chemii.js`
+- [x] Modyfikuj: `src/widoki/karta-produktu.js`
+- [x] Modyfikuj: `src/widoki/dobor-chemii.js`
+- [x] Modyfikuj: `src/style/chemia.css`
+- [x] Modyfikuj: `src/style/komponenty.css`
 - [ ] Test: [E2E] `chemia-modul` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, otwórz http://localhost:5174/#/start, kliknij kafel „Chemia”, wybierz pierwszą kategorię, rozwiń „Więcej” przy pierwszym produkcie, zrób screenshot → nagłówek „Chemia” z powrotem „Start”, w kategorii powrót „Chemia”, wiersze w najwyżej dwóch liniach, tekst ≥ 17 px, opis widoczny dopiero po „Więcej”
 - [ ] Weryfikacja: `npm test` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-12: Ustawienia, kreator startowy i kopia w nowym wyglądzie (feature-builder-ui)
 
-- [ ] Modyfikuj: `src/widoki/ustawienia.js`
-- [ ] Modyfikuj: `src/widoki/ustawienia-sekcje.js`
-- [ ] Modyfikuj: `src/widoki/ustawienia-tempo.js`
-- [ ] Modyfikuj: `src/widoki/ustawienia-oferta.js`
-- [ ] Modyfikuj: `src/widoki/kreator-startowy.js`
-- [ ] Modyfikuj: `src/widoki/kopia.js`
-- [ ] Modyfikuj: `src/widoki/ratunek.js`
-- [ ] Modyfikuj: `src/style/ustawienia.css`
-- [ ] Modyfikuj: `src/style/komponenty.css`
+- [x] Modyfikuj: `src/widoki/ustawienia.js`
+- [x] Modyfikuj: `src/widoki/ustawienia-sekcje.js`
+- [x] Modyfikuj: `src/widoki/ustawienia-tempo.js`
+- [x] Modyfikuj: `src/widoki/ustawienia-oferta.js`
+- [x] Modyfikuj: `src/widoki/kreator-startowy.js`
+- [x] Modyfikuj: `src/widoki/kopia.js`
+- [x] Modyfikuj: `src/widoki/ratunek.js`
+- [x] Modyfikuj: `src/style/ustawienia.css`
+- [x] Modyfikuj: `src/style/komponenty.css`
 - [ ] Test: [E2E] `ustawienia-kopia-wyglad` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz http://localhost:5174/#/start, kliknij „Ustawienia firmy”, potem wiersz „Kopia danych”, zrób screenshot → tytuł „Ustawienia firmy” z powrotem „Start”, na kopii powrót „Ustawienia firmy”, chipy podsumowania „4 wyceny”, „3 klientów”, „3 zlecenia” i zdanie „Plik kopii zawiera dane klientów, także notatki. Trzymaj go w bezpiecznym miejscu.”
 - [ ] Test: [E2E] `kreator-startowy-wyglad` — okno 360×800, wyczyść localStorage, otwórz http://localhost:5174/, przejdź kreator z województwem mazowieckim i kliknij „Gotowe”, zrób screenshot → kreator w nowym wyglądzie, po „Gotowe” ekran Start z powitaniem „Dzień dobry”
 - [ ] Weryfikacja: `npm test` przechodzi

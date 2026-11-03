@@ -1,91 +1,36 @@
-// Ekran startowy (`#/start`, makieta ekran-startowy): data i firma, kafle szybkiej i dokładnej wyceny, karta miesiąca
-// z tempem, „Do zrobienia”, baner kopii danych, znacznik ustawien domyslnych i instrukcja dla iPhone'a (R23);
-// pierwsze uruchomienie — stan pusty.
+// Ekran Start (`#/start`, makieta „Start” w docs/operator/aplikacja-modulowa-makiety.html): powitanie z nazwa firmy, jedno
+// zdanie o dniu, kafle gotowych modulow z linia stanu (R1–R3), najwyzej jeden baner (R5) i odnosnik „Ustawienia firmy”.
+// Szybka wycena jest dwa dotkniecia od Start: kafel Wycena, potem „Szybka wycena” (R6). Teksty licza czyste funkcje
+// z start-dane.js; widok tylko je sklada.
 
-import { czyPrzypomniecOKopii, dniOdKopii } from '../dane/kopia.js'
+import { dniOdKopii } from '../dane/kopia.js'
+import { dzienLokalny } from '../dane/ksztalt.js'
 import { wczytajStan } from '../dane/magazyn.js'
-import { brakujeUstawien } from '../dane/ustawienia.js'
-import { kwotaWyceny } from '../dane/wyceny.js'
-import { czyPokazacInstrukcjeIos, srodowiskoPrzegladarki, zamknijInstrukcjeIos } from '../pwa/rejestracja.js'
-import { tempoDoWyceny } from '../silnik/tempo.js'
-import { dataDnia, dniTemu, FORMY, odmiana, zl } from '../ui/format.js'
+import { srodowiskoPrzegladarki, zamknijInstrukcjeIos } from '../pwa/rejestracja.js'
+import { dniTemu } from '../ui/format.js'
 import { h, ikona } from '../ui/h.js'
-import { baner, dolnyPasek, karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
-import { pigulkaStatusu } from '../ui/statusy.js'
+import { baner, karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
+import { MODULY } from '../ui/moduly.js'
 import { sciezka } from '../ui/trasy.js'
-import { daneTempa } from '../zlecenia/dane-tempa.js'
-import { adresWyceny, doZrobienia, inicjal, nazwaMiesiaca, podsumowanieMiesiaca, wierszTempa } from './start-dane.js'
+import { banerStartu, powitanie, stanKafla, zdanieDnia } from './start-dane.js'
 import { tekstBleduZapisu } from './teksty-bledow.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../ui/router.js').Kontekst} Kontekst */
 /** @typedef {import('../dane/magazyn.js').Stan} Stan */
-/** @typedef {import('./start-dane.js').Zadanie} Zadanie */
+/** @typedef {import('../ui/moduly.js').Modul} Modul */
+/** @typedef {import('./start-dane.js').StanKafla} StanKafla */
 
-const TYTUL_BEZ_FIRMY = 'Czysty Zarobek'
-const PUSTY_START = 'Nie masz jeszcze wycen. Zacznij od szybkiej wyceny przez telefon albo dokładnej wyceny na miejscu.'
 const BEZ_KOPII = 'Nie masz jeszcze kopii danych. Dane są tylko w tej przeglądarce.'
-const ZOSTAJE = 'zostaje średnio'
 const INSTRUKCJA_IOS = 'Na iPhonie dodaj aplikację do ekranu początkowego: Udostępnij → Do ekranu początkowego. Dane z Safari nie przechodzą do aplikacji na ekranie początkowym, więc zrób to przed pierwszą wyceną.'
 
-/** @param {string} adres @param {'bolt' | 'file-text'} nazwaIkony @param {string} tytul @param {string} opis @param {boolean} czyGlowny */
-function kafel(adres, nazwaIkony, tytul, opis, czyGlowny) {
-  return h('a', { class: ['kafel', czyGlowny && 'kafel--glowny'], href: adres },
-    ikona(nazwaIkony, 'kafel__ikona'),
-    h('span', { class: 'kafel__tytul' }, tytul),
-    h('span', { class: 'kafel__opis' }, opis))
-}
-
-/** @param {string} wartosc @param {string} etykieta */
-const statystyka = (wartosc, etykieta) =>
-  h('div', { class: 'statystyka' }, h('span', { class: 'statystyka__wartosc liczba' }, wartosc), h('span', { class: 'statystyka__etykieta' }, etykieta))
-
-/** @param {Stan} stan @param {Kontekst} kontekst @param {Date} dzis */
-function kartaMiesiaca(stan, { domyslne }, dzis) {
-  const { wycen, przyjetych } = podsumowanieMiesiaca(stan.wyceny, dzis)
-  const tempo = wierszTempa(tempoDoWyceny(stan.ustawienia, daneTempa(stan), null, domyslne))
-  return karta({ klasa: 'karta-miesiaca' },
-    h('h2', { class: 'karta-miesiaca__miesiac' }, nazwaMiesiaca(dzis)),
-    h('div', { class: 'statystyki' },
-      statystyka(String(wycen), odmiana(wycen, FORMY.wycena)),
-      statystyka(String(przyjetych), odmiana(przyjetych, FORMY.przyjeta)),
-      // Realna stawka z wizyt wraca w nowym ekranie Start; do tego czasu karta pokazuje „—”.
-      statystyka('—', ZOSTAJE)),
-    h('p', { class: 'karta-miesiaca__tempo' },
-      h('span', { class: 'karta-miesiaca__etykieta' }, tempo.etykieta), ' ',
-      h('span', { class: 'karta-miesiaca__wartosc' }, tempo.wartosc)))
-}
-
-/** @param {Zadanie} zadanie */
-function wierszZadania({ tytul, wycena }) {
-  const kwota = kwotaWyceny(wycena)
-  const nazwa = wycena.klient.nazwa
-  const opis = [nazwa || (wycena.numer && `Wycena ${wycena.numer}`), kwota === null ? null : zl(kwota)].filter(Boolean).join(' · ')
-  const litera = inicjal(nazwa)
-  return wiersz({ tytul, opis: opis || undefined, adres: adresWyceny(wycena), awatar: litera || undefined,
-    ikona: litera ? undefined : 'file-text', dodatek: pigulkaStatusu(wycena.status) })
-}
-
-/** @param {Zadanie[]} zadania */
-function sekcjaZadan(zadania) {
-  return h('section', { class: 'sekcja', 'aria-labelledby': 'start-zadania' },
-    h('h2', { class: 'sekcja__naglowek', id: 'start-zadania' },
-      'Do zrobienia ', h('span', { class: 'sekcja__licznik liczba' }, String(zadania.length))),
-    karta({ klasa: 'karta--bez-odstepu' }, zadania.map(wierszZadania)))
-}
-
-/** @param {Stan} stan @param {Date} dzis @returns {HTMLElement | null} */
-function banerKopii(stan, dzis) {
-  if (!czyPrzypomniecOKopii(stan, dzis)) return null
-  const dni = dniOdKopii(stan, dzis)
-  const tekst = dni === null ? BEZ_KOPII : `Ostatnia kopia danych: ${dniTemu(dni)}`
-  return baner({ rodzaj: 'uwaga', tekst, akcja: { tekst: 'Zrób kopię', adres: sciezka('kopia') } })
-}
-
-/** @param {Stan} stan @returns {HTMLElement | null} */
-function banerUstawien(stan) {
-  if (brakujeUstawien(stan.ustawienia).length === 0) return null
-  return baner({ rodzaj: 'info', tekst: 'Ustawienia domyślne – uzupełnij', akcja: { tekst: 'Uzupełnij', adres: sciezka('ustawienia') } })
+/** Kafel modulu: link na cala powierzchnie z ikona, nazwa i linia stanu. @param {Readonly<Modul>} modul @param {StanKafla} stanLinii */
+function kafel({ nazwa, ikona: nazwaIkony, trasa }, { tekst, czyAkcja }) {
+  return h('li', { class: 'kafle__pozycja' },
+    h('a', { class: 'kafel', href: sciezka(trasa) },
+      h('span', { class: 'kafel__ikona' }, ikona(nazwaIkony)),
+      h('span', { class: 'kafel__nazwa' }, nazwa),
+      h('span', { class: ['kafel__stan', czyAkcja && 'kafel__stan--akcja'] }, tekst)))
 }
 
 /** Fokus po zniknieciu klikniętego przycisku wraca na tytul ekranu, a nie na poczatek dokumentu. @param {HTMLElement} element */
@@ -99,10 +44,9 @@ function fokusNaTytul(element) {
 /**
  * Instrukcja dla iPhone'a (osobne dane Safari i aplikacji z ekranu poczatkowego); „Rozumiem” zapisuje preferencje w stanie,
  * a nieudany zapis pokazuje blad pod banerem i zostawia przycisk do ponowienia.
- * @param {Stan} stan @param {Kontekst} kontekst @returns {HTMLElement | null}
+ * @param {Kontekst} kontekst @returns {HTMLElement}
  */
-function banerIos(stan, { magazyn }) {
-  if (!czyPokazacInstrukcjeIos({ ...srodowiskoPrzegladarki(), zamknieta: stan.preferencje.iosInstrukcjaZamknieta })) return null
+function banerIos({ magazyn }) {
   /** @type {HTMLElement | null} */
   let bladZapisu = null
   const handleRozumiem = () => {
@@ -124,29 +68,31 @@ function banerIos(stan, { magazyn }) {
   return instrukcja
 }
 
-/** @param {Stan} stan @param {Kontekst} kontekst @param {Date} dzis @returns {(HTMLElement | null)[]} */
-function trescStartu(stan, kontekst, dzis) {
-  if (stan.wyceny.length === 0) return [karta({}, h('p', { class: 'start-pusty' }, PUSTY_START))]
-  const zadania = doZrobienia(stan.wyceny)
-  return [kartaMiesiaca(stan, kontekst, dzis), zadania.length === 0 ? null : sekcjaZadan(zadania)]
+/** Jeden baner w kolejnosci z banerStartu. @param {Stan} stan @param {Kontekst} kontekst @param {Date} teraz @returns {HTMLElement | null} */
+function banerEkranu(stan, kontekst, teraz) {
+  const wybrany = banerStartu(stan, teraz, srodowiskoPrzegladarki())
+  if (wybrany === null) return null
+  if (wybrany.rodzaj === 'ios') return banerIos(kontekst)
+  if (wybrany.rodzaj === 'ustawienia') {
+    return baner({ rodzaj: 'info', tekst: 'Ustawienia domyślne – uzupełnij', akcja: { tekst: 'Uzupełnij', adres: sciezka('ustawienia') } })
+  }
+  const dni = dniOdKopii(stan, teraz)
+  const tekst = dni === null ? BEZ_KOPII : `Ostatnia kopia danych: ${dniTemu(dni)}`
+  return baner({ rodzaj: 'uwaga', tekst, akcja: { tekst: 'Zrób kopię', adres: sciezka('kopia') } })
 }
 
 /** @type {Widok} */
 export const widokStartu = {
   render(kontener, { kontekst }) {
     const stan = wczytajStan(kontekst.magazyn)
-    const dzis = new Date()
-    const nazwaFirmy = stan.ustawienia?.firma.nazwa.trim() ?? ''
+    const teraz = new Date()
+    const dzis = dzienLokalny(teraz)
     kontener.append(
-      naglowek({ tytul: dataDnia(dzis), podtytul: nazwaFirmy || TYTUL_BEZ_FIRMY, czyDuzy: true }),
+      naglowek({ tytul: powitanie(stan.ustawienia), podtytul: zdanieDnia(stan, dzis), czyDuzy: true }),
       h('div', { class: 'tresc' },
-        banerIos(stan, kontekst),
-        banerUstawien(stan),
-        h('div', { class: 'kafle' },
-          kafel(sciezka('szybka'), 'bolt', 'Szybka wycena', 'przez telefon, widełki', true),
-          kafel(sciezka('kreator', { krok: 'usluga' }), 'file-text', 'Dokładna wycena', 'pomieszczenia i brud', false)),
-        trescStartu(stan, kontekst, dzis),
-        banerKopii(stan, dzis)),
-      dolnyPasek('start'))
+        h('ul', { class: 'kafle', 'aria-label': 'Moduły' }, MODULY.map((modul) => kafel(modul, stanKafla(modul.id, stan, dzis)))),
+        banerEkranu(stan, kontekst, teraz),
+        karta({ klasa: 'karta--bez-odstepu' },
+          wiersz({ tytul: 'Ustawienia firmy', adres: sciezka('ustawienia'), ikona: 'settings' }))))
   },
 }

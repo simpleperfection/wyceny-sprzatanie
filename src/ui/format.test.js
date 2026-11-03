@@ -9,11 +9,13 @@ import {
   dataDnia,
   dniTemu,
   FORMY,
+  kiedy,
   m2,
   miejscownikWojewodztwa,
   odmiana,
   parsujLiczbe,
   procent,
+  SKROTY_DNI,
   sprawdzDate,
   tekstLiczby,
   tempo,
@@ -87,6 +89,29 @@ describe('daty', () => {
     assert.throws(() => dniTemu(-1), bladFormatu('zle_dni'))
     assert.throws(() => dniTemu(1.5), bladFormatu('zle_dni'))
   })
+
+  it('kiedy: jutro słowem, dalszy dzień skrótem dnia i miesiąca, godzina bez zera wiodącego', () => {
+    assert.equal(kiedy('2026-11-03', '09:00', '2026-11-02'), 'jutro 9:00')
+    assert.equal(kiedy('2026-11-06', '09:00', '2026-11-02'), 'pt 6 lis, 9:00')
+    assert.equal(kiedy('2026-11-08', '15:30', '2026-11-02'), 'nd 8 lis, 15:30')
+  })
+
+  it('kiedy: dziś, wizyta bez godziny i przejście przez koniec roku', () => {
+    assert.equal(kiedy('2026-11-02', '18:00', '2026-11-02'), 'dziś 18:00')
+    assert.equal(kiedy('2026-11-03', null, '2026-11-02'), 'jutro')
+    assert.equal(kiedy('2027-01-01', null, '2026-12-31'), 'jutro')
+    assert.equal(kiedy('2027-01-04', null, '2026-12-31'), 'pn 4 sty')
+  })
+
+  it('kiedy odrzuca zły dzień i godzinę spoza HH:MM', () => {
+    assert.throws(() => kiedy('2026-02-30', '09:00', '2026-02-01'), bladFormatu('zla_data'))
+    assert.throws(() => kiedy('2026-11-03', '09:00', 'dziś'), bladFormatu('zla_data'))
+    assert.throws(() => kiedy('2026-11-03', '9:00', '2026-11-02'), bladFormatu('zla_godzina'))
+  })
+
+  it('SKROTY_DNI od poniedziałku do niedzieli', () => {
+    assert.deepEqual(SKROTY_DNI, ['pn', 'wt', 'śr', 'czw', 'pt', 'sb', 'nd'])
+  })
 })
 
 describe('odmiana', () => {
@@ -104,6 +129,12 @@ describe('odmiana', () => {
     assert.equal(odmiana(3, FORMY.zlecenie), 'zlecenia')
     assert.equal(odmiana(0, FORMY.zlecenie), 'zleceń')
     assert.equal(odmiana(7, FORMY.przyjeta), 'przyjętych')
+  })
+
+  it('formy Start: niezapłacone, klient (męskoosobowy), czeka', () => {
+    assert.deepEqual([1, 2, 5, 22].map((n) => odmiana(n, FORMY.niezaplacone)), ['niezapłacone', 'niezapłacone', 'niezapłaconych', 'niezapłacone'])
+    assert.deepEqual([1, 3, 5].map((n) => odmiana(n, FORMY.klient)), ['klient', 'klientów', 'klientów'])
+    assert.deepEqual([1, 2, 5].map((n) => odmiana(n, FORMY.czeka)), ['czeka', 'czekają', 'czeka'])
   })
 
   it('odmiana odrzuca liczbę ujemną', () => {

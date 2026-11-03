@@ -1,17 +1,19 @@
-// Ekran ustawien firmy (`#/ustawienia`, makieta ustawienia-firmy): karty „Dane do oferty”, „Rynek i VAT”, „Tempo pracy”,
-// „Koszty zlecenia (szacunki do zmiany)”, „Zakres prac”, „Warunki oferty” i wiersz „Kopia danych”; kazda zmiana zapisuje sie
-// od razu z komunikatem „Zapisano”.
+// Ekran ustawien firmy (`#/ustawienia`, makieta ustawienia w docs/operator/aplikacja-modulowa-makiety.html): powrot „Start”,
+// karty „Dane do oferty”, „Rynek i VAT”, „Tempo pracy”, „Koszty zlecenia (szacunki do zmiany)”, „Zakres prac”, „Warunki oferty”
+// z wierszami ze strzalka i wiersz „Kopia danych” (zawartosc kopii, „Brak” przed pierwsza kopia). Zmiana zapisuje sie od razu
+// z komunikatem „Zapisano”; jedyna glowna akcja to „Zapisz” w arkuszu pola.
 
-import { dniOdKopii } from '../dane/kopia.js'
+import { dniOdKopii, podsumowanieKopii } from '../dane/kopia.js'
 import { wczytajStan } from '../dane/magazyn.js'
 import { ustawieniaDomyslne, zapiszUstawienia } from '../dane/ustawienia.js'
 import { dniTemu } from '../ui/format.js'
 import { h } from '../ui/h.js'
-import { baner, dolnyPasek, karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
+import { baner, karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
 import { sciezka } from '../ui/trasy.js'
 import { kartaWarunkowUstawien, kartaZakresowUstawien } from './ustawienia-oferta.js'
 import { kartaFirmy, kartaKosztow, kartaRynku } from './ustawienia-sekcje.js'
 import { kartaTempa } from './ustawienia-tempo.js'
+import { etykietyPodsumowania } from './kopia-teksty.js'
 import { tekstBleduZapisu } from './teksty-bledow.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
@@ -20,13 +22,17 @@ import { tekstBleduZapisu } from './teksty-bledow.js'
 /** @typedef {import('./ustawienia-sekcje.js').DaneSekcji} DaneSekcji */
 
 const CZAS_KOMUNIKATU_MS = 3000
-const BRAK_KOPII = 'brak kopii'
+const BRAK_KOPII = 'Brak'
+/** Wiersz kopii mowi o wycenach i klientach (makieta); pelne podsumowanie, takze zlecen, jest na ekranie kopii. */
+const POZYCJE_OPISU_KOPII = 2
 
-/** @param {Stan} stan @param {Date} dzis */
+/** @param {Stan} stan @param {Date} dzis @returns {HTMLElement} wiersz „Kopia danych”: dni od ostatniej kopii albo pigulka „Brak” */
 function kartaKopii(stan, dzis) {
   const dni = dniOdKopii(stan, dzis)
+  const opis = etykietyPodsumowania({ ...podsumowanieKopii(stan), czyUstawienia: false }).slice(0, POZYCJE_OPISU_KOPII).join(' · ')
+  const stanKopii = dni === null ? { dodatek: h('span', { class: 'pigulka pigulka--brak-kopii' }, BRAK_KOPII) } : { wartosc: dniTemu(dni) }
   return karta({ klasa: 'karta--bez-odstepu karta-kopii' },
-    wiersz({ tytul: 'Kopia danych', wartosc: dni === null ? BRAK_KOPII : dniTemu(dni), adres: sciezka('kopia') }))
+    wiersz({ tytul: 'Kopia danych', opis, ikona: 'download', adres: sciezka('kopia'), ...stanKopii }))
 }
 
 /** @param {HTMLElement} kontener @param {string | undefined} fokus selektor elementu */
@@ -88,10 +94,9 @@ export const widokUstawien = {
     const zapisz = (zmiana, fokus) => wykonaj(() => zapiszUstawienia(magazyn, zmiana, domyslne), fokus)
 
     kontener.append(
-      naglowek({ tytul: 'Twoja firma', podtytul: 'Ustawienia używane w każdej wycenie' }),
+      naglowek({ tytul: 'Ustawienia firmy', wstecz: sciezka('start'), wsteczTekst: 'Start' }),
       tresc,
-      komunikat,
-      dolnyPasek('ustawienia'))
+      komunikat)
     rysuj()
     return () => clearTimeout(zegar)
   },

@@ -1,11 +1,12 @@
-// Sekcje ustawien firmy z makiety `ustawienia-firmy`: karty z wierszami „etykieta — wartość — strzałka”, a wiersz otwiera
-// arkusz z polem. Te same sekcje sklada ekran ustawien (`#/ustawienia`) i kreator pierwszego uruchomienia; zapis robi widok.
+// Sekcje ustawien firmy z makiety `ustawienia`: karty z wierszami „etykieta — wartość — strzałka”, a wiersz otwiera arkusz
+// z polem i jedna glowna akcja „Zapisz”; wyjasnienia sa pod „Więcej” (R9). Te same sekcje sklada ekran ustawien
+// (`#/ustawienia`) i kreator pierwszego uruchomienia; zapis robi widok.
 
 import { scalKoszty } from '../dane/ustawienia.js'
 import { zl } from '../ui/format.js'
 import { h } from '../ui/h.js'
 import { chipy, pole, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
-import { arkusz, baner, karta, wiersz } from '../ui/komponenty/uklad.js'
+import { arkusz, baner, karta, wiecej, wiersz } from '../ui/komponenty/uklad.js'
 import { METRAZ_WZORCOWY, mieszkanieWzorcowe, tekstLiczby, zmianaZPol } from './ustawienia-formularz.js'
 
 /** @typedef {import('../dane/magazyn.js').Ustawienia} Ustawienia */
@@ -147,14 +148,14 @@ export function trescWojewodztwa(dane) {
   ]
 }
 
-/** @param {DaneSekcji} dane @returns {HTMLElement[]} chipy statusu VAT z opisem */
+/** @param {DaneSekcji} dane @returns {HTMLElement[]} chipy statusu VAT, a wyjasnienie cen pod „Więcej” (R9) */
 export function trescVat(dane) {
   const id = 'ustawienia-status-vat'
   return [
     chipy({ id, etykieta: 'Status VAT', opcje: STATUSY_VAT, wybrana: dane.ustawienia.statusVat,
       naZmiane: (statusVat) => { dane.zapisz({ statusVat }, `input[name="${id}"]:checked`) } }),
-    h('p', { class: 'ustawienia__opis' },
-      `Ceny w ofercie bez VAT. Czynny podatnik zobaczy cenę brutto (VAT ${dane.domyslne.stawka_vat_proc}%) i netto obok.`),
+    wiecej({}, h('p', { class: 'ustawienia__opis' },
+      `Ceny w ofercie bez VAT. Czynny podatnik zobaczy cenę brutto (VAT ${dane.domyslne.stawka_vat_proc}%) i netto obok.`)),
   ]
 }
 

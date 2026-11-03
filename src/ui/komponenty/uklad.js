@@ -1,29 +1,22 @@
-// Komponenty ukladu z makiet wariantu B: grafitowy naglowek, karta, baner, pasek postepu kreatora, wiersz listy,
-// dolny pasek nawigacji z arkuszem „+”, arkusz od dolu (natywny <dialog>) i dialog potwierdzenia.
+// Komponenty ukladu z makiety biało-zielonej (docs/operator/aplikacja-modulowa-makiety.html): bialy naglowek z powrotem
+// do ekranu nadrzednego, przelaczniki widokow modulu, karta, baner, pasek postepu kreatora, wiersz listy, „Więcej” i „?”,
+// arkusz od dolu (natywny <dialog>) i dialog potwierdzenia. Aplikacja nie ma dolnego paska: modul zmienia sie przez Start.
 
 import { h, ikona } from '../h.js'
-import { sciezka } from '../trasy.js'
 
 /** @typedef {import('../ikony.js').NazwaIkony} NazwaIkony */
 /** @typedef {import('../h.js').Dzieci} Dzieci */
 /**
- * @typedef {{ tytul: string, podtytul?: string, wstecz?: string, czyDuzy?: boolean }} OpcjeNaglowka
+ * @typedef {{ tytul: string, podtytul?: string, wstecz?: string, wsteczTekst?: string, czyDuzy?: boolean }} OpcjeNaglowka
+ * @typedef {{ tekst: string, adres: string, czyAktywna: boolean }} PozycjaPrzelacznika
  * @typedef {{ tekst: string, adres?: string, naKlik?: () => void }} Akcja
  * @typedef {{ rodzaj: 'uwaga' | 'info' | 'blad' | 'sukces', tekst: string, akcja?: Akcja }} OpcjeBanera
  * @typedef {{ tytul: string, opis?: string, wartosc?: string, adres?: string, naKlik?: () => void, awatar?: string,
  *   ikona?: NazwaIkony, dodatek?: Node }} OpcjeWiersza
- * @typedef {'start' | 'wyceny' | 'chemia' | 'ustawienia'} PozycjaPaska
  * @typedef {{ tytul: string, tresc: string, potwierdz: string, anuluj?: string, czyNiebezpieczne?: boolean }} OpcjeDialogu
  */
 
-/** @type {readonly { trasa: PozycjaPaska, tekst: string, ikona: NazwaIkony }[]} */
-const POZYCJE_PASKA = Object.freeze([
-  { trasa: 'start', tekst: 'Start', ikona: 'home' },
-  { trasa: 'wyceny', tekst: 'Wyceny', ikona: 'file-text' },
-  { trasa: 'chemia', tekst: 'Chemia', ikona: 'flask' },
-  { trasa: 'ustawienia', tekst: 'Firma', ikona: 'briefcase' },
-])
-const POZYCJI_PRZED_PLUSEM = 2
+const WIECEJ = 'Więcej'
 let licznikId = 0
 
 /**
@@ -41,13 +34,36 @@ function zamykaDialog(wynik) {
 /** @param {string} przedrostek @returns {string} id unikalne w dokumencie (aria-labelledby) */
 const noweId = (przedrostek) => `${przedrostek}-${++licznikId}`
 
-/** @param {OpcjeNaglowka} opcje @returns {HTMLElement} grafitowy pas z tytulem (h1), podtytulem i strzalka wstecz */
-export function naglowek({ tytul, podtytul, wstecz, czyDuzy = false }) {
+/**
+ * Powrot do ekranu nadrzednego: strzalka z widocznym tekstem (np. „Start”), a bez tekstu sama strzalka z etykieta „Wstecz”.
+ * @param {string} adres @param {string} [tekst] @returns {HTMLAnchorElement}
+ */
+function linkWstecz(adres, tekst) {
+  if (tekst === undefined) return h('a', { class: 'naglowek__wstecz', href: adres, 'aria-label': 'Wstecz' }, ikona('chevron-left'))
+  return h('a', { class: 'naglowek__wstecz naglowek__wstecz--tekst', href: adres }, ikona('chevron-left'), tekst)
+}
+
+/** @param {OpcjeNaglowka} opcje @returns {HTMLElement} bialy naglowek: powrot nad tytulem (h1), pod nim podtytul */
+export function naglowek({ tytul, podtytul, wstecz, wsteczTekst, czyDuzy = false }) {
   return h('header', { class: ['naglowek', czyDuzy && 'naglowek--duzy'] },
-    h('div', { class: 'naglowek__wiersz' },
-      wstecz === undefined ? null : h('a', { class: 'naglowek__wstecz', href: wstecz, 'aria-label': 'Wstecz' }, ikona('arrow-left')),
-      h('h1', { class: 'naglowek__tytul' }, tytul)),
+    wstecz === undefined ? null : h('div', { class: 'naglowek__gora' }, linkWstecz(wstecz, wsteczTekst)),
+    h('h1', { class: 'naglowek__tytul' }, tytul),
     podtytul ? h('p', { class: 'naglowek__podtytul' }, podtytul) : null)
+}
+
+/**
+ * Przelaczniki widokow modulu (np. Dzień / Tydzień / Miesiąc) jako linki; aktywny ma `aria-current="page"`.
+ * @param {readonly PozycjaPrzelacznika[]} pozycje najwyzej jedna aktywna
+ * @param {string} [etykieta] nazwa nawigacji dla czytnika ekranu, np. „Widok kalendarza”
+ * @returns {HTMLElement}
+ */
+export function przelaczniki(pozycje, etykieta) {
+  if (pozycje.length === 0) throw new RangeError('Przełączniki bez pozycji')
+  const aktywnych = pozycje.filter((pozycja) => pozycja.czyAktywna).length
+  if (aktywnych > 1) throw new RangeError(`Aktywne przełączniki: ${aktywnych}`)
+  return h('nav', { class: 'przelaczniki', 'aria-label': etykieta },
+    pozycje.map(({ tekst, adres, czyAktywna }) =>
+      h('a', { class: 'przelaczniki__pozycja', href: adres, 'aria-current': czyAktywna ? 'page' : null }, tekst)))
 }
 
 /**
@@ -127,36 +143,35 @@ export function arkusz({ tytul }, ...dzieci) {
   return dialog
 }
 
-/** @param {string} adres @param {NazwaIkony} nazwaIkony @param {string} tytul @param {string} opis */
-function opcjaArkusza(adres, nazwaIkony, tytul, opis) {
-  return h('a', { class: 'opcja-arkusza', href: adres, on: { click: zamykaDialog() } },
-    ikona(nazwaIkony, 'opcja-arkusza__ikona'),
-    h('span', { class: 'opcja-arkusza__tresc' },
-      h('span', { class: 'opcja-arkusza__tytul' }, tytul),
-      h('span', { class: 'opcja-arkusza__opis' }, opis)))
-}
-
-/** @param {{ trasa: PozycjaPaska, tekst: string, ikona: NazwaIkony }} pozycja @param {PozycjaPaska | null} aktywna */
-function pozycjaPaska(pozycja, aktywna) {
-  const czyAktywna = pozycja.trasa === aktywna
-  return h('a', { class: ['dolny-pasek__pozycja', czyAktywna && 'dolny-pasek__pozycja--aktywna'], href: sciezka(pozycja.trasa),
-    'aria-current': czyAktywna ? 'page' : null }, ikona(pozycja.ikona), h('span', null, pozycja.tekst))
+/**
+ * Wyjasnienia schowane pod „Więcej” (natywne <details>, dziala z klawiatury bez skryptu).
+ * @param {{ etykieta?: string }} opcje `etykieta` zamiast „Więcej”
+ * @param {...Dzieci} tresc co najmniej jeden element albo tekst
+ * @returns {HTMLDetailsElement}
+ */
+export function wiecej({ etykieta = WIECEJ }, ...tresc) {
+  if (tresc.length === 0) throw new RangeError('„Więcej” bez treści')
+  return h('details', { class: 'wiecej' },
+    h('summary', null, etykieta, ikona('chevron-right', 'wiecej__znak')),
+    h('div', { class: 'wiecej__tresc' }, ...tresc))
 }
 
 /**
- * Dolny pasek ekranow glownych: Start, Wyceny, „+” (arkusz z szybka i dokladna wycena), Chemia, Firma.
- * @param {PozycjaPaska | null} aktywna
- * @returns {HTMLElement}
+ * Przycisk „?” z wyjasnieniem w arkuszu od dolu. Arkusz powstaje przy kliknieciu w <body> i znika po zamknieciu.
+ * @param {{ tytul: string, tresc: string | readonly string[] }} opcje kazdy tekst `tresc` to osobny akapit
+ * @returns {HTMLButtonElement}
  */
-export function dolnyPasek(aktywna) {
-  const wybor = arkusz({ tytul: 'Nowa wycena' },
-    opcjaArkusza(sciezka('szybka'), 'bolt', 'Szybka wycena', 'przez telefon, widełki'),
-    opcjaArkusza(sciezka('kreator', { krok: 'usluga' }), 'file-text', 'Dokładna wycena', 'pomieszczenia i brud'))
-  const plus = h('button', { class: 'dolny-pasek__plus', type: 'button', 'aria-label': 'Nowa wycena', 'aria-haspopup': 'dialog',
-    on: { click: () => wybor.showModal() } }, h('span', { class: 'dolny-pasek__kolo' }, ikona('plus')))
-  const pozycje = POZYCJE_PASKA.map((pozycja) => pozycjaPaska(pozycja, aktywna))
-  return h('nav', { class: 'dolny-pasek', 'aria-label': 'Menu główne' },
-    pozycje.slice(0, POZYCJI_PRZED_PLUSEM), plus, pozycje.slice(POZYCJI_PRZED_PLUSEM), wybor)
+export function podpowiedz({ tytul, tresc }) {
+  if (tytul.trim() === '') throw new RangeError('Podpowiedź bez tytułu')
+  const akapity = typeof tresc === 'string' ? [tresc] : tresc
+  const handleOtworz = () => {
+    const okno = arkusz({ tytul }, akapity.map((akapit) => h('p', { class: 'arkusz__tekst' }, akapit)))
+    okno.addEventListener('close', () => okno.remove())
+    document.body.append(okno)
+    okno.showModal()
+  }
+  return h('button', { class: 'podpowiedz', type: 'button', 'aria-label': `Wyjaśnienie: ${tytul}`, 'aria-haspopup': 'dialog',
+    on: { click: handleOtworz } }, ikona('help-circle'))
 }
 
 /**

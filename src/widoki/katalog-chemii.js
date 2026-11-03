@@ -1,18 +1,23 @@
-// Katalog srodkow z dolnego paska (`#/chemia`): wszystkie kategorie z liczba srodkow, a po wybraniu (`?kategoria=<id>`) — produkty
-// kategorii. Do tego stan wczytywania i bledu bazy chemii (src/dane/chemia.js) wspolny dla katalogu i kroku chemii kreatora.
+// Modul Chemia (`#/chemia`, makieta „Chemia, kategoria” w docs/operator/aplikacja-modulowa-makiety.html): kategorie z liczba
+// srodkow i powrotem „Start”, a po wybraniu (`?kategoria=<id>`) — wiersze srodkow kategorii z powrotem „Chemia”. Do tego stan
+// wczytywania i bledu bazy chemii (src/dane/chemia.js) wspolny dla katalogu i kroku chemii kreatora.
 
 import { chemiaAplikacji } from '../dane/chemia.js'
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
 import { dostawcyZProduktami, produktyKategorii } from '../silnik/chemia.js'
 import { odmiana } from '../ui/format.js'
 import { h } from '../ui/h.js'
-import { baner, dolnyPasek, karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
+import { baner, karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
 import { sciezka } from '../ui/trasy.js'
-import { kartaKategorii } from './karta-produktu.js'
+import { kartaProduktu, podzielNazweKategorii } from './karta-produktu.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../silnik/chemia.js').Chemia} Chemia */
 
+const TYTUL = 'Chemia'
+/** Korzen modulu wraca do Start, kategoria do listy kategorii (staly ekran nadrzedny, nie historia przegladarki). */
+const POWROT_START = { wstecz: sciezka('start'), wsteczTekst: 'Start' }
+const POWROT_CHEMIA = { wstecz: sciezka('chemia'), wsteczTekst: 'Chemia' }
 const FORMY_SRODKA = /** @type {const} */ (['środek', 'środki', 'środków'])
 const WCZYTYWANIE = 'Wczytywanie środków…'
 const BLAD_POLACZENIA = 'Nie udało się wczytać bazy środków. Sprawdź połączenie z internetem i spróbuj jeszcze raz.'
@@ -61,20 +66,34 @@ export async function poChemii(miejsce, naDane, czyAktualny) {
   }
 }
 
-/** @param {Chemia} chemia @returns {HTMLElement} lista kategorii z liczba srodkow */
+/** @param {Chemia} chemia @returns {HTMLElement} kategorie: nazwa, w drugiej linii liczba srodkow i rodzaje brudu */
 function listaKategorii(chemia) {
-  return karta({ klasa: 'karta--bez-odstepu' }, chemia.kategorie.map((k) => wiersz({
-    tytul: k.nazwa,
-    opis: `${k.produkty.length} ${odmiana(k.produkty.length, FORMY_SRODKA)}`,
-    adres: sciezka('chemia', {}, { kategoria: k.id }),
-  })))
+  return karta({ klasa: 'karta--bez-odstepu' }, chemia.kategorie.map((k) => {
+    const { nazwa, dopisek } = podzielNazweKategorii(k.nazwa)
+    const liczba = `${k.produkty.length} ${odmiana(k.produkty.length, FORMY_SRODKA)}`
+    return wiersz({ tytul: nazwa, opis: dopisek ? `${liczba} · ${dopisek}` : liczba, adres: sciezka('chemia', {}, { kategoria: k.id }) })
+  }))
 }
 
-/** @param {Chemia} chemia @param {string} id @returns {Node} produkty kategorii albo komunikat o nieznanej kategorii */
-function produktyWybranej(chemia, id) {
+/**
+ * Ekran po wczytaniu bazy: korzen modulu (kategorie, powrot „Start”) albo wybrana kategoria (nazwa w tytule, rodzaje brudu
+ * w podtytule, wiersze srodkow, powrot „Chemia”); nieznana kategoria daje komunikat z powrotem do kategorii.
+ * @param {Chemia} chemia @param {string | null} id
+ * @returns {{ gora: HTMLElement, tresc: Node }}
+ */
+function ekranKatalogu(chemia, id) {
+  if (id === null) {
+    return { gora: naglowek({ tytul: TYTUL, podtytul: `Środki od ${dostawcyZProduktami(chemia).length} dostawców`, ...POWROT_START }),
+      tresc: listaKategorii(chemia) }
+  }
   const kategoria = chemia.kategorie.find((k) => k.id === id)
-  if (!kategoria) return baner({ rodzaj: 'info', tekst: NIE_MA_KATEGORII, akcja: { tekst: 'Pokaż wszystkie kategorie', adres: sciezka('chemia') } })
-  return kartaKategorii({ id: kategoria.id, tytul: kategoria.nazwa, produkty: produktyKategorii(kategoria, chemia), chemia })
+  if (!kategoria) {
+    return { gora: naglowek({ tytul: TYTUL, ...POWROT_CHEMIA }),
+      tresc: baner({ rodzaj: 'info', tekst: NIE_MA_KATEGORII, akcja: { tekst: 'Pokaż wszystkie kategorie', adres: sciezka('chemia') } }) }
+  }
+  const { nazwa, dopisek } = podzielNazweKategorii(kategoria.nazwa)
+  return { gora: naglowek({ tytul: nazwa, podtytul: dopisek ?? undefined, ...POWROT_CHEMIA }),
+    tresc: karta({ klasa: 'karta--bez-odstepu' }, produktyKategorii(kategoria, chemia).map((p) => kartaProduktu(p, chemia, 'h2'))) }
 }
 
 /** @type {Widok} */
@@ -82,15 +101,14 @@ export const widokKataloguChemii = {
   render(kontener, { zapytanie }) {
     let isAktualny = true
     const wybrana = zapytanie.kategoria ?? null
-    const wstecz = wybrana === null ? undefined : sciezka('chemia')
-    let gora = naglowek({ tytul: 'Chemia', wstecz })
+    let gora = naglowek({ tytul: TYTUL, ...(wybrana === null ? POWROT_START : POWROT_CHEMIA) })
     const tresc = h('div', { class: 'tresc' })
-    kontener.append(gora, tresc, dolnyPasek('chemia'))
+    kontener.append(gora, tresc)
     void poChemii(tresc, (chemia) => {
-      const nowa = naglowek({ tytul: 'Chemia', podtytul: `Środki od ${dostawcyZProduktami(chemia).length} dostawców`, wstecz })
-      tresc.replaceChildren(wybrana === null ? listaKategorii(chemia) : produktyWybranej(chemia, wybrana))
-      gora.replaceWith(nowa)
-      gora = nowa
+      const ekran = ekranKatalogu(chemia, wybrana)
+      tresc.replaceChildren(ekran.tresc)
+      gora.replaceWith(ekran.gora)
+      gora = ekran.gora
     }, () => isAktualny).catch(reportError)
     return () => {
       isAktualny = false

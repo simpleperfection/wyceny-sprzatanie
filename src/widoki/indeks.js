@@ -5,7 +5,6 @@ import { wczytajStan } from '../dane/magazyn.js'
 import { wycena as znajdzWycene } from '../dane/wyceny.js'
 import { h } from '../ui/h.js'
 import { przycisk } from '../ui/komponenty/formularz.js'
-import { dolnyPasek } from '../ui/komponenty/uklad.js'
 import { sciezka } from '../ui/trasy.js'
 import { widokDoboruChemii } from './dobor-chemii.js'
 import { widokKataloguChemii } from './katalog-chemii.js'
@@ -27,15 +26,14 @@ import { widokUstawien } from './ustawienia.js'
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../ui/router.js').Widoki} Widoki */
 
-/** @param {string} komunikat @returns {Widok} ekran z komunikatem, przyciskiem na start i dolnym paskiem */
+/** @param {string} komunikat @returns {Widok} ekran z komunikatem i przyciskiem na start */
 function widokKomunikatu(komunikat) {
   return {
     render(kontener) {
       kontener.append(
         h('div', { class: 'tresc tresc--komunikat' },
           h('h1', { class: 'komunikat' }, komunikat),
-          przycisk({ tekst: 'Wróć na start', adres: sciezka('start') })),
-        dolnyPasek(null))
+          przycisk({ tekst: 'Wróć na start', adres: sciezka('start') })))
     },
   }
 }

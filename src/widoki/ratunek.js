@@ -1,9 +1,9 @@
 // Ekran ratunkowy (R23): pokazuje go src/app.js zamiast routera, gdy danych zapisanych w przegladarce nie da sie odczytac
-// (uszkodzony JSON albo stan z nowszej wersji). Pozwala pobrac surowe dane, wczytac kopie z pliku (zastepuje dane po
-// potwierdzeniu) albo wyczyscic dane.
+// (uszkodzony JSON albo stan z nowszej wersji). Pozwala pobrac surowe dane (jedyna glowna akcja), wczytac kopie z pliku
+// (zastepuje dane po potwierdzeniu) albo wyczyscic dane.
 
 import { odczytajKopie, wczytajKopie } from '../dane/kopia.js'
-import { h } from '../ui/h.js'
+import { h, ikona } from '../ui/h.js'
 import { przycisk } from '../ui/komponenty/formularz.js'
 import { baner, dialogPotwierdzenia } from '../ui/komponenty/uklad.js'
 import { pobierzPlik, wybierzPlik } from '../ui/plik.js'
@@ -61,6 +61,7 @@ export function pokazRatunek(kontener, { magazyn, blad, surowe }) {
   }
 
   kontener.replaceChildren(h('div', { class: 'tresc tresc--komunikat ratunek' },
+    ikona('alert-triangle', 'ratunek__ikona'),
     h('h1', { class: 'komunikat' }, 'Nie udało się odczytać danych zapisanych w przeglądarce.'),
     blad === 'nowsza_wersja' ? h('p', { class: 'ratunek__opis' }, NOWSZA_WERSJA) : null,
     komunikat,

@@ -1,0 +1,80 @@
+/*
+ * Ekran Start z kaflami modulow (src/widoki/start.js), wymiary z makiety „Start” w docs/operator/aplikacja-modulowa-makiety.html.
+ * Dolaczony w index.html po komponenty.css. Powitanie to duzy naglowek (naglowek--duzy), zdanie o dniu jego podtytul.
+ */
+
+/* Zdanie o dniu pod powitaniem: 19 px z makiety (skala tekstu nie ma tego stopnia) */
+.naglowek--duzy .naglowek__podtytul {
+  font-size: 19px;
+  line-height: 1.3;
+}
+
+/* Kafle modulow: na telefonie (i szerzej, w kolumnie --szerokosc-kolumny) dwie kolumny */
+.kafle {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kafle__pozycja {
+  display: flex;
+}
+
+.kafel {
+  flex: 1;
+  min-width: 0;
+  min-height: 152px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid var(--linia-podzial);
+  border-radius: 20px;
+  background: var(--tlo-karta);
+  box-shadow: 0 1px 2px rgb(20 32 26 / 0.06), 0 6px 16px rgb(20 32 26 / 0.06);
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 0.15s, transform 0.15s;
+}
+
+.kafel:hover {
+  background: var(--tlo-miekkie);
+}
+
+.kafel:active {
+  transform: scale(0.96);
+}
+
+.kafel__ikona {
+  display: grid;
+  place-items: center;
+  width: var(--cel-dotyku);
+  height: var(--cel-dotyku);
+  margin-bottom: auto;
+  border-radius: var(--promien-przycisk);
+  background: var(--marka-zielen-tlo);
+  color: var(--marka-zielen);
+}
+
+.kafel__nazwa {
+  margin-top: 12px;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.kafel__stan {
+  font-size: var(--tekst-maly);
+  line-height: 1.3;
+  color: var(--tekst-drugi);
+}
+
+/* Linia stanu wymagajaca dzialania (do zamknięcia, do wysłania, pierwszy krok): pogrubiona w ciemnej zieleni */
+.kafel__stan--akcja {
+  font-weight: 700;
+  color: var(--marka-zielen-ciemna);
+}

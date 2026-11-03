@@ -569,7 +569,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 
 **Zależy od:** Faza 2
 
-- [ ] **IU-8: Tokeny, komponenty i nagłówek modułu bez dolnego paska**
+- [x] **IU-8: Tokeny, komponenty i nagłówek modułu bez dolnego paska**
 
 **Cel:** Biało-zielony wygląd w tokenach i wspólnych komponentach, nagłówek modułu z „← Start”, przełączniki widoków, „Więcej” i „?”, arkusze modułów, bez dolnego paska.
 
@@ -641,7 +641,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 **Operator checklist:**
 - [ ] Właściciel porównuje na telefonie nagłówek, przyciski, wiersze i kolory z zaakceptowaną makietą
 
-- [ ] **IU-9: Ekran Start z kaflami modułów**
+- [x] **IU-9: Ekran Start z kaflami modułów**
 
 **Cel:** Start z powitaniem, zdaniem o dniu, kaflami modułów z linią stanu, odnośnikiem „Ustawienia firmy” i jednym banerem.
 
@@ -705,7 +705,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 **Operator checklist:**
 - [ ] Właściciel otwiera Start na telefonie i bez instrukcji ocenia, że aplikacja ma moduły, a szybka wycena jest w dwóch dotknięciach
 
-- [ ] **IU-10: Moduł Wycena: ekran główny**
+- [x] **IU-10: Moduł Wycena: ekran główny**
 
 **Cel:** Ekran modułu Wycena z dwoma dużymi przyciskami i listą wycen w sekcjach według tego, co trzeba zrobić.
 
@@ -751,7 +751,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 - `node --test src/widoki/lista-wycen-dane.test.js` przechodzi
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-11: Moduł Chemia w nowym wyglądzie**
+- [x] **IU-11: Moduł Chemia w nowym wyglądzie**
 
 **Cel:** Katalog środków, karta produktu i krok doboru chemii w nowym wyglądzie z mniejszą ilością tekstu.
 
@@ -792,7 +792,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 - `npm test` przechodzi
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-12: Ustawienia, kreator startowy i kopia w nowym wyglądzie**
+- [x] **IU-12: Ustawienia, kreator startowy i kopia w nowym wyglądzie**
 
 **Cel:** Ustawienia firmy, kreator pierwszego uruchomienia, kopia i ekran ratunkowy w nowym wyglądzie z jedną główną akcją na ekranie.
 
@@ -821,6 +821,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 **Podejście:**
 - Ustawienia (`#/ustawienia`): tytuł „Ustawienia firmy”, powrót „Start”; kopia (`#/kopia`): powrót „Ustawienia firmy”; sekcje ustawień w wierszach ze strzałką; wyjaśnienia (VAT, tempo, warunki oferty) pod „Więcej” albo „?”; jedna główna akcja na ekranie („Zapisz”, „Zrób kopię”).
 - Kreator pierwszego uruchomienia: te same kroki i teksty decyzji, nowy wygląd; „Gotowe” i „Pomiń” prowadzą na Start (R5).
+- Korekta po fazie 3: sekcje ustawień zostały kartami z wierszami ze strzałką, a każdy wiersz otwiera arkusz z jedną akcją „Zapisz” — osobny ekran na sekcję (jak w makiecie) wymaga nowych tras w `src/ui/trasy.js` i `src/app.js`, których ta jednostka nie miała; to osobna jednostka albo decyzja właściciela.
 - Sekcje „Ustawienia firmy i kreator pierwszego uruchomienia” i „Kopia danych i ekran ratunkowy” przechodzą z `komponenty.css` do `src/style/ustawienia.css`.
 
 **Teksty (verbatim):**
