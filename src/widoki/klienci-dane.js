@@ -6,10 +6,11 @@ import { dodajKlienta, dopasowanieFrazy, indeksKlientow, klient, normalizujNazwe
 import { numerTelefonu } from '../dane/walidacja.js'
 import { kwotaWyceny } from '../dane/wyceny.js'
 import { zlecenie, zleceniaKlienta } from '../dane/zlecenia.js'
-import { dzienKrotko, kiedy, miesiacRok, zl } from '../ui/format.js'
+import { dzienKrotko, kiedy, kwotaJednostki, miesiacRok, zl } from '../ui/format.js'
 import { sciezka } from '../ui/trasy.js'
 import { W_ABONAMENCIE } from '../zlecenia/kalendarz-dane.js'
-import { najblizszaOtwarta, nazwaZlecenia } from '../zlecenia/karta-dane.js'
+import { najblizszaOtwarta } from '../zlecenia/karta-dane.js'
+import { dzienWizyty, nazwaZlecenia, nazwyUslug } from '../zlecenia/teksty-wizyty.js'
 import { niezaplacone } from '../zlecenia/zapytania.js'
 
 /** @typedef {import('../dane/klienci.js').Klient} Klient */
@@ -96,7 +97,7 @@ export function historiaWycen(stan, klientId) {
 function opisZlecenia(z, dzis) {
   const w = najblizszaOtwarta(z, dzis)
   if (w === null) return ZAKONCZONE
-  const kwota = w.okres.cenaWizyty === null ? W_ABONAMENCIE : zl(w.okres.cenaWizyty)
+  const kwota = w.okres.cenaWizyty === null ? W_ABONAMENCIE : kwotaJednostki(w.okres.cenaWizyty)
   return [kiedy(w.data, w.godzina, dzis), kwota].join(SEPARATOR)
 }
 
@@ -106,9 +107,10 @@ function opisZlecenia(z, dzis) {
  * @returns {PozycjaZlecenia[]}
  */
 export function historiaZlecen(stan, klientId, katalog, dzis) {
+  const nazwaUslugi = nazwyUslug(katalog)
   return zleceniaKlienta(stan, klientId)
     .sort((a, b) => (a.utworzone === b.utworzone ? 0 : a.utworzone < b.utworzone ? 1 : -1))
-    .map((z) => ({ nazwa: nazwaZlecenia(z, katalog), opis: opisZlecenia(z, dzis), adres: sciezka('zlecenie', { id: z.id }) }))
+    .map((z) => ({ nazwa: nazwaZlecenia(z, nazwaUslugi), opis: opisZlecenia(z, dzis), adres: sciezka('zlecenie', { id: z.id }) }))
 }
 
 /**
@@ -116,9 +118,9 @@ export function historiaZlecen(stan, klientId, katalog, dzis) {
  * @param {Pick<Stan, 'zlecenia'>} stan @param {Niezaplacone} pozycja @returns {PozycjaNiezaplacona}
  */
 function pozycjaNiezaplacona(stan, { rodzaj, zlecenieId, klucz, kwota }) {
-  if (rodzaj === 'miesiac') return { tekst: [miesiacRok(`${klucz}-01`), zl(kwota)].join(SEPARATOR), adres: sciezka('zlecenie', { id: zlecenieId }) }
-  const dzien = zlecenie(stan, zlecenieId)?.wizyty[klucz]?.przeniesiona?.data ?? klucz
-  return { tekst: [dzienKrotko(dzien), zl(kwota)].join(SEPARATOR), adres: sciezka('wizyta', { id: zlecenieId, data: klucz }) }
+  if (rodzaj === 'miesiac') return { tekst: [miesiacRok(`${klucz}-01`), kwotaJednostki(kwota)].join(SEPARATOR), adres: sciezka('zlecenie', { id: zlecenieId }) }
+  const z = zlecenie(stan, zlecenieId)
+  return { tekst: [dzienKrotko(z === null ? klucz : dzienWizyty(z, klucz)), kwotaJednostki(kwota)].join(SEPARATOR), adres: sciezka('wizyta', { id: zlecenieId, data: klucz }) }
 }
 
 /**

@@ -110,10 +110,11 @@ export function dniOkresu(okres, odDnia, doDnia, dzienMiesiaca = numerDnia(okres
 
 /**
  * Okres obowiazujacy w dniu: ostatni z `od` nie pozniejszym niz dzien (dzien przed pierwszym okresem dostaje pierwszy).
- * Jedyna regula okresu dnia dla kalendarza, zapisu wizyt i zaplat (src/dane/) i zapytan (src/zlecenia/).
+ * Jedyna regula okresu dnia dla kalendarza, zapisu wizyt i zaplat (src/dane/) i zapytan (src/zlecenia/). Dni porownuje jako
+ * teksty (RRRR-MM-DD sprawdza jestZlecenie przy odczycie stanu), bo to goraca petla po calej historii zlecenia.
  * @template {OkresKalendarza} O @param {readonly O[]} okresy niepuste, rosnace `od` @param {string} dzien @returns {O}
  */
-export const okresDnia = (okresy, dzien) => okresy.findLast((o) => porownajDni(o.od, dzien) <= 0) ?? okresy[0]
+export const okresDnia = (okresy, dzien) => okresy.findLast((o) => o.od <= dzien) ?? okresy[0]
 
 /**
  * Dzien miesiaca kazdego okresu: okres miesieczny, ktory zaczyna sie w dniu wizyty poprzedniego okresu miesiecznego
@@ -150,15 +151,16 @@ function dniZReguly(zlecenie, odDnia, doDnia) {
 
 /** @param {Wystapienie<OkresKalendarza, StanKalendarza>} a @param {Wystapienie<OkresKalendarza, StanKalendarza>} b @returns {number} */
 function porownajWystapienia(a, b) {
-  if (a.data !== b.data) return porownajDni(a.data, b.data)
+  if (a.data !== b.data) return a.data < b.data ? -1 : 1
   if (a.godzina !== b.godzina) return a.godzina === null ? 1 : b.godzina === null ? -1 : a.godzina < b.godzina ? -1 : 1
-  return porownajDni(a.dataPierwotna, b.dataPierwotna)
+  return a.dataPierwotna === b.dataPierwotna ? 0 : a.dataPierwotna < b.dataPierwotna ? -1 : 1
 }
 
 /**
  * Wizyty zlecenia w dniach `odDnia`–`doDnia` (wlacznie), po dniu i godzinie (bez godziny na koncu dnia).
  * Wizyta z zapisanym stanem jest zawsze, takze gdy regula jej juz nie daje; przesunieta jest w dniu `przeniesiona.data`
  * (takze gdy data pierwotna jest poza oknem), a okres i godzine bierze z daty pierwotnej (godzina przesuniecia wygrywa).
+ * Granice okna sprawdza sprawdzOkno, a daty wizyt jestZlecenie przy odczycie stanu, wiec petla porownuje je jako teksty.
  * @template {OkresKalendarza} O @template {StanKalendarza} S
  * @param {ZlecenieKalendarza<O, S>} zlecenie @param {string} odDnia @param {string} doDnia
  * @returns {Wystapienie<O, S>[]}
@@ -173,7 +175,7 @@ export function wystapienia(zlecenie, odDnia, doDnia) {
   for (const dataPierwotna of pierwotne) {
     const stan = Object.hasOwn(wizyty, dataPierwotna) ? wizyty[dataPierwotna] : null
     const data = stan?.przeniesiona?.data ?? dataPierwotna
-    if (porownajDni(data, odDnia) < 0 || porownajDni(data, doDnia) > 0) continue
+    if (data < odDnia || data > doDnia) continue
     const okres = okresDnia(okresy, dataPierwotna)
     wynik.push({ dataPierwotna, data, godzina: stan?.przeniesiona?.godzina ?? okres.godzina, okres, stan })
   }

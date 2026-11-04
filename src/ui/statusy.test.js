@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { afterEach, beforeEach, describe, it } from 'node:test'
 
-import { ETYKIETY_FORM_ZAPLATY, pigulkaWizyty } from './statusy.js'
+import { pigulkaWizyty } from './statusy.js'
 
 /** Atrapa elementu (Node nie ma DOM): tyle, ile uzywa `h()` przy pigulce. */
 class AtrapaElementu {
@@ -53,11 +53,5 @@ describe('pigulkaWizyty', () => {
 
   it('nieznany stan daje RangeError', () => {
     assert.throws(() => pigulkaWizyty(/** @type {never} */ ('wykonana')), RangeError)
-  })
-})
-
-describe('ETYKIETY_FORM_ZAPLATY', () => {
-  it('nazywa trzy formy zapłaty', () => {
-    assert.deepEqual(ETYKIETY_FORM_ZAPLATY, { gotowka: 'Gotówka', przelew: 'Przelew', blik: 'BLIK' })
   })
 })

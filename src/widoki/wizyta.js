@@ -1,64 +1,45 @@
 // Ekran wizyty (`#/zlecenie/:id/wizyta/:data`, data pierwotna; makieta „Wizyta” w docs/operator/aplikacja-modulowa-makiety.html):
 // wiersze klienta, adresu, terminu, kwoty i uslugi, „Zrobione”, zaplata z forma, czas pracy z planem i faktem, przesuniecie,
 // odwolanie i linki do zlecenia i wyceny. Dane i widocznosc akcji liczy src/zlecenia/wizyta-dane.js, a kazda akcja to jeden zapis
-// z src/dane/wizyty.js. Po zapisie ekran rysuje sie od nowa (magazyn.naZmiane zglasza tylko zmiany z innych kart), a fokus
-// wraca do sekcji akcji, bo kliknieta kontrolka znika razem ze starym ekranem. Czas, termin i zmiana formy sa w arkuszu od dolu.
+// z src/dane/wizyty.js. Zapis, fokus i arkusz od dolu (czas, termin, zmiana formy) daje src/widoki/ekran-akcji.js.
 
-import { dzienLokalny, jestDniem } from '../dane/ksztalt.js'
+import { dzienLokalny } from '../dane/ksztalt.js'
 import { wczytajStan } from '../dane/magazyn.js'
 import { cofnijZaplate, cofnijZrobiona, odwolajWizyte, oznaczZaplacona, oznaczZrobiona, przesunWizyte, przywrocWizyte, wpiszCzasPracy,
   zmienForme } from '../dane/wizyty.js'
-import { BladZlecenia } from '../dane/zlecenia.js'
-import { FORMY_ZAPLATY, MAKS_MINUT_PRACY } from '../dane/zlecenia-ksztalt.js'
+import { MAKS_MINUT_PRACY } from '../dane/zlecenia-ksztalt.js'
 import { czas, parsujLiczbe } from '../ui/format.js'
 import { h, ikona } from '../ui/h.js'
-import { chipy, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
-import { arkusz, baner, dialogPotwierdzenia, karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
-import { ETYKIETY_FORM_ZAPLATY, pigulkaWizyty } from '../ui/statusy.js'
-import { NAJWCZESNIEJSZA_DATA } from '../zlecenia/formularz.js'
-import { adresKalendarza } from '../zlecenia/kalendarz-dane.js'
+import { chipy, pole, przycisk, przyciskLicznika, ustawBlad } from '../ui/komponenty/formularz.js'
+import { dialogPotwierdzenia, karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
+import { pigulkaWizyty } from '../ui/statusy.js'
+import { tekstBleduWizyty } from '../zlecenia/bledy-zapisu.js'
+import { NAJWCZESNIEJSZA_DATA, OPCJE_FORM, tekstBleduPola } from '../zlecenia/opcje.js'
 import { KROK_CZASU, poprawnyCzas } from '../zlecenia/plan-fakt.js'
-import { modelWizyty } from '../zlecenia/wizyta-dane.js'
+import { bladPrzesuniecia, modelWizyty } from '../zlecenia/wizyta-dane.js'
+import { ekranBraku, otworzArkusz, pokazSkutek, wykonaj } from './ekran-akcji.js'
 import { linkMapy } from './klienci-dane.js'
-import { tekstBleduZapisu } from './teksty-bledow.js'
 
 /**
  * @typedef {import('../ui/router.js').Widok} Widok
  * @typedef {import('../ui/router.js').DaneAplikacji} DaneAplikacji
- * @typedef {import('../ui/h.js').Dzieci} Dzieci
  * @typedef {import('../ui/komponenty/uklad.js').OpcjeWiersza} OpcjeWiersza
  * @typedef {import('../dane/zlecenia-ksztalt.js').FormaZaplaty} FormaZaplaty
  * @typedef {import('../zlecenia/wizyta-dane.js').ModelWizyty} ModelWizyty
+ * @typedef {import('./ekran-akcji.js').EkranAkcji} EkranAkcji
  * @typedef {'zrobione' | 'zaplata' | 'czas' | 'termin' | 'odwolanie'} SekcjaWizyty miejsce fokusu i bledu po akcji
- * @typedef {Pick<DaneAplikacji, 'magazyn' | 'katalog'> & { kontener: HTMLElement, id: string, dataPierwotna: string,
- *   forma: FormaZaplaty | null, okno: HTMLDialogElement | null, czyPyta: boolean, czyAktywny: boolean }} EkranWizyty
- *   forma: wybrana w chipach przed zapisem zaplaty; okno: otwarty arkusz; czyPyta: otwarty dialog odwolania
- * @typedef {{ tytul: string, zapis: string, sekcja: SekcjaWizyty }} OpcjeArkusza zapis: tekst przycisku zapisu
+ * @typedef {EkranAkcji & Pick<DaneAplikacji, 'magazyn' | 'katalog'> & { kontener: HTMLElement, id: string, dataPierwotna: string,
+ *   forma: FormaZaplaty | null, czyPyta: boolean, czyAktywny: boolean }} EkranWizyty
+ *   forma: wybrana w chipach przed zapisem zaplaty; czyPyta: otwarty dialog odwolania
  */
 
 const NIE_MA_WIZYTY = 'Nie ma takiej wizyty.'
-const BLAD_WIZYTY = 'Nie udało się zapisać tej wizyty. Spróbuj jeszcze raz.'
 const BLAD_CZASU = 'Wpisz czas większy od zera i nie dłuższy niż 24 godziny.'
-const BLAD_DATY = 'Wybierz datę.'
 const PYTANIE_O_FORME = 'Jak zapłacił klient?'
 const MINUT_W_GODZINIE = 60
-const OPCJE_FORM = FORMY_ZAPLATY.map((wartosc) => ({ wartosc, etykieta: ETYKIETY_FORM_ZAPLATY[wartosc] }))
-
-/** @param {unknown} blad @returns {string} tekst bledu zapisu wizyty; blad spoza zlecenia i magazynu leci dalej */
-const tekstBleduWizyty = (blad) => (blad instanceof BladZlecenia ? BLAD_WIZYTY : tekstBleduZapisu(blad))
 
 /** @param {string} tekst @returns {number} pusty tekst = 0, zly = NaN */
 const liczbaPola = (tekst) => (tekst.trim() === '' ? 0 : parsujLiczbe(tekst) ?? Number.NaN)
-
-/** @param {'minus' | 'plus'} rodzaj @param {string} etykieta @param {() => void} naKlik @returns {HTMLButtonElement} */
-function przyciskKroku(rodzaj, etykieta, naKlik) {
-  const element = h('button', { type: 'button', class: ['licznik__przycisk', rodzaj === 'plus' && 'licznik__przycisk--plus'], 'aria-label': etykieta },
-    ikona(rodzaj))
-  element.addEventListener('click', () => {
-    if (element.getAttribute('aria-disabled') !== 'true') naKlik()
-  })
-  return element
-}
 
 /**
  * Licznik czasu pracy: godziny i minuty do wpisania, − / + co KROK_CZASU.
@@ -74,8 +55,8 @@ function licznikCzasu(start, naZmiane) {
     'aria-label': etykieta, 'aria-describedby': blad.id })
   const godziny = poleLiczby('wizyta-godziny', 'Ile trwała praca? Godziny')
   const minutyPola = poleLiczby('wizyta-minuty', 'Ile trwała praca? Minuty')
-  const minus = przyciskKroku('minus', `Zmniejsz czas pracy o ${KROK_CZASU} min`, () => ustaw(minuty - KROK_CZASU))
-  const plus = przyciskKroku('plus', `Zwiększ czas pracy o ${KROK_CZASU} min`, () => ustaw(minuty + KROK_CZASU))
+  const minus = przyciskLicznika('minus', `Zmniejsz czas pracy o ${KROK_CZASU} min`, () => ustaw(minuty - KROK_CZASU))
+  const plus = przyciskLicznika('plus', `Zwiększ czas pracy o ${KROK_CZASU} min`, () => ustaw(minuty + KROK_CZASU))
 
   function odswiez() {
     const czyBlad = poprawnyCzas(minuty) !== null
@@ -118,80 +99,9 @@ function licznikCzasu(start, naZmiane) {
   return { element, fokus: () => godziny.focus() }
 }
 
-/**
- * Pole daty albo godziny z natywnym wyborem (uklad `pole()`).
- * @param {{ id: string, etykieta: string, typ: 'date' | 'time', wartosc: string, min?: string, naZmiane: (wartosc: string) => void }} opcje
- * @returns {HTMLDivElement}
- */
-function poleTerminu({ id, etykieta, typ, wartosc, min, naZmiane }) {
-  const wejscie = h('input', { type: typ, id, name: id, class: 'pole__wejscie', value: wartosc, min, 'aria-describedby': `${id}-blad` })
-  wejscie.addEventListener('input', () => naZmiane(wejscie.value))
-  const element = h('div', { class: 'pole' }, h('label', { class: 'pole__etykieta', for: id }, etykieta), wejscie,
-    h('p', { class: 'pole__blad', id: `${id}-blad`, role: 'alert' }))
-  ustawBlad(element, null)
-  return element
-}
-
 /** @param {string} id @param {FormaZaplaty} wybrana @param {(forma: FormaZaplaty) => void} naZmiane @returns {HTMLElement} chipy rownej szerokosci */
 const chipyFormy = (id, wybrana, naZmiane) => h('div', { class: 'wizyta-formy' },
   chipy({ id, etykieta: PYTANIE_O_FORME, opcje: OPCJE_FORM, wybrana, naZmiane }))
-
-/**
- * Po narysowaniu: blad w sekcji akcji i fokus na jej pierwszej kontrolce (sekcji juz nie ma: powrot w naglowku).
- * @param {HTMLElement} kontener @param {SekcjaWizyty | null} sekcja @param {string | null} blad
- */
-function pokazSkutek(kontener, sekcja, blad) {
-  if (sekcja === null) return
-  const miejsce = kontener.querySelector(`[data-sekcja="${sekcja}"]`)
-  if (blad !== null) miejsce?.append(baner({ rodzaj: 'blad', tekst: blad }))
-  const cel = miejsce?.matches('a, button') ? miejsce : miejsce?.querySelector('button, a') ?? kontener.querySelector('a')
-  if (cel instanceof HTMLElement) cel.focus()
-}
-
-/**
- * Zapis jednej akcji i ekran narysowany od nowa; blad zostaje przy akcji, a jej kontrolki dzialaja dalej.
- * @param {EkranWizyty} e @param {SekcjaWizyty} sekcja @param {() => void} zapis
- */
-function wykonaj(e, sekcja, zapis) {
-  try {
-    zapis()
-  } catch (blad) {
-    rysuj(e, sekcja, tekstBleduWizyty(blad))
-    reportError(blad)
-    return
-  }
-  rysuj(e, sekcja)
-}
-
-/**
- * Arkusz z polami i przyciskiem zapisu: udany zapis zamyka arkusz, a blad zostaje w nim razem z wpisanymi wartosciami.
- * @param {EkranWizyty} e @param {OpcjeArkusza} opcje @param {Dzieci} pola
- * @param {() => (() => void) | null} przygotujZapis zapis gotowy do wykonania; null, gdy pola maja blad (pokazuje go sama)
- */
-function otworzArkusz(e, { tytul, zapis, sekcja }, pola, przygotujZapis) {
-  const komunikat = h('div', { class: 'wizyta-ekran__komunikat' })
-  function handleZapisz() {
-    const wykonajZapis = przygotujZapis()
-    if (wykonajZapis === null) return
-    try {
-      wykonajZapis()
-    } catch (blad) {
-      komunikat.replaceChildren(baner({ rodzaj: 'blad', tekst: tekstBleduWizyty(blad) }))
-      reportError(blad)
-      return
-    }
-    okno.close()
-    rysuj(e, sekcja)
-  }
-  const okno = arkusz({ tytul }, h('div', { class: 'arkusz__formularz' }, pola, komunikat, przycisk({ tekst: zapis, naKlik: handleZapisz })))
-  okno.addEventListener('close', () => {
-    okno.remove()
-    if (e.okno === okno) e.okno = null
-  })
-  document.body.append(okno)
-  e.okno = okno
-  okno.showModal()
-}
 
 /** @param {EkranWizyty} e @param {number} start minuty */
 function handleDopiszCzas(e, start) {
@@ -199,31 +109,28 @@ function handleDopiszCzas(e, start) {
   const licznik = licznikCzasu(start, (wartosc) => { minuty = wartosc })
   otworzArkusz(e, { tytul: 'Dopisz czas pracy', zapis: 'Zapisz czas', sekcja: 'czas' },
     [licznik.element, h('p', { class: 'wizyta-ekran__notka' }, 'Licz cały czas u klienta, bez dojazdu.')],
-    () => {
-      if (poprawnyCzas(minuty) === null) return () => wpiszCzasPracy(e.magazyn, e.id, e.dataPierwotna, minuty)
-      licznik.fokus()
-      return null
+    (zapisz) => {
+      if (poprawnyCzas(minuty) !== null) return licznik.fokus()
+      zapisz(() => wpiszCzasPracy(e.magazyn, e.id, e.dataPierwotna, minuty))
     })
 }
 
 /** @param {EkranWizyty} e @param {{ data: string, godzina: string }} poczatek */
 function handlePrzesun(e, poczatek) {
   let { data, godzina } = poczatek
-  const poleDaty = poleTerminu({ id: 'wizyta-data', etykieta: 'Data', typ: 'date', wartosc: data, min: NAJWCZESNIEJSZA_DATA,
+  const poleDaty = pole({ id: 'wizyta-data', etykieta: 'Data', rodzaj: 'data', wartosc: data, min: NAJWCZESNIEJSZA_DATA,
     naZmiane: (wartosc) => {
       data = wartosc
       ustawBlad(poleDaty, null)
     } })
-  const poleGodziny = poleTerminu({ id: 'wizyta-godzina', etykieta: 'Godzina', typ: 'time', wartosc: godzina, naZmiane: (wartosc) => { godzina = wartosc } })
+  const poleGodziny = pole({ id: 'wizyta-godzina', etykieta: 'Godzina', rodzaj: 'godzina', wartosc: godzina, naZmiane: (wartosc) => { godzina = wartosc } })
   otworzArkusz(e, { tytul: 'Przesuń', zapis: 'Zapisz nowy termin', sekcja: 'termin' },
     h('div', { class: 'zlecenie-formularz__dwa-pola' }, poleDaty, poleGodziny),
-    () => {
-      if (jestDniem(data) && data >= NAJWCZESNIEJSZA_DATA) {
-        return () => przesunWizyte(e.magazyn, e.id, e.dataPierwotna, { data, godzina: godzina === '' ? null : godzina })
-      }
-      ustawBlad(poleDaty, BLAD_DATY)
-      poleDaty.querySelector('input')?.focus()
-      return null
+    (zapisz) => {
+      const blad = bladPrzesuniecia(data)
+      ustawBlad(poleDaty, tekstBleduPola(blad))
+      if (blad !== null) return poleDaty.querySelector('input')?.focus()
+      zapisz(() => przesunWizyte(e.magazyn, e.id, e.dataPierwotna, { data, godzina: godzina === '' ? null : godzina }))
     })
 }
 
@@ -232,7 +139,7 @@ function handleZmienForme(e, forma) {
   let wybrana = forma
   otworzArkusz(e, { tytul: 'Zmień formę', zapis: 'Zmień formę', sekcja: 'zaplata' },
     chipyFormy('wizyta-nowa-forma', forma, (wartosc) => { wybrana = wartosc }),
-    () => () => zmienForme(e.magazyn, e.id, e.dataPierwotna, wybrana))
+    (zapisz) => zapisz(() => zmienForme(e.magazyn, e.id, e.dataPierwotna, wybrana)))
 }
 
 /** Pytanie zamyka sie po dluzszej chwili: ekran mogl zniknac albo druga karta zmienic wizyte. @param {EkranWizyty} e @param {string} dzien */
@@ -329,21 +236,14 @@ function sekcjaOdwolania(e, { czyOdwolana, dzien }) {
   return h('div', { class: 'wizyta-ekran__odwolanie', 'data-sekcja': 'odwolanie' }, akcja)
 }
 
-/** @returns {HTMLElement[]} ekran wizyty, ktorej nie ma (zly adres, zlecenie usuniete w innej karcie) */
-function ekranBraku() {
-  const dzis = adresKalendarza('dzien', null)
-  return [naglowek({ tytul: 'Wizyta', wstecz: dzis, wsteczTekst: 'Zlecenia' }),
-    h('div', { class: 'tresc' }, baner({ rodzaj: 'info', tekst: NIE_MA_WIZYTY, akcja: { tekst: 'Pokaż dzisiejsze wizyty', adres: dzis } }))]
-}
-
 /**
  * Ekran ze swiezego stanu.
- * @param {EkranWizyty} e @param {SekcjaWizyty | null} [sekcja] akcja, po ktorej ekran rysuje sie od nowa @param {string | null} [blad]
+ * @param {EkranWizyty} e @param {string | null} [sekcja] akcja, po ktorej ekran rysuje sie od nowa @param {string | null} [blad]
  */
 function rysuj(e, sekcja = null, blad = null) {
   const m = modelWizyty(wczytajStan(e.magazyn), e.katalog, e.id, e.dataPierwotna, dzienLokalny(new Date()))
   if (m === null) {
-    e.kontener.replaceChildren(...ekranBraku())
+    e.kontener.replaceChildren(...ekranBraku('Wizyta', NIE_MA_WIZYTY))
     return
   }
   e.kontener.replaceChildren(naglowek({ tytul: 'Wizyta', wstecz: m.powrot, wsteczTekst: 'Zlecenia' }),
@@ -359,7 +259,7 @@ export const widokWizyty = {
     const { magazyn, katalog } = kontekst
     /** @type {EkranWizyty} */
     const e = { kontener, magazyn, katalog, id: parametry.id ?? '', dataPierwotna: parametry.data ?? '', forma: null, okno: null, czyPyta: false,
-      czyAktywny: true }
+      czyAktywny: true, tekstBledu: tekstBleduWizyty, rysuj: (sekcja, blad) => rysuj(e, sekcja, blad) }
     rysuj(e)
     return () => {
       e.czyAktywny = false

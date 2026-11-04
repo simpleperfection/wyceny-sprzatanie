@@ -9,7 +9,7 @@ import { przycisk } from '../ui/komponenty/formularz.js'
 import { karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
 import { pigulkaStatusu } from '../ui/statusy.js'
 import { sciezka } from '../ui/trasy.js'
-import { adresZaplanowania } from '../zlecenia/formularz.js'
+import { adresZaplanowania } from '../zlecenia/kalendarz-dane.js'
 import { sekcjeWycen, wierszWyceny } from './lista-wycen-dane.js'
 import { adresWyceny } from './start-dane.js'
 

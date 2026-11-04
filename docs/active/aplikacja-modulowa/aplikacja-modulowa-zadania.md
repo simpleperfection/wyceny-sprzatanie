@@ -369,10 +369,10 @@ Zależy od: Faza 4
 - [x] Test: [Unit] `modelDnia` dla dnia innego niż dziś nie ma sekcji „Do zamknięcia”; wizyta jutrzejsza nie ma przycisków
 - [x] Test: [Unit] `modelMiesiaca(2026, 11)` liczy wizyty serii co tydzień w każdym tygodniu i pomija odwołane
 - [x] Test: [Unit] `dzienKrotko('2026-11-03')` → „wt 3 lis”; `dopasuj('#/zlecenie/nowe', TRASY)` → `noweZlecenie`; `dopasuj('#/zlecenie/z1/wizyta/2026-11-02', TRASY)` → `wizyta`
-- [ ] Test: [E2E] `zlecenia-dzien-zamkniecie` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz http://localhost:5174/#/start, kliknij kafel „Zlecenia”, w „Do zamknięcia” kliknij „Zrobione” przy Biurze Rachunkowym Lis i „Zapłacone” przy Janie Nowaku, wróć „Start”, zrób screenshot → kafel „Zlecenia” był pierwszy z linią „2 do zamknięcia”, widok Dzień otworzył się domyślnie, po dwóch dotknięciach sekcja „Do zamknięcia” znika, Start pokazuje „Dziś 2 zlecenia” bez niezapłaconych, a kafel „2 dziś”
-- [ ] Test: [E2E] `kalendarz-widoki` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz http://localhost:5174/#/zlecenia/dzien, kliknij „Tydzień”, potem „Miesiąc”, dotknij dnia za tydzień w siatce, zrób screenshot każdego widoku → Tydzień to lista 7 dni od poniedziałku z wizytą Biura w dzisiejszym dniu tygodnia, Miesiąc ma liczby wizyt w dniach, dotknięcie dnia otwiera widok Dzień tego dnia z wizytą Biura 15:00
-- [ ] Weryfikacja: `node --test src/zlecenia/kalendarz-dane.test.js src/ui/format.test.js src/ui/router.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Test: [E2E] `zlecenia-dzien-zamkniecie` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz http://localhost:5174/#/start, kliknij kafel „Zlecenia”, w „Do zamknięcia” kliknij „Zrobione” przy Biurze Rachunkowym Lis i „Zapłacone” przy Janie Nowaku, wróć „Start”, zrób screenshot → kafel „Zlecenia” był pierwszy z linią „2 do zamknięcia”, widok Dzień otworzył się domyślnie, po dwóch dotknięciach sekcja „Do zamknięcia” znika, Start pokazuje „Dziś 2 zlecenia” bez niezapłaconych, a kafel „2 dziś”
+- [x] Test: [E2E] `kalendarz-widoki` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz http://localhost:5174/#/zlecenia/dzien, kliknij „Tydzień”, potem „Miesiąc”, dotknij dnia za tydzień w siatce, zrób screenshot każdego widoku → Tydzień to lista 7 dni od poniedziałku z wizytą Biura w dzisiejszym dniu tygodnia, Miesiąc ma liczby wizyt w dniach, dotknięcie dnia otwiera widok Dzień tego dnia z wizytą Biura 15:00
+- [x] Weryfikacja: `node --test src/zlecenia/kalendarz-dane.test.js src/ui/format.test.js src/ui/router.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-16: Nowe zlecenie: ręcznie i „Zaplanuj” z wyceny (feature-builder-fullstack)
 
@@ -390,11 +390,11 @@ Zależy od: Faza 4
 - [x] Test: [Unit] termin wyceny „2026-11-14T09:00” daje datę 2026-11-14 i godzinę 9:00; termin „sobota rano” — dziś bez godziny
 - [x] Test: [Unit] `bledyFormularza` bez klienta → `klient`; cykl tygodniowy bez dni → `dni`; cena „-5” → `cena`
 - [x] Test: [Unit] `akcjeWyceny` dla przyjętej wyceny do zaplanowania zawiera `zaplanuj`, dla przyjętej ze zleceniem — nie
-- [ ] Test: [E2E] `zlecenie-seria-co-tydzien` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz http://localhost:5174/#/zlecenia/dzien, kliknij „Nowe zlecenie”, wybierz klienta „Jan Nowak”, usługę „Sprzątanie mieszkania (standard)”, cenę 200, datę jutrzejszą, godzinę 10:00, „Co tydzień”, kliknij „Zapisz zlecenie”, przejdź na „Tydzień”, zrób screenshot → po zapisie widok Dzień daty startu z wizytą „10:00 · Jan Nowak”, w widoku tygodnia wizyta w dniu tygodnia daty startu, a za tydzień kolejna; formularz wymagał najwyżej 8 dotknięć poza wpisywaniem
-- [ ] Test: [E2E] `zaplanuj-z-wyceny` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz http://localhost:5174/#/wyceny, w sekcji „Do zaplanowania” kliknij „Zaplanuj” przy Annie Kowalskiej, sprawdź wypełnione pola, wybierz datę jutrzejszą i kliknij „Zapisz zlecenie”, wróć do ekranu Wycena i otwórz tę wycenę, zrób screenshot → formularz ma klienta „Anna Kowalska”, cenę z wyceny i planowany czas, wycena znika z „Do zaplanowania”, a jej podsumowanie ma sekcję „Zlecenia z tej wyceny” z nowym zleceniem
-- [ ] Test: [E2E] `abonament-raz-w-miesiacu` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, w kreatorze dokładnej wyceny zrób wycenę biura 100 m² z abonamentem 3× w tygodniu, zapisz ją, oznacz jako przyjętą, kliknij „Zaplanuj”, wybierz klienta przez „Dodaj nowego klienta: Biuro Testowe”, zrób screenshot formularza i kliknij „Zapisz zlecenie” → formularz ma „Co tydzień” z dniami pn, śr, pt, płatność „Raz w miesiącu” i „Kwota za miesiąc (zł)” równą cenie za wizytę × 13; po zapisie wizyty w widoku tygodnia w pn, śr i pt mają tylko „Zrobione” i „w abonamencie”
-- [ ] Weryfikacja: `node --test src/zlecenia/formularz.test.js src/kreator/podsumowanie.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Test: [E2E] `zlecenie-seria-co-tydzien` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz http://localhost:5174/#/zlecenia/dzien, kliknij „Nowe zlecenie”, wybierz klienta „Jan Nowak”, usługę „Sprzątanie mieszkania (standard)”, cenę 200, datę jutrzejszą, godzinę 10:00, „Co tydzień”, kliknij „Zapisz zlecenie”, przejdź na „Tydzień”, zrób screenshot → po zapisie widok Dzień daty startu z wizytą „10:00 · Jan Nowak”, w widoku tygodnia wizyta w dniu tygodnia daty startu, a za tydzień kolejna; formularz wymagał najwyżej 8 dotknięć poza wpisywaniem
+- [x] Test: [E2E] `zaplanuj-z-wyceny` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz http://localhost:5174/#/wyceny, w sekcji „Do zaplanowania” kliknij „Zaplanuj” przy Annie Kowalskiej, sprawdź wypełnione pola, wybierz datę jutrzejszą i kliknij „Zapisz zlecenie”, wróć do ekranu Wycena i otwórz tę wycenę, zrób screenshot → formularz ma klienta „Anna Kowalska”, cenę z wyceny i planowany czas, wycena znika z „Do zaplanowania”, a jej podsumowanie ma sekcję „Zlecenia z tej wyceny” z nowym zleceniem
+- [x] Test: [E2E] `abonament-raz-w-miesiacu` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, w kreatorze dokładnej wyceny zrób wycenę biura 100 m² z abonamentem 3× w tygodniu, zapisz ją, oznacz jako przyjętą, kliknij „Zaplanuj”, wybierz klienta przez „Dodaj nowego klienta: Biuro Testowe”, zrób screenshot formularza i kliknij „Zapisz zlecenie” → formularz ma „Co tydzień” z dniami pn, śr, pt, płatność „Raz w miesiącu” i „Kwota za miesiąc (zł)” równą cenie za wizytę × 13; po zapisie wizyty w widoku tygodnia w pn, śr i pt mają tylko „Zrobione” i „w abonamencie”
+- [x] Weryfikacja: `node --test src/zlecenia/formularz.test.js src/kreator/podsumowanie.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-17: Wizyta: zamknięcie, zapłata, czas pracy, przesunięcie i odwołanie (feature-builder-ui)
 
@@ -410,9 +410,9 @@ Zależy od: Faza 4
 - [x] Test: [Unit] model wizyty przesuniętej pokazuje nowy termin i pigułkę „Przesunięta”, a cofnięcie przesunięcia na datę pierwotną ją usuwa
 - [x] Test: [Unit] plan i fakt wizyty z planem 270 min i czasem 300 min daje „Plan 4 h 30 min”, „Fakt 5 h” i stawkę z `historiaPlanuIFaktu`; wizyta zlecenia bez planu nie pokazuje planu
 - [x] Test: [Unit] przeniesiona wizyta z formą null pokazuje „Zapłacone” bez formy
-- [ ] Test: [E2E] `wizyta-przesun-i-czas` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz http://localhost:5174/#/zlecenia/dzien, kliknij wizytę „9:00 · Anna Kowalska”, kliknij „Zrobione”, „Zapłacone” i wybierz formę „Przelew”, kliknij „Dopisz czas pracy”, ustaw 4 h 15 min i „Zapisz czas”; wróć do widoku Dzień, kliknij wizytę „15:00 · Biuro Rachunkowe Lis”, kliknij „Przesuń”, ustaw jutro 11:00 i „Zapisz nowy termin”, zrób screenshot widoku Dzień jutra i ekranu Start → wizyta Anny ma „Zapłacone · Przelew · {dziś}” i zapisany czas, wizyta Biura jest jutro o 11:00 z pigułką „Przesunięta” i nie ma jej dziś, Start pokazuje „Dziś 1 zlecenie · 1 niezapłacone”
-- [ ] Weryfikacja: `node --test src/zlecenia/wizyta-dane.test.js src/zlecenia/plan-fakt.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Test: [E2E] `wizyta-przesun-i-czas` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz http://localhost:5174/#/zlecenia/dzien, kliknij wizytę „9:00 · Anna Kowalska”, kliknij „Zrobione”, „Zapłacone” i wybierz formę „Przelew”, kliknij „Dopisz czas pracy”, ustaw 4 h 15 min i „Zapisz czas”; wróć do widoku Dzień, kliknij wizytę „15:00 · Biuro Rachunkowe Lis”, kliknij „Przesuń”, ustaw jutro 11:00 i „Zapisz nowy termin”, zrób screenshot widoku Dzień jutra i ekranu Start → wizyta Anny ma „Zapłacone · Przelew · {dziś}” i zapisany czas, wizyta Biura jest jutro o 11:00 z pigułką „Przesunięta” i nie ma jej dziś, Start pokazuje „Dziś 1 zlecenie · 1 niezapłacone”
+- [x] Weryfikacja: `node --test src/zlecenia/wizyta-dane.test.js src/zlecenia/plan-fakt.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-18: Karta zlecenia, seria i historia klienta (feature-builder-ui)
 
@@ -428,10 +428,14 @@ Zależy od: Faza 4
 - [x] Test: [Unit] `opisRodzaju` dla serii co tydzień pn i czw 9:00 za 250 zł → „Co tydzień: pn, czw · 9:00 · 250 zł za wizytę”; dla serii miesięcznej → „… · 1560 zł miesięcznie”
 - [x] Test: [Unit] `miesiaceDoZaplaty` dla serii od 2026-09-14 przy dziś 2026-11-02: listopad, październik, wrzesień; październik bez zapłaty ma flagę niezapłaconego, listopad nie
 - [x] Test: [Unit] `niezaplaconeKlienta` zwraca tylko pozycje danego klienta; `historiaZlecen` ma „Zakończone” dla serii z `koniec` w przeszłości
-- [ ] Test: [E2E] `seria-zmiana-i-zakonczenie` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz kartę zlecenia Biura Rachunkowego Lis z widoku Dzień, kliknij „Zmień cenę lub godzinę”, ustaw 16:00, zapisz, potem „Zakończ serię” z dniem za 2 tygodnie, otwórz widok Miesiąc, zrób screenshot → najbliższa wizyta ma 16:00, wcześniejsze zostały 15:00, po dniu zakończenia w Miesiącu nie ma wizyt Biura, zapłaty miesięczne pokazują opłacone miesiące jako „Zapłacone”
-- [ ] Test: [E2E] `klient-historia-zlecen` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz kartę klienta „Jan Nowak”, zrób screenshot, kliknij „Nowe zlecenie” → karta ma sekcję „Niezapłacone” z wczorajszą wizytą za 180 zł i sekcję „Zlecenia”; „Nowe zlecenie” otwiera formularz z wybranym Janem Nowakiem
-- [ ] Weryfikacja: `node --test src/zlecenia/karta-dane.test.js src/widoki/klienci-dane.test.js` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Test: [E2E] `seria-zmiana-i-zakonczenie` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz kartę zlecenia Biura Rachunkowego Lis z widoku Dzień, kliknij „Zmień cenę lub godzinę”, ustaw 16:00, zapisz, potem „Zakończ serię” z dniem za 2 tygodnie, otwórz widok Miesiąc, zrób screenshot → najbliższa wizyta ma 16:00, wcześniejsze zostały 15:00, po dniu zakończenia w Miesiącu nie ma wizyt Biura, zapłaty miesięczne pokazują opłacone miesiące jako „Zapłacone”
+- [x] Test: [E2E] `klient-historia-zlecen` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz kartę klienta „Jan Nowak”, zrób screenshot, kliknij „Nowe zlecenie” → karta ma sekcję „Niezapłacone” z wczorajszą wizytą za 180 zł i sekcję „Zlecenia”; „Nowe zlecenie” otwiera formularz z wybranym Janem Nowakiem
+- [x] Weryfikacja: `node --test src/zlecenia/karta-dane.test.js src/widoki/klienci-dane.test.js` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+
+## Do poprawy po review fazy 5
+
+Zamkniete cyklem fix: 24 pozycji — pelna tresc findingow i uzasadnienia w `review-faza-5.md`.
 
 ## Operator checklist faza 5
 

@@ -5,8 +5,8 @@ import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
 import { niezaplacone } from '../zlecenia/zapytania.js'
 import { KLUCZ_MAGAZYNU, utworzMagazyn, wczytajStan } from './magazyn.js'
 import {
-  cofnijZaplate, cofnijZaplateMiesiaca, cofnijZrobiona, formaDomyslna, odwolajWizyte, oznaczZaplacona, oznaczZaplateMiesiaca, oznaczZrobiona,
-  przesunWizyte, przywrocWizyte, wpiszCzasPracy, zmienForme,
+  cofnijZaplate, cofnijZaplateMiesiaca, cofnijZrobiona, czyMiesiacMaWizyte, formaDomyslna, kwotaMiesiaca, odwolajWizyte, oznaczZaplacona,
+  oznaczZaplateMiesiaca, oznaczZrobiona, przesunWizyte, przywrocWizyte, wpiszCzasPracy, zmienForme,
 } from './wizyty.js'
 import { BladZlecenia, zlecenie } from './zlecenia.js'
 import { MAKS_WIZYT_ZLECENIA } from './zlecenia-ksztalt.js'
@@ -291,5 +291,30 @@ describe('wpiszCzasPracy', () => {
 
     assert.deepEqual(wizytyZlecenia(wpiszCzasPracy(magazyn, 'z1', '2026-11-09', 1440)), { '2026-11-09': { ...STAN_WIZYTY, minutyPracy: 1440 } })
     assert.deepEqual(wizytyZlecenia(wpiszCzasPracy(magazyn, 'z1', '2026-11-09', null)), {})
+  })
+})
+
+describe('czyMiesiacMaWizyte', () => {
+  const zrobiona = { ...STAN_WIZYTY, zrobiona: TERAZ.toISOString() }
+
+  it('miesiąc z wizytą z reguły ma wizytę, a po końcu serii już nie', () => {
+    const z = seriaTestowa('z1', { koniec: '2026-11-30' })
+
+    assert.equal(czyMiesiacMaWizyte(z, '2026-11'), true)
+    assert.equal(czyMiesiacMaWizyte(z, '2026-12'), false)
+  })
+
+  it('po końcu serii miesiąc zostawia tylko zrobiona, nieodwołana wizyta', () => {
+    const zZrobiona = seriaTestowa('z1', { koniec: '2026-11-30', wizyty: { '2026-12-07': zrobiona } })
+    const zOdwolana = seriaTestowa('z1', { koniec: '2026-11-30', wizyty: { '2026-12-07': { ...zrobiona, odwolana: true } } })
+    const zPrzesunieta = seriaTestowa('z1', { koniec: '2026-11-30', wizyty: { '2026-12-07': { ...STAN_WIZYTY, przeniesiona: { data: '2026-12-08', godzina: null } } } })
+
+    assert.deepEqual([zZrobiona, zOdwolana, zPrzesunieta].map((z) => czyMiesiacMaWizyte(z, '2026-12')), [true, false, false])
+  })
+
+  it('miesiąc bez wizyty daje w kwocie `brak_wizyty`, tak samo jak predykat', () => {
+    const z = seriaTestowa('z1', { koniec: '2026-11-30' })
+
+    assert.throws(() => kwotaMiesiaca(z, '2026-12'), { name: BladZlecenia.name, kod: 'brak_wizyty' })
   })
 })

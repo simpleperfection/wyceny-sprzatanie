@@ -5,8 +5,9 @@
 
 import { jestDniem } from '../dane/ksztalt.js'
 import { BladKalendarza, dodajDni, dzienWMiesiacu, ostatniDzienMiesiaca, poczatekTygodnia, porownajDni, siatkaMiesiaca } from '../kalendarz/daty.js'
-import { dataDnia, dzienKrotko, FORMY, godzina, miesiacRok, odmiana, zakresDni, zl } from '../ui/format.js'
+import { dataDnia, dzienKrotko, FORMY, godzina, kwotaJednostki, miesiacRok, odmiana, zakresDni } from '../ui/format.js'
 import { sciezka } from '../ui/trasy.js'
+import { nazwyUslug, tekstTerminu } from './teksty-wizyty.js'
 import { doZamkniecia, wizytyDnia, wizytyOkresu } from './zapytania.js'
 
 /**
@@ -54,11 +55,8 @@ export const dzienKalendarza = (zapytanie, dzis) => (jestDniem(zapytanie.data) ?
 /** @param {WidokKalendarza} widok @param {string | null} dzien null: bez `?data=` (dzis) @returns {string} adres widoku kalendarza */
 export const adresKalendarza = (widok, dzien) => sciezka('zlecenia', { widok }, dzien === null ? {} : { data: dzien })
 
-/** @param {Pick<Katalog, 'uslugi'>} katalog @returns {(uslugaId: string) => string} nazwa uslugi, a nieznanej jej id */
-function nazwyUslug(katalog) {
-  const nazwy = new Map(katalog.uslugi.map((u) => [u.id, u.nazwa]))
-  return (id) => nazwy.get(id) ?? id
-}
+/** @param {string} wycenaId @returns {string} adres formularza zlecenia z wyceny */
+export const adresZaplanowania = (wycenaId) => sciezka('noweZlecenie', {}, { wycena: wycenaId })
 
 /**
  * Przyciski wiersza od dnia wizyty (R15): „Zrobione” dla niezrobionej, „Zapłacone” dla rozliczenia za wizyte z cena > 0 bez
@@ -70,7 +68,7 @@ function akcjeWizyty(w, dzis) {
   /** @type {AkcjaWizyty[]} */
   const akcje = []
   if ((w.stan?.zrobiona ?? null) === null) akcje.push('zrobione')
-  if (w.kwota !== null && w.kwota > 0 && (w.stan?.zaplata ?? null) === null) akcje.push('zaplacone')
+  if (w.czyPlatna && (w.stan?.zaplata ?? null) === null) akcje.push('zaplacone')
   return akcje
 }
 
@@ -82,10 +80,9 @@ function akcjeWizyty(w, dzis) {
 function wierszWizyty(w, dzis, { czyZalegla, czyAkcje }) {
   const klient = w.klient?.nazwa ?? w.nazwa
   const czas = w.godzina === null ? null : godzina(w.godzina)
-  const kiedyZalegla = czas === null ? dzienKrotko(w.data) : `${dzienKrotko(w.data)}, ${czas}`
   return { klucz: `${w.zlecenieId}|${w.dataPierwotna}`, zlecenieId: w.zlecenieId, dataPierwotna: w.dataPierwotna,
-    tytul: czyZalegla ? klient : `${czas ?? BEZ_GODZINY} · ${klient}`, miejsce: czyZalegla ? kiedyZalegla : w.adres,
-    kwota: w.kwota === null ? W_ABONAMENCIE : zl(w.kwota), adres: sciezka('wizyta', { id: w.zlecenieId, data: w.dataPierwotna }),
+    tytul: czyZalegla ? klient : `${czas ?? BEZ_GODZINY} · ${klient}`, miejsce: czyZalegla ? tekstTerminu(w.data, w.godzina) : w.adres,
+    kwota: w.kwota === null ? W_ABONAMENCIE : kwotaJednostki(w.kwota), adres: sciezka('wizyta', { id: w.zlecenieId, data: w.dataPierwotna }),
     akcje: czyAkcje ? akcjeWizyty(w, dzis) : [], czyOdwolana: w.odwolana, czyZrobiona: (w.stan?.zrobiona ?? null) !== null,
     czyPrzesunieta: (w.stan?.przeniesiona ?? null) !== null }
 }

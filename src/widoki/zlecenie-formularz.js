@@ -4,28 +4,26 @@
 // otwarciu ekranu, wiec podwojne „Zapisz zlecenie” nie dubluje zlecenia; po zapisie adres formularza w historii zamienia sie na dzien startu.
 
 import { dzienLokalny } from '../dane/ksztalt.js'
-import { BladMagazynu, wczytajStan } from '../dane/magazyn.js'
-import { BladZlecenia } from '../dane/zlecenia.js'
+import { wczytajStan } from '../dane/magazyn.js'
 import { DLUGOSC_OPISU } from '../dane/zlecenia-ksztalt.js'
 import { h } from '../ui/h.js'
-import { chipy, pole, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
+import { chipy, chipyWielokrotne, pole, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
 import { baner, naglowek } from '../ui/komponenty/uklad.js'
 import { sciezka } from '../ui/trasy.js'
-import {
-  BEZ_POWTARZANIA, bledyFormularza, czyMaDni, etykietaCeny, INNA_USLUGA, NAJWCZESNIEJSZA_DATA, OPCJE_DNI, OPCJE_PLATNOSCI, OPCJE_POWTARZANIA,
-  tekstOdmowy, tekstPlanu, wartosciPoczatkowe, zapiszFormularz, zCyklem, zData, zDniem, zRozliczeniem,
-} from '../zlecenia/formularz.js'
+import { tekstBleduFormularza, tekstOdmowy } from '../zlecenia/bledy-zapisu.js'
+import { bledyFormularza, INNA_USLUGA, tekstPlanu, wartosciPoczatkowe, zapiszFormularz, zCyklem, zData, zDniem, zRozliczeniem } from '../zlecenia/formularz.js'
 import { adresKalendarza } from '../zlecenia/kalendarz-dane.js'
-import { tekstBleduZapisu } from './teksty-bledow.js'
+import {
+  BEZ_POWTARZANIA, czyMaDni, etykietaCeny, NAJWCZESNIEJSZA_DATA, OPCJE_DNI, OPCJE_PLATNOSCI, OPCJE_POWTARZANIA, tekstBleduPola,
+} from '../zlecenia/opcje.js'
 import { wyborKlienta } from './wybor-klienta.js'
 
 /**
  * @typedef {import('../ui/router.js').Widok} Widok
  * @typedef {import('../ui/router.js').Kontekst} Kontekst
  * @typedef {import('../zlecenia/formularz.js').WartosciFormularza} WartosciFormularza
- * @typedef {import('../zlecenia/formularz.js').KodBleduFormularza} KodBleduFormularza
  * @typedef {import('../zlecenia/formularz.js').OpcjaUslugi} OpcjaUslugi
- * @typedef {import('../zlecenia/formularz.js').Powtarzanie} Powtarzanie
+ * @typedef {import('../zlecenia/opcje.js').Powtarzanie} Powtarzanie
  * @typedef {import('./wybor-klienta.js').WyborKlienta} WyborKlienta
  * @typedef {import('../dane/zlecenia-ksztalt.js').Rozliczenie} Rozliczenie
  * @typedef {{ usluga: HTMLDivElement, opis: HTMLDivElement, cena: HTMLDivElement, data: HTMLDivElement, godzina: HTMLDivElement,
@@ -36,16 +34,8 @@ import { wyborKlienta } from './wybor-klienta.js'
  * @typedef {{ wartosci: WartosciFormularza }} EkranFormularza biezace wartosci otwartego ekranu
  */
 
-/** @type {Readonly<Record<Exclude<KodBleduFormularza, 'brak_klienta'>, string>>} „Wybierz klienta.” pokazuje wyborKlienta */
-const TEKSTY_BLEDOW = Object.freeze({
-  brak_uslugi: 'Wybierz usługę albo wpisz opis.',
-  zla_cena: 'Wpisz cenę.',
-  brak_daty: 'Wybierz datę.',
-  brak_dni: 'Wybierz dni tygodnia.',
-})
 /** Pola z bledem pod spodem w kolejnosci na ekranie (fokus idzie na pierwsze). */
 const POLA_Z_BLEDEM = /** @type {const} */ (['usluga', 'cena', 'data', 'dni'])
-const BLAD_ZAPISU = 'Nie udało się zapisać zlecenia. Spróbuj jeszcze raz.'
 const WYCENY_NIE_MA = 'Tej wyceny nie można zaplanować. Mogła zostać usunięta albo zmienić status.'
 
 /** @param {HTMLElement} element @param {string | null} blad komunikat pod polem; `aria-invalid` takze na <select> */
@@ -72,38 +62,6 @@ function poleUslugi({ opcje, wybrana, czyZablokowane, naZmiane }) {
   return element
 }
 
-/**
- * Pole daty albo godziny z natywnym wyborem (uklad `pole()`).
- * @param {{ id: string, etykieta: string, typ: 'date' | 'time', wartosc: string, min?: string, naZmiane: (wartosc: string) => void }} opcje
- * @returns {HTMLDivElement}
- */
-function poleCzasu({ id, etykieta, typ, wartosc, min, naZmiane }) {
-  const wejscie = h('input', { type: typ, id, name: id, class: 'pole__wejscie', value: wartosc, min, 'aria-describedby': `${id}-blad` })
-  wejscie.addEventListener('input', () => naZmiane(wejscie.value))
-  const element = h('div', { class: 'pole' }, h('label', { class: 'pole__etykieta', for: id }, etykieta), wejscie,
-    h('p', { class: 'pole__blad', id: `${id}-blad`, role: 'alert' }))
-  ustawBlad(element, null)
-  return element
-}
-
-/**
- * Chipy wielokrotnego wyboru dni tygodnia: pola checkbox w grupie (`chipy()` ma tylko pojedynczy wybor).
- * @param {readonly number[]} dni @param {(dzien: number) => void} naZmiane @returns {HTMLDivElement}
- */
-function poleDni(dni, naZmiane) {
-  const id = 'zlecenie-dni'
-  const element = h('div', { class: 'grupa-chipow' },
-    h('p', { class: 'grupa-chipow__etykieta', id: `${id}-etykieta` }, 'Dni'),
-    h('div', { class: 'chipy chipy--dni', role: 'group', 'aria-labelledby': `${id}-etykieta`, 'aria-describedby': `${id}-blad` },
-      OPCJE_DNI.map(({ wartosc, etykieta }) => h('label', { class: 'chip' },
-        h('input', { type: 'checkbox', name: id, value: String(wartosc), class: 'chip__wejscie', checked: dni.includes(wartosc),
-          on: { change: () => naZmiane(wartosc) } }),
-        h('span', { class: 'chip__tekst' }, etykieta)))),
-    h('p', { class: 'pole__blad', id: `${id}-blad`, role: 'alert' }))
-  ustawBlad(element, null)
-  return element
-}
-
 /** @param {WartosciFormularza} w @param {ObslugaPol} obsluga @returns {PolaZlecenia} */
 function polaZlecenia(w, obsluga) {
   const opis = pole({ id: 'zlecenie-opis', etykieta: 'Opis', wartosc: w.opis, naZmiane: obsluga.naOpis })
@@ -114,10 +72,10 @@ function polaZlecenia(w, obsluga) {
     opis,
     cena: pole({ id: 'zlecenie-cena', etykieta: etykietaCeny(w.rozliczenie), rodzaj: 'liczba', wartosc: w.cena, podpowiedz: w.podpowiedzCeny ?? undefined,
       naZmiane: obsluga.naCene }),
-    data: poleCzasu({ id: 'zlecenie-data', etykieta: 'Data', typ: 'date', wartosc: w.data, min: NAJWCZESNIEJSZA_DATA, naZmiane: obsluga.naDate }),
-    godzina: poleCzasu({ id: 'zlecenie-godzina', etykieta: 'Godzina', typ: 'time', wartosc: w.godzina, naZmiane: obsluga.naGodzine }),
+    data: pole({ id: 'zlecenie-data', etykieta: 'Data', rodzaj: 'data', wartosc: w.data, min: NAJWCZESNIEJSZA_DATA, naZmiane: obsluga.naDate }),
+    godzina: pole({ id: 'zlecenie-godzina', etykieta: 'Godzina', rodzaj: 'godzina', wartosc: w.godzina, naZmiane: obsluga.naGodzine }),
     powtarzaj: chipy({ id: 'zlecenie-powtarzaj', etykieta: 'Powtarzaj', opcje: OPCJE_POWTARZANIA, wybrana: w.cykl, naZmiane: obsluga.naCykl }),
-    dni: poleDni(w.dni, obsluga.naDzien),
+    dni: chipyWielokrotne({ id: 'zlecenie-dni', etykieta: 'Dni', opcje: OPCJE_DNI, wybrane: w.dni, klasa: 'chipy--dni', naZmiane: obsluga.naDzien }),
     platnosc: chipy({ id: 'zlecenie-platnosc', etykieta: 'Płatność', opcje: OPCJE_PLATNOSCI, wybrana: w.rozliczenie, naZmiane: obsluga.naRozliczenie }),
   }
 }
@@ -133,15 +91,6 @@ function odswiezPola(pola, w) {
   if (cena && cena.value !== w.cena) cena.value = w.cena
   for (const dzien of pola.dni.querySelectorAll('input')) dzien.checked = w.dni.includes(Number(dzien.value))
   for (const opcja of pola.platnosc.querySelectorAll('input')) opcja.checked = opcja.value === w.rozliczenie
-}
-
-/** @param {unknown} blad @returns {string} tekst nieudanego zapisu: odmowa bez zglaszania, awaria przez `reportError`, inne bledy leca dalej */
-function tekstBledu(blad) {
-  const odmowa = tekstOdmowy(blad)
-  if (odmowa !== null) return odmowa
-  if (!(blad instanceof BladMagazynu) && !(blad instanceof BladZlecenia)) throw blad
-  reportError(blad)
-  return blad instanceof BladMagazynu ? tekstBleduZapisu(blad) : BLAD_ZAPISU
 }
 
 /** @param {PolaZlecenia} pola @param {WartosciFormularza} w @param {typeof POLA_Z_BLEDEM[number]} nazwa @returns {HTMLElement} pole z bledem: blad uslugi przy „Inna usługa” pod opisem */
@@ -199,8 +148,7 @@ function sprawdzPola(pola, w, wybor) {
   const czyKlient = wybor.sprawdz()
   const bledy = bledyFormularza(w)
   for (const nazwa of POLA_Z_BLEDEM) {
-    const kod = bledy[nazwa]
-    pokazBlad(poleBledu(pola, w, nazwa), kod === undefined || kod === 'brak_klienta' ? null : TEKSTY_BLEDOW[kod])
+    pokazBlad(poleBledu(pola, w, nazwa), tekstBleduPola(bledy[nazwa]))
   }
   const pierwsze = POLA_Z_BLEDEM.find((nazwa) => bledy[nazwa] !== undefined)
   const kontrolka = pierwsze === undefined ? null : poleBledu(pola, w, pierwsze).querySelector('input, select')
@@ -243,7 +191,9 @@ function uruchomFormularz(kontener, kontekst, poczatek, plan) {
     try {
       start = zapiszFormularz(kontekst, id, ekran.wartosci).start
     } catch (blad) {
-      return komunikat.replaceChildren(baner({ rodzaj: 'blad', tekst: tekstBledu(blad) }))
+      const tekst = tekstBleduFormularza(blad)
+      if (tekstOdmowy(blad) === null) reportError(blad)
+      return komunikat.replaceChildren(baner({ rodzaj: 'blad', tekst }))
     }
     const adres = adresKalendarza('dzien', start)
     history.replaceState(null, '', adres)

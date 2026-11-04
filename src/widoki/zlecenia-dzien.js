@@ -6,12 +6,11 @@
 import { dzienLokalny } from '../dane/ksztalt.js'
 import { wczytajStan } from '../dane/magazyn.js'
 import { oznaczZaplacona, oznaczZrobiona } from '../dane/wizyty.js'
-import { BladZlecenia } from '../dane/zlecenia.js'
 import { h } from '../ui/h.js'
 import { przycisk } from '../ui/komponenty/formularz.js'
 import { baner } from '../ui/komponenty/uklad.js'
+import { tekstBleduWizyty } from '../zlecenia/bledy-zapisu.js'
 import { dzienKalendarza, modelDnia } from '../zlecenia/kalendarz-dane.js'
-import { tekstBleduZapisu } from './teksty-bledow.js'
 import { ekranKalendarza, przyciskNowegoZlecenia, wierszWizyty } from './zlecenia-wspolne.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
@@ -24,13 +23,9 @@ import { ekranKalendarza, przyciskNowegoZlecenia, wierszWizyty } from './zleceni
 const ID_DO_ZAMKNIECIA = 'kalendarz-do-zamkniecia'
 const ID_WIZYT_DNIA = 'kalendarz-wizyty-dnia'
 const PUSTY_DZIEN = 'Brak wizyt tego dnia.'
-const BLAD_WIZYTY = 'Nie udało się zapisać tej wizyty. Spróbuj jeszcze raz.'
 const WIZYTY_JUZ_NIE_MA = 'Tej wizyty już nie ma na liście.'
 const TEKSTY_AKCJI = Object.freeze({ zrobione: 'Zrobione', zaplacone: 'Zapłacone' })
 const ZAPISY_AKCJI = Object.freeze({ zrobione: oznaczZrobiona, zaplacone: oznaczZaplacona })
-
-/** @param {unknown} blad @returns {string} tekst bledu zapisu wizyty; blad spoza zlecenia i magazynu leci dalej */
-const tekstBleduWizyty = (blad) => (blad instanceof BladZlecenia ? BLAD_WIZYTY : tekstBleduZapisu(blad))
 
 /** @param {WierszWizyty} w @param {AkcjaWizyty} akcja @param {ObslugaAkcji} handleAkcja @returns {HTMLElement} */
 function przyciskAkcji(w, akcja, handleAkcja) {

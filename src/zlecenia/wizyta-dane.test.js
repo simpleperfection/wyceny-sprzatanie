@@ -13,7 +13,7 @@ import { nowySzkic, zmienWejscie } from '../kreator/stan.js'
 import { ukladMieszkania } from '../silnik/uklad.js'
 import { zl } from '../ui/format.js'
 import { historiaPlanuIFaktu } from './plan-fakt.js'
-import { modelWizyty } from './wizyta-dane.js'
+import { bladPrzesuniecia, modelWizyty } from './wizyta-dane.js'
 
 /** @typedef {import('../dane/magazyn.js').Magazyn} Magazyn */
 /** @typedef {import('../dane/magazyn.js').Stan} Stan */
@@ -134,6 +134,30 @@ describe('modelWizyty: dane ekranu', () => {
   })
 })
 
+describe('modelWizyty: klient i usługa', () => {
+  it('zlecenie klienta, którego nie ma, daje null', () => {
+    const stan = wczytajStan(magazynZZleceniem())
+
+    assert.equal(modelWizyty({ ...stan, klienci: [] }, katalog, 'z1', DZIS, DZIS), null)
+  })
+
+  it('usługa spoza katalogu pokazuje swoje id', () => {
+    assert.equal(model(magazynZZleceniem({ uslugaId: 'stara' })).usluga, 'stara')
+  })
+
+  it('zlecenie bez opisu i bez usługi nie ma wiersza „Usługa”', () => {
+    const stan = stanZeZmiana(magazynZZleceniem(), (z) => ({ ...z, uslugaId: null, opis: null }))
+
+    assert.equal(modelWizyty(stan, katalog, 'z1', DZIS, DZIS)?.usluga, null)
+  })
+
+  it('cena z groszami ma w kwocie wizyty grosze, które zapisze zapłata', () => {
+    const magazyn = magazynZZleceniem({ cenaWizyty: 149.5 })
+
+    assert.equal(model(magazyn).kwota, `149,50${NBSP}zł`)
+  })
+})
+
 describe('modelWizyty: zapłata', () => {
   it('wizyta serii miesięcznej nie ma akcji zapłaty, a kwota to „w abonamencie”; wizyta za wizytę ma akcję z formą domyślną', () => {
     const miesieczna = model(magazynZZleceniem({ ...TYGODNIOWA, rozliczenie: 'miesiecznie', cenaWizyty: undefined, cenaMiesiaca: 1200 }))
@@ -171,6 +195,42 @@ describe('modelWizyty: zapłata', () => {
     assert.deepEqual(m.pigulki, ['zrobiona', 'zaplacona'])
   })
 
+  it('wizyta serii ma pigułkę swojej zapłaty: opłacona „Zapłacone”, a druga wizyta tej serii „Niezapłacone”', () => {
+    const magazyn = magazynZZleceniem(TYGODNIOWA)
+    const nastepna = '2026-11-09'
+    oznaczZrobiona(magazyn, 'z1', DZIS, POLUDNIE)
+    oznaczZrobiona(magazyn, 'z1', nastepna, POLUDNIE)
+    oznaczZaplacona(magazyn, 'z1', DZIS, { forma: 'przelew', ...POLUDNIE })
+
+    assert.deepEqual(model(magazyn, DZIS, nastepna).pigulki, ['zrobiona', 'zaplacona'])
+    assert.deepEqual(model(magazyn, nastepna, nastepna).pigulki, ['zrobiona', 'niezaplacona'])
+  })
+
+  it('niezapłacona wizyta drugiego zlecenia klienta tego samego dnia nie zmienia pigułek pierwszego', () => {
+    const magazyn = magazynZZleceniem()
+    utworzZlecenie(magazyn, /** @type {never} */ ({ klientId: 'k1', ...ZA_WIZYTE }), { id: 'z2' })
+    oznaczZrobiona(magazyn, 'z1', DZIS, POLUDNIE)
+    oznaczZrobiona(magazyn, 'z2', DZIS, POLUDNIE)
+    oznaczZaplacona(magazyn, 'z1', DZIS, { forma: 'przelew', ...POLUDNIE })
+
+    assert.deepEqual(model(magazyn).pigulki, ['zrobiona', 'zaplacona'])
+  })
+
+  it('zapłata gotówką ma tekst „Zapłacone · Gotówka · {data}”', () => {
+    const magazyn = magazynZZleceniem()
+    oznaczZaplacona(magazyn, 'z1', DZIS, { forma: 'gotowka', ...POLUDNIE })
+
+    assert.deepEqual(model(magazyn).zaplata, { rodzaj: 'zapisana', tekst: 'Zapłacone · Gotówka · pn 2 lis', forma: 'gotowka' })
+  })
+
+  it('zapłata z formą null startuje zmianę formy od ostatniej formy klienta, nie od gotówki', () => {
+    const zaplaty = { [DZIS]: wizyta({ zrobiona: '2026-11-02T12:00:00.000Z', zaplata: { forma: null, data: DZIS, kwota: 250 } }),
+      '2026-11-09': wizyta({ zrobiona: '2026-11-09T12:00:00.000Z', zaplata: { forma: 'blik', data: '2026-11-09', kwota: 250 } }) }
+    const stan = stanZeZmiana(magazynZZleceniem(TYGODNIOWA), (z) => ({ ...z, wizyty: zaplaty }))
+
+    assert.deepEqual(modelWizyty(stan, katalog, 'z1', DZIS, DZIS)?.zaplata, { rodzaj: 'zapisana', tekst: 'Zapłacone', forma: 'blik' })
+  })
+
   it('przeniesiona wizyta z formą null pokazuje „Zapłacone” bez formy, a zmiana formy startuje od formy domyślnej', () => {
     const zaplata = { forma: null, data: DZIS, kwota: 250 }
     const stan = stanZeZmiana(magazynZZleceniem(), (z) => ({ ...z, wizyty: { [DZIS]: wizyta({ zrobiona: '2026-11-02T12:00:00.000Z', zaplata }) } }))
@@ -185,6 +245,17 @@ describe('modelWizyty: zapłata', () => {
     const m = model(magazyn)
 
     assert.deepEqual([m.zaplata, m.pigulki], [null, ['zrobiona']])
+  })
+})
+
+describe('bladPrzesuniecia', () => {
+  it('pusta data i niepełny rok dają błąd', () => {
+    assert.equal(bladPrzesuniecia(''), 'brak_daty')
+    assert.equal(bladPrzesuniecia('0026-11-03'), 'brak_daty')
+  })
+
+  it('poprawny dzień nie ma błędu', () => {
+    assert.equal(bladPrzesuniecia(JUTRO), null)
   })
 })
 

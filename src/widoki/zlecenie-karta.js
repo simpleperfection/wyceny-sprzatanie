@@ -1,142 +1,42 @@
 // Karta zlecenia (`#/zlecenie/:id`, `?od=` otwiera zmiane od tej wizyty): powrot „Zlecenia”, klient, opis rodzaju, najblizsza wizyta,
 // kolejne okresy i wycena, „Zmień cenę lub godzinę”, „Zakończ serię”, zaplaty za miesiace (R26) i „Usuń zlecenie”. Dane liczy
-// src/zlecenia/karta-dane.js, a kazda akcja to jeden zapis z src/dane/zlecenia.js albo src/dane/wizyty.js. Po zapisie ekran rysuje
-// sie od nowa (magazyn.naZmiane zglasza tylko zmiany z innych kart), a fokus wraca do sekcji akcji, bo kliknieta kontrolka znika.
+// src/zlecenia/karta-dane.js, a kazda akcja to jeden zapis z src/dane/zlecenia.js albo src/dane/wizyty.js. Zapis, fokus i arkusz
+// od dolu daje src/widoki/ekran-akcji.js.
 
-import { dzienLokalny, jestDniem } from '../dane/ksztalt.js'
+import { dzienLokalny } from '../dane/ksztalt.js'
 import { wczytajStan } from '../dane/magazyn.js'
 import { cofnijZaplateMiesiaca, oznaczZaplateMiesiaca } from '../dane/wizyty.js'
-import { BladZlecenia, usunZlecenie, zakonczSerie, zmienOdWizyty } from '../dane/zlecenia.js'
-import { FORMY_ZAPLATY } from '../dane/zlecenia-ksztalt.js'
+import { usunZlecenie, zakonczSerie, zmienOdWizyty } from '../dane/zlecenia.js'
 import { dzienKrotko } from '../ui/format.js'
 import { h, ikona } from '../ui/h.js'
-import { chipy, pole, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
-import { arkusz, baner, dialogPotwierdzenia, karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
-import { ETYKIETY_FORM_ZAPLATY, pigulkaWizyty } from '../ui/statusy.js'
-import { BEZ_POWTARZANIA, czyMaDni, etykietaCeny, OPCJE_DNI, OPCJE_POWTARZANIA } from '../zlecenia/formularz.js'
+import { chipy, chipyWielokrotne, pole, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
+import { dialogPotwierdzenia, karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
+import { pigulkaWizyty } from '../ui/statusy.js'
+import { tekstBleduKarty } from '../zlecenia/bledy-zapisu.js'
 import { adresKalendarza } from '../zlecenia/kalendarz-dane.js'
-import { bledyZmiany, modelKarty, przelaczDzien, wartosciZmiany, wizytaZAdresu, zmianaDoZapisu } from '../zlecenia/karta-dane.js'
-import { tekstBleduZapisu } from './teksty-bledow.js'
+import { bladKonca, bledyZmiany, modelKarty, wartosciZmiany, wizytaZAdresu, zmianaDoZapisu } from '../zlecenia/karta-dane.js'
+import { BEZ_POWTARZANIA, czyMaDni, etykietaCeny, OPCJE_DNI, OPCJE_FORM, OPCJE_POWTARZANIA, przelaczDzien, tekstBleduPola } from '../zlecenia/opcje.js'
+import { dzienWizyty } from '../zlecenia/teksty-wizyty.js'
+import { ekranBraku, otworzArkusz, pokazSkutek, wykonaj } from './ekran-akcji.js'
 
 /**
  * @typedef {import('../ui/router.js').Widok} Widok
  * @typedef {import('../ui/router.js').Kontekst} Kontekst
- * @typedef {import('../ui/h.js').Dzieci} Dzieci
- * @typedef {import('../ui/komponenty/formularz.js').OpcjePola} OpcjePola
  * @typedef {import('../dane/zlecenia-ksztalt.js').FormaZaplaty} FormaZaplaty
  * @typedef {import('../zlecenia/karta-dane.js').MiesiacDoZaplaty} MiesiacDoZaplaty
  * @typedef {import('../zlecenia/karta-dane.js').ModelKarty} ModelKarty
- * @typedef {Pick<Kontekst, 'magazyn' | 'katalog' | 'nawiguj'> & { kontener: HTMLElement, id: string, formy: Map<string, FormaZaplaty>,
- *   okno: HTMLDialogElement | null, czyPyta: boolean, czyAktywny: boolean }} EkranKarty
- *   formy: wybrane w chipach przed zapisem zaplaty, po miesiacu; okno: otwarty arkusz; czyPyta: otwarty dialog potwierdzenia
- * @typedef {{ tytul: string, zapis: string, sekcja: string }} OpcjeArkusza zapis: tekst przycisku; sekcja: miejsce fokusu po zapisie
- * @typedef {(zapis: () => void) => void} ZapisArkusza wykonuje zapis: udany zamyka arkusz, a blad zostaje w nim razem z wartosciami
+ * @typedef {import('./ekran-akcji.js').EkranAkcji} EkranAkcji
+ * @typedef {EkranAkcji & Pick<Kontekst, 'magazyn' | 'katalog' | 'nawiguj'> & { kontener: HTMLElement, id: string, formy: Map<string, FormaZaplaty>,
+ *   czyPyta: boolean, czyAktywny: boolean }} EkranKarty
+ *   formy: wybrane w chipach przed zapisem zaplaty, po miesiacu; czyPyta: otwarty dialog potwierdzenia
  */
 
 const NIE_MA_ZLECENIA = 'Nie ma takiego zlecenia.'
-const BLAD_ZLECENIA = 'Nie udało się zapisać tego zlecenia. Spróbuj jeszcze raz.'
-const BLAD_DATY = 'Wybierz datę.'
 const TRESC_KONCA = 'Kolejne wizyty znikną z kalendarza. Zostaną tylko wizyty już oznaczone albo przesunięte.'
 const TRESC_USUNIECIA = 'Tego nie można cofnąć.'
 const TRESC_USUNIECIA_Z_ZAPLATAMI = 'Zapłaty zapisane przy tym zleceniu też znikną.'
-const OPCJE_FORM = FORMY_ZAPLATY.map((wartosc) => ({ wartosc, etykieta: ETYKIETY_FORM_ZAPLATY[wartosc] }))
 /** Chipy „Powtarzaj” w serii: seria nie moze stac sie zleceniem jednorazowym. */
 const OPCJE_CYKLI = OPCJE_POWTARZANIA.filter((o) => o.wartosc !== BEZ_POWTARZANIA)
-
-/** @param {unknown} blad @returns {string} tekst bledu zapisu; blad spoza zlecenia i magazynu leci dalej */
-const tekstBledu = (blad) => (blad instanceof BladZlecenia ? BLAD_ZLECENIA : tekstBleduZapisu(blad))
-
-/**
- * Po narysowaniu: blad w sekcji akcji i fokus na jej pierwszej kontrolce (sekcji juz nie ma: powrot w naglowku).
- * @param {HTMLElement} kontener @param {string | null} sekcja @param {string | null} blad
- */
-function pokazSkutek(kontener, sekcja, blad) {
-  if (sekcja === null) return
-  const miejsce = kontener.querySelector(`[data-sekcja="${sekcja}"]`)
-  if (blad !== null) miejsce?.append(baner({ rodzaj: 'blad', tekst: blad }))
-  const cel = miejsce?.matches('a, button') ? miejsce : miejsce?.querySelector('button, a') ?? kontener.querySelector('a')
-  if (cel instanceof HTMLElement) cel.focus()
-}
-
-/**
- * Zapis jednej akcji i ekran narysowany od nowa; blad zostaje przy akcji, a jej kontrolki dzialaja dalej.
- * @param {EkranKarty} e @param {string} sekcja @param {() => void} zapis
- */
-function wykonaj(e, sekcja, zapis) {
-  try {
-    zapis()
-  } catch (blad) {
-    rysuj(e, sekcja, tekstBledu(blad))
-    reportError(blad)
-    return
-  }
-  rysuj(e, sekcja)
-}
-
-/**
- * Arkusz z formularzem: Enter i przycisk zapisu daja to samo, a `naZapisz` sprawdza pola i woła `zapisz`.
- * @param {EkranKarty} e @param {OpcjeArkusza} opcje @param {Dzieci} pola
- * @param {(zapisz: ZapisArkusza, okno: HTMLDialogElement) => void | Promise<void>} naZapisz
- */
-function otworzArkusz(e, { tytul, zapis, sekcja }, pola, naZapisz) {
-  const komunikat = h('div', { class: 'wizyta-ekran__komunikat' })
-  /** @type {ZapisArkusza} */
-  function zapisz(wykonajZapis) {
-    try {
-      wykonajZapis()
-    } catch (blad) {
-      komunikat.replaceChildren(baner({ rodzaj: 'blad', tekst: tekstBledu(blad) }))
-      reportError(blad)
-      return
-    }
-    okno.close()
-    rysuj(e, sekcja)
-  }
-  const formularz = h('form', { class: 'arkusz__formularz', novalidate: true }, pola, komunikat, przycisk({ tekst: zapis, typ: 'submit' }))
-  formularz.addEventListener('submit', (zdarzenie) => {
-    zdarzenie.preventDefault()
-    komunikat.replaceChildren()
-    void Promise.resolve(naZapisz(zapisz, okno)).catch(reportError)
-  })
-  const okno = arkusz({ tytul }, formularz)
-  okno.addEventListener('close', () => {
-    okno.remove()
-    if (e.okno === okno) e.okno = null
-  })
-  document.body.append(okno)
-  e.okno = okno
-  okno.showModal()
-}
-
-/**
- * Pole `pole()` z natywnym wyborem daty albo godziny.
- * @param {OpcjePola} opcje @param {'date' | 'time'} typ @param {string} [min] @returns {HTMLDivElement}
- */
-function poleCzasu(opcje, typ, min) {
-  const element = pole(opcje)
-  const wejscie = element.querySelector('input')
-  wejscie?.setAttribute('type', typ)
-  if (min !== undefined) wejscie?.setAttribute('min', min)
-  return element
-}
-
-/**
- * Chipy wielokrotnego wyboru dni tygodnia: pola checkbox w grupie (`chipy()` ma tylko pojedynczy wybor).
- * @param {readonly number[]} dni @param {(dzien: number) => void} naZmiane @returns {HTMLDivElement}
- */
-function poleDni(dni, naZmiane) {
-  const id = 'zmiana-dni'
-  const element = h('div', { class: 'grupa-chipow' },
-    h('p', { class: 'grupa-chipow__etykieta', id: `${id}-etykieta` }, 'Dni'),
-    h('div', { class: 'chipy chipy--dni', role: 'group', 'aria-labelledby': `${id}-etykieta`, 'aria-describedby': `${id}-blad` },
-      OPCJE_DNI.map(({ wartosc, etykieta }) => h('label', { class: 'chip' },
-        h('input', { type: 'checkbox', name: id, value: String(wartosc), class: 'chip__wejscie', checked: dni.includes(wartosc),
-          on: { change: () => naZmiane(wartosc) } }),
-        h('span', { class: 'chip__tekst' }, etykieta)))),
-    h('p', { class: 'pole__blad', id: `${id}-blad`, role: 'alert' }))
-  ustawBlad(element, null)
-  return element
-}
 
 /**
  * Arkusz „Zmiana od {dzień}”: cena, godzina, a w serii tez powtarzanie i dni. Bez zmian zamyka sie bez zapisu.
@@ -148,11 +48,11 @@ function handleZmiana(e, { zlecenie: z }, dataPierwotna) {
     w = { ...w, cena: wartosc }
     ustawBlad(cena, null)
   } })
-  const godzina = poleCzasu({ id: 'zmiana-godzina', etykieta: 'Godzina', wartosc: w.godzina, naZmiane: (wartosc) => { w = { ...w, godzina: wartosc } } }, 'time')
-  const dni = poleDni(w.dni, (dzien) => {
+  const godzina = pole({ id: 'zmiana-godzina', etykieta: 'Godzina', rodzaj: 'godzina', wartosc: w.godzina, naZmiane: (wartosc) => { w = { ...w, godzina: wartosc } } })
+  const dni = chipyWielokrotne({ id: 'zmiana-dni', etykieta: 'Dni', opcje: OPCJE_DNI, wybrane: w.dni, klasa: 'chipy--dni', naZmiane: (dzien) => {
     w = { ...w, dni: przelaczDzien(w.dni, dzien) }
     ustawBlad(dni, null)
-  })
+  } })
   dni.hidden = w.cykl === null || !czyMaDni(w.cykl)
   const powtarzaj = w.cykl === null ? null : chipy({ id: 'zmiana-powtarzaj', etykieta: 'Powtarzaj', opcje: OPCJE_CYKLI, wybrana: w.cykl, naZmiane: (cykl) => {
     if (cykl === BEZ_POWTARZANIA) return
@@ -160,12 +60,12 @@ function handleZmiana(e, { zlecenie: z }, dataPierwotna) {
     dni.hidden = !czyMaDni(cykl)
     ustawBlad(dni, null)
   } })
-  otworzArkusz(e, { tytul: `Zmiana od ${dzienKrotko(dataPierwotna)}`, zapis: 'Zapisz zmianę', sekcja: 'zmiana' },
+  otworzArkusz(e, { tytul: `Zmiana od ${dzienKrotko(dzienWizyty(z, dataPierwotna))}`, zapis: 'Zapisz zmianę', sekcja: 'zmiana' },
     [cena, godzina, powtarzaj, powtarzaj === null ? null : dni],
     (zapisz, okno) => {
       const bledy = bledyZmiany(w)
-      ustawBlad(cena, bledy.cena ?? null)
-      ustawBlad(dni, bledy.dni ?? null)
+      ustawBlad(cena, tekstBleduPola(bledy.cena))
+      ustawBlad(dni, tekstBleduPola(bledy.dni))
       if (bledy.cena !== undefined || bledy.dni !== undefined) return (bledy.cena === undefined ? dni : cena).querySelector('input')?.focus()
       const zmiana = zmianaDoZapisu(z, dataPierwotna, w)
       if (Object.keys(zmiana).length === 0) return okno.close()
@@ -180,16 +80,15 @@ function handleZmiana(e, { zlecenie: z }, dataPierwotna) {
  */
 function handleKoniec(e, { domyslnyKoniec, zlecenie: { start } }) {
   let dzien = domyslnyKoniec
-  const poleDaty = poleCzasu({ id: 'koniec-dzien', etykieta: 'Ostatni dzień', wartosc: dzien, naZmiane: (wartosc) => {
+  const poleDaty = pole({ id: 'koniec-dzien', etykieta: 'Ostatni dzień', rodzaj: 'data', wartosc: dzien, min: start, naZmiane: (wartosc) => {
     dzien = wartosc
     ustawBlad(poleDaty, null)
-  } }, 'date', start)
+  } })
   otworzArkusz(e, { tytul: 'Zakończ serię', zapis: 'Zakończ serię', sekcja: 'koniec' }, poleDaty, async (zapisz) => {
     const ostatni = dzien
-    if (!jestDniem(ostatni) || ostatni < start) {
-      ustawBlad(poleDaty, BLAD_DATY)
-      return poleDaty.querySelector('input')?.focus()
-    }
+    const blad = bladKonca(ostatni, start)
+    ustawBlad(poleDaty, tekstBleduPola(blad))
+    if (blad !== null) return poleDaty.querySelector('input')?.focus()
     if (e.czyPyta) return
     e.czyPyta = true
     const czyZakonczyc = await dialogPotwierdzenia({ tytul: `Zakończyć serię po ${dzienKrotko(ostatni)}?`, tresc: TRESC_KONCA, potwierdz: 'Zakończ',
@@ -210,7 +109,7 @@ async function handleUsun(e, { czyMaZaplaty }) {
   try {
     usunZlecenie(e.magazyn, e.id)
   } catch (blad) {
-    rysuj(e, 'usun', tekstBledu(blad))
+    e.rysuj('usun', e.tekstBledu(blad))
     reportError(blad)
     return
   }
@@ -279,13 +178,6 @@ function sekcjaZaplat(e, m) {
     m.miesiace.map((pozycja) => kartaMiesiaca(e, m, pozycja)))
 }
 
-/** @returns {HTMLElement[]} ekran zlecenia, ktorego nie ma (zly adres, zlecenie usuniete w innej karcie) */
-function ekranBraku() {
-  const dzis = adresKalendarza('dzien', null)
-  return [naglowek({ tytul: 'Zlecenie', wstecz: dzis, wsteczTekst: 'Zlecenia' }),
-    h('div', { class: 'tresc' }, baner({ rodzaj: 'info', tekst: NIE_MA_ZLECENIA, akcja: { tekst: 'Pokaż dzisiejsze wizyty', adres: dzis } }))]
-}
-
 /**
  * Ekran ze swiezego stanu.
  * @param {EkranKarty} e @param {string | null} [sekcja] akcja, po ktorej ekran rysuje sie od nowa @param {string | null} [blad]
@@ -294,7 +186,7 @@ function ekranBraku() {
 function rysuj(e, sekcja = null, blad = null) {
   const m = modelKarty(wczytajStan(e.magazyn), e.katalog, e.id, dzienLokalny(new Date()))
   if (m === null) {
-    e.kontener.replaceChildren(...ekranBraku())
+    e.kontener.replaceChildren(...ekranBraku('Zlecenie', NIE_MA_ZLECENIA))
     return null
   }
   e.kontener.replaceChildren(naglowek({ tytul: m.tytul, podtytul: m.koniec ?? undefined, wstecz: adresKalendarza('dzien', null), wsteczTekst: 'Zlecenia' }),
@@ -310,7 +202,8 @@ export const widokKartyZlecenia = {
   render(kontener, { parametry, zapytanie, kontekst }) {
     const { magazyn, katalog, nawiguj } = kontekst
     /** @type {EkranKarty} */
-    const e = { kontener, magazyn, katalog, nawiguj, id: parametry.id ?? '', formy: new Map(), okno: null, czyPyta: false, czyAktywny: true }
+    const e = { kontener, magazyn, katalog, nawiguj, id: parametry.id ?? '', formy: new Map(), okno: null, czyPyta: false, czyAktywny: true,
+      tekstBledu: tekstBleduKarty, rysuj: (sekcja, blad) => { rysuj(e, sekcja, blad) } }
     const m = rysuj(e)
     const od = m === null ? null : wizytaZAdresu(m.zlecenie, zapytanie.od ?? null)
     if (m !== null && od !== null) handleZmiana(e, m, od)

@@ -7,7 +7,7 @@ import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
 import { KLUCZ_MAGAZYNU, utworzMagazyn, wczytajStan, zaktualizujStan } from '../dane/magazyn.js'
 import { oznaczZaplacona, oznaczZrobiona, przesunWizyte } from '../dane/wizyty.js'
 import { BladKalendarza } from '../kalendarz/daty.js'
-import { adresKalendarza, dzienKalendarza, jestWidokiemKalendarza, modelDnia, modelMiesiaca, modelTygodnia, sasiedni,
+import { adresKalendarza, adresZaplanowania, dzienKalendarza, jestWidokiemKalendarza, modelDnia, modelMiesiaca, modelTygodnia, sasiedni,
   WIDOKI_KALENDARZA } from './kalendarz-dane.js'
 
 /** Poniedzialek; stan moduly-dzis liczy daty wzgledem tego dnia (seria biura w poniedzialki od 2026-10-19). */
@@ -144,6 +144,38 @@ describe('modelDnia', () => {
     assert.deepEqual([poZrobione?.akcje, poZrobione?.czyZrobiona], [['zaplacone'], true])
   })
 
+  it('wizyta opłacona przed „Zrobione” ma w wierszu dnia tylko „Zrobione”', async () => {
+    const magazyn = await magazynModulowDzis()
+
+    oznaczZaplacona(magazyn, 'e2e-zlecenie-anna', DZIS)
+
+    assert.deepEqual(modelDnia(wczytajStan(magazyn), KATALOG, DZIS, DZIS).wizyty[0].akcje, ['zrobione'])
+  })
+
+  it('cena z groszami ma w wierszu grosze, które zapisze zapłata', async () => {
+    const stan = await stanModulowDzis()
+    stan.zlecenia.find((/** @type {any} */ z) => z.id === 'e2e-zlecenie-anna').okresy[0].cenaWizyty = 149.5
+
+    assert.equal(modelDnia(stan, KATALOG, DZIS, DZIS).wizyty[0].kwota, `149,50${NBSP}zł`)
+  })
+
+  it('zaległa wizyta bez godziny ma w „Do zamknięcia” sam dzień', async () => {
+    const stan = await stanModulowDzis()
+    stan.zlecenia.find((/** @type {any} */ z) => z.id === BIURO).okresy[0].godzina = null
+
+    assert.equal(modelDnia(stan, KATALOG, DZIS, DZIS).doZamkniecia[0].miejsce, 'pn 26 paź')
+  })
+
+  it('wiersz bez klienta na liście ma nazwę usługi z katalogu, a usługa spoza katalogu swoje id', async () => {
+    const stan = await stanModulowDzis()
+    stan.klienci = stan.klienci.filter((/** @type {any} */ k) => k.id !== 'e2e-klient-anna')
+    const stanObcejUslugi = structuredClone(stan)
+    stanObcejUslugi.zlecenia.find((/** @type {any} */ z) => z.id === 'e2e-zlecenie-anna').uslugaId = 'stara_usluga'
+
+    assert.equal(modelDnia(stan, KATALOG, DZIS, DZIS).wizyty[0].tytul, '9:00 · Sprzątanie mieszkania')
+    assert.equal(modelDnia(stanObcejUslugi, KATALOG, DZIS, DZIS).wizyty[0].tytul, '9:00 · stara_usluga')
+  })
+
   it('wizyta przesunięta jest w nowym dniu z flagą przesunięcia, a w dniu pierwotnym jej nie ma', async () => {
     const magazyn = await magazynModulowDzis()
 
@@ -205,6 +237,12 @@ describe('modelMiesiaca', () => {
     assert.equal(model.tygodnie[1][0]?.etykieta, 'Poniedziałek, 2 listopada, 2 wizyty')
   })
 
+  it('dzień bez wizyt ma etykietę bez liczby wizyt', async () => {
+    const model = modelMiesiaca(await stanModulowDzis(), 2026, 11, DZIS)
+
+    assert.equal(model.tygodnie[1][1]?.etykieta, 'Wtorek, 3 listopada')
+  })
+
   it('zły miesiąc daje BladKalendarza `miesiac`', async () => {
     const stan = await stanModulowDzis()
 
@@ -223,16 +261,21 @@ describe('nawigacja kalendarza', () => {
   it('sasiedni odrzuca nieznany widok i kierunek', () => {
     assert.throws(() => sasiedni(/** @type {any} */ ('rok'), DZIS, 1), bladKalendarza('widok'))
     assert.throws(() => sasiedni('dzien', DZIS, /** @type {any} */ (2)), bladKalendarza('kierunek'))
+    assert.throws(() => sasiedni('miesiac', 'zly', 1), bladKalendarza('dzien'))
   })
 
   it('dzień z zapytania, widoki i adres kalendarza', () => {
     assert.equal(dzienKalendarza({ data: '2026-11-09' }, DZIS), '2026-11-09')
     assert.equal(dzienKalendarza({ data: '2026-02-30' }, DZIS), DZIS)
     assert.equal(dzienKalendarza({}, DZIS), DZIS)
-    assert.deepEqual(WIDOKI_KALENDARZA.map((w) => w.etykieta), ['Dzień', 'Tydzień', 'Miesiąc'])
+    assert.deepEqual(WIDOKI_KALENDARZA.map((w) => adresKalendarza(w.id, null)), ['#/zlecenia/dzien', '#/zlecenia/tydzien', '#/zlecenia/miesiac'])
     assert.equal(jestWidokiemKalendarza('tydzien'), true)
     assert.equal(jestWidokiemKalendarza('rok'), false)
     assert.equal(adresKalendarza('miesiac', null), '#/zlecenia/miesiac')
     assert.equal(adresKalendarza('tydzien', '2026-11-02'), '#/zlecenia/tydzien?data=2026-11-02')
+  })
+
+  it('adres zaplanowania prowadzi do formularza z wyceną w zapytaniu', () => {
+    assert.equal(adresZaplanowania('w 1'), '#/zlecenie/nowe?wycena=w+1')
   })
 })

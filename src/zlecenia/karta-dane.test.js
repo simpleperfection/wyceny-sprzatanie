@@ -4,10 +4,12 @@ import { describe, it } from 'node:test'
 import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
 import { dodajKlienta } from '../dane/klienci.js'
 import { utworzMagazyn, wczytajStan } from '../dane/magazyn.js'
+import { przesunWizyte } from '../dane/wizyty.js'
 import { BladZlecenia, utworzZlecenie, zakonczSerie, zlecenie as znajdzZlecenie, zmienOdWizyty } from '../dane/zlecenia.js'
+import { wystapienia } from '../kalendarz/wystapienia.js'
 import {
-  bledyZmiany, domyslnyKoniec, miesiaceDoZaplaty, modelKarty, najblizszaOtwarta, nazwaZlecenia, okresyDoPokazania, opisRodzaju, przelaczDzien,
-  wartosciZmiany, wizytaZAdresu, zmianaDoZapisu,
+  bladKonca, bledyZmiany, domyslnyKoniec, miesiaceDoZaplaty, modelKarty, najblizszaOtwarta, okresyDoPokazania, opisRodzaju, wartosciZmiany,
+  wizytaZAdresu, zmianaDoZapisu,
 } from './karta-dane.js'
 
 /** @typedef {import('../dane/magazyn.js').Magazyn} Magazyn */
@@ -54,17 +56,6 @@ function magazynZSeria() {
 /** @param {Magazyn} magazyn @returns {Zlecenie} */
 const zapisane = (magazyn) => /** @type {Zlecenie} */ (znajdzZlecenie(wczytajStan(magazyn), 'z1'))
 
-describe('nazwaZlecenia', () => {
-  it('opis wygrywa z usługą, a bez opisu jest nazwa usługi z katalogu', () => {
-    assert.equal(nazwaZlecenia(zlecenie({ opis: 'Klatka schodowa' }), KATALOG), 'Klatka schodowa')
-    assert.equal(nazwaZlecenia(zlecenie(), KATALOG), 'Mieszkanie lub dom')
-  })
-
-  it('usługa spoza katalogu pokazuje swoje id', () => {
-    assert.equal(nazwaZlecenia(zlecenie({ uslugaId: 'usunieta' }), KATALOG), 'usunieta')
-  })
-})
-
 describe('opisRodzaju', () => {
   it('seria co tydzień w pn i czw o 9:00 za 250 zł', () => {
     assert.equal(opisRodzaju(seria([1, 4])), `Co tydzień: pn, czw · 9:00 · 250${NBSP}zł za wizytę`)
@@ -96,6 +87,19 @@ describe('opisRodzaju', () => {
     const z = zlecenie({ wizyty: { [START]: stanWizyty({ przeniesiona: { data: '2026-09-16', godzina: '11:30' } }) } })
 
     assert.equal(opisRodzaju(z), `Jednorazowe · śr 16 wrz, 11:30 · 250${NBSP}zł`)
+  })
+})
+
+describe('kwoty z groszami', () => {
+  it('opis rodzaju i miesiące pokazują grosze, a pełne złote zostają bez nich', () => {
+    const z = zlecenie({ okresy: [okres(START, { godzina: '09:00', cenaWizyty: 149.5 })] })
+    const seriaZaWizyte = seria([1], { cenaWizyty: 149.5 })
+    const z2 = miesieczna({ okresy: [okres(START, { cykl: { co: 'tydzien', dni: [1] }, cenaMiesiaca: 1199.99 })] })
+
+    assert.equal(opisRodzaju(z), `Jednorazowe · pn 14 wrz, 9:00 · 149,50${NBSP}zł`)
+    assert.equal(opisRodzaju(seriaZaWizyte), `Co tydzień: pn · 9:00 · 149,50${NBSP}zł za wizytę`)
+    assert.equal(opisRodzaju(z2), `Co tydzień: pn · 1${NBSP}199,99${NBSP}zł miesięcznie`)
+    assert.equal(miesiaceDoZaplaty(z2, DZIS).at(-1)?.kwota, `1${NBSP}199,99${NBSP}zł`)
   })
 })
 
@@ -152,6 +156,12 @@ describe('domyslnyKoniec', () => {
     assert.equal(domyslnyKoniec(z, DZIS), '2026-10-05')
   })
 
+  it('wizyty zamknięte w innej kolejności niż dni: ostatnia po dacie, nie po zapisie', () => {
+    const z = { ...seria([1]), wizyty: { '2026-10-05': ZROBIONA, '2026-09-21': ZROBIONA } }
+
+    assert.equal(domyslnyKoniec(z, DZIS), '2026-10-05')
+  })
+
   it('bez zrobionych wizyt dziś, a seria z przyszłym startem dzień startu', () => {
     assert.equal(domyslnyKoniec(seria([1]), DZIS), DZIS)
     assert.equal(domyslnyKoniec(seria([1]), '2026-09-01'), START)
@@ -198,6 +208,27 @@ describe('miesiaceDoZaplaty', () => {
     assert.deepEqual(miesiaceDoZaplaty(zWizyta, DZIS).map((m) => m.miesiac), ['2026-10', '2026-09'])
   })
 
+  it('wizyta po końcu serii z samym przesunięciem nie zostawia miesiąca do zapłaty', () => {
+    const z = miesieczna({ koniec: '2026-09-28', wizyty: { '2026-10-05': stanWizyty({ przeniesiona: { data: '2026-10-06', godzina: null } }) } })
+
+    assert.deepEqual(miesiaceDoZaplaty(z, DZIS).map((m) => m.miesiac), ['2026-09'])
+  })
+
+  it('zrobiona i odwołana wizyta po końcu serii nie zostawia miesiąca do zapłaty', () => {
+    const z = miesieczna({ koniec: '2026-09-28', wizyty: { '2026-10-05': stanWizyty({ zrobiona: CHWILA, odwolana: true }) } })
+
+    assert.deepEqual(miesiaceDoZaplaty(z, DZIS).map((m) => m.miesiac), ['2026-09'])
+  })
+
+  it('zapłacony miesiąc bez wizyty po końcu serii zostaje na liście ze swoją zapłatą', () => {
+    const z = miesieczna({ koniec: '2026-09-28', zaplatyMiesieczne: { '2026-10': zaplata } })
+
+    const miesiace = miesiaceDoZaplaty(z, DZIS)
+
+    assert.deepEqual(miesiace.map((m) => m.miesiac), ['2026-10', '2026-09'])
+    assert.equal(miesiace[0].zaplata, 'Zapłacone · Przelew · pn 5 paź')
+  })
+
   it('miesiąc startu bez wizyty odpada: seria od 30.09 w poniedziałki ma pierwszą wizytę w październiku', () => {
     const start = '2026-09-30'
     const z = miesieczna({ start, okresy: [okres(start, { cykl: { co: 'tydzien', dni: [1] }, cenaMiesiaca: 1200 })] })
@@ -236,6 +267,32 @@ describe('wartosciZmiany', () => {
     assert.deepEqual(wartosciZmiany(z, '2026-10-12'), { cena: '280,5', godzina: '16:00', cykl: 'tydzien', dni: [1, 4] })
   })
 
+  it('przesunięta wizyta z własną godziną pokazuje godzinę z kalendarza, a przesunięta bez godziny — godzinę okresu', () => {
+    const zGodzina = { ...seria([1]), wizyty: { '2026-09-21': stanWizyty({ przeniesiona: { data: '2026-09-23', godzina: '11:00' } }) } }
+    const bezGodziny = { ...seria([1]), wizyty: { '2026-09-21': stanWizyty({ przeniesiona: { data: '2026-09-23', godzina: null } }) } }
+
+    assert.equal(wartosciZmiany(zGodzina, '2026-09-21').godzina, '11:00')
+    assert.equal(wartosciZmiany(bezGodziny, '2026-09-21').godzina, '09:00')
+  })
+
+  it('zmiana godziny przesuniętej wizyty jest widoczna na tej wizycie i na następnych', () => {
+    const magazyn = magazynZSeria()
+    const pierwotna = '2026-09-21'
+    przesunWizyte(magazyn, 'z1', pierwotna, { data: '2026-09-23', godzina: '11:00' })
+    const przed = zapisane(magazyn)
+
+    zmienOdWizyty(magazyn, 'z1', pierwotna, zmianaDoZapisu(przed, pierwotna, { ...wartosciZmiany(przed, pierwotna), godzina: '12:00' }))
+
+    assert.deepEqual(wystapienia(zapisane(magazyn), '2026-09-21', '2026-09-28').map((w) => [w.data, w.godzina]),
+      [['2026-09-23', '12:00'], ['2026-09-28', '12:00']])
+  })
+
+  it('niezmieniona godzina przesuniętej wizyty nie jest zmianą', () => {
+    const z = { ...seria([1]), wizyty: { '2026-09-21': stanWizyty({ przeniesiona: { data: '2026-09-23', godzina: '11:00' } }) } }
+
+    assert.deepEqual(zmianaDoZapisu(z, '2026-09-21', wartosciZmiany(z, '2026-09-21')), {})
+  })
+
   it('cykl co miesiąc podpowiada dzień tygodnia wizyty, a zlecenie jednorazowe nie ma cyklu', () => {
     const z = seria([], { cykl: { co: 'miesiac', dni: [] }, godzina: null })
 
@@ -244,10 +301,16 @@ describe('wartosciZmiany', () => {
   })
 })
 
-describe('przelaczDzien', () => {
-  it('włącza dzień z zachowaniem kolejności i wyłącza włączony', () => {
-    assert.deepEqual(przelaczDzien([1, 4], 2), [1, 2, 4])
-    assert.deepEqual(przelaczDzien([1, 4], 4), [1])
+describe('bladKonca', () => {
+  it('pusty dzień, niepełny rok i dzień przed startem dają błąd', () => {
+    assert.equal(bladKonca('', START), 'brak_daty')
+    assert.equal(bladKonca('0026-11-03', START), 'brak_daty')
+    assert.equal(bladKonca('2026-09-13', START), 'brak_daty')
+  })
+
+  it('dzień startu i późniejszy są poprawne', () => {
+    assert.equal(bladKonca(START, START), null)
+    assert.equal(bladKonca('2026-10-05', START), null)
   })
 })
 
@@ -260,7 +323,7 @@ describe('bledyZmiany', () => {
   })
 
   it('zła cena i brak dni w cyklu tygodniowym to błędy pól', () => {
-    assert.deepEqual(bledyZmiany({ ...poprawne, cena: 'dużo', dni: [] }), { cena: 'Wpisz cenę.', dni: 'Wybierz dni tygodnia.' })
+    assert.deepEqual(bledyZmiany({ ...poprawne, cena: 'dużo', dni: [] }), { cena: 'zla_cena', dni: 'brak_dni' })
   })
 
   it('cykl co miesiąc i zlecenie jednorazowe nie wymagają dni', () => {
@@ -393,6 +456,13 @@ describe('modelKarty', () => {
     const z = miesieczna({ zaplatyMiesieczne: { '2026-09': zaplata } })
 
     assert.equal(modelKarty({ ...STAN, zlecenia: [z] }, KATALOG, 'z1', DZIS)?.forma, 'blik')
+  })
+
+  it('wycena bez numeru ma sam napis „Wycena”', () => {
+    const w = /** @type {import('../dane/wyceny.js').Wycena} */ (/** @type {unknown} */ ({ id: 'w1', numer: null }))
+    const m = modelKarty({ ...STAN, wyceny: [w], zlecenia: [{ ...seria([1]), wycenaId: 'w1' }] }, KATALOG, 'z1', DZIS)
+
+    assert.deepEqual(m?.wycena, { tekst: 'Wycena', adres: '#/wycena/w1' })
   })
 
   it('wycena prowadzi do siebie z numerem', () => {

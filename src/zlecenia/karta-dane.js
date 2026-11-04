@@ -4,15 +4,15 @@
 
 import { klient } from '../dane/klienci.js'
 import { jestDniem, jestKwota } from '../dane/ksztalt.js'
-import { formaDomyslna, kwotaMiesiaca } from '../dane/wizyty.js'
+import { czyMiesiacMaWizyte, formaDomyslna, kwotaMiesiaca } from '../dane/wizyty.js'
 import { wycena } from '../dane/wyceny.js'
 import { BladZlecenia, czySeria, zlecenie } from '../dane/zlecenia.js'
-import { dodajDni, dzienTygodnia, miesiacDnia, ostatniDzienMiesiaca } from '../kalendarz/daty.js'
+import { dodajDni, dzienTygodnia, miesiacDnia } from '../kalendarz/daty.js'
 import { najblizszaWizyta, okresDnia, wystapienia } from '../kalendarz/wystapienia.js'
-import { dzienKrotko, godzina, kiedy, miesiacRok, parsujLiczbe, SKROTY_DNI, tekstLiczby, zl } from '../ui/format.js'
-import { ETYKIETY_FORM_ZAPLATY } from '../ui/statusy.js'
+import { dzienKrotko, godzina, kiedy, kwotaJednostki, miesiacRok, parsujLiczbe, SKROTY_DNI, tekstLiczby } from '../ui/format.js'
 import { sciezka } from '../ui/trasy.js'
-import { czyMaDni } from './formularz.js'
+import { czyMaDni, ETYKIETY_CYKLI, jestDataZlecenia } from './opcje.js'
+import { dzienWizyty, nazwaZlecenia, nazwyUslug, tekstTerminu, tekstZaplaty } from './teksty-wizyty.js'
 import { niezaplacone } from './zapytania.js'
 
 /**
@@ -21,7 +21,6 @@ import { niezaplacone } from './zapytania.js'
  * @typedef {import('../dane/zlecenia-ksztalt.js').FormaZaplaty} FormaZaplaty
  * @typedef {import('../dane/zlecenia-ksztalt.js').Okres} Okres
  * @typedef {import('../dane/zlecenia-ksztalt.js').StanWizyty} StanWizyty
- * @typedef {import('../dane/zlecenia-ksztalt.js').Zaplata} Zaplata
  * @typedef {import('../dane/zlecenia-ksztalt.js').Zlecenie} Zlecenie
  * @typedef {import('../kalendarz/wystapienia.js').RodzajCyklu} RodzajCyklu
  * @typedef {import('../kalendarz/wystapienia.js').Wystapienie<Okres, StanWizyty>} WystapienieZlecenia
@@ -41,28 +40,16 @@ import { niezaplacone } from './zapytania.js'
 const OKNO_KOTWICY_DNI = 62
 /** Pierwszy dzien miesiaca plus tyle dni to zawsze nastepny miesiac (i nigdy kolejny). */
 const DNI_DO_NASTEPNEGO_MIESIACA = 31
-const BLAD_CENY = 'Wpisz cenę.'
-const BLAD_DNI = 'Wybierz dni tygodnia.'
 
 /** @param {string} dzien RRRR-MM-DD @returns {number} dzien miesiaca 1–31 */
 const numerDnia = (dzien) => Number(dzien.slice(8, 10))
-
-/**
- * Nazwa wyswietlana zlecenia: opis albo nazwa uslugi z katalogu; usluga spoza katalogu pokazuje swoje id.
- * @param {Pick<Zlecenie, 'opis' | 'uslugaId'>} z @param {Pick<Katalog, 'uslugi'>} katalog @returns {string}
- */
-export function nazwaZlecenia({ opis, uslugaId }, katalog) {
-  if (opis !== null) return opis
-  if (uslugaId === null) return 'Zlecenie'
-  return katalog.uslugi.find((u) => u.id === uslugaId)?.nazwa ?? uslugaId
-}
 
 /**
  * Jedyna wizyta zlecenia jednorazowego: okno to jej dzien po przesunieciu, bo tylko w nim `wystapienia` ja oddaje.
  * @param {Zlecenie} z @returns {WystapienieZlecenia}
  */
 function jedynaWizyta(z) {
-  const dzien = (Object.hasOwn(z.wizyty, z.start) ? z.wizyty[z.start].przeniesiona?.data : null) ?? z.start
+  const dzien = dzienWizyty(z, z.start)
   return wystapienia(z, dzien, dzien)[0]
 }
 
@@ -86,14 +73,13 @@ const tekstDni = (dni) => [...dni].sort((a, b) => a - b).map((d) => SKROTY_DNI[d
  */
 function tekstCyklu(z, indeks) {
   const { cykl } = z.okresy[indeks]
-  if (cykl?.co === 'tydzien') return `Co tydzień: ${tekstDni(cykl.dni)}`
-  if (cykl?.co === 'dwa_tygodnie') return `Co 2 tygodnie: ${tekstDni(cykl.dni)}`
-  return `Co miesiąc, ${dzienMiesiacaOkresu(z, indeks)}. dnia`
+  if (cykl?.co === 'tydzien' || cykl?.co === 'dwa_tygodnie') return `${ETYKIETY_CYKLI[cykl.co]}: ${tekstDni(cykl.dni)}`
+  return `${ETYKIETY_CYKLI.miesiac}, ${dzienMiesiacaOkresu(z, indeks)}. dnia`
 }
 
 /** @param {Zlecenie} z @param {Okres} okres @returns {string} „250 zł za wizytę” albo „1 560 zł miesięcznie” */
 function tekstKwoty({ rozliczenie }, { cenaWizyty, cenaMiesiaca }) {
-  return rozliczenie === 'miesiecznie' ? `${zl(cenaMiesiaca ?? 0)} miesięcznie` : `${zl(cenaWizyty ?? 0)} za wizytę`
+  return rozliczenie === 'miesiecznie' ? `${kwotaJednostki(cenaMiesiaca ?? 0)} miesięcznie` : `${kwotaJednostki(cenaWizyty ?? 0)} za wizytę`
 }
 
 /** @param {Zlecenie} z @param {number} indeks @returns {string} opis okresu serii, bez godziny w okresie bez godziny */
@@ -101,9 +87,6 @@ function opisOkresu(z, indeks) {
   const okres = z.okresy[indeks]
   return [tekstCyklu(z, indeks), okres.godzina === null ? null : godzina(okres.godzina), tekstKwoty(z, okres)].filter((t) => t !== null).join(' · ')
 }
-
-/** @param {WystapienieZlecenia} w @returns {string} „pn 2 lis, 9:00” albo sam dzien */
-const tekstTerminu = (w) => (w.godzina === null ? dzienKrotko(w.data) : `${dzienKrotko(w.data)}, ${godzina(w.godzina)}`)
 
 /**
  * Opis rodzaju zlecenia z pierwszego okresu: „Co tydzień: pn, czw · 9:00 · 250 zł za wizytę”, „Jednorazowe · pn 2 lis, 9:00 · 250 zł”.
@@ -113,7 +96,7 @@ const tekstTerminu = (w) => (w.godzina === null ? dzienKrotko(w.data) : `${dzien
 export function opisRodzaju(z) {
   if (czySeria(z)) return opisOkresu(z, 0)
   const w = jedynaWizyta(z)
-  return `Jednorazowe · ${tekstTerminu(w)} · ${zl(w.okres.cenaWizyty ?? 0)}`
+  return `Jednorazowe · ${tekstTerminu(w.data, w.godzina)} · ${kwotaJednostki(w.okres.cenaWizyty ?? 0)}`
 }
 
 /** Okresy serii od drugiego: „Od pn 9 lis” i opis okresu. @param {Zlecenie} z @returns {OpisOkresu[]} */
@@ -155,21 +138,11 @@ export function domyslnyKoniec(z, dzis) {
   return ostatnia < z.start ? z.start : ostatnia
 }
 
-/** @param {Zaplata} zaplata @returns {string} „Zapłacone · Przelew · pn 2 lis”, bez formy „Zapłacone” */
-function tekstZaplaty({ forma, data }) {
-  return forma === null ? 'Zapłacone' : `Zapłacone · ${ETYKIETY_FORM_ZAPLATY[forma]} · ${dzienKrotko(data)}`
-}
-
 /**
- * Miesiac, za ktory mozna zaplacic: daje go regula okresow albo ma zrobiona wizyte z data pierwotna w tym miesiacu (warunek
- * kwotaMiesiaca: po koncu serii regula milczy, a wizyty ze stanem zostaja).
- * @param {Zlecenie} z @param {string} miesiac RRRR-MM @returns {boolean}
+ * Blad ostatniego dnia serii: dzien przed startem albo niepelna data daje kod, poprawny dzien null.
+ * @param {string} dzien @param {string} start RRRR-MM-DD @returns {'brak_daty' | null}
  */
-function czyMiesiacZWizyta(z, miesiac) {
-  const ostatni = ostatniDzienMiesiaca(Number(miesiac.slice(0, 4)), Number(miesiac.slice(5, 7)))
-  if (wystapienia({ ...z, wizyty: {} }, `${miesiac}-01`, `${miesiac}-${ostatni}`).length > 0) return true
-  return Object.entries(z.wizyty).some(([dzien, s]) => dzien.startsWith(`${miesiac}-`) && s.zrobiona !== null && !s.odwolana)
-}
+export const bladKonca = (dzien, start) => (jestDataZlecenia(dzien) && dzien >= start ? null : 'brak_daty')
 
 /**
  * Miesiace serii miesiecznej od pierwszego z wizyta do miesiaca `dzis`, najnowszy pierwszy; miesiace bez wizyt (po koncu serii)
@@ -185,8 +158,8 @@ export function miesiaceDoZaplaty(z, dzis) {
   const wynik = []
   for (let miesiac = miesiacDnia(z.start); miesiac <= biezacy; miesiac = miesiacDnia(dodajDni(`${miesiac}-01`, DNI_DO_NASTEPNEGO_MIESIACA))) {
     const zaplata = Object.hasOwn(z.zaplatyMiesieczne, miesiac) ? z.zaplatyMiesieczne[miesiac] : null
-    if (zaplata === null && !czyMiesiacZWizyta(z, miesiac)) continue
-    wynik.unshift({ miesiac, nazwa: miesiacRok(`${miesiac}-01`), kwota: zl(zaplata?.kwota ?? kwotaMiesiaca(z, miesiac)),
+    if (zaplata === null && !czyMiesiacMaWizyte(z, miesiac)) continue
+    wynik.unshift({ miesiac, nazwa: miesiacRok(`${miesiac}-01`), kwota: kwotaJednostki(zaplata?.kwota ?? kwotaMiesiaca(z, miesiac)),
       zaplata: zaplata === null ? null : tekstZaplaty(zaplata), czyNiezaplacony: zalegle.has(miesiac) })
   }
   return wynik
@@ -205,25 +178,26 @@ export function wizytaZAdresu(z, od) {
 }
 
 /**
- * Wartosci formularza zmiany z okresu wizyty; cykl bez dni tygodnia (co miesiac) podpowiada dzien tygodnia wizyty na wypadek
- * zmiany powtarzania.
+ * Wartosci formularza zmiany: cena i cykl z okresu wizyty, a godzina taka, jaka widac w kalendarzu (godzina przesuniecia wygrywa,
+ * jak w `wystapienia`). Cykl bez dni tygodnia (co miesiac) podpowiada dzien tygodnia wizyty na wypadek zmiany powtarzania.
  * @param {Zlecenie} z @param {string} dataPierwotna @returns {WartosciZmiany}
  */
 export function wartosciZmiany(z, dataPierwotna) {
-  const { cykl, godzina: czasWizyty, cenaWizyty, cenaMiesiaca } = okresDnia(z.okresy, dataPierwotna)
+  const { cykl, godzina: czasOkresu, cenaWizyty, cenaMiesiaca } = okresDnia(z.okresy, dataPierwotna)
+  const czasPrzesuniecia = Object.hasOwn(z.wizyty, dataPierwotna) ? z.wizyty[dataPierwotna].przeniesiona?.godzina : null
   const dni = cykl === null || cykl.dni.length === 0 ? [dzienTygodnia(dataPierwotna)] : [...cykl.dni]
-  return { cena: tekstLiczby(cenaWizyty ?? cenaMiesiaca ?? 0), godzina: czasWizyty ?? '', cykl: cykl?.co ?? null, dni }
+  return { cena: tekstLiczby(cenaWizyty ?? cenaMiesiaca ?? 0), godzina: czasPrzesuniecia ?? czasOkresu ?? '', cykl: cykl?.co ?? null, dni }
 }
-
-/** @param {readonly number[]} dni @param {number} dzien 1–7 @returns {number[]} dni z dniem wlaczonym albo wylaczonym, rosnaco */
-export const przelaczDzien = (dni, dzien) => (dni.includes(dzien) ? dni.filter((d) => d !== dzien) : [...dni, dzien].sort((a, b) => a - b))
 
 /** @param {WartosciZmiany} w @returns {boolean} */
 const czyZDniami = ({ cykl }) => cykl !== null && czyMaDni(cykl)
 
-/** Bledy pol formularza zmiany; bez bledow pusty obiekt. @param {WartosciZmiany} w @returns {{ cena?: string, dni?: string }} */
+/**
+ * Bledy pol formularza zmiany, kody jak w bledyFormularza; bez bledow pusty obiekt.
+ * @param {WartosciZmiany} w @returns {{ cena?: 'zla_cena', dni?: 'brak_dni' }}
+ */
 export function bledyZmiany(w) {
-  return { ...(jestKwota(parsujLiczbe(w.cena)) ? {} : { cena: BLAD_CENY }), ...(czyZDniami(w) && w.dni.length === 0 ? { dni: BLAD_DNI } : {}) }
+  return { ...(jestKwota(parsujLiczbe(w.cena)) ? {} : { cena: 'zla_cena' }), ...(czyZDniami(w) && w.dni.length === 0 ? { dni: 'brak_dni' } : {}) }
 }
 
 /** @param {WartosciZmiany} przed @param {WartosciZmiany} po @returns {boolean} */
@@ -258,7 +232,7 @@ export function modelKarty(stan, katalog, id, dzis) {
   if (z === null || k === null) return null
   const w = z.wycenaId === null ? null : wycena(stan, z.wycenaId)
   const seria = czySeria(z)
-  return { zlecenie: z, tytul: nazwaZlecenia(z, katalog), koniec: z.koniec === null ? null : `Zakończona ${dzienKrotko(z.koniec)}`,
+  return { zlecenie: z, tytul: nazwaZlecenia(z, nazwyUslug(katalog)), koniec: z.koniec === null ? null : `Zakończona ${dzienKrotko(z.koniec)}`,
     klient: { nazwa: k.nazwa, adres: sciezka('klient', { id: k.id }) }, rodzaj: opisRodzaju(z), wizyta: wierszWizyty(z, dzis),
     okresy: okresyDoPokazania(z), wycena: w === null ? null : { tekst: w.numer === null ? 'Wycena' : `Wycena ${w.numer}`, adres: sciezka('wycena', { id: w.id }) },
     czySeria: seria, zmianaOd: seria ? najblizszaOtwarta(z, dzis)?.dataPierwotna ?? null : z.start, domyslnyKoniec: domyslnyKoniec(z, dzis),

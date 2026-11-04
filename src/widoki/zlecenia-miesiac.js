@@ -1,13 +1,13 @@
 // Widok Miesiąc (`#/zlecenia/miesiac`, makieta „Miesiąc” w docs/operator/aplikacja-modulowa-makiety.html): siatka pn–nd
-// z numerem dnia i liczba nieodwolanych wizyt, dzisiaj na zielonym kole, a dotkniecie dnia otwiera widok Dzień. Tabela, zeby
-// czytnik ekranu podawal dzien tygodnia kolumny; dni spoza miesiaca to puste komorki.
+// z numerem dnia i liczba nieodwolanych wizyt, dzisiaj na zielonym kole, a dotkniecie dnia otwiera widok Dzień; pod siatka
+// „Nowe zlecenie”. Tabela, zeby czytnik ekranu podawal dzien tygodnia kolumny; dni spoza miesiaca to puste komorki.
 
 import { dzienLokalny } from '../dane/ksztalt.js'
 import { wczytajStan } from '../dane/magazyn.js'
 import { SKROTY_DNI } from '../ui/format.js'
 import { h } from '../ui/h.js'
 import { dzienKalendarza, modelMiesiaca } from '../zlecenia/kalendarz-dane.js'
-import { ekranKalendarza } from './zlecenia-wspolne.js'
+import { ekranKalendarza, przyciskNowegoZlecenia } from './zlecenia-wspolne.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../zlecenia/kalendarz-dane.js').KomorkaMiesiaca} KomorkaMiesiaca */
@@ -37,6 +37,6 @@ export const widokMiesiacaKalendarza = {
     const dzien = dzienKalendarza(zapytanie, dzis)
     const [rok, miesiac] = dzien.split('-').map(Number)
     const { tytul, tygodnie } = modelMiesiaca(wczytajStan(kontekst.magazyn), rok, miesiac, dzis)
-    kontener.append(...ekranKalendarza({ widok: 'miesiac', dzien, dzis, tytul }, siatka(tygodnie)))
+    kontener.append(...ekranKalendarza({ widok: 'miesiac', dzien, dzis, tytul }, siatka(tygodnie), przyciskNowegoZlecenia(dzien)))
   },
 }

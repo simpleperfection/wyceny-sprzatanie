@@ -9,19 +9,19 @@ import { wycena } from '../dane/wyceny.js'
 import { czySeria, zlecenie } from '../dane/zlecenia.js'
 import { porownajDni } from '../kalendarz/daty.js'
 import { wystapienia } from '../kalendarz/wystapienia.js'
-import { czas, dzienKrotko, godzina, zl } from '../ui/format.js'
-import { ETYKIETY_FORM_ZAPLATY } from '../ui/statusy.js'
+import { czas, dzienKrotko, kwotaJednostki, zl } from '../ui/format.js'
 import { sciezka } from '../ui/trasy.js'
 import { adresKalendarza, W_ABONAMENCIE } from './kalendarz-dane.js'
+import { jestDataZlecenia } from './opcje.js'
 import { czasStartowy, planIFaktWizyty } from './plan-fakt.js'
-import { niezaplacone } from './zapytania.js'
+import { dzienWizyty, nazwaZlecenia, nazwyUslug, tekstTerminu, tekstZaplaty } from './teksty-wizyty.js'
+import { czyPlatnaZaWizyte, niezaplacone } from './zapytania.js'
 
 /**
  * @typedef {import('../dane/magazyn.js').Stan} Stan
  * @typedef {import('../dane/zlecenia-ksztalt.js').FormaZaplaty} FormaZaplaty
  * @typedef {import('../dane/zlecenia-ksztalt.js').Okres} Okres
  * @typedef {import('../dane/zlecenia-ksztalt.js').StanWizyty} StanWizyty
- * @typedef {import('../dane/zlecenia-ksztalt.js').Zaplata} Zaplata
  * @typedef {import('../dane/zlecenia-ksztalt.js').Zlecenie} Zlecenie
  * @typedef {import('../kalendarz/wystapienia.js').Wystapienie<Okres, StanWizyty>} WystapienieZlecenia
  * @typedef {import('../silnik/katalog.js').Katalog} Katalog
@@ -47,26 +47,21 @@ const CZAS_BEZ_PLANU = 60
  * @param {Zlecenie} z @param {string} dataPierwotna @returns {WystapienieZlecenia | null}
  */
 function wystapienieWizyty(z, dataPierwotna) {
-  const dzien = Object.hasOwn(z.wizyty, dataPierwotna) ? z.wizyty[dataPierwotna].przeniesiona?.data ?? dataPierwotna : dataPierwotna
+  const dzien = dzienWizyty(z, dataPierwotna)
   return wystapienia(z, dzien, dzien).find((w) => w.dataPierwotna === dataPierwotna) ?? null
 }
 
-/** @param {WystapienieZlecenia} w @returns {string} „pn 2 lis, 9:00” albo sam dzien */
-const tekstTerminu = (w) => (w.godzina === null ? dzienKrotko(w.data) : `${dzienKrotko(w.data)}, ${godzina(w.godzina)}`)
-
-/** @param {Zaplata} zaplata @returns {string} „Zapłacone · Przelew · pn 2 lis”, a bez formy (wizyty z wersji 1) „Zapłacone” */
-function tekstZaplaty({ forma, data }) {
-  return forma === null ? 'Zapłacone' : `Zapłacone · ${ETYKIETY_FORM_ZAPLATY[forma]} · ${dzienKrotko(data)}`
-}
+/** Blad nowego dnia wizyty (przesunWizyte sprawdza sam ksztalt dnia). @param {string} data @returns {'brak_daty' | null} */
+export const bladPrzesuniecia = (data) => (jestDataZlecenia(data) ? null : 'brak_daty')
 
 /**
- * Zapisana zaplata albo akcja zaplaty (rozliczenie za wizyte, cena > 0, wizyta nieodwolana); inaczej null.
+ * Zapisana zaplata albo akcja zaplaty (wizyta platna za wizyte, nieodwolana); inaczej null.
  * @param {Zlecenie} z @param {WystapienieZlecenia} w @param {StanWizytyEkranu} stan @returns {ZaplataWizyty | null}
  */
 function zaplataWizyty(z, w, stan) {
   const zaplata = w.stan?.zaplata ?? null
   if (zaplata !== null) return { rodzaj: 'zapisana', tekst: tekstZaplaty(zaplata), forma: zaplata.forma ?? formaDomyslna(stan, z.klientId) }
-  if ((w.stan?.odwolana ?? false) || z.rozliczenie !== 'za_wizyte' || (w.okres.cenaWizyty ?? 0) === 0) return null
+  if ((w.stan?.odwolana ?? false) || !czyPlatnaZaWizyte(z, w.okres)) return null
   return { rodzaj: 'do_zaplaty', forma: formaDomyslna(stan, z.klientId) }
 }
 
@@ -115,13 +110,6 @@ function linkiWizyty(z, dataPierwotna, stan) {
     wycena: w === null || w.numer === null ? null : { tekst: `Wycena ${w.numer}`, adres: sciezka('wycena', { id: w.id }) } }
 }
 
-/** @param {Zlecenie} z @param {Pick<Katalog, 'uslugi'>} katalog @returns {string | null} opis albo nazwa uslugi z katalogu */
-function nazwaZlecenia(z, katalog) {
-  if (z.opis !== null || z.uslugaId === null) return z.opis
-  const { uslugaId } = z
-  return katalog.uslugi.find((u) => u.id === uslugaId)?.nazwa ?? uslugaId
-}
-
 /**
  * Model ekranu wizyty; nieznane zlecenie albo wizyta (zly dzien, dzien bez wizyty) daja null.
  * @param {StanWizytyEkranu} stan @param {Katalog} katalog @param {string} id @param {string} dataPierwotna @param {string} dzis RRRR-MM-DD
@@ -136,8 +124,9 @@ export function modelWizyty(stan, katalog, id, dataPierwotna, dzis) {
   const czyZrobiona = (w.stan?.zrobiona ?? null) !== null
   const czyOdDnia = !czyOdwolana && porownajDni(w.data, dzis) <= 0
   return { zlecenieId: z.id, dataPierwotna, powrot: adresKalendarza('dzien', w.data === dzis ? null : w.data), dzien: dzienKrotko(w.data),
-    termin: tekstTerminu(w), klient: { nazwa: k.nazwa, adres: sciezka('klient', { id: k.id }) }, adres: k.adres,
-    kwota: w.okres.cenaWizyty === null ? W_ABONAMENCIE : zl(w.okres.cenaWizyty), usluga: nazwaZlecenia(z, katalog),
+    termin: tekstTerminu(w.data, w.godzina), klient: { nazwa: k.nazwa, adres: sciezka('klient', { id: k.id }) }, adres: k.adres,
+    kwota: w.okres.cenaWizyty === null ? W_ABONAMENCIE : kwotaJednostki(w.okres.cenaWizyty),
+    usluga: z.opis === null && z.uslugaId === null ? null : nazwaZlecenia(z, nazwyUslug(katalog)),
     pigulki: pigulkiWizyty(z, w, stan, dzis), czyOdwolana, czyZrobiona, czyMozeZrobione: czyOdDnia && !czyZrobiona,
     zaplata: zaplataWizyty(z, w, stan), czasPracy: czasPracyWizyty(z, w, stan, katalog), startCzasu: czyOdDnia ? startLicznika(z, w) : null,
     przesuniecie: czyOdwolana ? null : { data: w.data, godzina: w.godzina ?? '' }, linki: linkiWizyty(z, dataPierwotna, stan) }

@@ -2,13 +2,15 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
 import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
+import { czytajJson } from '../../tests/pomocnicze.js'
 import { utworzMagazyn, wczytajStan } from '../dane/magazyn.js'
+import { wczytajDomyslne, zapiszUstawienia } from '../dane/ustawienia.js'
 import { BladZlecenia, doZaplanowania } from '../dane/zlecenia.js'
 import { wystapienia } from '../kalendarz/wystapienia.js'
 import {
-  adresZaplanowania, bledyFormularza, BEZ_POWTARZANIA, czyMaDni, doZapisu, etykietaCeny, INNA_USLUGA, opisZlecenia, tekstOdmowy, tekstPlanu,
-  wartosciPoczatkowe, zapiszFormularz, zCyklem, zData, zDniem, zRozliczeniem,
+  bledyFormularza, doZapisu, INNA_USLUGA, tekstPlanu, wartosciPoczatkowe, zapiszFormularz, zCyklem, zData, zDniem, zRozliczeniem,
 } from './formularz.js'
+import { BEZ_POWTARZANIA } from './opcje.js'
 
 const DZIS = '2026-11-03' // wtorek
 const TERAZ = new Date('2026-11-03T08:00:00.000Z')
@@ -190,6 +192,10 @@ describe('wartosciPoczatkowe ręcznie', () => {
 })
 
 describe('zmiany pól', () => {
+  it('wyczyszczone pole daty nie podpowiada dni tygodnia', () => {
+    assert.deepEqual(zData(zCyklem(reczne(), 'tydzien'), '').dni, [])
+  })
+
   it('„Co tydzień” bierze dzień tygodnia daty, a dni idą za zmianą daty, dopóki nie zmieni ich użytkownik', () => {
     const seria = zCyklem(reczne(), 'tydzien')
 
@@ -224,11 +230,6 @@ describe('zmiany pól', () => {
     assert.equal(zRozliczeniem({ ...abonament, cena: '1500' }, 'za_wizyte').cena, '1500')
   })
 
-  it('etykieta ceny zależy od rozliczenia; dni mają tylko cykle tygodniowe', () => {
-    assert.equal(etykietaCeny('za_wizyte'), 'Cena (zł)')
-    assert.equal(etykietaCeny('miesiecznie'), 'Kwota za miesiąc (zł)')
-    assert.deepEqual(['tydzien', 'dwa_tygodnie', 'miesiac', BEZ_POWTARZANIA].map(czyMaDni), [true, true, false, false])
-  })
 })
 
 describe('bledyFormularza', () => {
@@ -328,6 +329,15 @@ describe('zapiszFormularz', () => {
     assert.equal(doZaplanowania(stan, stan.wyceny[0]), false)
   })
 
+  it('plan z wyceny ma ręczne tempo firmy, a nie tempo domyślne', async () => {
+    const magazyn = magazynZeStanem({ ...PUSTY_STAN, wyceny: [abonamentTestowy('abonament_3', 13)] })
+    zapiszUstawienia(magazyn, { tempo: { reczne: 1 } }, await wczytajDomyslne(czytajJson))
+
+    const z = zapiszFormularz({ magazyn, domyslne: DOMYSLNE }, 'z1', zWyceny(abonamentTestowy('abonament_3', 13)))
+
+    assert.deepEqual(z.plan, { minutyNormowe: 95, tempo: 1 })
+  })
+
   it('drugi zapis z tym samym id nie dubluje zlecenia', () => {
     const magazyn = magazynZeStanem(PUSTY_STAN)
     const kontekst = { magazyn, domyslne: DOMYSLNE }
@@ -346,15 +356,6 @@ describe('zapiszFormularz', () => {
   })
 })
 
-describe('tekstOdmowy', () => {
-  it('odmowa zapisu ma własny tekst, a inny błąd zlecenia i obcy błąd to awaria', () => {
-    assert.equal(tekstOdmowy(new BladZlecenia('zly_status')), 'Ta wycena nie jest już przyjęta, więc zlecenia nie zapisano.')
-    assert.equal(tekstOdmowy(new BladZlecenia('brak_klienta')), 'Tego klienta już nie ma. Wybierz innego.')
-    assert.equal(tekstOdmowy(new BladZlecenia('cykl')), null)
-    assert.equal(tekstOdmowy(new TypeError('x')), null)
-  })
-})
-
 describe('tekstPlanu', () => {
   it('planowany czas: minuty normowe × tempo firmy; bez migawki brak tekstu', () => {
     assert.equal(tekstPlanu({ minutyNormowe: 120, usluga: 'mieszkanie_standard' }, PUSTY_STAN, DOMYSLNE), 'Planowany czas: 2 h 36 min')
@@ -365,23 +366,5 @@ describe('tekstPlanu', () => {
     const stan = { ...PUSTY_STAN, ustawienia: { tempo: { reczne: 1 } } }
 
     assert.equal(tekstPlanu({ minutyNormowe: 120, usluga: 'mieszkanie_standard' }, stan, DOMYSLNE), 'Planowany czas: 2 h')
-  })
-})
-
-describe('opisZlecenia', () => {
-  /** @param {object} okres */
-  const opis = (okres) => opisZlecenia({ start: DZIS, okresy: [{ od: DZIS, cykl: null, godzina: null, cenaWizyty: 100, cenaMiesiaca: null, ...okres }] })
-
-  it('dzień, godzina i powtarzanie', () => {
-    assert.equal(opis({}), 'wt 3 lis')
-    assert.equal(opis({ godzina: '09:30' }), 'wt 3 lis, 9:30')
-    assert.equal(opis({ godzina: '10:00', cykl: { co: 'tydzien', dni: [2] } }), 'wt 3 lis, 10:00 · Co tydzień')
-    assert.equal(opis({ cykl: { co: 'miesiac', dni: [] } }), 'wt 3 lis · Co miesiąc')
-  })
-})
-
-describe('adresZaplanowania', () => {
-  it('prowadzi do formularza z wyceną w zapytaniu', () => {
-    assert.equal(adresZaplanowania('w 1'), '#/zlecenie/nowe?wycena=w+1')
   })
 })

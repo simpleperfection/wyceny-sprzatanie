@@ -216,6 +216,15 @@ describe('niezaplaconeKlienta', () => {
     assert.deepEqual(niezaplaconeKlienta(stan, 'k-jan', DZIS), [{ tekst: `śr 7 paź · 180${NBSP}zł`, adres: '#/zlecenie/z-jan/wizyta/2026-10-05' }])
   })
 
+  it('cena z groszami zostaje z groszami w wizycie i w miesiącu', () => {
+    const cena = (z, pola) => ({ ...z, okresy: [{ ...z.okresy[0], ...pola }] })
+    const stan = { klienci: [JAN, BIURO], zlecenia: [cena(zlecenie('z-jan', 'k-jan', { wizyty: { '2026-10-05': ZROBIONA } }), { cenaWizyty: 149.5 }),
+      cena(abonament('z-abo', 'k-biuro', { wizyty: { '2026-10-05': ZROBIONA } }), { cenaMiesiaca: 1199.99 })] }
+
+    assert.equal(niezaplaconeKlienta(stan, 'k-jan', DZIS)[0].tekst, `pn 5 paź · 149,50${NBSP}zł`)
+    assert.equal(niezaplaconeKlienta(stan, 'k-biuro', DZIS)[0].tekst, `Październik 2026 · 1${NBSP}199,99${NBSP}zł`)
+  })
+
   it('miesiąc abonamentu ma nazwę i kwotę i prowadzi do karty zlecenia', () => {
     const stan = { klienci: [BIURO], zlecenia: [abonament('z-abo', 'k-biuro', { wizyty: { '2026-10-05': ZROBIONA } })] }
 

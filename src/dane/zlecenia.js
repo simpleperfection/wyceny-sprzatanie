@@ -5,7 +5,7 @@
 import { jestGodzina, porownajDni } from '../kalendarz/daty.js'
 import { okresDnia } from '../kalendarz/wystapienia.js'
 import { jestDniem, jestId, jestKwota, jestLiczba, jestObiektem } from './ksztalt.js'
-import { czyAbonament, czyWycenaZamknieta, wycena } from './wyceny.js'
+import { czyAbonament, czyWycenaZamknieta, wycena, zKlientemZlecenia } from './wyceny.js'
 import { DLUGOSC_OPISU, jestZlecenie, MAKS_WIZYT_ZLECENIA, MAKS_ZLECEN, ROZLICZENIA } from './zlecenia-ksztalt.js'
 
 /**
@@ -16,6 +16,7 @@ import { DLUGOSC_OPISU, jestZlecenie, MAKS_WIZYT_ZLECENIA, MAKS_ZLECEN, ROZLICZE
  * @typedef {import('./zlecenia-ksztalt.js').Okres} Okres
  * @typedef {import('./zlecenia-ksztalt.js').PlanZlecenia} PlanZlecenia
  * @typedef {import('./zlecenia-ksztalt.js').Rozliczenie} Rozliczenie
+ * @typedef {import('./zlecenia-ksztalt.js').StanWizyty} StanWizyty
  * @typedef {import('./zlecenia-ksztalt.js').Zlecenie} Zlecenie
  * @typedef {{ teraz?: () => Date }} OpcjeZlecen zegar (do testow)
  * @typedef {{ cykl?: Cykl | null, godzina?: string | null, cenaWizyty?: number | null, cenaMiesiaca?: number | null }} ZmianaOkresu
@@ -129,9 +130,10 @@ function rekordZlecenia(dane, { id, teraz, wycenaId, uslugaId, plan }) {
  * Zapis nowego zlecenia z id od wolajacego: zapisane juz id (podwojne „Zapisz”, druga karta) oddaje zapisane bez zmian.
  * @param {Magazyn} magazyn @param {OpcjeZlecen & { id: string }} opcje
  * @param {(stan: Stan, id: string, teraz: string) => Zlecenie} zbuduj rekord na swiezym stanie; moze rzucic BladZlecenia
+ * @param {(stan: Stan, nowe: Zlecenie) => Stan} [dopelnij] zmiana stanu w tym samym zapisie co nowe zlecenie
  * @returns {Zlecenie}
  */
-function dodajZlecenie(magazyn, opcje, zbuduj) {
+function dodajZlecenie(magazyn, opcje, zbuduj, dopelnij = (stan) => stan) {
   const id = opcje?.id
   if (!jestId(id)) throw new BladZlecenia('id', 'Identyfikator zlecenia musi być niepustym tekstem')
   const obecny = magazyn.wczytaj()
@@ -143,7 +145,7 @@ function dodajZlecenie(magazyn, opcje, zbuduj) {
     if (s.zlecenia.length >= MAKS_ZLECEN) throw new BladZlecenia('za_duzo', `Można zapisać najwyżej ${MAKS_ZLECEN} zleceń`)
     const nowe = zbuduj(s, id, teraz)
     if (!s.klienci.some((k) => k.id === nowe.klientId)) throw new BladZlecenia('brak_klienta', `Nie ma klienta ${nowe.klientId}`)
-    return { ...s, zlecenia: [...s.zlecenia, nowe] }
+    return dopelnij({ ...s, zlecenia: [...s.zlecenia, nowe] }, nowe)
   })
   const wynik = zlecenie(stan, id)
   if (wynik === null) throw new BladZlecenia('brak_zlecenia', `Nie zapisano zlecenia ${id}`)
@@ -163,7 +165,8 @@ export function utworzZlecenie(magazyn, dane, opcje) {
 
 /**
  * Zlecenie z przyjetej wyceny (inny status → `zly_status`): usluga z wyceny, plan z minut normowych migawki i tempa
- * od wolajacego (bez migawki plan null); okres i cykl z `dane` (dni abonamentu podpowiada formularz).
+ * od wolajacego (bez migawki plan null); okres i cykl z `dane` (dni abonamentu podpowiada formularz). Wycena bez klienta dostaje
+ * w tym samym zapisie klienta zlecenia (R18), bo zamknieta juz wycena nie pozwoli go przypisac.
  * @param {Magazyn} magazyn @param {string} wycenaId @param {ZlecenieZWyceny} dane @param {OpcjeZlecen & { id: string }} opcje
  * @returns {Zlecenie}
  */
@@ -176,8 +179,11 @@ export function zaplanujZWyceny(magazyn, wycenaId, dane, opcje) {
     if (w.wynik !== null && !(jestLiczba(tempo) && tempo > 0)) throw new BladZlecenia('tempo', `Tempo planu musi być dodatnie, jest ${tempo}`)
     const plan = w.wynik === null || tempo === undefined ? null : { minutyNormowe: w.wynik.minutyNormowe, tempo }
     return rekordZlecenia(dane, { id, teraz, wycenaId: w.id, uslugaId: w.wejscie.uslugaId, plan })
-  })
+  }, (stan, nowe) => ({ ...stan, wyceny: stan.wyceny.map((w) => (w.id === wycenaId ? zKlientemZlecenia(w, stan, nowe) : w)) }))
 }
+
+/** @param {StanWizyty} w @returns {boolean} wizyta bez zadnej zmiany: jej wpis nie zostaje w `wizyty` */
+export const czyStanDomyslny = (w) => w.przeniesiona === null && !w.odwolana && w.zrobiona === null && w.zaplata === null && w.minutyPracy === null
 
 /**
  * Zmiana jednego zlecenia na swiezym stanie magazynu z `zmienione` = teraz; `fn` moze rzucic BladZlecenia (nic sie nie
@@ -208,17 +214,33 @@ function zmianaOkresu(zmiany) {
 }
 
 /**
+ * Nowa godzina zmiany obowiazuje tez te wizyte: przesuniecie traci swoja godzine (wygrywa z godzina okresu w `wystapienia`),
+ * a przesuniecie tylko godziny, w dniu pierwotnym, znika.
+ * @param {Zlecenie} z @param {string} dataPierwotna @param {ZmianaOkresu} zmiana @returns {Zlecenie}
+ */
+function bezGodzinyPrzesuniecia(z, dataPierwotna, zmiana) {
+  const stan = Object.hasOwn(z.wizyty, dataPierwotna) ? z.wizyty[dataPierwotna] : null
+  if (zmiana.godzina === undefined || stan === null || (stan.przeniesiona?.godzina ?? null) === null) return z
+  const { data } = /** @type {NonNullable<StanWizyty['przeniesiona']>} */ (stan.przeniesiona)
+  const nowy = { ...stan, przeniesiona: data === dataPierwotna ? null : { data, godzina: null } }
+  const pozostale = Object.fromEntries(Object.entries(z.wizyty).filter(([dzien]) => dzien !== dataPierwotna))
+  return { ...z, wizyty: czyStanDomyslny(nowy) ? pozostale : { ...pozostale, [dataPierwotna]: nowy } }
+}
+
+/**
  * Zmiana ceny, godziny albo cyklu od wizyty z data pierwotna w przod (R13): w serii nowy okres od tego dnia (okres o tym samym
  * `od` zostaje zastapiony), a podane pola nadpisuja tez pozniejsze okresy (ich pozostale pola zostaja). Zmiana cyklu usuwa
  * pozniejsze okresy: kazdy okres liczy kotwice cyklu od swojego `od` (tydzien dla `dwa_tygodnie`, dzien dla `miesiac`), wiec
  * z nowym cyklem rozbilyby rytm nowego okresu. W zleceniu jednorazowym zmiana jedynego okresu (dodanie cyklu → `jednorazowe`).
+ * Podana godzina zdejmuje godzine przesuniecia tej wizyty (bezGodzinyPrzesuniecia).
  * @param {Magazyn} magazyn @param {string} id @param {string} dataPierwotna @param {ZmianaOkresu} zmiany @param {OpcjeZlecen} [opcje]
  * @returns {Stan}
  */
 export function zmienOdWizyty(magazyn, id, dataPierwotna, zmiany, opcje = {}) {
   if (!jestDniem(dataPierwotna)) throw new BladZlecenia('data', `Dzień wizyty musi mieć postać RRRR-MM-DD, jest ${String(dataPierwotna)}`)
   const zmiana = zmianaOkresu(zmiany)
-  return zmienZlecenie(magazyn, id, opcje, (z) => {
+  return zmienZlecenie(magazyn, id, opcje, (obecne) => {
+    const z = bezGodzinyPrzesuniecia(obecne, dataPierwotna, zmiana)
     if (!czySeria(z)) {
       if (zmiana.cykl !== undefined && zmiana.cykl !== null) throw new BladZlecenia('jednorazowe', 'Zlecenie jednorazowe nie ma powtarzania')
       return sprawdzony({ ...z, okresy: [okresZeZmiany(z.okresy[0], zmiana, z.rozliczenie, z.start)] })

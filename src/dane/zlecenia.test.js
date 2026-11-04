@@ -32,11 +32,12 @@ const klientTestowy = (id) => ({
 })
 
 /**
- * Wycena z polami, ktore czyta planowanie (status, usluga, migawka); magazyn wymaga od wyceny tylko obiektu z id.
+ * Wycena z polami, ktore czyta planowanie (status, klient, usluga, migawka, oferta); magazyn wymaga od wyceny tylko obiektu z id.
  * @param {string} id @param {string} status @param {object | null} [wynik]
  */
 const wycenaTestowa = (id, status, wynik = { cena: 120, minutyNormowe: 95, wizytWMiesiacu: 13 }) => ({
-  id, status, klientId: null, wejscie: { uslugaId: 'biura', wariantId: 'abonament_3' }, wynik,
+  id, status, klientId: null, klient: { nazwa: '', adres: '', termin: null }, wejscie: { uslugaId: 'biura', wariantId: 'abonament_3' }, wynik,
+  oferta: { wyslana: null, nieaktualna: false },
 })
 
 /** @param {string} id @param {object} [zmiana] */
@@ -150,9 +151,93 @@ describe('zaplanujZWyceny', () => {
   })
 })
 
+describe('zaplanujZWyceny: klient wyceny', () => {
+  const DANE = { klientId: 'k1', rozliczenie: 'za_wizyte', start: '2026-11-10', cykl: null, godzina: null, cenaWizyty: 180, tempo: 1.3 }
+  /** @param {object} [zmiana] */
+  const wycena = (zmiana = {}) => ({ ...wycenaTestowa('w1', 'przyjeta'), ...zmiana })
+
+  it('wycena bez klienta dostaje w tym samym zapisie klienta zlecenia z kopią nazwy i adresu', () => {
+    const k1 = { ...klientTestowy('k1'), adres: 'ul. Lipowa 3' }
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [k1], wyceny: [wycena()] })
+
+    zaplanujZWyceny(magazyn, 'w1', DANE, { id: 'z1', teraz: () => POZNIEJ })
+
+    const [w] = wczytajStan(magazyn).wyceny
+    assert.deepEqual([w.klientId, w.klient], ['k1', { nazwa: 'Klient k1', adres: 'ul. Lipowa 3', termin: null }])
+    assert.equal(w.zmieniona, POZNIEJ.toISOString())
+  })
+
+  it('wysłana oferta bez klienta staje się nieaktualna, bo dostaje nową nazwę', () => {
+    const oferta = { wyslana: '2026-10-30', nieaktualna: false }
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')], wyceny: [wycena({ oferta })] })
+
+    zaplanujZWyceny(magazyn, 'w1', DANE, { id: 'z1' })
+
+    assert.equal(wczytajStan(magazyn).wyceny[0].oferta.nieaktualna, true)
+  })
+
+  it('wycena z klientem zostaje przy swoim kliencie, nawet gdy zlecenie ma innego', () => {
+    const klient = { nazwa: 'Klient k2', adres: '', termin: null }
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1'), klientTestowy('k2')], wyceny: [wycena({ klientId: 'k2', klient })] })
+
+    const z = zaplanujZWyceny(magazyn, 'w1', DANE, { id: 'z1' })
+
+    const [w] = wczytajStan(magazyn).wyceny
+    assert.deepEqual([z.klientId, w.klientId, w.klient], ['k1', 'k2', klient])
+  })
+
+  it('zlecenie, którego nie można zapisać, nie zmienia wyceny', () => {
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k2')], wyceny: [wycena()] })
+
+    assert.throws(() => zaplanujZWyceny(magazyn, 'w1', DANE, { id: 'z1' }), blad('brak_klienta'))
+    assert.equal(wczytajStan(magazyn).wyceny[0].klientId, null)
+  })
+})
+
 describe('zmienOdWizyty', () => {
   /** @param {object} z @returns {[string, number | null][]} */
   const cenyWizyt = (z) => wystapienia(z, '2026-11-02', '2026-11-23').map((w) => [w.dataPierwotna, w.okres.cenaWizyty])
+  const STAN_WIZYTY = { przeniesiona: null, odwolana: false, zrobiona: null, zaplata: null, minutyPracy: null }
+
+  it('jednorazowe przesunięte na środę o 11:00: nowa godzina 12:00 widać w kalendarzu', () => {
+    const wizyty = { '2026-11-02': { ...STAN_WIZYTY, przeniesiona: { data: '2026-11-04', godzina: '11:00' } } }
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')], zlecenia: [zlecenieTestowe('z1', { wizyty })] })
+
+    const z = zlecenie(zmienOdWizyty(magazyn, 'z1', '2026-11-02', { godzina: '12:00' }), 'z1')
+
+    assert.deepEqual(wystapienia(z, '2026-11-02', '2026-11-08').map((w) => [w.data, w.godzina]), [['2026-11-04', '12:00']])
+    assert.deepEqual(z?.wizyty['2026-11-02'].przeniesiona, { data: '2026-11-04', godzina: null })
+  })
+
+  it('przesunięcie samej godziny znika po zmianie godziny, a wpis bez innych zmian razem z nim', () => {
+    const wizyty = { '2026-11-09': { ...STAN_WIZYTY, przeniesiona: { data: '2026-11-09', godzina: '11:00' } } }
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')], zlecenia: [seriaTestowa('z1', { wizyty })] })
+
+    const z = zlecenie(zmienOdWizyty(magazyn, 'z1', '2026-11-09', { godzina: '12:00' }), 'z1')
+
+    assert.deepEqual(z?.wizyty, {})
+    assert.deepEqual(wystapienia(z, '2026-11-09', '2026-11-09').map((w) => w.godzina), ['12:00'])
+  })
+
+  it('zrobiona wizyta z przesunięciem samej godziny zostaje zrobiona po zmianie godziny', () => {
+    const zrobiona = TERAZ.toISOString()
+    const wizyty = { '2026-11-09': { ...STAN_WIZYTY, zrobiona, przeniesiona: { data: '2026-11-09', godzina: '11:00' } } }
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')], zlecenia: [seriaTestowa('z1', { wizyty })] })
+
+    const z = zlecenie(zmienOdWizyty(magazyn, 'z1', '2026-11-09', { godzina: '12:00' }), 'z1')
+
+    assert.deepEqual(z?.wizyty['2026-11-09'], { ...STAN_WIZYTY, zrobiona })
+  })
+
+  it('zmiana ceny zostawia godzinę przesunięcia', () => {
+    const przeniesiona = { data: '2026-11-10', godzina: '11:00' }
+    const wizyty = { '2026-11-09': { ...STAN_WIZYTY, przeniesiona } }
+    const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')], zlecenia: [seriaTestowa('z1', { wizyty })] })
+
+    const z = zlecenie(zmienOdWizyty(magazyn, 'z1', '2026-11-09', { cenaWizyty: 280 }), 'z1')
+
+    assert.deepEqual(z?.wizyty['2026-11-09'].przeniesiona, przeniesiona)
+  })
 
   it('w serii od 2026-11-02 cena 280 od 2026-11-16: 09.11 ma starą cenę, 16.11 i dalej — 280', () => {
     const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')], zlecenia: [seriaTestowa('z1')] })

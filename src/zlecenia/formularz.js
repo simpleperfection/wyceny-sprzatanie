@@ -3,17 +3,15 @@
 // idzie przez src/dane/zlecenia.js, ktory sprawdza klienta, wycene i ksztalt rekordu na swiezym stanie.
 
 import { klient as znajdzKlienta } from '../dane/klienci.js'
-import { jestDniem, jestKwota, TERMIN_ISO } from '../dane/ksztalt.js'
+import { jestKwota, TERMIN_ISO } from '../dane/ksztalt.js'
 import { wczytajStan } from '../dane/magazyn.js'
 import { czyAbonament, kwotaWyceny, wycena as znajdzWycene } from '../dane/wyceny.js'
 import { BladZlecenia, utworzZlecenie, zaplanujZWyceny } from '../dane/zlecenia.js'
-import { ROZLICZENIA } from '../dane/zlecenia-ksztalt.js'
 import { dzienTygodnia } from '../kalendarz/daty.js'
-import { CYKLE } from '../kalendarz/wystapienia.js'
 import { tempoDoWyceny } from '../silnik/tempo.js'
-import { czas, dzienKrotko, godzina, parsujLiczbe, SKROTY_DNI, tekstLiczby } from '../ui/format.js'
-import { sciezka } from '../ui/trasy.js'
+import { czas, parsujLiczbe, tekstLiczby } from '../ui/format.js'
 import { daneTempa } from './dane-tempa.js'
+import { BEZ_POWTARZANIA, czyMaDni, jestDataZlecenia, przelaczDzien } from './opcje.js'
 
 /**
  * @typedef {import('../dane/magazyn.js').Stan} Stan
@@ -21,13 +19,13 @@ import { daneTempa } from './dane-tempa.js'
  * @typedef {import('../dane/zlecenia.js').NoweZlecenie} NoweZlecenie
  * @typedef {import('../dane/zlecenia-ksztalt.js').Rozliczenie} Rozliczenie
  * @typedef {import('../dane/zlecenia-ksztalt.js').Zlecenie} Zlecenie
- * @typedef {import('../kalendarz/wystapienia.js').RodzajCyklu} RodzajCyklu
  * @typedef {import('../silnik/katalog.js').Katalog} Katalog
  * @typedef {import('../silnik/szybka.js').SzybkaWyceny} SzybkaWyceny
  * @typedef {import('../ui/router.js').DaneAplikacji} DaneAplikacji
+ * @typedef {import('./opcje.js').KodBleduPola} KodBleduPola
+ * @typedef {import('./opcje.js').Powtarzanie} Powtarzanie
  */
 /**
- * @typedef {RodzajCyklu | typeof BEZ_POWTARZANIA} Powtarzanie
  * @typedef {{ wartosc: string, etykieta: string }} OpcjaUslugi
  * @typedef {{ wycenaId: string | null, klientId: string | null, data: string | null }} ZrodloFormularza zapytanie adresu: `?wycena=`,
  *   `?klient=`, `?data=`; klient i data licza sie tylko bez wyceny
@@ -37,51 +35,14 @@ import { daneTempa } from './dane-tempa.js'
  *   minutyNormowe: number | null }} WartosciFormularza usluga: id z katalogu, INNA_USLUGA albo null (nie wybrano); cena: tekst pola
  *   wedlug rozliczenia; cenyWyceny: kwoty abonamentu za wizyte i za miesiac; czyDniReczne: dni nie ida za data; minutyNormowe: plan z migawki
  * @typedef {'klient' | 'usluga' | 'cena' | 'data' | 'dni'} PoleFormularza
- * @typedef {'brak_klienta' | 'brak_uslugi' | 'zla_cena' | 'brak_daty' | 'brak_dni'} KodBleduFormularza
  */
 
-/** Wartosc chipa „Nie” (zlecenie jednorazowe). */
-export const BEZ_POWTARZANIA = 'nie'
 /** Wartosc opcji „Inna usługa”: zlecenie bez uslugi z katalogu, z polem opisu. */
 export const INNA_USLUGA = 'inna'
-/** Najwczesniejsza data zlecenia: niepelny rok w polu daty (0026-11-03) wypadlby poza lata kalendarza. */
-export const NAJWCZESNIEJSZA_DATA = '2000-01-01'
-
-/** @type {Readonly<Record<RodzajCyklu, string>>} */
-const ETYKIETY_CYKLI = Object.freeze({ tydzien: 'Co tydzień', dwa_tygodnie: 'Co 2 tygodnie', miesiac: 'Co miesiąc' })
-/** @type {Readonly<Record<Rozliczenie, string>>} */
-const ETYKIETY_ROZLICZEN = Object.freeze({ za_wizyte: 'Za wizytę', miesiecznie: 'Raz w miesiącu' })
-/** @type {Readonly<Record<Rozliczenie, string>>} */
-const ETYKIETY_CENY = Object.freeze({ za_wizyte: 'Cena (zł)', miesiecznie: 'Kwota za miesiąc (zł)' })
-
-/** Chipy „Powtarzaj”. @type {readonly { wartosc: Powtarzanie, etykieta: string }[]} */
-export const OPCJE_POWTARZANIA = Object.freeze([{ wartosc: BEZ_POWTARZANIA, etykieta: 'Nie' },
-  ...CYKLE.map((c) => ({ wartosc: c, etykieta: ETYKIETY_CYKLI[c] }))])
-/** Chipy „Płatność”. */
-export const OPCJE_PLATNOSCI = Object.freeze(ROZLICZENIA.map((r) => ({ wartosc: r, etykieta: ETYKIETY_ROZLICZEN[r] })))
-/** Chipy „Dni”: dzien ISO 1–7 i skrot. */
-export const OPCJE_DNI = Object.freeze(SKROTY_DNI.map((etykieta, i) => ({ wartosc: i + 1, etykieta })))
 
 /** Dni wizyt abonamentu wedlug wariantu; `abonament_1` nie ma wpisu, bo idzie za dniem tygodnia daty startu. */
 const DNI_ABONAMENTU = new Map([['abonament_2', [1, 4]], ['abonament_3', [1, 3, 5]], ['abonament_5', [1, 2, 3, 4, 5]]])
 
-/** Odmowy zapisu (stan zmienil sie w innej karcie albo limit), a nie awarie: bez zglaszania bledu. */
-const TEKSTY_ODMOW = new Map([
-  ['brak_klienta', 'Tego klienta już nie ma. Wybierz innego.'],
-  ['brak_wyceny', 'Tej wyceny już nie ma, więc zlecenia nie zapisano.'],
-  ['zly_status', 'Ta wycena nie jest już przyjęta, więc zlecenia nie zapisano.'],
-  ['za_duzo', 'Masz już najwięcej zleceń, ile można zapisać.'],
-])
-
-/** @param {string} wycenaId @returns {string} adres formularza zlecenia z wyceny */
-export const adresZaplanowania = (wycenaId) => sciezka('noweZlecenie', {}, { wycena: wycenaId })
-/** @param {Rozliczenie} rozliczenie @returns {string} etykieta pola ceny */
-export const etykietaCeny = (rozliczenie) => ETYKIETY_CENY[rozliczenie]
-/** @param {Powtarzanie} cykl @returns {boolean} cykl z wyborem dni tygodnia */
-export const czyMaDni = (cykl) => cykl === 'tydzien' || cykl === 'dwa_tygodnie'
-
-/** @param {unknown} data @returns {data is string} */
-const jestDataZlecenia = (data) => jestDniem(data) && data >= NAJWCZESNIEJSZA_DATA
 /** @param {string} data @returns {number[]} dzien tygodnia daty; bez poprawnej daty pusta lista */
 const domyslneDni = (data) => (jestDataZlecenia(data) ? [dzienTygodnia(data)] : [])
 /** @param {number | null} kwota @returns {string} */
@@ -188,14 +149,11 @@ export const zData = (w, data) => ({ ...w, data, dni: w.czyDniReczne ? w.dni : d
  * Wlaczenie albo wylaczenie dnia tygodnia; dni rosnaco.
  * @param {WartosciFormularza} w @param {number} dzien 1–7 @returns {WartosciFormularza}
  */
-export function zDniem(w, dzien) {
-  const dni = w.dni.includes(dzien) ? w.dni.filter((d) => d !== dzien) : [...w.dni, dzien].sort((a, b) => a - b)
-  return { ...w, dni, czyDniReczne: true }
-}
+export const zDniem = (w, dzien) => ({ ...w, dni: przelaczDzien(w.dni, dzien), czyDniReczne: true })
 
 /**
  * Bledy formularza (R19: klient wymagany zawsze); bez bledow pusty obiekt.
- * @param {WartosciFormularza} w @returns {Partial<Record<PoleFormularza, KodBleduFormularza>>}
+ * @param {WartosciFormularza} w @returns {Partial<Record<Exclude<PoleFormularza, 'klient'>, KodBleduPola>> & { klient?: 'brak_klienta' }}
  */
 export function bledyFormularza(w) {
   const czyUsluga = w.usluga === INNA_USLUGA ? w.opis.trim() !== '' : w.usluga !== null
@@ -250,17 +208,4 @@ export function zapiszFormularz({ magazyn, domyslne }, id, w) {
   if (w.wycenaId === null) return utworzZlecenie(magazyn, dane, { id })
   const tempo = tempoPlanu(wczytajStan(magazyn), w.usluga, domyslne)
   return zaplanujZWyceny(magazyn, w.wycenaId, { ...dane, tempo }, { id })
-}
-
-/** @param {unknown} blad @returns {string | null} tekst odmowy zapisu; inny blad to awaria (null) */
-export const tekstOdmowy = (blad) => (blad instanceof BladZlecenia ? TEKSTY_ODMOW.get(blad.kod) ?? null : null)
-
-/**
- * Wiersz zlecenia pod wycena: pierwsza wizyta i powtarzanie.
- * @param {Pick<Zlecenie, 'start' | 'okresy'>} z @returns {string} „wt 3 lis, 10:00 · Co tydzień”
- */
-export function opisZlecenia({ start, okresy }) {
-  const { cykl, godzina: czasWizyty } = okresy[0]
-  const kiedy = czasWizyty === null ? dzienKrotko(start) : `${dzienKrotko(start)}, ${godzina(czasWizyty)}`
-  return cykl === null ? kiedy : `${kiedy} · ${ETYKIETY_CYKLI[cykl.co]}`
 }
