@@ -1,5 +1,5 @@
 /*
- * Szybka wycena i pytania do klienta (src/widoki/szybka.js, szybka-wynik.js, pytania.js; makieta szybka-wycena).
+ * Szybka wycena i pytania do klienta (src/widoki/szybka.js, szybka-pola.js, szybka-wynik.js, pytania.js; makieta szybka-wycena).
  * Dolaczony w index.html po komponenty.css; inne jednostki go nie zmieniaja. Tresc ma --tekst-podstawowy, a --tekst-maly
  * tylko etykiety nad wartoscia. Wyjasnienia sa pod „Więcej”, na wierzchu zostaje kwota i „Zostaje”.
  */

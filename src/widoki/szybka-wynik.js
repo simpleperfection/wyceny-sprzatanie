@@ -1,7 +1,8 @@
 // Karta wyniku szybkiej wyceny (makieta szybka-wycena): „Widełki dla klienta” z duza kwota i „Zostaje…” na wierzchu, bo pomaga
 // w decyzji, a mediana w wojewodztwie, rynek i tekst dla klienta pod „Więcej”; pod nimi „Dokładna wycena” (glowna akcja) i „Kopiuj
 // tekst”. Usluga z ogledzinami ma „Orientacyjnie od” i zalecenie ogledzin, pusty zakres i blad — tekst zamiast kwoty.
-// Kwoty liczy src/kreator/szybka.js (silnik), karta tylko rysuje.
+// Kwoty liczy src/kreator/szybka.js (silnik), karta tylko je rysuje. Modul prowadzi tez akcje tej karty: stan akcji w toku
+// (ustawOczekiwanie) i „Kopiuj tekst” (kopiujTekstKlienta: zapis wyceny, schowek, oznaczenie jako wyslana, zaznaczenie cytatu).
 
 import { miejscownikWojewodztwa, zl } from '../ui/format.js'
 import { h } from '../ui/h.js'

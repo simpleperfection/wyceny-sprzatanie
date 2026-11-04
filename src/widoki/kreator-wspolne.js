@@ -51,7 +51,10 @@ const NIEAKTUALNA = 'Wycena zmieniła się w innej karcie przeglądarki. Widzisz
 const KOD_NIEAKTUALNEJ = 'nieaktualna'
 const BLAD_ZAPISU_WYCENY = 'Nie udało się zapisać wyceny. Spróbuj jeszcze raz.'
 const BLAD_LICZENIA = 'Nie udało się policzyć ceny dla tych danych. Sprawdź wybraną usługę i wpisany zakres.'
-/** Powrot do modulu Wycena: ekran nadrzedny kreatora, szybkiej wyceny, pytan i podsumowania. */
+/**
+ * Powrot do modulu Wycena: ekran nadrzedny kreatora, szybkiej wyceny, pytan, podsumowania i oferty bez wyceny. Oferta z wycena bierze
+ * stad tylko tekst, a adres prowadzi do tej wyceny.
+ */
 export const POWROT_DO_WYCEN = Object.freeze({ wstecz: sciezka('wyceny'), wsteczTekst: 'Wycena' })
 
 /** @param {KrokKreatora} krok */

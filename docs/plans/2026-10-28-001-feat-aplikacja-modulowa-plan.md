@@ -1237,7 +1237,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 **Podejście:**
 - Logika kreatora i silnik bez zmian (R21); zmieniają się wygląd i ilość tekstu: pasek postępu w nowym wyglądzie, jedna główna akcja „Dalej” na krok, opisy pozycji, dodatków i podpowiedzi pod `wiecej` / `podpowiedz` (IU-8), wiersz listy najwyżej w dwóch liniach, liczniki i chipy ≥ 48 px. Kreator wraca do ekranu Wycena (powrót „Wycena” na pierwszym kroku).
 - Sekcje kreatora (rama kroku, wybór usługi, pomieszczenia, pozycje i dodatki) przechodzą z `komponenty.css` do `src/style/kreator.css`.
-- Korekta po implementacji (faza 6, 2026-11-04): reguły `.postep` zostały w `komponenty.css`, bo pasek jest też w `kreator-startowy.js` i `podsumowanie.js`; wygląd kreatora nadpisuje `.naglowek .postep` w `kreator.css`. Tytuł kroku to nazwa kroku z makiety („Zakres”), a powrót pokazuje poprzedni krok, z pierwszego kroku „Wycena”.
+- Korekta po implementacji (faza 6, 2026-11-04): reguły `.postep` zostały w `komponenty.css`, bo poza `naglowekKroku` w `kreator-wspolne.js` (używa go też krok Cena w `podsumowanie.js`) pasek rysuje `kreator-startowy.js`; wygląd kreatora nadpisuje `.naglowek .postep` w `kreator.css`. Tytuł kroku to nazwa kroku z makiety („Zakres”), a powrót pokazuje poprzedni krok, z pierwszego kroku „Wycena”.
 
 **Teksty (verbatim):**
 - Powrót z pierwszego kroku: „Wycena”
@@ -1277,7 +1277,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 **Podejście:**
 - Działanie szybkiej wyceny i pytań bez zmian (R21: widełki, tryby „ok” i „od”, skutki odpowiedzi, kopiowanie tekstu); nowy wygląd: wynik z dużą kwotą (`--tekst-kwota`), jedna główna akcja, wyjaśnienia (skąd widełki, zastrzeżenie o stanie lokalu) pod „Więcej” albo „?”; powrót „Wycena”.
 - Sekcje „Szybka wycena” i „Pytania do klienta” przechodzą z `komponenty.css` do `src/style/szybka.css`; `szybka.js` zostaje poniżej 300 linii.
-- Korekta po implementacji (faza 6, 2026-11-04): warunek „`szybka.js` poniżej 300 linii” NIE jest spełniony, plik ma 395 linii (przed fazą 391, tabela wyżej była nieaktualna). Zejście pod próg wymaga nowego pliku `src/widoki/szybka-pola.js` poza polem Pliki (`otworzWyborUslugi`, `polaFormularza`, `licznikiPozycji`, `dodatkiAgd`) i przeniesienia `ustawOczekiwanie` do `szybka-wynik.js`. Blok `.wybor-pola` został w `komponenty.css`, bo opiera się na nim wybór klienta i `klienci.css`. Ekran pytań z zapisaną wyceną ma powrót „Szybka wycena” albo „Usługa” (nazwa celu), a „Wycena” tylko bez zapisanej wyceny.
+- Korekta po implementacji (faza 6, 2026-11-04): warunek „`szybka.js` poniżej 300 linii” jest spełniony po poprawkach z review, plik ma 293 linie (przed fazą 391, tabela wyżej była nieaktualna; po samej fazie 395). Pod próg sprowadził go nowy plik `src/widoki/szybka-pola.js` poza polem Pliki (`otworzWyborUslugi`, `polaFormularza`, `licznikiPozycji`, `dodatkiAgd`) i przeniesienie `ustawOczekiwanie` do `szybka-wynik.js`. Blok `.wybor-pola` został w `komponenty.css`, bo opiera się na nim wybór klienta i `klienci.css`. Ekran pytań z zapisaną wyceną ma powrót „Szybka wycena” albo „Usługa” (nazwa celu), a „Wycena” tylko bez zapisanej wyceny.
 
 **Teksty (verbatim):**
 - Powrót: „Wycena”
@@ -1320,7 +1320,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 - Podsumowanie: cena dla klienta duża i pogrubiona w zieleni (`--tekst-kwota`, `--marka-zielen`), pasek widełek rynku zostaje, opis mediany rynku i rozbicie kosztów pod „?” albo „Więcej” (przykład z R9); jedna główna akcja zależna od statusu (zapis, wysłanie oferty, „Zaplanuj” z IU-16); powrót „Wycena”.
 - Edycja oferty: sekcje zakresu, warunków i klienta w wierszach ze strzałką albo kartach z jedną akcją; teksty pomocnicze pod „Więcej”; działanie linku i PDF bez zmian (R21).
 - Sekcje „Podsumowanie wyceny”, „Pasek widełek rynku”, „Plan a fakt” i „Edycja oferty” przechodzą z `komponenty.css` do `src/style/podsumowanie.css`.
-- Korekta po implementacji (faza 6, 2026-11-04): `edytor-listy.js` bez zmian, układ jest w `podsumowanie.css`. Rozmiary: `podsumowanie.js` 316, `podsumowanie-karty.js` 235, `oferta-edycja.js` 364, `oferta-edycja-sekcje.js` 339 linii. Krok Cena w kreatorze ma powrót „Chemia”, „Wycena” tylko zapisana wycena. Przy wycenie ze zleceniem „Zaplanuj kolejne” jest wierszem, więc ekran nie ma głównego przycisku. Od makiety różni się: pigułka statusu nad kartą, arkusz „?” bez „Rozumiem”, „?” przy wierszu „Mediana rynku”, brak wierszy „Zakres” i „Chemia”.
+- Korekta po implementacji (faza 6, 2026-11-04): `edytor-listy.js` bez zmian, układ jest w `podsumowanie.css`. Rozmiary: `podsumowanie.js` 292, `podsumowanie-karty.js` 233, `oferta-edycja.js` 362, `oferta-edycja-sekcje.js` 339 linii. Krok Cena w kreatorze ma powrót „Chemia”, „Wycena” tylko zapisana wycena. Przy wycenie ze zleceniem „Zaplanuj kolejne” jest wierszem, więc ekran nie ma głównego przycisku. Od makiety różni się: pigułka statusu nad kartą, arkusz „?” bez „Rozumiem”, „?” przy wierszu „Mediana rynku”, brak wierszy „Zakres” i „Chemia”.
 
 **Teksty (verbatim):**
 - Powrót: „Wycena”
@@ -1361,7 +1361,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 - Decyzja właściciela (2026-10-28): oferta neutralna — białe tło, ciemny tekst, kwota duża i pogrubiona w kolorze tekstu, bez `--marka-zielen*` (oferta pokazuje firmę, nie aplikację); tekst ≥ 17 px, kontrast AA; `oferta.css` używa tokenów neutralnych (`--tekst-*`, `--tlo-*`, `--linia-*`) albo własnych zmiennych lokalnych; przyciski strony oferty (druk) ≥ 48 px.
 - `druk.css` zostaje czarno-biały (A4), z większym tekstem, jeśli makieta tak pokazuje; `oferta.html` — `theme-color` biały.
 - Treść oferty, kodek linku i strona bez localStorage i service workera bez zmian (R21).
-- Korekta po implementacji (faza 6, 2026-11-04): `e2e/stany/oferta-po-terminie.txt` nie dekoduje się (`{ ok: false, powod: 'uszkodzony' }`), bo JSON seeda nie ma pól `trybCeny` i `abonament`, których wymaga `jestOferta`. Scenariusz `oferta-neutralna` wymaga seeda wygenerowanego od nowa przez `zakodujOferte`. Kontakt firmy i etykiety sekcji mają 17 px zamiast 15 px z makiety, a przyciski nie mają ikon, bo `oferta-klient.js` nie należał do jednostki.
+- Korekta po implementacji (faza 6, 2026-11-04): `e2e/stany/oferta-po-terminie.txt` nie dekodował się (`{ ok: false, powod: 'uszkodzony' }`), bo JSON seeda nie miał pól `trybCeny` i `abonament`, których wymaga `jestOferta`. Po poprawkach z review seed jest wygenerowany od nowa przez `zakodujOferte`: `odkodujOferte` daje `ok: true` z oboma polami, więc scenariusz `oferta-neutralna` ma z czego startować. Kontakt firmy i etykiety sekcji mają 17 px zamiast 15 px z makiety, a przyciski nie mają ikon, bo `oferta-klient.js` nie należał do jednostki.
 
 **Wzorce do naśladowania:**
 - `docs/operator/aplikacja-modulowa-makiety.html` — ekran oferty (jeśli jest), inaczej tokeny neutralne makiety

@@ -33,7 +33,6 @@ import { wyborKlienta } from './wybor-klienta.js'
 /** @typedef {{ w: Wycena, stan: Stan, oferta: Oferta }} BiezacaOferta */
 
 const CZAS_KOMUNIKATU_MS = 3000
-/** Tekst powrotu: nadrzedna jest wycena tej oferty, a gdy jej nie ma — modul Wycena. */
 /** Kontrolki kart oferty wylaczane w wycenie ze zleceniem (zablokujEdycje). */
 const KONTROLKI_EDYCJI = 'input, textarea, select, button'
 const BRAK_DANYCH_FIRMY = 'Uzupełnij nazwę firmy i telefon w ustawieniach, zanim wyślesz ofertę.'
