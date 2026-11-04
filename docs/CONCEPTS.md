@@ -14,7 +14,7 @@ Zapisany przy wycenie wynik silnika (linie, minuty normowe, wizyty w miesiącu, 
 Flaga oferty ustawiana, gdy po wysłaniu zmieniło się wejście albo cena wyceny: klient ma wcześniejszą wersję.
 
 ## Status wyceny
-`szkic` → `do_wyslania` → `wyslana` → `przyjeta` → `wykonana` (albo `odrzucona`). Abonament po wpisaniu wykonania zostaje `przyjeta`, a zlecenie jednorazowe przechodzi w `wykonana`.
+`szkic` → `do_wyslania` → `wyslana` → `przyjeta` (albo `odrzucona`). Statusu `wykonana` już nie ma: wykonanie żyje w wizytach zlecenia, a wycena, z której powstało zlecenie, zostaje `przyjeta` i jest zamknięta (tylko do odczytu).
 
 ## Szybka wycena
 Wycena przez telefon z kilku pytań, która daje widełki (`widelki`), jedną kwotę (`ok`) albo dolną granicę przy oględzinach (`od`); można ją zamienić na dokładną wycenę. → [wymagania](brainstorms/2026-10-23-poczatkujace-firmy-requirements.md)
