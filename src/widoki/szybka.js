@@ -1,7 +1,7 @@
 // Szybka wycena przez telefon (`#/szybka`, opcjonalnie `?wycena=<id>`, makieta szybka-wycena): pole „Usługa” z arkuszem, pola
 // wg uslugi (mieszkanie: rodzaj, metraz, lazienki, kuchnia, stan, AGD; biuro: metraz i stan; okna, tapicerka, dywany: liczniki
-// pozycji; ogledziny: metraz), opcjonalny klient z listy (wyborKlienta; `?klient=<id>` z karty klienta), wiersz pytan do klienta
-// i karta wyniku liczona przy kazdej zmianie. Bez „Zapisz” (makieta):
+// pozycji; ogledziny: metraz), opcjonalny klient z listy (wyborKlienta; `?klient=<id>` z karty klienta), karta wyniku liczona
+// przy kazdej zmianie i wiersz pytan do klienta. Bez „Zapisz” (makieta):
 // zapisuje „Kopiuj tekst” (status wyslana) i „Dokładna wycena” (zamiana w dokladna i krok zakresu kreatora), a zapisany rekord
 // zapisuje sie przy kazdej zmianie. Logika w src/kreator/szybka.js, widok tylko rysuje.
 
@@ -51,10 +51,11 @@ const JUZ_DOKLADNA = 'Ta wycena jest już dokładną wyceną.'
 const NIEAKTUALNA = 'Wycena zmieniła się w innej karcie przeglądarki. Widzisz teraz aktualne dane.'
 const BRAK_WYNIKU = 'Uzupełnij usługę i zakres, żeby zapisać wycenę.'
 const BLAD_ILOSCI = bladZakresu({ min: 0, max: MAKS_ILOSCI })
+const NAGLOWEK = Object.freeze({ tytul: 'Szybka wycena', podtytul: 'Rozmowa z klientem', wstecz: sciezka('wyceny'), wsteczTekst: 'Wycena' })
 
 /** @param {HTMLElement} kontener @param {string} tekst @param {{ tekst: string, adres: string }} akcja */
 function pokazKomunikat(kontener, tekst, akcja) {
-  kontener.replaceChildren(naglowek({ tytul: 'Szybka wycena', podtytul: 'Rozmowa z klientem', wstecz: sciezka('start') }),
+  kontener.replaceChildren(naglowek(NAGLOWEK),
     h('div', { class: 'tresc' }, baner({ rodzaj: 'info', tekst }), przycisk({ tekst: akcja.tekst, rodzaj: 'drugi', adres: akcja.adres })))
 }
 
@@ -162,17 +163,19 @@ export const widokSzybkiejWyceny = {
     let klientId = zapisana ? zapisana.klientId : znajdzKlienta(stanMagazynu, zapytanie.klient ?? '')?.id ?? null
     let czyLazienkiReczne = formularz.lazienki !== undefined && formularz.lazienki !== domyslneLazienki(formularz.m2, katalog.uklady)
     let czyDodatkiOtwarte = false
+    let czyWiecejOtwarte = false
     let czySkopiowano = false
     let czyWToku = false
     let czyAktywny = true
     /** @type {StanWyniku} */
     let stanWyniku = wynikFormularza(kontekst, formularz)
-    /** @type {HTMLElement | null} */
-    let cytat = null
+    /** @type {import('./szybka-wynik.js').TekstKlienta} */
+    let tekstKlienta = { cytat: null, zapasowy: null }
     const pola = h('div', { class: 'szybka__pola' })
     const miejsceKlienta = h('div', { class: 'szybka__klient' })
     const miejsceLazienek = h('div', { class: 'szybka__lazienki' })
     const miejsceWyniku = h('div', { class: 'szybka__wynik' })
+    const miejscePytan = h('div', { class: 'szybka__pytania' })
     const komunikat = h('div', { class: 'kreator__komunikat', 'aria-live': 'polite' })
 
     /** @param {string} tekst */
@@ -187,10 +190,11 @@ export const widokSzybkiejWyceny = {
 
     /** @param {string} [fokus] */
     function rysujWynik(fokus) {
-      const karta = kartaWyniku({ stan: stanWyniku, czySkopiowano, naKopiuj: () => void handleKopiuj().catch(reportError),
-        naDokladna: () => void handleDokladna().catch(reportError) })
-      cytat = karta.cytat
-      miejsceWyniku.replaceChildren(karta.element)
+      const { element: karta, ...tekst } = kartaWyniku({ stan: stanWyniku, czySkopiowano,
+        wiecej: { czyOtwarte: czyWiecejOtwarte, naPrzelacz: (czy) => { czyWiecejOtwarte = czy } },
+        naKopiuj: () => void handleKopiuj().catch(reportError), naDokladna: () => void handleDokladna().catch(reportError) })
+      tekstKlienta = tekst
+      miejsceWyniku.replaceChildren(karta)
       if (stanWyniku.stan === 'blad' && stanWyniku.kod === 'liczenie') reportError(stanWyniku.blad)
       const element = fokus ? miejsceWyniku.querySelector(fokus) : null
       if (element instanceof HTMLElement) element.focus()
@@ -329,13 +333,14 @@ export const widokSzybkiejWyceny = {
       const { tekst } = stanWyniku.wynik
       try {
         const w = zapisz()
-        const czyWSchowku = cytat ? await kopiujDoSchowka(tekst, cytat) : false
+        const czyWSchowku = tekstKlienta.zapasowy ? await kopiujDoSchowka(tekst, tekstKlienta.zapasowy) : false
         if (czyWSchowku && w.id === id) zmieniona = oznaczWyslana(kontekst, w.id).zmieniona
         if (!czyAktywny) return
         czySkopiowano = czyWSchowku
+        czyWiecejOtwarte ||= !czyWSchowku
         komunikat.replaceChildren(czyWSchowku ? h('p', { class: 'wizualnie-ukryte' }, 'Skopiowano') : baner({ rodzaj: 'info', tekst: NIE_SKOPIOWANO }))
         rysujWynik('[data-akcja="kopiuj"]')
-        if (!czyWSchowku && cytat) getSelection()?.selectAllChildren(cytat)
+        if (!czyWSchowku && tekstKlienta.cytat) getSelection()?.selectAllChildren(tekstKlienta.cytat)
       } catch (blad) {
         if (czyAktywny) obsluzBlad(blad)
       } finally {
@@ -375,14 +380,13 @@ export const widokSzybkiejWyceny = {
       rysujLazienki()
       pola.replaceChildren(poleUslugi,
         ...polaFormularza({ formularz, katalog, zmien, naMetraz: handleMetraz, lazienki: miejsceLazienek,
-          dodatki: { czyOtwarte: czyDodatkiOtwarte, naPrzelacz: (czy) => { czyDodatkiOtwarte = czy } } }),
-        wierszPytan({ katalog, uslugaId: formularz.uslugaId, odpowiedzi: formularz.odpowiedzi, naKlik: handlePytania }))
+          dodatki: { czyOtwarte: czyDodatkiOtwarte, naPrzelacz: (czy) => { czyDodatkiOtwarte = czy } } }))
+      miejscePytan.replaceChildren(wierszPytan({ katalog, uslugaId: formularz.uslugaId, odpowiedzi: formularz.odpowiedzi, naKlik: handlePytania }))
       const element = fokus ? pola.querySelector(fokus) : null
       if (element instanceof HTMLElement) element.focus()
     }
 
-    kontener.replaceChildren(naglowek({ tytul: 'Szybka wycena', podtytul: 'Rozmowa z klientem', wstecz: sciezka('start') }),
-      h('div', { class: 'tresc szybka' }, miejsceKlienta, pola, miejsceWyniku, komunikat))
+    kontener.replaceChildren(naglowek(NAGLOWEK), h('div', { class: 'tresc szybka' }, miejsceKlienta, pola, miejsceWyniku, komunikat, miejscePytan))
     rysujKlienta()
     rysujPola()
     rysujWynik()

@@ -1,6 +1,6 @@
 // Pierwszy krok kreatora dokladnej wyceny (`#/kreator/usluga`, opcjonalnie `?wycena=<id>` albo `?klient=<id>` z karty klienta,
-// makieta kreator-wybor-uslugi): wojewodztwo (podpowiedziane z ustawien) ze stawka, uslugi w dwoch grupach wg trybu z podpowiedzia
-// ceny z silnika, warianty biur. „Dalej” tworzy szkic (z klientem z adresu) albo zapisuje zmiane wyboru i przechodzi do kroku
+// makieta kreator-wybor-uslugi): wojewodztwo (podpowiedziane z ustawien) ze stawka, uslugi w dwoch grupach wg trybu, a pod wybrana
+// podpowiedz ceny z silnika i warianty biur. „Dalej” tworzy szkic (z klientem z adresu) albo zapisuje zmiane wyboru i przechodzi do kroku
 // zakresu. Po utworzeniu szkicu pod uslugami jest wiersz „Pytania do klienta · a z n” do ekranu pytan.
 
 import { wczytajStan } from '../dane/magazyn.js'
@@ -12,7 +12,7 @@ import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
 import { kwotaJednostki, m2, nazwaJednostki, tekstLiczby, zl } from '../ui/format.js'
 import { h } from '../ui/h.js'
 import { chipy, przycisk } from '../ui/komponenty/formularz.js'
-import { arkusz, baner, dialogPotwierdzenia, karta, wiersz } from '../ui/komponenty/uklad.js'
+import { arkusz, baner, dialogPotwierdzenia, karta, wiecej, wiersz } from '../ui/komponenty/uklad.js'
 import { sciezka } from '../ui/trasy.js'
 import { adresKroku, ramaKroku, wycenaKroku, zglosBladKreatora } from './kreator-wspolne.js'
 import { wierszPytan } from './pytania.js'
@@ -119,27 +119,28 @@ export const widokKreatoraUslugi = {
       zmienWyborEkranu({ uslugaId: usluga.id, wariantId: usluga.warianty?.[0]?.id ?? null }, FOKUS_USLUGI)
     }
 
-    /** @param {Usluga} usluga @returns {Node[]} opcja uslugi, a pod wybrana usluga z wariantami — chipy wariantow */
+    /** @param {Usluga} usluga @returns {Node[]} opcja uslugi (najwyzej dwie linie nazwy), a pod wybrana podpowiedz ceny i chipy wariantow */
     function opcjaUslugi(usluga) {
       const czyWybrana = usluga.id === wybor.uslugaId
-      const opis = podpowiedz(kontekst, usluga, wybor.wojewodztwoId)
       const opcja = h('label', { class: 'opcja-uslugi' },
         h('input', { type: 'radio', name: NAZWA_POLA_USLUGI, value: usluga.id, class: 'opcja-uslugi__wejscie', checked: czyWybrana,
           on: { change: () => handleWyborUslugi(usluga) } }),
-        h('span', { class: 'opcja-uslugi__tresc' },
-          h('span', { class: 'opcja-uslugi__tytul' }, usluga.nazwa),
-          opis ? h('span', { class: 'opcja-uslugi__opis liczba' }, opis) : null))
+        h('span', { class: 'opcja-uslugi__tytul' }, usluga.nazwa))
+      if (!czyWybrana) return [opcja]
+      const opis = podpowiedz(kontekst, usluga, wybor.wojewodztwoId)
       const warianty = usluga.warianty ?? []
-      if (!czyWybrana || warianty.length === 0) return [opcja]
-      return [opcja, h('div', { class: 'opcja-uslugi__warianty' }, chipy({
-        id: 'kreator-wariant', etykieta: 'Wariant', opcje: warianty.map((w) => ({ wartosc: w.id, etykieta: w.nazwa })), wybrana: wybor.wariantId,
-        naZmiane: (wariantId) => zmienWyborEkranu({ wariantId }, 'input[name="kreator-wariant"]:checked'),
-      }))]
+      if (!opis && warianty.length === 0) return [opcja]
+      return [opcja, h('div', { class: 'opcja-uslugi__szczegoly' },
+        opis ? h('p', { class: 'opcja-uslugi__opis liczba' }, opis) : null,
+        warianty.length === 0 ? null : chipy({
+          id: 'kreator-wariant', etykieta: 'Wariant', opcje: warianty.map((w) => ({ wartosc: w.id, etykieta: w.nazwa })), wybrana: wybor.wariantId,
+          naZmiane: (wariantId) => zmienWyborEkranu({ wariantId }, 'input[name="kreator-wariant"]:checked'),
+        }))]
     }
 
     function trescKroku() {
       const wojewodztwo = katalog.wojewodztwo(wybor.wojewodztwoId)
-      const wierszWojewodztwa = wiersz({ tytul: 'Województwo', wartosc: `${wojewodztwo.nazwa} · ${tekstLiczby(wojewodztwo.stawka_h)} zł/h`,
+      const wierszWojewodztwa = wiersz({ tytul: 'Województwo', opis: `${wojewodztwo.nazwa} · ${tekstLiczby(wojewodztwo.stawka_h)} zł/h`,
         naKlik: () => otworzWyborWojewodztwa(kontekst, wybor.wojewodztwoId, (wojewodztwoId) => zmienWyborEkranu({ wojewodztwoId }, FOKUS_WOJEWODZTWA)) })
       wierszWojewodztwa.dataset.pole = 'wojewodztwo'
       const wybieralne = katalog.uslugi.filter((u) => !u.tylko_dodatek)
@@ -153,7 +154,7 @@ export const widokKreatoraUslugi = {
         ...grupy,
         zapisana ? wierszPytan({ katalog, uslugaId: zapisana.wejscie.uslugaId, odpowiedzi: zapisana.odpowiedzi,
           adres: sciezka('pytania', { id: zapisana.id }) }) : null,
-        katalog.uslugi.some((u) => u.tylko_dodatek) ? h('p', { class: 'kreator-usluga__notka' }, 'AGD, szafki i balkon dodasz w kroku „Dodatki”.') : null,
+        katalog.uslugi.some((u) => u.tylko_dodatek) ? wiecej({}, 'AGD, szafki i balkon dodasz w kroku „Dodatki”.') : null,
         komunikat,
       ].filter((element) => element !== null)
     }

@@ -1,6 +1,6 @@
 // Pytania do klienta (`#/wycena/:id/pytania`, makieta pytania-do-klienta): naglowek z usluga i licznikiem odpowiedzi, karta
 // z pytaniami uslugi (odpowiedz z pigulka skutku albo „+ Dodaj odpowiedź” z arkuszem pola wg typu i notatka), baner prosby
-// o zdjecia z „Kopiuj prośbę” i „Gotowe” wracajace do szybkiej wyceny albo kreatora. Do tego wiersz „Pytania do klienta · a z n”
+// o zdjecia z „Kopiuj prośbę” i „Gotowe” wracajace (jak powrot w naglowku) do szybkiej wyceny albo kreatora. Do tego wiersz „Pytania do klienta · a z n”
 // dla ekranu szybkiej wyceny i kreatora. Zapis i skutki odpowiedzi licza src/kreator/pytania.js; widok tylko rysuje.
 
 import { wczytajStan } from '../dane/magazyn.js'
@@ -29,6 +29,7 @@ import { adresKroku, zglosBladKreatora } from './kreator-wspolne.js'
 /** @typedef {(id: string, odpowiedz: Odpowiedz | null) => string | null} ZapisOdpowiedzi tekst bledu albo null po zapisie */
 
 const TYTUL = 'Pytania do klienta'
+const POWROT_DO_WYCEN = Object.freeze({ wstecz: sciezka('wyceny'), wsteczTekst: 'Wycena' })
 const WCZYTYWANIE = 'Wczytywanie pytań…'
 const BLAD_POLACZENIA = 'Nie udało się wczytać pytań do klienta. Sprawdź połączenie z internetem i spróbuj jeszcze raz.'
 const BLAD_DANYCH = 'Lista pytań do klienta jest niepełna. Odśwież stronę, a jeśli to nie pomoże, zajrzyj tu później.'
@@ -58,8 +59,10 @@ export function tekstBleduPytan(blad) {
   return BLAD_DANYCH
 }
 
-/** @param {Pick<Wycena, 'id' | 'rodzaj'>} w @returns {string} ekran, z ktorego otwiera sie pytania: szybka wycena albo kreator */
-const adresPowrotu = (w) => (w.rodzaj === 'szybka' ? sciezka('szybka', {}, { wycena: w.id }) : adresKroku('usluga', w.id))
+/** @param {Pick<Wycena, 'id' | 'rodzaj'>} w @returns {{ wstecz: string, wsteczTekst: string }} ekran, z ktorego otwiera sie pytania, i jego nazwa */
+const powrotPytan = (w) => (w.rodzaj === 'szybka'
+  ? { wstecz: sciezka('szybka', {}, { wycena: w.id }), wsteczTekst: 'Szybka wycena' }
+  : { wstecz: adresKroku('usluga', w.id), wsteczTekst: 'Usługa' })
 
 /**
  * Wiersz „Pytania do klienta · {a} z {n}” z ikona i strzalka: link (adres) albo przycisk (naKlik). Licznik pojawia sie po
@@ -177,7 +180,7 @@ function elementPytania(wpis, i, { czyEdycja, naOtworz }) {
   }, tresc)
   const odpowiedz = opis === null
     ? czyEdycja ? akcja('+ Dodaj odpowiedź', 'przycisk przycisk--tekstowy pytanie__dodaj') : h('p', { class: 'pytanie__brak' }, '–')
-    : czyEdycja ? akcja([h('span', { class: 'wizualnie-ukryte' }, 'Zmień odpowiedź: '), opis], 'pytanie__odpowiedz')
+    : czyEdycja ? akcja([h('span', { class: 'wizualnie-ukryte' }, 'Zmień odpowiedź: '), opis, ikona('chevron-right', 'pytanie__strzalka')], 'pytanie__odpowiedz')
       : h('p', { class: 'pytanie__odpowiedz' }, opis)
   return h('li', { class: 'pytanie' },
     h('p', { class: 'pytanie__tresc', id: idTresci }, wpis.pytanie.tresc),
@@ -193,8 +196,8 @@ function pokazProsbe(element) {
 
 /** @param {HTMLElement} kontener @param {string} tekst */
 function pokazBrakWyceny(kontener, tekst) {
-  kontener.replaceChildren(naglowek({ tytul: TYTUL, wstecz: sciezka('start') }),
-    h('div', { class: 'tresc' }, baner({ rodzaj: 'info', tekst }), przycisk({ tekst: 'Wróć na start', rodzaj: 'drugi', adres: sciezka('start') })))
+  kontener.replaceChildren(naglowek({ tytul: TYTUL, ...POWROT_DO_WYCEN }),
+    h('div', { class: 'tresc' }, baner({ rodzaj: 'info', tekst }), przycisk({ tekst: 'Wróć do wycen', rodzaj: 'drugi', adres: POWROT_DO_WYCEN.wstecz })))
 }
 
 /**
@@ -215,12 +218,12 @@ export const widokPytan = {
     if (!poczatkowa) return pokazBrakWyceny(kontener, 'Nie ma tej wyceny. Mogła zostać usunięta.')
     let wycena = poczatkowa
     let isAktualny = true
-    const powrot = adresPowrotu(wycena)
+    const powrot = powrotPytan(wycena)
     const nazwaUslugi = katalog.usluga(wycena.wejscie.uslugaId).nazwa
-    let gora = naglowek({ tytul: TYTUL, podtytul: nazwaUslugi, wstecz: powrot })
+    let gora = naglowek({ tytul: TYTUL, podtytul: nazwaUslugi, ...powrot })
     const tresc = h('div', { class: 'tresc pytania' })
     const komunikat = h('div', { class: 'kreator__komunikat', 'aria-live': 'polite' })
-    kontener.replaceChildren(gora, tresc, h('div', { class: 'pytania__stopka' }, przycisk({ tekst: 'Gotowe', adres: powrot })))
+    kontener.replaceChildren(gora, tresc, h('div', { class: 'pytania__stopka' }, przycisk({ tekst: 'Gotowe', adres: powrot.wstecz })))
 
     /** @type {string | null} komunikat po zamknieciu arkusza (odpowiedzi zmienione w innej karcie) */
     let informacja = null
@@ -264,7 +267,7 @@ export const widokPytan = {
     function rysuj(pytania, fokus) {
       const ekran = pytaniaWyceny(wycena, pytania, kontekst)
       for (const blad of ekran.bledne) reportError(blad)
-      const nowa = naglowek({ tytul: TYTUL, podtytul: `${nazwaUslugi} · ${ekran.odpowiedziane} z ${ekran.liczba}`, wstecz: powrot })
+      const nowa = naglowek({ tytul: TYTUL, podtytul: `${nazwaUslugi} · ${ekran.odpowiedziane} z ${ekran.liczba}`, ...powrot })
       gora.replaceWith(nowa)
       gora = nowa
       const opcje = { czyEdycja: !czyWycenaZamknieta(wczytajStan(magazyn), wycena.id),

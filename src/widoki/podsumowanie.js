@@ -1,8 +1,9 @@
 // Podsumowanie wyceny (makieta podsumowanie-wyceny), dwa tryby: krok `cena` kreatora (`#/kreator/cena?wycena=<id>`) z paskiem
 // postepu i „Zapisz” (arkusz z wyborem klienta → zapiszWycene: status `do_wyslania`, numer, przejscie do `#/wycena/<id>`) oraz
-// zapisana wycena (`#/wycena/<id>`) z akcjami wg statusu (Zaplanuj, Przygotuj ofertę, Edytuj, Klient przyjął, Klient zrezygnował, Usuń wycenę)
-// i lista „Zlecenia z tej wyceny”. Oba maja te same karty (src/widoki/podsumowanie-karty.js), reczna cene i baner „Przelicz”; wycena ze
-// zleceniem jest tylko do odczytu. Liczy src/kreator/podsumowanie.js, zapisuje src/dane/wyceny.js; widok tylko rysuje.
+// zapisana wycena (`#/wycena/<id>`) z jedna glowna akcja wg stanu (Zaplanuj, Przygotuj ofertę albo Klient przyjął), pozostalymi
+// akcjami w wierszach ze strzalka, lista „Zlecenia z tej wyceny” i „Usuń wycenę” na koncu. Oba maja te same karty
+// (src/widoki/podsumowanie-karty.js), reczna cene i baner „Przelicz”; wycena ze zleceniem jest tylko do odczytu. Liczy
+// src/kreator/podsumowanie.js, zapisuje src/dane/wyceny.js; widok tylko rysuje.
 
 import { klient as znajdzKlienta } from '../dane/klienci.js'
 import { wczytajStan } from '../dane/magazyn.js'
@@ -20,27 +21,38 @@ import { adresZaplanowania } from '../zlecenia/kalendarz-dane.js'
 import { historiaPlanuIFaktu } from '../zlecenia/plan-fakt.js'
 import { opisZlecenia } from '../zlecenia/teksty-wizyty.js'
 import { adresKroku, wycenaKroku, zglosBladKreatora } from './kreator-wspolne.js'
-import { banery, kartaCeny, kartaKosztow, kartaRynku, kartaZostaje, notkaPropozycji, otworzEdycjeCeny } from './podsumowanie-karty.js'
+import { banery, kartaCeny, kartaZostaje, otworzEdycjeCeny } from './podsumowanie-karty.js'
 import { wyborKlienta } from './wybor-klienta.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../ui/router.js').Kontekst} Kontekst */
 /** @typedef {import('../ui/komponenty/uklad.js').OpcjeBanera} OpcjeBanera */
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
+/** @typedef {import('../dane/wyceny.js').StatusWyceny} StatusWyceny */
 /** @typedef {import('../kreator/podsumowanie.js').AkcjaWyceny} AkcjaWyceny */
+/** @typedef {import('../ui/ikony.js').NazwaIkony} NazwaIkony */
 /**
  * @typedef {'kreator' | 'zapisana'} TrybPodsumowania
+ * @typedef {AkcjaWyceny | 'oferta'} AkcjaEkranu
+ * @typedef {Exclude<AkcjaEkranu, 'usun'>} AkcjaZOpisem
+ * @typedef {{ tekst: string, ikona: NazwaIkony, adres?: string, naKlik?: () => void }} OpisAkcji
  * @typedef {{ naStatus: (nowy: 'przyjeta' | 'odrzucona') => void, naUsun: (w: Wycena) => void }} ObslugaAkcji
- * @typedef {{ naPrzelicz: () => void, naZmien: (brutto: number) => void }} ObslugaKart
+ * @typedef {{ naPrzelicz: () => void, naZmien: (brutto: number) => void, czyKosztyOtwarte: () => boolean,
+ *   naPrzelaczKoszty: (czyOtwarte: boolean) => void }} ObslugaKart
  */
 
 const ZMIENIONA_W_INNEJ_KARCIE = 'Status tej wyceny zmienił się w innej karcie przeglądarki. Widzisz teraz aktualne dane.'
 const BRAK_CENY = 'Ta wycena nie ma jeszcze ceny. Dodaj zakres prac, żeby ją policzyć.'
+const TYTUL = 'Podsumowanie'
+const POWROT_DO_WYCEN = Object.freeze({ wstecz: sciezka('wyceny'), wsteczTekst: 'Wycena' })
 const INDEKS_KROKU_CENY = KROKI_KREATORA.findIndex((k) => k.id === 'cena')
 const REGION_KOMUNIKATU = '.podsumowanie__komunikat'
 
-/** @param {Wycena} w @returns {string} „Wycena 1/10/2026 · Pani Test” albo „Nowa wycena” */
-const podtytul = (w) => (w.numer ? [`Wycena ${w.numer}`, w.klient.nazwa].filter(Boolean).join(' · ') : 'Nowa wycena')
+/** @param {Wycena} w @returns {string} „Pani Test · nr 1/10/2026” albo „Nowa wycena” */
+const podtytul = (w) => (w.numer ? [w.klient.nazwa, `nr ${w.numer}`].filter(Boolean).join(' · ') : 'Nowa wycena')
+
+/** @param {Wycena} w @param {Kontekst} kontekst @returns {string} nazwa uslugi wyceny; usluga spoza katalogu — „Podsumowanie” */
+const tytulWyceny = (w, { katalog }) => katalog.uslugi.find((u) => u.id === w.wejscie.uslugaId)?.nazwa ?? TYTUL
 
 /** @param {unknown} blad @returns {string} tekst bledu zapisu; status zmieniony w innej karcie nie jest zglaszany */
 const tekstBledu = (blad) => (blad instanceof BladWyceny && blad.kod === 'przejscie' ? ZMIENIONA_W_INNEJ_KARCIE : zglosBladKreatora(blad))
@@ -84,16 +96,30 @@ function otworzZapis({ magazyn, nawiguj }, w) {
   wybor.element.querySelector('button')?.focus()
 }
 
-/** @param {Wycena} w @param {AkcjaWyceny} akcja @param {ObslugaAkcji} obsluga @returns {HTMLElement} */
-function przyciskAkcji(w, akcja, { naStatus, naUsun }) {
-  if (akcja === 'zaplanuj') return przycisk({ tekst: 'Zaplanuj', ikona: 'calendar', adres: adresZaplanowania(w.id) })
-  if (akcja === 'zaplanuj_kolejne') return przycisk({ tekst: 'Zaplanuj kolejne', rodzaj: 'drugi', ikona: 'calendar', adres: adresZaplanowania(w.id) })
-  if (akcja === 'edytuj') return przycisk({ tekst: 'Edytuj', rodzaj: 'drugi', adres: adresKroku('usluga', w.id) })
-  if (akcja === 'przyjeta') return przycisk({ tekst: 'Klient przyjął', naKlik: () => naStatus('przyjeta') })
-  if (akcja === 'odrzucona') return przycisk({ tekst: 'Klient zrezygnował', rodzaj: 'drugi', naKlik: () => naStatus('odrzucona') })
-  const usun = przycisk({ tekst: 'Usuń wycenę', rodzaj: 'tekstowy', ikona: 'trash', naKlik: () => naUsun(w) })
-  usun.classList.add('podsumowanie__usun')
-  return usun
+/**
+ * Hierarchia akcji ekranu (R9): jedna glowna wg stanu — „Zaplanuj” przy wycenie do zaplanowania, oferta przy wycenie do wysłania,
+ * potem decyzja klienta; reszta to wiersze, a usuniecie stoi osobno. Bez takiej akcji ekran nie ma glownej (np. wycena ze zleceniem).
+ * @param {readonly AkcjaEkranu[]} akcje @param {StatusWyceny} status
+ * @returns {{ glowna: AkcjaZOpisem | null, wiersze: AkcjaZOpisem[], czyUsun: boolean }}
+ */
+export function ukladAkcji(akcje, status) {
+  /** @type {readonly AkcjaZOpisem[]} */
+  const kandydaci = status === 'do_wyslania' ? ['zaplanuj', 'oferta', 'przyjeta'] : ['zaplanuj', 'przyjeta']
+  const glowna = kandydaci.find((a) => akcje.includes(a)) ?? null
+  return { glowna, wiersze: akcje.filter((a) => a !== 'usun').filter((a) => a !== glowna), czyUsun: akcje.includes('usun') }
+}
+
+/**
+ * @param {Wycena} w @param {AkcjaZOpisem} akcja @param {boolean} czyZamknieta wycena ze zleceniem: oferta tylko do podglądu i wysłania
+ * @param {ObslugaAkcji} obsluga @returns {OpisAkcji}
+ */
+function opisAkcji(w, akcja, czyZamknieta, { naStatus }) {
+  if (akcja === 'zaplanuj') return { tekst: 'Zaplanuj', ikona: 'calendar', adres: adresZaplanowania(w.id) }
+  if (akcja === 'zaplanuj_kolejne') return { tekst: 'Zaplanuj kolejne', ikona: 'calendar', adres: adresZaplanowania(w.id) }
+  if (akcja === 'oferta') return { tekst: czyZamknieta ? 'Pokaż ofertę' : 'Przygotuj ofertę', ikona: 'file-text', adres: sciezka('oferta', { id: w.id }) }
+  if (akcja === 'edytuj') return { tekst: 'Edytuj', ikona: 'pencil', adres: adresKroku('usluga', w.id) }
+  if (akcja === 'przyjeta') return { tekst: 'Klient przyjął', ikona: 'check', naKlik: () => naStatus('przyjeta') }
+  return { tekst: 'Klient zrezygnował', ikona: 'x', naKlik: () => naStatus('odrzucona') }
 }
 
 /**
@@ -124,16 +150,20 @@ function kartaWpisowCzasu(w, { magazyn, katalog }) {
 /**
  * @param {Wycena} w @param {boolean} czyZamknieta wycena ze zleceniem: bez edycji, oferta tylko do podglądu i wysłania
  * @param {boolean} czyDoZaplanowania @param {ObslugaAkcji} obsluga
- * @returns {HTMLElement[]} glowny „Zaplanuj”, gdy jest, „Przygotuj ofertę” („Pokaż ofertę” przy wycenie ze zleceniem; glowny przy
- *   wycenie do wysłania), potem pozostale akcje wg statusu
+ * @returns {{ akcje: HTMLElement, usun: HTMLElement | null }} glowny przycisk i karta wierszy; „Usuń wycenę” osobno, bo stoi na koncu ekranu
  */
 function akcjeZapisanej(w, czyZamknieta, czyDoZaplanowania, obsluga) {
-  const oferta = czyStatusOferty(w.status)
-    ? [przycisk({ tekst: czyZamknieta ? 'Pokaż ofertę' : 'Przygotuj ofertę', rodzaj: w.status === 'do_wyslania' ? 'glowny' : 'drugi', ikona: 'file-text', adres: sciezka('oferta', { id: w.id }) })]
-    : []
-  const akcje = akcjeWyceny(w.status, czyZamknieta, czyDoZaplanowania)
-  const przyciski = akcje.map((a) => przyciskAkcji(w, a, obsluga))
-  return akcje[0] === 'zaplanuj' ? [...przyciski.slice(0, 1), ...oferta, ...przyciski.slice(1)] : [...oferta, ...przyciski]
+  const wedlugStatusu = akcjeWyceny(w.status, czyZamknieta, czyDoZaplanowania)
+  const { glowna, wiersze, czyUsun } = ukladAkcji(czyStatusOferty(w.status) ? ['oferta', ...wedlugStatusu] : wedlugStatusu, w.status)
+  const wierszAkcji = (/** @type {AkcjaZOpisem} */ akcja) => {
+    const { tekst, ...reszta } = opisAkcji(w, akcja, czyZamknieta, obsluga)
+    return wiersz({ tytul: tekst, ...reszta })
+  }
+  const usun = czyUsun ? przycisk({ tekst: 'Usuń wycenę', rodzaj: 'tekstowy', ikona: 'trash', naKlik: () => obsluga.naUsun(w) }) : null
+  usun?.classList.add('podsumowanie__usun')
+  return { usun, akcje: h('div', { class: 'podsumowanie__akcje' },
+    glowna ? przycisk(opisAkcji(w, glowna, czyZamknieta, obsluga)) : null,
+    wiersze.length === 0 ? null : karta({ klasa: 'karta--bez-odstepu' }, wiersze.map(wierszAkcji))) }
 }
 
 /**
@@ -142,7 +172,7 @@ function akcjeZapisanej(w, czyZamknieta, czyDoZaplanowania, obsluga) {
  *   (bez „Przelicz” i „Zmień”) @param {ObslugaKart} obsluga
  * @returns {Node[]}
  */
-function karty(w, kontekst, tryb, czyZamknieta, { naPrzelicz, naZmien }) {
+function karty(w, kontekst, tryb, czyZamknieta, { naPrzelicz, naZmien, czyKosztyOtwarte, naPrzelaczKoszty }) {
   if (w.wynik === null) {
     return bezPustych([baner({ rodzaj: 'info', tekst: BRAK_CENY }),
       tryb === 'kreator' ? przycisk({ tekst: 'Przejdź do zakresu', rodzaj: 'drugi', adres: adresKroku('zakres', w.id) }) : null])
@@ -150,9 +180,9 @@ function karty(w, kontekst, tryb, czyZamknieta, { naPrzelicz, naZmien }) {
   const czyEdytowalna = !czyZamknieta
   try {
     const widok = widokPodsumowania(w, kontekst)
-    return bezPustych([...banery(widok.ostrzezenia, czyEdytowalna ? naPrzelicz : null),
-      kartaCeny(widok, czyEdytowalna ? () => naZmien(widok.cena.brutto) : null), kartaRynku(widok.rynek, widok.cena.brutto),
-      kartaZostaje(widok), kartaKosztow(widok.koszty), notkaPropozycji(widok.propozycje)])
+    return [...banery(widok.ostrzezenia, czyEdytowalna ? naPrzelicz : null),
+      kartaCeny(widok, w.wynik.wojewodztwo, czyEdytowalna ? () => naZmien(widok.cena.brutto) : null),
+      kartaZostaje(widok, { czyOtwarte: czyKosztyOtwarte(), naPrzelacz: naPrzelaczKoszty })]
   } catch (blad) {
     return [baner({ rodzaj: 'blad', tekst: zglosBladKreatora(blad) })]
   }
@@ -166,16 +196,20 @@ function karty(w, kontekst, tryb, czyZamknieta, { naPrzelicz, naZmien }) {
  */
 function elementyEkranu({ w, czyZamknieta, czyDoZaplanowania, kontekst, tryb, komunikat, obslugaKart, obslugaAkcji }) {
   const czyKreator = tryb === 'kreator'
+  const zapisana = czyKreator ? null : akcjeZapisanej(w, czyZamknieta, czyDoZaplanowania, obslugaAkcji)
   return bezPustych([
-    naglowek({ tytul: 'Podsumowanie', podtytul: podtytul(w), wstecz: czyKreator ? adresKroku('chemia', w.id) : sciezka('wyceny') }),
+    czyKreator
+      ? naglowek({ tytul: TYTUL, podtytul: podtytul(w), wstecz: adresKroku('chemia', w.id), wsteczTekst: KROKI_KREATORA[INDEKS_KROKU_CENY - 1]?.etykieta })
+      : naglowek({ tytul: tytulWyceny(w, kontekst), podtytul: podtytul(w), ...POWROT_DO_WYCEN }),
     czyKreator ? pasekPostepu(KROKI_KREATORA.map((k) => k.etykieta), INDEKS_KROKU_CENY) : null,
     h('div', { class: 'tresc podsumowanie' },
       czyKreator ? null : h('div', { class: 'podsumowanie__status' }, pigulkaStatusu(w.status)),
       h('div', { class: 'podsumowanie__komunikat', 'aria-live': 'polite', tabIndex: -1 }, komunikat ? baner(komunikat) : null),
       karty(w, kontekst, tryb, czyZamknieta, obslugaKart),
+      zapisana?.akcje ?? null,
       czyKreator ? null : kartaZlecen(w, kontekst),
       czyKreator ? null : kartaWpisowCzasu(w, kontekst),
-      czyKreator ? null : h('div', { class: 'podsumowanie__akcje' }, akcjeZapisanej(w, czyZamknieta, czyDoZaplanowania, obslugaAkcji))),
+      zapisana?.usun ?? null),
     czyKreator ? h('div', { class: 'stopka-kreatora' }, przycisk({ tekst: 'Zapisz', naKlik: () => otworzZapis(kontekst, w) })) : null,
   ])
 }
@@ -191,6 +225,7 @@ function uruchomPodsumowanie(kontener, kontekst, id, tryb) {
   let komunikat = null
   let czyAktywny = true
   let czyPytaOUsuniecie = false
+  let czyKosztyOtwarte = false
 
   /** @param {() => OpcjeBanera} akcja zapis i komunikat sukcesu; blad zapisu daje komunikat bledu */
   function wykonaj(akcja) {
@@ -226,6 +261,8 @@ function uruchomPodsumowanie(kontener, kontekst, id, tryb) {
       return { rodzaj: 'info', tekst: `Cena wynosiła ${zl(stara)}, teraz ${zl(nowa)}.` }
     }),
     naZmien: (brutto) => otworzEdycjeCeny({ kontekst, id, brutto, tekstBledu, naZmiane: () => rysuj(), naZamkniecie: () => rysuj('[data-akcja="zmien"]') }),
+    czyKosztyOtwarte: () => czyKosztyOtwarte,
+    naPrzelaczKoszty: (czy) => { czyKosztyOtwarte = czy },
   }
 
   /** @type {ObslugaAkcji} */
@@ -257,7 +294,7 @@ function uruchomPodsumowanie(kontener, kontekst, id, tryb) {
 /** @param {HTMLElement} kontener */
 function pokazBrak(kontener) {
   kontener.replaceChildren(
-    naglowek({ tytul: 'Podsumowanie', wstecz: sciezka('wyceny') }),
+    naglowek({ tytul: TYTUL, ...POWROT_DO_WYCEN }),
     h('div', { class: 'tresc' }, baner({ rodzaj: 'info', tekst: 'Nie ma tej wyceny. Mogła zostać usunięta.' }),
       przycisk({ tekst: 'Wróć do listy wycen', rodzaj: 'drugi', adres: sciezka('wyceny') })))
 }

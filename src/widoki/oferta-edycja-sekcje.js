@@ -1,7 +1,7 @@
-// Karty ekranu przygotowania oferty (makieta oferta-edycja): „Twoja firma”, „Klient i termin”, „Zakres prac”, „Dodatki do
-// zaproponowania” i „Warunki” z waznoscia oferty, wspolne pomocnicze dla sekcji oferty w ustawieniach (listy punktow, edytory
-// zakresu) i wczytanie data/zakresy.json; reguly warunkow (R20) sa w src/oferta/tresc.js. Zapis robi widok przez `zapisz`
-// (tekst bledu albo null).
+// Karty ekranu przygotowania oferty: „Twoja firma” (wiersz ze strzalka), „Klient i termin” (wybor klienta, adres i termin pod
+// „Więcej”), „Zakres prac” i „Warunki” (liczba punktow z jedna akcja „Edytuj”, lista i notki pod „Więcej”), „Dodatki do
+// zaproponowania”, wspolne pomocnicze dla sekcji oferty w ustawieniach (listy punktow, edytory zakresu) i wczytanie
+// data/zakresy.json; reguly warunkow (R20) sa w src/oferta/tresc.js. Zapis robi widok przez `zapisz` (tekst bledu albo null).
 
 import { dzienLokalny, jestDniem } from '../dane/ksztalt.js'
 import { pobierzJson } from '../dane/pobierz.js'
@@ -10,7 +10,7 @@ import { BladKatalogu } from '../silnik/bledy.js'
 import { data, odmiana, zl } from '../ui/format.js'
 import { h, ikona } from '../ui/h.js'
 import { pole, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
-import { baner, karta, wiersz } from '../ui/komponenty/uklad.js'
+import { baner, karta, wiecej, wiersz } from '../ui/komponenty/uklad.js'
 import { sciezka } from '../ui/trasy.js'
 import { edytorListy, punktyZTekstow } from './edytor-listy.js'
 import { otworzArkusz } from './ustawienia-sekcje.js'
@@ -33,6 +33,7 @@ import { otworzArkusz } from './ustawienia-sekcje.js'
 
 const MS_DNIA = 86_400_000
 const FORMY_DNI = /** @type {const} */ (['dzień', 'dni', 'dni'])
+const FORMY_PUNKTOW = /** @type {const} */ (['punkt', 'punkty', 'punktów'])
 export const NOTKA_ZAKRESU = 'Zmiana dotyczy tylko tej oferty. Domyślny zakres ustawisz w ustawieniach.'
 const WCZYTYWANIE = 'Wczytywanie zakresów prac…'
 const BLAD_POLACZENIA = 'Nie udało się wczytać zakresów prac. Sprawdź połączenie z internetem i spróbuj jeszcze raz.'
@@ -104,6 +105,12 @@ export function tekstWaznosci(waznaDo, dzis) {
 /** @param {{ od: number, do: number }} razem @returns {string} „294 zł” albo widelki „250–320 zł” */
 export const tekstKwoty = (razem) => (razem.od === razem.do ? zl(razem.od) : `${zl(razem.od).replace(/\s?zł$/u, '')}–${zl(razem.do)}`)
 
+/** @param {ZakresUslugi} zakres @returns {string} „5 w cenie · 2 poza ceną” */
+export const tekstZakresu = (zakres) => `${zakres.wchodzi.length} w cenie · ${zakres.nie_wchodzi.length} poza ceną`
+
+/** @param {number} n liczba warunkow @returns {string} „1 punkt”, „3 punkty”, „5 punktów” */
+export const tekstPunktow = (n) => `${n} ${odmiana(n, FORMY_PUNKTOW)}`
+
 /** @param {string} tytul @param {AkcjaKarty} [akcja] @param {NazwaIkony} [nazwaIkony] @returns {HTMLDivElement} tytul karty z akcja po prawej */
 export function naglowekKarty(tytul, akcja, nazwaIkony) {
   const element = akcja ? przycisk({ tekst: akcja.tekst, rodzaj: 'tekstowy', ikona: nazwaIkony, adres: akcja.adres, naKlik: akcja.naKlik }) : null
@@ -155,12 +162,10 @@ const wymienDzieci = (element, dzieci) => element.replaceChildren(...dzieci.filt
 /** @param {HTMLElement} miejsce @param {string | null} blad */
 const pokazBlad = (miejsce, blad) => miejsce.replaceChildren(...(blad ? [baner({ rodzaj: 'blad', tekst: blad })] : []))
 
-/** @param {Firma} firma @returns {HTMLElement} karta „Twoja firma” (tylko do odczytu) */
+/** @param {Firma} firma @returns {HTMLElement} wiersz „Twoja firma” z nazwa i telefonem, prowadzi do ustawien */
 export function kartaFirmy(firma) {
-  const kontakt = [firma.telefon ? `tel. ${firma.telefon}` : '', firma.email, firma.nip ? `NIP ${firma.nip}` : ''].filter(Boolean).join(' · ')
-  return karta({ klasa: 'karta-oferty' }, naglowekKarty('Twoja firma', { tekst: 'Zmień w ustawieniach', adres: sciezka('ustawienia') }),
-    firma.nazwa ? h('p', { class: 'karta-oferty__firma' }, firma.nazwa) : null,
-    kontakt ? h('p', { class: 'karta-oferty__kontakt' }, kontakt) : null)
+  const opis = [firma.nazwa, firma.telefon].filter(Boolean).join(' · ')
+  return karta({ klasa: 'karta--bez-odstepu' }, wiersz({ tytul: 'Twoja firma', opis, adres: sciezka('ustawienia') }))
 }
 
 /**
@@ -176,7 +181,8 @@ function zapisujPole(element, zmiana, zapisz) {
 }
 
 /**
- * Karta „Klient i termin”: wybor klienta z listy (element z wyborKlienta), adres i termin tej wyceny zapisywane po wyjsciu z pola.
+ * Karta „Klient i termin”: wybor klienta z listy (element z wyborKlienta), pod „Więcej” opcjonalny adres i termin tej wyceny,
+ * zapisywane po wyjsciu z pola.
  * @param {KlientWyceny} klient @param {ZapisOferty} zapisz @param {HTMLElement} wybor @returns {HTMLElement}
  */
 export function kartaKlienta(klient, zapisz, wybor) {
@@ -188,14 +194,24 @@ export function kartaKlienta(klient, zapisz, wybor) {
   ustawBlad(termin, null)
   return karta({ tytul: 'Klient i termin', klasa: 'karta-oferty' },
     wybor,
-    zapisujPole(pole({ id: 'oferta-adres', etykieta: 'Adres (opcjonalnie)', wartosc: klient.adres, autocomplete: 'street-address' }),
-      (adres) => ({ klient: { adres } }), zapisz),
-    zapisujPole(termin, (wartosc) => ({ klient: { termin: wartosc === '' ? null : wartosc } }), zapisz))
+    wiecej({ etykieta: 'Adres i termin' },
+      zapisujPole(pole({ id: 'oferta-adres', etykieta: 'Adres (opcjonalnie)', wartosc: klient.adres, autocomplete: 'street-address' }),
+        (adres) => ({ klient: { adres } }), zapisz),
+      zapisujPole(termin, (wartosc) => ({ klient: { termin: wartosc === '' ? null : wartosc } }), zapisz)))
 }
 
+/** @returns {HTMLElement} notka o zakresie zmienianym tylko w tej ofercie */
+const notkaZakresu = () => h('p', { class: 'karta-oferty__notka' }, NOTKA_ZAKRESU)
+
+/** @param {ZakresUslugi} zakres @param {boolean} czyZmieniony @returns {Node[]} liczba punktow, a lista i notka pod „Więcej” */
+const zakresDoOdczytu = (zakres, czyZmieniony) => [
+  h('p', { class: 'karta-oferty__streszczenie liczba' }, tekstZakresu(zakres)),
+  wiecej({ etykieta: 'Pokaż zakres' }, ...widokZakresu(zakres), czyZmieniony ? notkaZakresu() : null),
+]
+
 /**
- * Karta „Zakres prac”: lista albo (po „Edytuj”) edytory zapisujace po kazdej zmianie; notka i „Przywróć domyślny” przy zakresie
- * zmienionym w tej ofercie. `pobierz` czyta swiezy stan.
+ * Karta „Zakres prac”: liczba punktow z lista pod „Więcej” albo (po „Edytuj”) edytory zapisujace po kazdej zmianie; notka pod
+ * „Więcej” i „Przywróć domyślny” przy zakresie zmienionym w tej ofercie. `pobierz` czyta swiezy stan.
  * @param {{ pobierz: () => StanZakresu, zapisz: ZapisOferty }} opcje
  * @returns {HTMLElement}
  */
@@ -227,9 +243,8 @@ export function kartaZakresu({ pobierz, zapisz }) {
         czyEdycja = !czyEdycja
         rysuj('[data-akcja="zakres"]')
       } }, czyEdycja ? 'check' : 'pencil'),
-      ...(czyEdycja ? edytoryZakresu('oferta-zakres', zakres, naZmiane) : widokZakresu(zakres)),
+      ...(czyEdycja ? [...edytoryZakresu('oferta-zakres', zakres, naZmiane), wiecej({}, notkaZakresu())] : zakresDoOdczytu(zakres, czyZmieniony)),
       komunikat,
-      czyEdycja || czyZmieniony ? h('p', { class: 'karta-oferty__notka' }, NOTKA_ZAKRESU) : null,
       miejscePrzywrocenia])
     odswiezPrzywrocenie()
     const cel = fokus ? element.querySelector(fokus) : null
@@ -272,9 +287,15 @@ function otworzWaznosc(waznaDo, dzis, zapisz, naZapis) {
   })
 }
 
+/** @param {readonly string[]} teksty warunki widoczne w ofercie @returns {Node[]} liczba punktow z lista pod „Więcej”; bez warunkow „Brak punktów.” */
+const warunkiDoOdczytu = (teksty) => (teksty.length === 0 ? [listaPunktow(teksty, 'warunek')] : [
+  h('p', { class: 'karta-oferty__streszczenie liczba' }, tekstPunktow(teksty.length)),
+  wiecej({ etykieta: 'Pokaż warunki' }, listaPunktow(teksty, 'warunek')),
+])
+
 /**
- * Karta „Warunki”: lista ✓ albo (po „Edytuj”) edytor warunkow widocznych w tej ofercie, „Przywróć domyślne” przy warunkach
- * zmienionych w tej ofercie i wiersz „Oferta ważna do” z arkuszem daty.
+ * Karta „Warunki”: liczba punktow z lista ✓ pod „Więcej” albo (po „Edytuj”) edytor warunkow widocznych w tej ofercie, „Przywróć
+ * domyślne” przy warunkach zmienionych w tej ofercie i wiersz „Oferta ważna do” z arkuszem daty.
  * @param {{ pobierz: () => StanWarunkow, zapisz: ZapisOferty, dzis: Date }} opcje
  * @returns {HTMLElement}
  */
@@ -297,7 +318,7 @@ export function kartaWarunkow({ pobierz, zapisz, dzis }) {
       czyEdycja = false
       rysuj('[data-akcja="warunki"]')
     }
-    const waznosc = wiersz({ tytul: 'Oferta ważna do', wartosc: tekstWaznosci(waznaDo, dzis),
+    const waznosc = wiersz({ tytul: 'Oferta ważna do', opis: tekstWaznosci(waznaDo, dzis),
       naKlik: () => otworzWaznosc(waznaDo, dzis, zapisz, () => rysuj('[data-akcja="waznosc"]')) })
     waznosc.dataset.akcja = 'waznosc'
     wymienDzieci(element, [
@@ -305,7 +326,7 @@ export function kartaWarunkow({ pobierz, zapisz, dzis }) {
         czyEdycja = !czyEdycja
         rysuj('[data-akcja="warunki"]')
       } }, czyEdycja ? 'check' : 'pencil'),
-      czyEdycja ? edytor() : listaPunktow(widoczne.map((w) => w.tresc), 'warunek'),
+      ...(czyEdycja ? [edytor()] : warunkiDoOdczytu(widoczne.map((w) => w.tresc))),
       komunikat,
       czyZmienione && !czyEdycja ? przycisk({ tekst: 'Przywróć domyślne', rodzaj: 'tekstowy', naKlik: przywroc }) : null,
       waznosc])

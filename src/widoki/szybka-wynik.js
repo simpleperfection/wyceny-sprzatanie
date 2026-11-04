@@ -1,18 +1,21 @@
-// Karta wyniku szybkiej wyceny (makieta szybka-wycena): „Widełki dla klienta” z zakreslaczem, pigulki z mediana w wojewodztwie,
-// rynkiem i „Zostaje…” (R5, swiadome odstepstwo od makiety), cytat tekstu dla klienta i przyciski „Kopiuj tekst” / „Dokładna
-// wycena”. Usluga z ogledzinami ma „Orientacyjnie od” i zalecenie ogledzin, pusty zakres i blad — tekst zamiast kwoty.
+// Karta wyniku szybkiej wyceny (makieta szybka-wycena): „Widełki dla klienta” z duza kwota i „Zostaje…” na wierzchu, bo pomaga
+// w decyzji, a mediana w wojewodztwie, rynek i tekst dla klienta pod „Więcej”; pod nimi „Dokładna wycena” (glowna akcja) i „Kopiuj
+// tekst”. Usluga z ogledzinami ma „Orientacyjnie od” i zalecenie ogledzin, pusty zakres i blad — tekst zamiast kwoty.
 // Kwoty liczy src/kreator/szybka.js (silnik), karta tylko rysuje.
 
 import { miejscownikWojewodztwa, zl } from '../ui/format.js'
 import { h } from '../ui/h.js'
 import { przycisk } from '../ui/komponenty/formularz.js'
-import { baner, karta } from '../ui/komponenty/uklad.js'
+import { baner, karta, wiecej } from '../ui/komponenty/uklad.js'
 
 /** @typedef {import('../kreator/szybka.js').StanWyniku} StanWyniku */
 /** @typedef {import('../silnik/szybka.js').WynikSzybkiej} WynikSzybkiej */
 /**
- * @typedef {{ stan: StanWyniku, czySkopiowano: boolean, naKopiuj: () => void, naDokladna: () => void }} OpcjeKarty
- * @typedef {{ element: HTMLElement, cytat: HTMLElement | null }} KartaWyniku cytat: tekst do zaznaczenia, gdy schowek odmowi
+ * @typedef {{ czyOtwarte: boolean, naPrzelacz: (czyOtwarte: boolean) => void }} StanWiecej stan „Więcej” trzyma ekran, bo karta rysuje sie od nowa
+ * @typedef {{ stan: StanWyniku, czySkopiowano: boolean, wiecej: StanWiecej, naKopiuj: () => void, naDokladna: () => void }} OpcjeKarty
+ * @typedef {{ cytat: HTMLElement | null, zapasowy: HTMLElement | null }} TekstKlienta cytat: tekst pod „Więcej” do recznego
+ *   skopiowania; zapasowy: ten sam tekst poza „Więcej” dla kopiowania przez zaznaczenie, bo zwiniete <details> nie jest rysowane
+ * @typedef {TekstKlienta & { element: HTMLElement }} KartaWyniku
  */
 
 const OGLEDZINY = 'Ta usługa wymaga oględzin. Poproś o zdjęcia albo umów się na obejrzenie przed podaniem ceny.'
@@ -46,29 +49,34 @@ export function tekstZostaje(naGodzine) {
   return `Zostaje ok. ${od === doKwoty ? KWOTA.format(od) : `${KWOTA.format(od)}–${KWOTA.format(doKwoty)}`} zł/h`
 }
 
-/** @param {StanWyniku & { stan: 'wynik' }} stan @returns {{ elementy: (Node | null)[], cytat: HTMLElement }} */
-function trescWyniku({ wynik, wojewodztwo }) {
+/** @param {StanWyniku & { stan: 'wynik' }} stan @param {StanWiecej} stanWiecej @returns {TekstKlienta & { elementy: (Node | null)[] }} */
+function trescWyniku({ wynik, wojewodztwo }, { czyOtwarte, naPrzelacz }) {
   const cytat = h('q', { class: 'karta-szybkiej__cytat' }, wynik.tekst)
+  const zapasowy = h('p', { class: 'wizualnie-ukryte', 'aria-hidden': 'true' }, wynik.tekst)
+  const szczegoly = wiecej({}, h('p', { class: 'liczba' }, tekstMediany(wynik.mediana, wojewodztwo)),
+    h('p', { class: 'liczba' }, tekstRynku(wynik.rynek)), cytat)
+  szczegoly.open = czyOtwarte
+  szczegoly.addEventListener('toggle', () => naPrzelacz(szczegoly.open))
   return {
     cytat,
+    zapasowy,
     elementy: [
       wynik.tryb === 'od' ? null : h('p', { class: 'karta-szybkiej__etykieta' }, 'Widełki dla klienta'),
-      h('p', { class: 'karta-szybkiej__kwota liczba' }, h('span', { class: 'zakreslacz' }, tekstKwoty(wynik))),
+      h('p', { class: 'karta-szybkiej__kwota liczba' }, tekstKwoty(wynik)),
       wynik.tryb === 'od' ? h('p', { class: 'karta-szybkiej__ogledziny' }, OGLEDZINY) : null,
-      h('div', { class: 'karta-szybkiej__pigulki' },
-        h('span', { class: 'pigulka liczba' }, tekstMediany(wynik.mediana, wojewodztwo)),
-        h('span', { class: 'pigulka liczba' }, tekstRynku(wynik.rynek)),
-        h('span', { class: 'pigulka pigulka--zostaje liczba' }, tekstZostaje(wynik.zostaje.naGodzine))),
-      cytat,
+      h('p', { class: 'karta-szybkiej__zostaje liczba' }, tekstZostaje(wynik.zostaje.naGodzine)),
+      szczegoly,
+      zapasowy,
     ],
   }
 }
 
-/** @param {StanWyniku} stan @returns {{ elementy: (Node | null)[], cytat: HTMLElement | null }} */
-function tresc(stan) {
-  if (stan.stan === 'wynik') return trescWyniku(stan)
-  if (stan.stan === 'pusty') return { elementy: [h('p', { class: 'karta-szybkiej__pusto' }, PUSTY_ZAKRES)], cytat: null }
-  return { elementy: [baner({ rodzaj: 'blad', tekst: stan.kod === 'metraz' ? BLAD_METRAZU : BLAD_LICZENIA })], cytat: null }
+/** @param {StanWyniku} stan @param {StanWiecej} stanWiecej @returns {TekstKlienta & { elementy: (Node | null)[] }} */
+function tresc(stan, stanWiecej) {
+  if (stan.stan === 'wynik') return trescWyniku(stan, stanWiecej)
+  const brak = { cytat: null, zapasowy: null }
+  if (stan.stan === 'pusty') return { ...brak, elementy: [h('p', { class: 'karta-szybkiej__pusto' }, PUSTY_ZAKRES)] }
+  return { ...brak, elementy: [baner({ rodzaj: 'blad', tekst: stan.kod === 'metraz' ? BLAD_METRAZU : BLAD_LICZENIA })] }
 }
 
 /**
@@ -77,13 +85,13 @@ function tresc(stan) {
  * @param {OpcjeKarty} opcje
  * @returns {KartaWyniku}
  */
-export function kartaWyniku({ stan, czySkopiowano, naKopiuj, naDokladna }) {
-  const { elementy, cytat } = tresc(stan)
+export function kartaWyniku({ stan, czySkopiowano, wiecej: stanWiecej, naKopiuj, naDokladna }) {
+  const { elementy, cytat, zapasowy } = tresc(stan, stanWiecej)
   const czyWylaczony = stan.stan !== 'wynik'
-  const kopiuj = przycisk({ tekst: czySkopiowano ? 'Skopiowano' : 'Kopiuj tekst', rodzaj: 'drugi', ikona: czySkopiowano ? 'check' : undefined,
+  const kopiuj = przycisk({ tekst: czySkopiowano ? 'Skopiowano' : 'Kopiuj tekst', rodzaj: 'drugi', ikona: czySkopiowano ? 'check' : 'copy',
     naKlik: naKopiuj, czyWylaczony })
   const dokladna = przycisk({ tekst: 'Dokładna wycena', naKlik: naDokladna, czyWylaczony })
   kopiuj.dataset.akcja = 'kopiuj'
   dokladna.dataset.akcja = 'dokladna'
-  return { element: karta({ klasa: 'karta-szybkiej' }, ...elementy, h('div', { class: 'karta-szybkiej__przyciski' }, kopiuj, dokladna)), cytat }
+  return { element: karta({ klasa: 'karta-szybkiej' }, ...elementy, h('div', { class: 'karta-szybkiej__przyciski' }, dokladna, kopiuj)), cytat, zapasowy }
 }

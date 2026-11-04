@@ -1,5 +1,5 @@
 // Krok zakresu kreatora dla uslug w trybie pozycji (`#/kreator/zakres?wycena=<id>`, makieta kreator-pozycje): uslugi m² z progami
-// maja licznik powierzchni (krok 5 m²), baner progu metrazu, karte „Pozycje” z przelacznikami i notke o materiale i minimum;
+// maja licznik powierzchni (krok 5 m²), baner progu metrazu, karte „Pozycje” z przelacznikami i „Więcej” o materiale i minimum;
 // okna, tapicerka i dywany — liczniki pozycji. Chipy zabrudzenia przy `poziomy_brudu`, stopka z „Razem” i „Dalej”.
 // Zmiany ida przez src/kreator/pozycje.js i `zapisKroku` (src/widoki/kreator-wspolne.js); kwoty linii bierze z migawki wyniku
 // (silnik), widok tylko rysuje.
@@ -11,7 +11,7 @@ import { czyPozycjeZPowierzchnia, pozycjeGlowne } from '../kreator/stan.js'
 import { kwotaJednostki, m2, nazwaJednostki, zl } from '../ui/format.js'
 import { h } from '../ui/h.js'
 import { chipy, licznik, ustawBlad } from '../ui/komponenty/formularz.js'
-import { baner, karta } from '../ui/komponenty/uklad.js'
+import { baner, karta, wiecej } from '../ui/komponenty/uklad.js'
 import { adresKroku, BLAD_ILOSCI, odswiezStopke, pokazKomunikat, ramaKroku, wycenaKroku, zapisKroku } from './kreator-wspolne.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
@@ -33,9 +33,6 @@ const PROCENT = 100
 /** @type {ReadonlyMap<string, string>} oczekiwane bledy wpisu (bez zglaszania) */
 const TEKSTY_BLEDOW = new Map([['ilosc', BLAD_ILOSCI], ['brak_pozycji_glownej', BRAK_POZYCJI]])
 
-/** @param {number} mnoznik @returns {string} „+15%” albo „−30%” */
-const tekstMnoznika = (mnoznik) => `${mnoznik > 1 ? '+' : '−'}${Math.round(Math.abs(mnoznik - 1) * PROCENT)}%`
-
 /** @param {InfoProgu | null} info @returns {string | null} */
 function tekstProgu(info) {
   if (!info) return null
@@ -47,15 +44,14 @@ function tekstProgu(info) {
 /** @param {Wycena} wycena @param {Usluga} usluga @param {Pozycja} pozycja @returns {LiniaWyceny[]} linie pozycji z migawki (pozycja albo doplata, material) */
 const liniePozycji = (wycena, usluga, pozycja) => (wycena.wynik?.linie ?? []).filter((l) => l.klucz === `${usluga.id}.${pozycja.id}` && l.rodzaj !== 'dodatek')
 
-/** @param {Pozycja} pozycja @param {LiniaWyceny | undefined} linia @param {number} cenaJedn cena × wsp (bez linii) @returns {string} */
+/**
+ * Jedna linia opisu: mnoznik progu pokazuje baner nad karta, a impregnat „Więcej” pod nia.
+ * @param {Pozycja} pozycja @param {LiniaWyceny | undefined} linia @param {number} cenaJedn cena × wsp (bez linii)
+ * @returns {string}
+ */
 function opisPozycji(pozycja, linia, cenaJedn) {
-  const material = pozycja.doliczaj_material ? ' + impregnat' : ''
-  const czyDoplata = pozycja.typ === 'doplata'
-  if (!linia) return `${czyDoplata && !material ? 'dopłata · ' : ''}${kwotaJednostki(cenaJedn)}/m²${material}`
-  const iloczyn = `${m2(linia.ilosc)} × ${kwotaJednostki(linia.cenaJedn)}`
-  if (czyDoplata) return `dopłata · ${iloczyn}${material}`
-  if (linia.mnoznikProgu === 1) return iloczyn
-  return `${iloczyn} (${kwotaJednostki(linia.cenaJedn / linia.mnoznikProgu)} ${tekstMnoznika(linia.mnoznikProgu)})`
+  const doplata = pozycja.typ === 'doplata' ? 'dopłata · ' : ''
+  return linia ? `${doplata}${m2(linia.ilosc)} × ${kwotaJednostki(linia.cenaJedn)}` : `${doplata}${kwotaJednostki(cenaJedn)}/m²`
 }
 
 /** @param {Pozycja} pozycja @param {OpcjeKartyPozycji & { czyJedynaGlowna: boolean }} opcje @returns {HTMLElement} */
@@ -73,11 +69,13 @@ function wierszPozycji(pozycja, { wycena, usluga, katalog, naPrzelacz, czyJedyna
     : h('label', { class: 'wiersz-pozycji__nazwa', for: idPola }, pozycja.nazwa)
   return h('div', { class: ['wiersz-pozycji', !czyWlaczona && 'wiersz-pozycji--wylaczona'] },
     przelacznik,
-    h('span', { class: 'wiersz-pozycji__tresc' }, nazwa, h('span', { class: 'wiersz-pozycji__opis', id: `${idPola}-opis` }, opis)),
-    h('span', { class: 'wiersz-pozycji__kwota liczba' }, czyWlaczona && linia ? zl(linia.kwota) : '–'))
+    h('span', { class: 'wiersz-pozycji__tresc' }, nazwa,
+      h('span', { class: 'wiersz-pozycji__dol' },
+        h('span', { class: 'wiersz-pozycji__opis', id: `${idPola}-opis` }, opis),
+        h('span', { class: 'wiersz-pozycji__kwota liczba' }, czyWlaczona && linia ? zl(linia.kwota) : '–'))))
 }
 
-/** @param {OpcjeKartyPozycji} opcje @returns {Node[]} baner progu, karta „Pozycje” i notka o materiale i minimum */
+/** @param {OpcjeKartyPozycji} opcje @returns {Node[]} baner progu, karta „Pozycje” i „Więcej” o materiale i minimum */
 function trescPowierzchni(opcje) {
   const { wycena, usluga, katalog } = opcje
   const tekst = tekstProgu(infoProgu(usluga, powierzchnia(wycena.wejscie), katalog))
@@ -91,7 +89,7 @@ function trescPowierzchni(opcje) {
   return [
     tekst ? baner({ rodzaj: 'info', tekst }) : null,
     karta({ tytul: 'Pozycje', klasa: 'karta-pozycji' }, wiersze),
-    oMaterial || minimum ? h('p', { class: 'kreator-pozycje__notka' }, `${oMaterial}${minimum}`.trim()) : null,
+    oMaterial || minimum ? wiecej({}, `${oMaterial}${minimum}`.trim()) : null,
   ].filter((element) => element !== null)
 }
 

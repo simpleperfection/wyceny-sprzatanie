@@ -33,6 +33,8 @@ import { wyborKlienta } from './wybor-klienta.js'
 /** @typedef {{ w: Wycena, stan: Stan, oferta: Oferta }} BiezacaOferta */
 
 const CZAS_KOMUNIKATU_MS = 3000
+/** Tekst powrotu: nadrzedna jest wycena tej oferty, a gdy jej nie ma — modul Wycena. */
+const POWROT = 'Wycena'
 /** Kontrolki kart oferty wylaczane w wycenie ze zleceniem (zablokujEdycje). */
 const KONTROLKI_EDYCJI = 'input, textarea, select, button'
 const BRAK_DANYCH_FIRMY = 'Uzupełnij nazwę firmy i telefon w ustawieniach, zanim wyślesz ofertę.'
@@ -305,7 +307,7 @@ function uruchomOferte(kontener, kontekst, id, zakresy, czyAktywny) {
     } })
     if (czyWycenaZamknieta(stan, id)) zablokujEdycje([klient, zakres, warunki])
     kontener.replaceChildren(
-      naglowek({ tytul: 'Oferta', podtytul: `Wycena ${oferta.numer} · ${tekstKwoty(oferta.razem)}`, wstecz: sciezka('wycena', { id }) }),
+      naglowek({ tytul: 'Oferta', podtytul: `Wycena ${oferta.numer} · ${tekstKwoty(oferta.razem)}`, wstecz: sciezka('wycena', { id }), wsteczTekst: POWROT }),
       h('div', { class: 'tresc oferta-edycja' },
         czyDaneFirmy(oferta) ? null : baner({ rodzaj: 'uwaga', tekst: BRAK_DANYCH_FIRMY, akcja: { tekst: 'Uzupełnij', adres: sciezka('ustawienia') } }),
         kartaFirmy(oferta.firma), klient, zakres, kartaDodatkow(oferta.dodatkiOpcjonalne), warunki,
@@ -334,7 +336,7 @@ function uruchomOferte(kontener, kontekst, id, zakresy, czyAktywny) {
  */
 function pokazStan(kontener, id, tekst) {
   const powrot = id === null ? sciezka('wyceny') : sciezka('wycena', { id })
-  kontener.replaceChildren(naglowek({ tytul: 'Oferta', wstecz: powrot }),
+  kontener.replaceChildren(naglowek({ tytul: 'Oferta', wstecz: powrot, wsteczTekst: POWROT }),
     h('div', { class: 'tresc' }, baner({ rodzaj: 'info', tekst }),
       przycisk({ tekst: id === null ? 'Wróć do listy wycen' : 'Wróć do wyceny', rodzaj: 'drugi', adres: powrot })))
 }
@@ -351,7 +353,7 @@ export const widokOferty = {
       return pokazStan(kontener, id, `Ofertę przygotujesz z wyceny do wysłania, wysłanej albo przyjętej. Ta ma status „${ETYKIETY_STATUSOW[w.status]}”.`)
     }
     const tresc = h('div', { class: 'tresc' })
-    kontener.replaceChildren(naglowek({ tytul: 'Oferta', wstecz: sciezka('wycena', { id }) }), tresc)
+    kontener.replaceChildren(naglowek({ tytul: 'Oferta', wstecz: sciezka('wycena', { id }), wsteczTekst: POWROT }), tresc)
     void poZakresach(tresc, (zakresy) => { sprzatanie = uruchomOferte(kontener, kontekst, id, zakresy, () => czyAktywny) },
       () => czyAktywny).catch(reportError)
     return () => {

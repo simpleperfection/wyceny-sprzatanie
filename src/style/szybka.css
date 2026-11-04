@@ -1,4 +1,251 @@
 /*
- * Szybka wycena i pytania do klienta. Arkusz wypelnia IU-20: style ekranow modulu, takze przeniesione tu z komponenty.css.
- * Dolaczony w index.html po komponenty.css; inne jednostki go nie zmieniaja.
+ * Szybka wycena i pytania do klienta (src/widoki/szybka.js, szybka-wynik.js, pytania.js; makieta szybka-wycena).
+ * Dolaczony w index.html po komponenty.css; inne jednostki go nie zmieniaja. Tresc ma --tekst-podstawowy, a --tekst-maly
+ * tylko etykiety nad wartoscia. Wyjasnienia sa pod „Więcej”, na wierzchu zostaje kwota i „Zostaje”.
  */
+
+/* Szybka wycena: pola formularza, AGD, wiersz pytan i karta wyniku */
+.tresc.szybka,
+.szybka__pola {
+  gap: 16px;
+}
+
+.szybka__pola {
+  display: flex;
+  flex-direction: column;
+}
+
+.szybka__lazienki {
+  display: contents;
+}
+
+.szybka__notka {
+  color: var(--tekst-drugi);
+}
+
+.szybka__dodatki {
+  border: 1px solid var(--linia-podzial);
+  border-radius: var(--promien-karta);
+  background: var(--tlo-karta);
+}
+
+.szybka__dodatki-tytul {
+  display: list-item;
+  min-height: var(--cel-dotyku);
+  padding: 12px 14px;
+  border-radius: var(--promien-karta);
+  list-style-position: inside;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.szybka__dodatki-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 10px 10px;
+}
+
+/* Wiersz „Pytania do klienta” (szybka wycena i krok uslugi kreatora): karta z ikona i strzalka */
+.wiersz-pytan {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 10px 12px 10px 14px;
+  border: 1px solid var(--linia-podzial);
+  border-radius: var(--promien-karta);
+  background: var(--tlo-karta);
+  color: var(--tekst-glowny);
+  font-size: var(--tekst-podstawowy);
+  font-weight: 700;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.wiersz-pytan:hover {
+  background: var(--tlo-miekkie);
+}
+
+.wiersz-pytan .ikona {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 8px;
+  border-radius: 12px;
+  background: var(--tlo-miekkie);
+  color: var(--tekst-drugi);
+}
+
+.wiersz-pytan .wiersz-pytan__strzalka {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: none;
+  color: var(--tekst-trzeci);
+}
+
+.wiersz-pytan__tekst {
+  flex: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.karta-szybkiej {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-color: var(--marka-zielen-wykres);
+  background: linear-gradient(var(--marka-zielen-tlo), var(--tlo-karta) 70%);
+}
+
+.karta-szybkiej__etykieta {
+  font-size: var(--tekst-maly);
+  font-weight: 700;
+  color: var(--tekst-drugi);
+}
+
+.karta-szybkiej__kwota {
+  font-size: var(--tekst-kwota);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--marka-zielen);
+  text-wrap: balance;
+}
+
+.karta-szybkiej__zostaje {
+  font-weight: 700;
+}
+
+.karta-szybkiej__ogledziny {
+  padding: 8px 12px;
+  border-radius: var(--promien-przycisk);
+  background: var(--uwaga-tlo);
+  color: var(--uwaga-tekst);
+  text-wrap: pretty;
+}
+
+.karta-szybkiej__cytat {
+  display: block;
+  quotes: '„' '”';
+  text-wrap: pretty;
+}
+
+.karta-szybkiej__pusto {
+  color: var(--tekst-drugi);
+}
+
+.karta-szybkiej__przyciski {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* Pytania do klienta: lista pytan z odpowiedziami i skutkami, prosba o zdjecia, „Gotowe” */
+.lista-pytan {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pytanie {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--linia-podzial);
+}
+
+.pytanie:last-child {
+  border-bottom: 0;
+}
+
+.pytanie__tresc {
+  color: var(--tekst-drugi);
+  text-wrap: pretty;
+}
+
+/* Odpowiedz do zmiany to wiersz ze strzalka, a odpowiedz wyceny ze zleceniem to zwykly tekst */
+.pytanie__odpowiedz {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: var(--cel-dotyku);
+  padding: 4px 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--tekst-glowny);
+  font-size: var(--tekst-podstawowy);
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+p.pytanie__odpowiedz {
+  display: block;
+  min-height: 0;
+  cursor: auto;
+}
+
+.pytanie__strzalka {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  color: var(--tekst-trzeci);
+}
+
+.pytanie__dodaj {
+  justify-content: flex-start;
+  padding: 4px 0;
+}
+
+.pytanie__brak {
+  color: var(--tekst-trzeci);
+}
+
+.pigulka--skutek {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+  padding: 4px 12px;
+  border-radius: var(--promien-przycisk);
+  background: var(--sukces-tlo);
+  color: var(--sukces-tekst);
+  font-size: var(--tekst-podstawowy);
+  font-weight: 600;
+  white-space: normal;
+}
+
+.pigulka--skutek .ikona {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+.pytania__prosba {
+  color: var(--tekst-drugi);
+}
+
+.pytania__stopka {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  margin-top: auto;
+  padding: 12px var(--odstep-ekranu) calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--linia-podzial);
+  background: var(--tlo-karta);
+}
+
+.pytania__stopka .przycisk {
+  flex: 1;
+}
