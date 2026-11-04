@@ -959,7 +959,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 
 **Zależy od:** Faza 4
 
-- [ ] **IU-15: Kalendarz: Dzień, Tydzień i Miesiąc**
+- [x] **IU-15: Kalendarz: Dzień, Tydzień i Miesiąc**
 
 **Cel:** Moduł Zlecenia z widokami Dzień (z „Do zamknięcia” i szybkim zamykaniem wizyt), Tydzień i Miesiąc oraz trasami całego modułu.
 
@@ -1023,7 +1023,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 - `node --test src/zlecenia/kalendarz-dane.test.js src/ui/format.test.js src/ui/router.test.js` przechodzi
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-16: Nowe zlecenie: ręcznie i „Zaplanuj” z wyceny**
+- [x] **IU-16: Nowe zlecenie: ręcznie i „Zaplanuj” z wyceny**
 
 **Cel:** Formularz zlecenia jednorazowego i cyklicznego, ręcznie albo z przyjętej wyceny z ceną, planem czasu i cyklem z abonamentu.
 
@@ -1053,6 +1053,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 - `src/zlecenia/formularz.js` (czyste): `wartosciPoczatkowe(stan, katalog, { wycenaId, klientId, data }, dzis)`. Z wyceny: klient wyceny, usługa, cena = `kwotaWyceny` z `src/dane/wyceny.js` (cena ręczna wygrywa); szybka wycena w trybie „widełki” albo „od” — puste pole ceny z podpowiedzią widełek (decyzja planu), w trybie „ok” — kwota; data i godzina z terminu wyceny zgodnego z `TERMIN_ISO` (`src/dane/ksztalt.js`), inaczej dziś bez godziny; abonament (`czyAbonament`) → cykl `tydzien` z dniami według `wejscie.wariantId` (`abonament_1`: dzień tygodnia daty startu, `abonament_2`: [1, 4], `abonament_3`: [1, 3, 5], `abonament_5`: [1, 2, 3, 4, 5]), rozliczenie `miesiecznie`, kwota miesięczna = cena za wizytę × `wizytWMiesiacu` zaokrąglona do 1 zł (R26). Ręcznie: klient z `?klient=`, data z `?data=` albo dziś, `za_wizyte`. `bledyFormularza(wartosci)` → `{ pole: kod }` (klient wymagany zawsze, R19; cena ≥ 0 wymagana; data; dni przy cyklu tygodniowym i dwutygodniowym; usługa albo opis); `doZapisu(wartosci)` → dane dla `utworzZlecenie` / `zaplanujZWyceny` (`src/dane/zlecenia.js`). Cykle z `CYKLE` (`src/kalendarz/wystapienia.js`), rozliczenia z `ROZLICZENIA` (`src/dane/zlecenia-ksztalt.js`), dni z `SKROTY_DNI` (`src/ui/format.js`).
 - Ekran `#/zlecenie/nowe` (podmienia tymczasowy widok z IU-15): powrót „Zlecenia” (z wyceny: „Wycena”), tytuł „Nowe zlecenie”, podtytuł z wyceny „Z wyceny {numer}”; pola w kolejności: Klient (`wyborKlienta` z IU-14, wymagany), Usługa (wybór z katalogu albo „Inna” z polem opisu, `DLUGOSC_OPISU = 120`), Cena, Data, Godzina, Powtarzaj (chipy), Dni (chipy wielokrotnego wyboru przy cyklu tygodniowym; domyślnie dzień tygodnia daty), Płatność (tylko przy serii), planowany czas z wyceny jako tekst; jedna główna akcja „Zapisz zlecenie”. Id zlecenia nadane przy otwarciu ekranu; po zapisie `history.replaceState` na `#/zlecenia/dzien?data=<start>`. Tempo planu w chwili zapisu: `tempoDoWyceny(ustawienia, daneTempa(stan), uslugaId, domyslne)`.
 - „Zaplanuj”: główny przycisk na podsumowaniu przyjętej wyceny, gdy `doZaplanowania` (akcja `zaplanuj` w `akcjeWyceny`); pod podsumowaniem przyjętej wyceny lista „Zlecenia z tej wyceny” z wierszami → `#/zlecenie/<id>` (R22); przycisk „Zaplanuj” w wierszach sekcji „Do zaplanowania” ekranu Wycena. Z jednej wyceny można zaplanować kolejne zlecenie (przycisk drugi „Zaplanuj kolejne”, gdy wycena ma już zlecenie).
+- Korekta po implementacji (faza 5, 2026-11-04): `akcjeWyceny` ma trzeci wymagany argument `czyDoZaplanowania` i akcję `zaplanuj_kolejne`: przyjęta wycena ze zleceniem dostaje ją zamiast `zaplanuj`, a abonament z samym zleceniem jednorazowym nadal dostaje `zaplanuj`. `src/zlecenia/formularz.js` ma też `zapiszFormularz(kontekst, id, wartosci)` (wzór: `zapiszSzybka`), więc nie jest w całości czysty.
 - Seria co tydzień zakłada się w niecałą minutę: klient, cena, data, „Co tydzień” (dzień tygodnia z daty), „Zapisz zlecenie”.
 
 **Teksty (verbatim):**
@@ -1086,7 +1087,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 **Operator checklist:**
 - [ ] Właściciel zakłada na telefonie serię co tydzień u stałego klienta i mierzy, że trwa to niecałą minutę
 
-- [ ] **IU-17: Wizyta: zamknięcie, zapłata, czas pracy, przesunięcie i odwołanie**
+- [x] **IU-17: Wizyta: zamknięcie, zapłata, czas pracy, przesunięcie i odwołanie**
 
 **Cel:** Ekran wizyty z „Zrobione”, zapłatą z formą, opcjonalnym czasem pracy z planem i faktem, przesunięciem i odwołaniem.
 
@@ -1144,7 +1145,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 **Operator checklist:**
 - [ ] Właściciel zamyka na telefonie wczorajszą wizytę z zapłatą dwoma dotknięciami w widoku Dzień
 
-- [ ] **IU-18: Karta zlecenia, seria i historia klienta**
+- [x] **IU-18: Karta zlecenia, seria i historia klienta**
 
 **Cel:** Karta zlecenia z opisem serii, zmianą od wizyty, zakończeniem serii, zapłatami miesięcznymi i usunięciem oraz zlecenia i niezapłacone na karcie klienta.
 
@@ -1178,6 +1179,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 - „Usuń zlecenie”: `dialogPotwierdzenia`; gdy zlecenie ma zapłaty, treść mówi, że zapłaty też znikną.
 - Karta klienta: sekcja „Zlecenia” (nazwa, najbliższa wizyta albo „Zakończone”), sekcja „Niezapłacone” z `niezaplacone(stan, dzis, klientId)` (`src/zlecenia/zapytania.js`; wiersz „{data albo miesiąc} · {kwota}” → wizyta albo zlecenie), przycisk „Nowe zlecenie” (→ `#/zlecenie/nowe?klient=<id>`, R18); `klienci-dane.js`: `historiaZlecen`, `niezaplaconeKlienta`.
 - `karta-dane.js` (czyste): `opisRodzaju(zlecenie, katalog)` (dni przez `SKROTY_DNI` z `src/ui/format.js`), `miesiaceDoZaplaty(zlecenie, dzis)`, `okresyDoPokazania`, `domyslnyKoniec`.
+- Korekta po implementacji (faza 5, 2026-11-04): `opisRodzaju(zlecenie)` nie ma argumentu `katalog`, nazwę liczy `nazwaZlecenia(zlecenie, katalog)`. Kwoty idą przez `zl()`, więc seria miesięczna daje „1 560 zł miesięcznie” (twarde spacje), a nie „1560 zł”. `miesiaceDoZaplaty` pomija miesiące bez wizyt, a flaga niezapłaconego miesiąca to reguła `niezaplacone` z `src/zlecenia/zapytania.js` (miesiąc przed bieżącym, co najmniej jedna zrobiona wizyta, bez zapłaty).
 
 **Teksty (verbatim):**
 - Rodzaj: „Jednorazowe”, „Co tydzień: {dni} · {godzina}”, „Co 2 tygodnie: {dni} · {godzina}”, „Co miesiąc, {dzień}. dnia · {godzina}”, z kwotą „· {kwota} za wizytę” albo „· {kwota} miesięcznie”

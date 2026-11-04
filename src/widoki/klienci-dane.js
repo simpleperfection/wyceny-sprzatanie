@@ -1,22 +1,33 @@
-// Dane modulu Klienci (bez DOM): opis i inicjaly wiersza listy, linki telefonu i mapy na karcie klienta, historia wycen
-// klienta, podpowiedz duplikatu w formularzu, klient formularza i jego zapis (nowy albo edycja) oraz propozycje w wyborze
-// klienta (R17, R18, R19). Wyszukiwanie i operacje na magazynie sa w src/dane/klienci.js.
+// Dane modulu Klienci (bez DOM): opis i inicjaly wiersza listy, linki telefonu i mapy na karcie klienta, historia wycen i zlecen
+// klienta z niezaplaconymi pozycjami, podpowiedz duplikatu w formularzu, klient formularza i jego zapis (nowy albo edycja) oraz
+// propozycje w wyborze klienta (R16, R17, R18, R19). Wyszukiwanie i operacje na magazynie sa w src/dane/klienci.js.
 
 import { dodajKlienta, dopasowanieFrazy, indeksKlientow, klient, normalizujNazwe, zapiszKlienta } from '../dane/klienci.js'
 import { numerTelefonu } from '../dane/walidacja.js'
 import { kwotaWyceny } from '../dane/wyceny.js'
-import { zl } from '../ui/format.js'
+import { zlecenie, zleceniaKlienta } from '../dane/zlecenia.js'
+import { dzienKrotko, kiedy, miesiacRok, zl } from '../ui/format.js'
+import { sciezka } from '../ui/trasy.js'
+import { W_ABONAMENCIE } from '../zlecenia/kalendarz-dane.js'
+import { najblizszaOtwarta, nazwaZlecenia } from '../zlecenia/karta-dane.js'
+import { niezaplacone } from '../zlecenia/zapytania.js'
 
 /** @typedef {import('../dane/klienci.js').Klient} Klient */
 /** @typedef {import('../dane/klienci.js').ZmianaKlienta} ZmianaKlienta */
 /** @typedef {import('../dane/magazyn.js').Magazyn} Magazyn */
 /** @typedef {import('../dane/magazyn.js').Stan} Stan */
+/** @typedef {import('../silnik/katalog.js').Katalog} Katalog */
 /** @typedef {{ rodzaj: 'nowy' } | { rodzaj: 'edycja', klient: Klient } | { rodzaj: 'brak' }} KlientFormularza brak: klienta z adresu nie ma */
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
+/** @typedef {import('../dane/zlecenia-ksztalt.js').Zlecenie} Zlecenie */
+/** @typedef {import('../zlecenia/zapytania.js').Niezaplacone} Niezaplacone */
 /** @typedef {{ wycena: Wycena, kwota: number | null, opis: string }} PozycjaHistorii opis: „150 zł · 30 paź”, bez ceny sam dzien */
+/** @typedef {{ nazwa: string, opis: string, adres: string }} PozycjaZlecenia opis: „dziś 9:00 · 250 zł” albo „Zakończone” */
+/** @typedef {{ tekst: string, adres: string }} PozycjaNiezaplacona tekst: „pn 2 lis · 180 zł” albo „Październik 2026 · 1 200 zł” */
 
 const JEZYK = 'pl-PL'
 const SEPARATOR = ' · '
+const ZAKONCZONE = 'Zakończone'
 const ADRES_MAPY = 'https://www.google.com/maps/search/?api=1&query='
 const NUMER_TELEFONU = /^\+?\d+$/u
 /** Dzien utworzenia wyceny w czasie lokalnym: „30 paź”. */
@@ -80,6 +91,42 @@ export function historiaWycen(stan, klientId) {
       return { wycena, kwota, opis: kwota === null ? dzien : [zl(kwota), dzien].join(SEPARATOR) }
     })
 }
+
+/** @param {Zlecenie} z @param {string} dzis RRRR-MM-DD @returns {string} „dziś 9:00 · 250 zł”, bez wizyty do wykonania „Zakończone” */
+function opisZlecenia(z, dzis) {
+  const w = najblizszaOtwarta(z, dzis)
+  if (w === null) return ZAKONCZONE
+  const kwota = w.okres.cenaWizyty === null ? W_ABONAMENCIE : zl(w.okres.cenaWizyty)
+  return [kiedy(w.data, w.godzina, dzis), kwota].join(SEPARATOR)
+}
+
+/**
+ * Zlecenia klienta od najnowszego (data zalozenia) z nazwa, najblizsza wizyta albo „Zakończone” i adresem karty zlecenia.
+ * @param {Pick<Stan, 'zlecenia'>} stan @param {string} klientId @param {Pick<Katalog, 'uslugi'>} katalog @param {string} dzis RRRR-MM-DD
+ * @returns {PozycjaZlecenia[]}
+ */
+export function historiaZlecen(stan, klientId, katalog, dzis) {
+  return zleceniaKlienta(stan, klientId)
+    .sort((a, b) => (a.utworzone === b.utworzone ? 0 : a.utworzone < b.utworzone ? 1 : -1))
+    .map((z) => ({ nazwa: nazwaZlecenia(z, katalog), opis: opisZlecenia(z, dzis), adres: sciezka('zlecenie', { id: z.id }) }))
+}
+
+/**
+ * Wiersz niezaplaconej pozycji: wizyta z dniem, w ktorym sie odbyla (po przesunieciu nowy dzien) → ekran wizyty, a miesiac → karta zlecenia.
+ * @param {Pick<Stan, 'zlecenia'>} stan @param {Niezaplacone} pozycja @returns {PozycjaNiezaplacona}
+ */
+function pozycjaNiezaplacona(stan, { rodzaj, zlecenieId, klucz, kwota }) {
+  if (rodzaj === 'miesiac') return { tekst: [miesiacRok(`${klucz}-01`), zl(kwota)].join(SEPARATOR), adres: sciezka('zlecenie', { id: zlecenieId }) }
+  const dzien = zlecenie(stan, zlecenieId)?.wizyty[klucz]?.przeniesiona?.data ?? klucz
+  return { tekst: [dzienKrotko(dzien), zl(kwota)].join(SEPARATOR), adres: sciezka('wizyta', { id: zlecenieId, data: klucz }) }
+}
+
+/**
+ * Niezaplacone klienta (regula `niezaplacone`, src/zlecenia/zapytania.js), najstarsze najpierw.
+ * @param {Pick<Stan, 'klienci' | 'zlecenia'>} stan @param {string} klientId @param {string} dzis RRRR-MM-DD
+ * @returns {PozycjaNiezaplacona[]}
+ */
+export const niezaplaconeKlienta = (stan, klientId, dzis) => niezaplacone(stan, dzis, klientId).map((pozycja) => pozycjaNiezaplacona(stan, pozycja))
 
 /** Regula „klient ma historie” (karta klienta: „Usuń klienta”) ma jedna definicje w src/dane/klienci.js. */
 export { czyMaHistorie } from '../dane/klienci.js'

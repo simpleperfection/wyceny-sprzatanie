@@ -25,9 +25,9 @@ const BEZ_KOPII = 'Nie masz jeszcze kopii danych. Dane są tylko w tej przegląd
 const INSTRUKCJA_IOS = 'Na iPhonie dodaj aplikację do ekranu początkowego: Udostępnij → Do ekranu początkowego. Dane z Safari nie przechodzą do aplikacji na ekranie początkowym, więc zrób to przed pierwszą wyceną.'
 
 /** Kafel modulu: link na cala powierzchnie z ikona, nazwa i linia stanu. @param {Readonly<Modul>} modul @param {StanKafla} stanLinii */
-function kafel({ nazwa, ikona: nazwaIkony, trasa }, { tekst, czyAkcja }) {
+function kafel({ nazwa, ikona: nazwaIkony, trasa, parametry }, { tekst, czyAkcja }) {
   return h('li', { class: 'kafle__pozycja' },
-    h('a', { class: 'kafel', href: sciezka(trasa) },
+    h('a', { class: 'kafel', href: sciezka(trasa, parametry) },
       h('span', { class: 'kafel__ikona' }, ikona(nazwaIkony)),
       h('span', { class: 'kafel__nazwa' }, nazwa),
       h('span', { class: ['kafel__stan', czyAkcja && 'kafel__stan--akcja'] }, tekst)))

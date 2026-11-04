@@ -6,6 +6,7 @@ import { wycena as znajdzWycene } from '../dane/wyceny.js'
 import { h } from '../ui/h.js'
 import { przycisk } from '../ui/komponenty/formularz.js'
 import { sciezka } from '../ui/trasy.js'
+import { jestWidokiemKalendarza } from '../zlecenia/kalendarz-dane.js'
 import { widokDoboruChemii } from './dobor-chemii.js'
 import { widokKataloguChemii } from './katalog-chemii.js'
 import { widokListyKlientow } from './klienci-lista.js'
@@ -25,6 +26,12 @@ import { widokPytan } from './pytania.js'
 import { widokStartu } from './start.js'
 import { widokSzybkiejWyceny } from './szybka.js'
 import { widokUstawien } from './ustawienia.js'
+import { widokWizyty } from './wizyta.js'
+import { widokDniaKalendarza } from './zlecenia-dzien.js'
+import { widokMiesiacaKalendarza } from './zlecenia-miesiac.js'
+import { widokTygodniaKalendarza } from './zlecenia-tydzien.js'
+import { widokFormularzaZlecenia } from './zlecenie-formularz.js'
+import { widokKartyZlecenia } from './zlecenie-karta.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../ui/router.js').Widoki} Widoki */
@@ -53,6 +60,16 @@ const widokKreatoraZakresu = {
   },
 }
 
+const EKRANY_KALENDARZA = Object.freeze({ dzien: widokDniaKalendarza, tydzien: widokTygodniaKalendarza, miesiac: widokMiesiacaKalendarza })
+
+/** @type {Widok} widok trasy `#/zlecenia/:widok`: Dzień, Tydzień albo Miesiąc, a inny adres to „Nie ma takiego ekranu.” */
+const widokKalendarza = {
+  render(kontener, argumenty) {
+    const { widok } = argumenty.parametry
+    return (jestWidokiemKalendarza(widok) ? EKRANY_KALENDARZA[widok] : NIE_MA_EKRANU).render(kontener, argumenty)
+  },
+}
+
 /** @type {Widoki} */
 export const WIDOKI = Object.freeze({
   start: widokStartu,
@@ -65,6 +82,10 @@ export const WIDOKI = Object.freeze({
   nowyKlient: widokFormularzaKlienta,
   klient: widokKartyKlienta,
   edycjaKlienta: widokFormularzaKlienta,
+  zlecenia: widokKalendarza,
+  noweZlecenie: widokFormularzaZlecenia,
+  zlecenie: widokKartyZlecenia,
+  wizyta: widokWizyty,
   kreator: widokKreatora({ usluga: widokKreatoraUslugi, zakres: widokKreatoraZakresu, dodatki: widokKreatoraDodatkow, chemia: widokDoboruChemii,
     cena: widokPodsumowaniaKreatora }, NIE_MA_EKRANU),
   wycena: widokZapisanejWyceny,

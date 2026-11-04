@@ -18,6 +18,12 @@ export const TRASY = Object.freeze({
   nowyKlient: '#/klienci/nowy',
   klient: '#/klienci/:id',
   edycjaKlienta: '#/klienci/:id/edycja',
+  // Modul Zlecenia (zrodlo: IU-15): widok kalendarza `dzien` | `tydzien` | `miesiac`, zapytanie `?data=RRRR-MM-DD`.
+  zlecenia: '#/zlecenia/:widok',
+  // Przed `zlecenie`: `nowe` pasuje tez do wzorca `#/zlecenie/:id`.
+  noweZlecenie: '#/zlecenie/nowe',
+  zlecenie: '#/zlecenie/:id',
+  wizyta: '#/zlecenie/:id/wizyta/:data',
 })
 
 /** @typedef {keyof typeof TRASY} NazwaTrasy */

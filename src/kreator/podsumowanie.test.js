@@ -250,9 +250,17 @@ describe('przeliczWycene', () => {
 
 describe('akcjeWyceny', () => {
   it('decyzja klienta przy wycenie do wysłania i wysłanej, przyjęta z rezygnacją, ze zleceniem bez edycji', () => {
-    assert.deepEqual(akcjeWyceny('do_wyslania', false), ['przyjeta', 'odrzucona', 'edytuj', 'usun'])
-    assert.deepEqual(akcjeWyceny('wyslana', false), ['przyjeta', 'odrzucona', 'edytuj', 'usun'])
-    assert.deepEqual(akcjeWyceny('przyjeta', false), ['odrzucona', 'edytuj', 'usun'])
-    assert.deepEqual(akcjeWyceny('przyjeta', true), ['odrzucona', 'usun'])
+    assert.deepEqual(akcjeWyceny('do_wyslania', false, false), ['przyjeta', 'odrzucona', 'edytuj', 'usun'])
+    assert.deepEqual(akcjeWyceny('wyslana', false, false), ['przyjeta', 'odrzucona', 'edytuj', 'usun'])
+    assert.deepEqual(akcjeWyceny('odrzucona', true, false), ['usun'])
+  })
+
+  it('przyjęta do zaplanowania ma `zaplanuj` przed innymi akcjami, a ze zleceniem tylko `zaplanuj_kolejne`', () => {
+    assert.deepEqual(akcjeWyceny('przyjeta', false, true), ['zaplanuj', 'odrzucona', 'edytuj', 'usun'])
+    assert.deepEqual(akcjeWyceny('przyjeta', true, false), ['zaplanuj_kolejne', 'odrzucona', 'usun'])
+  })
+
+  it('abonament z samym zleceniem jednorazowym jest dalej do zaplanowania i bez edycji', () => {
+    assert.deepEqual(akcjeWyceny('przyjeta', true, true), ['zaplanuj', 'odrzucona', 'usun'])
   })
 })

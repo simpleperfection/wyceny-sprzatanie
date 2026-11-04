@@ -59,7 +59,7 @@
   flex: 1;
 }
 
-/* Sekcja „Wyceny”: naglowek nad karta z wierszami */
+/* Sekcje „Niezapłacone”, „Zlecenia” i „Wyceny”: naglowek nad karta z wierszami */
 .karta-klienta__sekcja {
   display: flex;
   flex-direction: column;

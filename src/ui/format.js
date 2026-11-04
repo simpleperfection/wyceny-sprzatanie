@@ -24,6 +24,8 @@ const formatDaty = new Intl.DateTimeFormat(JEZYK, { day: 'numeric', month: 'long
 const formatDnia = new Intl.DateTimeFormat(JEZYK, { weekday: 'long', day: 'numeric', month: 'long' })
 /** Dzien i skrot miesiaca dnia RRRR-MM-DD liczonego w UTC: „6 lis”. */
 const formatDniaKrotki = new Intl.DateTimeFormat(JEZYK, { day: 'numeric', month: 'short', timeZone: 'UTC' })
+/** Miesiac (mianownik) i rok dnia RRRR-MM-DD liczonego w UTC: „listopad 2026”. */
+const formatMiesiacaRoku = new Intl.DateTimeFormat(JEZYK, { month: 'long', year: 'numeric', timeZone: 'UTC' })
 
 /** Skroty dni tygodnia od poniedzialku (indeks = dzien ISO − 1). */
 export const SKROTY_DNI = Object.freeze(/** @type {const} */ (['pn', 'wt', 'śr', 'czw', 'pt', 'sb', 'nd']))
@@ -32,6 +34,7 @@ export const SKROTY_DNI = Object.freeze(/** @type {const} */ (['pn', 'wt', 'śr'
 export const FORMY = Object.freeze({
   wycena: /** @type {const} */ (['wycena', 'wyceny', 'wycen']),
   zlecenie: /** @type {const} */ (['zlecenie', 'zlecenia', 'zleceń']),
+  wizyta: /** @type {const} */ (['wizyta', 'wizyty', 'wizyt']),
   wykonaneZlecenie: /** @type {const} */ (['wykonane zlecenie', 'wykonane zlecenia', 'wykonanych zleceń']),
   przyjeta: /** @type {const} */ (['przyjęta', 'przyjęte', 'przyjętych']),
   niezaplacone: /** @type {const} */ (['niezapłacone', 'niezapłacone', 'niezapłaconych']),
@@ -163,21 +166,57 @@ export function dniTemu(dni) {
   return dni === 1 ? 'wczoraj' : `${dni} dni temu`
 }
 
+/** @param {unknown} dzien @returns {asserts dzien is string} RRRR-MM-DD, inaczej BladFormatu `zla_data` */
+function sprawdzDzien(dzien) {
+  if (!jestDniem(dzien)) throw new BladFormatu('zla_data', `Dzień musi mieć postać RRRR-MM-DD, jest ${String(dzien)}`)
+}
+
+/** @param {string} dzien RRRR-MM-DD @returns {Date} polnoc UTC dnia (formaty z `timeZone: 'UTC'`) */
+const polnocUtc = (dzien) => new Date(`${dzien}T00:00:00Z`)
+
+/** Godzina wizyty bez zera wiodacego; spoza HH:MM → BladFormatu `zla_godzina`. @param {string} tekst HH:MM @returns {string} „9:00” */
+export function godzina(tekst) {
+  if (!jestGodzina(tekst)) throw new BladFormatu('zla_godzina', `Godzina musi mieć postać HH:MM, jest ${String(tekst)}`)
+  return `${Number(tekst.slice(0, 2))}:${tekst.slice(3)}`
+}
+
+/** Zly dzien → BladFormatu `zla_data`. @param {string} dzien RRRR-MM-DD @returns {string} „wt 3 lis” */
+export function dzienKrotko(dzien) {
+  sprawdzDzien(dzien)
+  return `${SKROTY_DNI[dzienTygodnia(dzien) - 1]} ${formatDniaKrotki.format(polnocUtc(dzien))}`
+}
+
+/** Zly dzien → BladFormatu `zla_data`. @param {string} dzien RRRR-MM-DD dowolny dzien miesiaca @returns {string} „Listopad 2026” */
+export function miesiacRok(dzien) {
+  sprawdzDzien(dzien)
+  const tekst = formatMiesiacaRoku.format(polnocUtc(dzien))
+  return tekst.charAt(0).toLocaleUpperCase(JEZYK) + tekst.slice(1)
+}
+
+/**
+ * Zakres dni (np. tydzien) z miesiacem raz, gdy oba dni sa w tym samym miesiacu; zly dzien → BladFormatu `zla_data`.
+ * @param {string} od RRRR-MM-DD @param {string} doDnia RRRR-MM-DD @returns {string} „2–8 lis”, „26 paź – 1 lis”
+ */
+export function zakresDni(od, doDnia) {
+  sprawdzDzien(od)
+  sprawdzDzien(doDnia)
+  if (od.slice(0, 7) === doDnia.slice(0, 7)) return `${Number(od.slice(8))}–${formatDniaKrotki.format(polnocUtc(doDnia))}`
+  return `${formatDniaKrotki.format(polnocUtc(od))} – ${formatDniaKrotki.format(polnocUtc(doDnia))}`
+}
+
 /**
  * Termin wizyty wzgledem dnia `dzis` (dni RRRR-MM-DD liczone w UTC): dzis i jutro slowem, dalsze dni skrotem dnia tygodnia.
  * Zly dzien → BladFormatu `zla_data`, godzina spoza HH:MM → `zla_godzina`.
- * @param {string} dzien @param {string | null} godzina HH:MM albo null (wizyta bez godziny) @param {string} dzis
+ * @param {string} dzien @param {string | null} godzinaWizyty HH:MM albo null (wizyta bez godziny) @param {string} dzis
  * @returns {string} „jutro 9:00”, „pt 6 lis, 9:00”, „dziś”, „pt 6 lis”
  */
-export function kiedy(dzien, godzina, dzis) {
-  for (const d of [dzien, dzis]) {
-    if (!jestDniem(d)) throw new BladFormatu('zla_data', `Dzień musi mieć postać RRRR-MM-DD, jest ${String(d)}`)
-  }
-  if (godzina !== null && !jestGodzina(godzina)) throw new BladFormatu('zla_godzina', `Godzina musi mieć postać HH:MM, jest ${String(godzina)}`)
+export function kiedy(dzien, godzinaWizyty, dzis) {
+  sprawdzDzien(dzien)
+  sprawdzDzien(dzis)
+  const czasTekst = godzinaWizyty === null ? null : godzina(godzinaWizyty)
   const slowo = dzien === dzis ? 'dziś' : dzien === dodajDni(dzis, 1) ? 'jutro' : null
-  const dzienTekst = slowo ?? `${SKROTY_DNI[dzienTygodnia(dzien) - 1]} ${formatDniaKrotki.format(new Date(`${dzien}T00:00:00Z`))}`
-  if (godzina === null) return dzienTekst
-  const czasTekst = `${Number(godzina.slice(0, 2))}:${godzina.slice(3)}`
+  const dzienTekst = slowo ?? dzienKrotko(dzien)
+  if (czasTekst === null) return dzienTekst
   return slowo === null ? `${dzienTekst}, ${czasTekst}` : `${dzienTekst} ${czasTekst}`
 }
 

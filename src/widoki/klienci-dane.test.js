@@ -5,8 +5,8 @@ import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
 import { BladKlienta, dodajKlienta, usunKlienta } from '../dane/klienci.js'
 import { utworzMagazyn, wczytajStan } from '../dane/magazyn.js'
 import {
-  czyMaHistorie, historiaWycen, inicjaly, klientFormularza, linkMapy, linkTelefonu, opisWiersza, podobnyKlient, propozycjeKlientow,
-  zapiszFormularzKlienta,
+  czyMaHistorie, historiaWycen, historiaZlecen, inicjaly, klientFormularza, linkMapy, linkTelefonu, niezaplaconeKlienta, opisWiersza, podobnyKlient,
+  propozycjeKlientow, zapiszFormularzKlienta,
 } from './klienci-dane.js'
 
 const CHWILA = '2026-10-20T10:00:00.000Z'
@@ -27,6 +27,29 @@ const wycena = (id, klientId, utworzona, { cena, cenaReczna } = {}) => ({
 const ANNA = klient('k-anna', 'Anna Kowalska', { telefon: '600 100 200', adres: 'ul. Lipowa 3, Warszawa' })
 const BIURO = klient('k-biuro', 'Biuro Rachunkowe Lis', { adres: 'ul. Prosta 10, Warszawa' })
 const JAN = klient('k-jan', 'Jan Nowak')
+
+const NBSP = ' '
+const DZIS = '2026-11-02'
+const KATALOG = { uslugi: [{ id: 'okna', nazwa: 'Mycie okien' }] }
+const CYKL = { co: /** @type {const} */ ('tydzien'), dni: [1] }
+const ZROBIONA = { przeniesiona: null, odwolana: false, zrobiona: CHWILA, zaplata: null, minutyPracy: null }
+
+/**
+ * Zlecenie za wizyte od 2026-10-05 (poniedzialek), 9:00, 180 zl.
+ * @param {string} id @param {string} klientId @param {Partial<import('../dane/zlecenia-ksztalt.js').Zlecenie>} [pola]
+ * @returns {import('../dane/zlecenia-ksztalt.js').Zlecenie}
+ */
+const zlecenie = (id, klientId, pola = {}) => ({ id, klientId, wycenaId: null, uslugaId: 'okna', opis: null, rozliczenie: 'za_wizyte', start: '2026-10-05',
+  okresy: [{ od: '2026-10-05', cykl: null, godzina: '09:00', cenaWizyty: 180, cenaMiesiaca: null }], koniec: null, plan: null, wizyty: {},
+  zaplatyMiesieczne: {}, utworzone: CHWILA, zmienione: CHWILA, ...pola })
+
+/** @param {string} id @param {string} klientId @param {Partial<import('../dane/zlecenia-ksztalt.js').Zlecenie>} [pola] seria w poniedzialki za 180 zl */
+const seria = (id, klientId, pola = {}) => zlecenie(id, klientId, { okresy: [{ od: '2026-10-05', cykl: CYKL, godzina: '09:00', cenaWizyty: 180, cenaMiesiaca: null }],
+  ...pola })
+
+/** @param {string} id @param {string} klientId @param {Partial<import('../dane/zlecenia-ksztalt.js').Zlecenie>} [pola] seria w poniedzialki za 1200 zl miesiecznie */
+const abonament = (id, klientId, pola = {}) => zlecenie(id, klientId, { rozliczenie: 'miesiecznie',
+  okresy: [{ od: '2026-10-05', cykl: CYKL, godzina: '15:00', cenaWizyty: null, cenaMiesiaca: 1200 }], ...pola })
 
 describe('linkTelefonu', () => {
   it('usuwa spacje i myślniki, zostawia +48', () => {
@@ -129,6 +152,81 @@ describe('historiaWycen', () => {
 
   it('nieprawidłowa data utworzenia daje RangeError', () => {
     assert.throws(() => historiaWycen({ wyceny: [wycena('w-zla', 'k-anna', 'wczoraj')] }, 'k-anna'), RangeError)
+  })
+})
+
+describe('historiaZlecen', () => {
+  it('seria ma nazwę z katalogu, najbliższą wizytę z kwotą i adres karty zlecenia', () => {
+    const stan = { zlecenia: [seria('z-seria', 'k-anna')] }
+
+    assert.deepEqual(historiaZlecen(stan, 'k-anna', KATALOG, DZIS), [{ nazwa: 'Mycie okien', opis: `dziś 9:00 · 180${NBSP}zł`, adres: '#/zlecenie/z-seria' }])
+  })
+
+  it('seria z końcem w przeszłości ma „Zakończone”', () => {
+    const stan = { zlecenia: [seria('z-koniec', 'k-anna', { koniec: '2026-10-26' })] }
+
+    assert.equal(historiaZlecen(stan, 'k-anna', KATALOG, DZIS)[0].opis, 'Zakończone')
+  })
+
+  it('seria z końcem w przyszłości ma jeszcze najbliższą wizytę', () => {
+    const stan = { zlecenia: [seria('z-koniec', 'k-anna', { koniec: '2026-11-30' })] }
+
+    assert.equal(historiaZlecen(stan, 'k-anna', KATALOG, DZIS)[0].opis, `dziś 9:00 · 180${NBSP}zł`)
+  })
+
+  it('zrobione zlecenie jednorazowe ma „Zakończone”, a abonament wizytę bez kwoty', () => {
+    const stan = { zlecenia: [zlecenie('z-raz', 'k-anna', { wizyty: { '2026-10-05': ZROBIONA } }), abonament('z-abo', 'k-biuro')] }
+
+    assert.equal(historiaZlecen(stan, 'k-anna', KATALOG, DZIS)[0].opis, 'Zakończone')
+    assert.equal(historiaZlecen(stan, 'k-biuro', KATALOG, DZIS)[0].opis, 'dziś 15:00 · w abonamencie')
+  })
+
+  it('tylko zlecenia klienta, od najnowszego, a opis zlecenia wygrywa z usługą', () => {
+    const stan = { zlecenia: [
+      seria('z-stare', 'k-anna', { utworzone: '2026-10-01T08:00:00.000Z' }),
+      seria('z-obce', 'k-biuro'),
+      seria('z-nowe', 'k-anna', { utworzone: '2026-10-20T08:00:00.000Z', opis: 'Klatka schodowa', uslugaId: null }),
+    ] }
+
+    assert.deepEqual(historiaZlecen(stan, 'k-anna', KATALOG, DZIS).map((p) => [p.adres, p.nazwa]), [
+      ['#/zlecenie/z-nowe', 'Klatka schodowa'],
+      ['#/zlecenie/z-stare', 'Mycie okien'],
+    ])
+  })
+
+  it('klient bez zleceń ma pustą historię', () => {
+    assert.deepEqual(historiaZlecen({ zlecenia: [seria('z', 'k-anna')] }, 'k-jan', KATALOG, DZIS), [])
+  })
+})
+
+describe('niezaplaconeKlienta', () => {
+  it('zwraca tylko pozycje danego klienta', () => {
+    const stan = { klienci: [ANNA, JAN], zlecenia: [
+      zlecenie('z-jan', 'k-jan', { wizyty: { '2026-10-05': ZROBIONA } }),
+      zlecenie('z-anna', 'k-anna', { wizyty: { '2026-10-05': ZROBIONA } }),
+    ] }
+
+    assert.deepEqual(niezaplaconeKlienta(stan, 'k-jan', DZIS), [{ tekst: `pn 5 paź · 180${NBSP}zł`, adres: '#/zlecenie/z-jan/wizyta/2026-10-05' }])
+  })
+
+  it('przesunięta wizyta ma dzień, w którym się odbyła, a adres z datą pierwotną', () => {
+    const przesunieta = { ...ZROBIONA, przeniesiona: { data: '2026-10-07', godzina: null } }
+    const stan = { klienci: [JAN], zlecenia: [zlecenie('z-jan', 'k-jan', { wizyty: { '2026-10-05': przesunieta } })] }
+
+    assert.deepEqual(niezaplaconeKlienta(stan, 'k-jan', DZIS), [{ tekst: `śr 7 paź · 180${NBSP}zł`, adres: '#/zlecenie/z-jan/wizyta/2026-10-05' }])
+  })
+
+  it('miesiąc abonamentu ma nazwę i kwotę i prowadzi do karty zlecenia', () => {
+    const stan = { klienci: [BIURO], zlecenia: [abonament('z-abo', 'k-biuro', { wizyty: { '2026-10-05': ZROBIONA } })] }
+
+    assert.deepEqual(niezaplaconeKlienta(stan, 'k-biuro', DZIS), [{ tekst: `Październik 2026 · 1${NBSP}200${NBSP}zł`, adres: '#/zlecenie/z-abo' }])
+  })
+
+  it('klient bez zaległości ma pustą listę', () => {
+    const zaplata = { forma: /** @type {const} */ ('gotowka'), data: '2026-10-05', kwota: 180 }
+    const stan = { klienci: [JAN], zlecenia: [zlecenie('z-jan', 'k-jan', { wizyty: { '2026-10-05': { ...ZROBIONA, zaplata } } })] }
+
+    assert.deepEqual(niezaplaconeKlienta(stan, 'k-jan', DZIS), [])
   })
 })
 

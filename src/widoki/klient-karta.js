@@ -1,25 +1,32 @@
 // Karta klienta (`#/klienci/<id>`, makieta „Karta klienta” w docs/operator/aplikacja-modulowa-makiety.html): powrot „Klienci”,
 // „Edytuj”, inicjaly i nazwa, telefon (link `tel:`) i adres (link do mapy) jednym dotknieciem, notatki w calosci, „Nowa wycena”
-// z tym klientem i historia wycen z kwota i statusem. „Usuń klienta” tylko bez historii (wyceny ani zlecenia, R18).
+// z tym klientem, „Nowe zlecenie” (R18), „Niezapłacone” (R16, tylko z zaleglosciami), zlecenia i historia wycen z kwota i statusem.
+// „Usuń klienta” tylko bez historii (wyceny ani zlecenia, R18).
 
 import { BladKlienta, klient, usunKlienta } from '../dane/klienci.js'
+import { dzienLokalny } from '../dane/ksztalt.js'
 import { wczytajStan } from '../dane/magazyn.js'
 import { h } from '../ui/h.js'
 import { przycisk } from '../ui/komponenty/formularz.js'
 import { baner, dialogPotwierdzenia, karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
 import { pigulkaStatusu } from '../ui/statusy.js'
 import { sciezka } from '../ui/trasy.js'
-import { czyMaHistorie, historiaWycen, inicjaly, linkMapy, linkTelefonu } from './klienci-dane.js'
+import { czyMaHistorie, historiaWycen, historiaZlecen, inicjaly, linkMapy, linkTelefonu, niezaplaconeKlienta } from './klienci-dane.js'
 import { adresWyceny } from './start-dane.js'
 import { tekstBleduZapisu } from './teksty-bledow.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../silnik/katalog.js').Katalog} Katalog */
 /** @typedef {import('../dane/klienci.js').Klient} Klient */
+/** @typedef {import('../ui/h.js').Dzieci} Dzieci */
 /** @typedef {import('./klienci-dane.js').PozycjaHistorii} PozycjaHistorii */
+/** @typedef {import('./klienci-dane.js').PozycjaNiezaplacona} PozycjaNiezaplacona */
+/** @typedef {import('./klienci-dane.js').PozycjaZlecenia} PozycjaZlecenia */
 
 const POWROT = { wstecz: sciezka('klienci'), wsteczTekst: 'Klienci' }
 const ID_WYCEN = 'karta-klienta-wyceny'
+const ID_ZLECEN = 'karta-klienta-zlecenia'
+const ID_NIEZAPLACONYCH = 'karta-klienta-niezaplacone'
 const NIE_MA_KLIENTA = 'Nie ma takiego klienta.'
 const MA_HISTORIE = 'Tego klienta nie można usunąć, bo ma wyceny albo zlecenia.'
 const BLAD_USUNIECIA = 'Nie udało się usunąć klienta. Spróbuj jeszcze raz.'
@@ -55,13 +62,31 @@ function wierszWyceny(katalog, { wycena, opis }) {
   return wiersz({ tytul: usluga, opis, adres: adresWyceny(wycena), dodatek: pigulkaStatusu(wycena.status) })
 }
 
+/** @param {string} id @param {string} tytul @param {Dzieci} tresc @returns {HTMLElement} sekcja z naglowkiem nad karta wierszy */
+function sekcja(id, tytul, tresc) {
+  return h('section', { class: 'karta-klienta__sekcja', 'aria-labelledby': id },
+    h('h2', { class: 'karta-klienta__tytul-sekcji', id }, tytul), tresc)
+}
+
 /** @param {Pick<Katalog, 'uslugi'>} katalog @param {PozycjaHistorii[]} historia @returns {HTMLElement} sekcja „Wyceny” */
 function sekcjaWycen(katalog, historia) {
-  return h('section', { class: 'karta-klienta__sekcja', 'aria-labelledby': ID_WYCEN },
-    h('h2', { class: 'karta-klienta__tytul-sekcji', id: ID_WYCEN }, 'Wyceny'),
-    historia.length === 0
-      ? h('p', { class: 'karta-klienta__pusto' }, 'Brak wycen.')
-      : karta({ klasa: 'karta--bez-odstepu' }, historia.map((pozycja) => wierszWyceny(katalog, pozycja))))
+  return sekcja(ID_WYCEN, 'Wyceny', historia.length === 0
+    ? h('p', { class: 'karta-klienta__pusto' }, 'Brak wycen.')
+    : karta({ klasa: 'karta--bez-odstepu' }, historia.map((pozycja) => wierszWyceny(katalog, pozycja))))
+}
+
+/** @param {PozycjaZlecenia[]} zlecenia @returns {HTMLElement} sekcja „Zlecenia” */
+function sekcjaZlecen(zlecenia) {
+  return sekcja(ID_ZLECEN, 'Zlecenia', zlecenia.length === 0
+    ? h('p', { class: 'karta-klienta__pusto' }, 'Brak zleceń.')
+    : karta({ klasa: 'karta--bez-odstepu' }, zlecenia.map(({ nazwa, opis, adres }) => wiersz({ tytul: nazwa, opis, adres }))))
+}
+
+/** @param {PozycjaNiezaplacona[]} pozycje @returns {HTMLElement | null} sekcja „Niezapłacone”; bez zaleglosci null */
+function sekcjaNiezaplaconych(pozycje) {
+  if (pozycje.length === 0) return null
+  return sekcja(ID_NIEZAPLACONYCH, 'Niezapłacone',
+    karta({ klasa: 'karta--bez-odstepu' }, pozycje.map(({ tekst, adres }) => wiersz({ tytul: tekst, adres }))))
 }
 
 /** @param {HTMLElement} kontener */
@@ -82,6 +107,7 @@ export const widokKartyKlienta = {
     let czyPytaOUsuniecie = false
     let czyAktywny = true
     const { id, nazwa } = k
+    const dzis = dzienLokalny(new Date())
 
     async function handleUsun() {
       if (czyPytaOUsuniecie) return
@@ -105,7 +131,10 @@ export const widokKartyKlienta = {
       kontakt(k),
       notatki,
       h('div', { class: 'karta-klienta__akcje' },
-        przycisk({ tekst: 'Nowa wycena', adres: sciezka('kreator', { krok: 'usluga' }, { klient: k.id }) })),
+        przycisk({ tekst: 'Nowa wycena', adres: sciezka('kreator', { krok: 'usluga' }, { klient: k.id }) }),
+        przycisk({ tekst: 'Nowe zlecenie', rodzaj: 'drugi', adres: sciezka('noweZlecenie', {}, { klient: k.id }) })),
+      sekcjaNiezaplaconych(niezaplaconeKlienta(stan, k.id, dzis)),
+      sekcjaZlecen(historiaZlecen(stan, k.id, katalog, dzis)),
       sekcjaWycen(katalog, historiaWycen(stan, k.id)),
       komunikat,
       usun))

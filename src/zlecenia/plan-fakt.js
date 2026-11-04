@@ -1,5 +1,5 @@
 // Plan a fakt wizyt zlecen (R15, R16): krok licznika czasu pracy, sprawdzenie czasu, punkt startu licznika i plan wizyty
-// z planu zlecenia oraz lista „plan a fakt” z realna stawka. Logika bez DOM i bez zapisu (czas pracy zapisuje wpiszCzasPracy
+// z planu zlecenia, plan i fakt jednej wizyty oraz lista „plan a fakt” z realna stawka. Logika bez DOM i bez zapisu (czas pracy zapisuje wpiszCzasPracy
 // z src/dane/wizyty.js). Tempo planu to `plan.tempo` zlecenia z chwili zaplanowania; koszt i realna stawka licza sie
 // z migawki wyceny zlecenia (kosztPrzyTempie z src/kreator/podsumowanie.js), a kolejnosc wpisow — jak w tempie wlasnym.
 
@@ -18,9 +18,10 @@ import { daneTempa, idWpisuWizyty } from './dane-tempa.js'
  * @typedef {Pick<Stan, 'zlecenia' | 'wyceny' | 'ustawienia'>} StanPlanu
  * @typedef {{ plan: number, tempoPlanu: number, stawkaPlanu: number | null }} PlanWizyty plan: minuty (czas normowy × tempo
  *   planu); stawkaPlanu: zl za godzine pracy przy tempie planu, null bez wyceny z migawka albo gdy migawki nie da sie policzyc
- * @typedef {{ zlecenieId: string, dataPierwotna: string, data: string, uslugaId: string, plan: number, fakt: number,
- *   procent: number, stawka: number | null }} WierszHistorii data: dzien wizyty (przesuniety albo pierwotny); plan i fakt
- *   w minutach; procent: ulamek roznicy wzgledem planu; stawka: realna stawka (zl za godzine faktu), null jak stawkaPlanu
+ * @typedef {{ plan: number, fakt: number, procent: number, stawka: number | null }} PlanIFakt plan i fakt w minutach; procent:
+ *   ulamek roznicy wzgledem planu; stawka: realna stawka (zl za godzine faktu), null jak stawkaPlanu
+ * @typedef {PlanIFakt & { zlecenieId: string, dataPierwotna: string, data: string, uslugaId: string }} WierszHistorii
+ *   data: dzien wizyty (przesuniety albo pierwotny)
  */
 
 /** Licznik czasu pracy zmienia sie o tyle minut (ustalenie z makiet). */
@@ -87,6 +88,27 @@ export function planZakonczenia(z, stan, katalog) {
 }
 
 /**
+ * Plan i fakt wizyty z czasem pracy; jedna regula dla ekranu wizyty i listy „plan a fakt”.
+ * @param {Zlecenie} z @param {PlanZlecenia} planZ @param {number} fakt minuty @param {StanPlanu} stan @param {Katalog} katalog
+ * @returns {PlanIFakt}
+ */
+function policzPlanIFakt(z, { minutyNormowe, tempo }, fakt, stan, katalog) {
+  const plan = minutyPlanu(minutyNormowe, tempo)
+  return { plan, fakt, procent: (fakt - plan) / plan, stawka: stawkaPrzyTempie(z, stan, katalog, fakt / minutyNormowe) }
+}
+
+/**
+ * Plan i fakt jednej wizyty (ekran wizyty); bez limitu listy, wiec tez dla wizyty spoza najnowszych wpisow. Zlecenie bez planu
+ * i wizyta bez czasu pracy daja null.
+ * @param {Zlecenie} z @param {string} dataPierwotna @param {StanPlanu} stan @param {Katalog} katalog
+ * @returns {PlanIFakt | null}
+ */
+export function planIFaktWizyty(z, dataPierwotna, stan, katalog) {
+  const fakt = Object.hasOwn(z.wizyty, dataPierwotna) ? z.wizyty[dataPierwotna].minutyPracy : null
+  return z.plan === null || fakt === null ? null : policzPlanIFakt(z, z.plan, fakt, stan, katalog)
+}
+
+/**
  * Najnowsze wpisy czasu pracy wizyt (od najnowszego, kolejnosc jak wpisyTempa): dzien, usluga, plan z tempa planu zlecenia,
  * fakt, roznica jako ulamek planu i realna stawka (koszt przy tempie fakt / norma). Licza sie wizyty z czasem pracy zlecen
  * z planem (daneTempa).
@@ -108,9 +130,6 @@ export function historiaPlanuIFaktu(stan, katalog) {
     const wizyta = wizyty.get(wpis.wykonanieId)
     if (wizyta === undefined || wizyta.z.plan === null) return []
     const { z, dataPierwotna, fakt } = wizyta
-    const { minutyNormowe, tempo } = wizyta.z.plan
-    const plan = minutyPlanu(minutyNormowe, tempo)
-    return [{ zlecenieId: z.id, dataPierwotna, data: wpis.data, uslugaId: wpis.uslugaId, plan, fakt, procent: (fakt - plan) / plan,
-      stawka: stawkaPrzyTempie(z, stan, katalog, fakt / minutyNormowe) }]
+    return [{ zlecenieId: z.id, dataPierwotna, data: wpis.data, uslugaId: wpis.uslugaId, ...policzPlanIFakt(z, wizyta.z.plan, fakt, stan, katalog) }]
   })
 }

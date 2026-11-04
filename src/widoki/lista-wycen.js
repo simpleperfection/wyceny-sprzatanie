@@ -1,16 +1,20 @@
 // Ekran modulu Wycena (`#/wyceny`, makieta „Moduł Wycena” w docs/operator/aplikacja-modulowa-makiety.html): powrot „Start”,
 // dwa duze przyciski „Szybka wycena” i „Dokładna wycena” (R6: szybka wycena dwa dotkniecia od Start), pod nimi wyceny
-// w sekcjach wedlug tego, co trzeba zrobic (R20). Sekcje i tresc wierszy licza czyste funkcje z lista-wycen-dane.js.
+// w sekcjach wedlug tego, co trzeba zrobic (R20), a w „Do zaplanowania” z przyciskiem „Zaplanuj” pod wierszem (jak „Zrobione”
+// w zleceniach). Sekcje i tresc wierszy licza czyste funkcje z lista-wycen-dane.js.
 
 import { wczytajStan } from '../dane/magazyn.js'
 import { h, ikona } from '../ui/h.js'
+import { przycisk } from '../ui/komponenty/formularz.js'
 import { karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
 import { pigulkaStatusu } from '../ui/statusy.js'
 import { sciezka } from '../ui/trasy.js'
+import { adresZaplanowania } from '../zlecenia/formularz.js'
 import { sekcjeWycen, wierszWyceny } from './lista-wycen-dane.js'
 import { adresWyceny } from './start-dane.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
+/** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
 /** @typedef {import('../silnik/katalog.js').Katalog} Katalog */
 /** @typedef {import('../ui/ikony.js').NazwaIkony} NazwaIkony */
 /** @typedef {import('./lista-wycen-dane.js').SekcjaWycen} SekcjaWycen */
@@ -28,17 +32,28 @@ function duzyPrzycisk({ nazwa, podpis, adres, ikona: nazwaIkony, czyGlowny }) {
     ikona('chevron-right', 'wybor-wyceny__strzalka'))
 }
 
+/** Wiersz sekcji „Do zaplanowania”: link do wyceny, pod nim „Zaplanuj”. @param {Wycena} w @param {Katalog} katalog */
+function wierszDoZaplanowania(w, katalog) {
+  const { tytul, szczegoly } = wierszWyceny(w, katalog)
+  return h('div', { class: 'wizyta' },
+    wiersz({ tytul, opis: szczegoly, adres: adresWyceny(w) }),
+    h('div', { class: 'wizyta__akcje' },
+      przycisk({ tekst: 'Zaplanuj', rodzaj: 'drugi', ikona: 'calendar', adres: adresZaplanowania(w.id), etykieta: `Zaplanuj: ${tytul}` })))
+}
+
 /** Pigulka statusu tylko w „Pozostałe”: w innych sekcjach status mowi naglowek. @param {SekcjaWycen} sekcja @param {Katalog} katalog */
 function sekcjaEkranu({ id, tytul, wyceny }, katalog) {
   const idTytulu = `sekcja-wycen-${id}`
   const czyZeStatusem = id === 'pozostale'
   return h('section', { class: 'sekcja-wycen', 'aria-labelledby': idTytulu },
     h('h2', { class: 'sekcja-wycen__tytul', id: idTytulu }, tytul),
-    karta({ klasa: 'karta--bez-odstepu' }, wyceny.map((w) => {
-      const { tytul: tytulWiersza, szczegoly } = wierszWyceny(w, katalog)
-      return wiersz({ tytul: tytulWiersza, opis: szczegoly, adres: adresWyceny(w),
-        dodatek: czyZeStatusem ? pigulkaStatusu(w.status) : undefined })
-    })))
+    id === 'do_zaplanowania'
+      ? wyceny.map((w) => wierszDoZaplanowania(w, katalog))
+      : karta({ klasa: 'karta--bez-odstepu' }, wyceny.map((w) => {
+        const { tytul: tytulWiersza, szczegoly } = wierszWyceny(w, katalog)
+        return wiersz({ tytul: tytulWiersza, opis: szczegoly, adres: adresWyceny(w),
+          dodatek: czyZeStatusem ? pigulkaStatusu(w.status) : undefined })
+      })))
 }
 
 /** @type {Widok} */

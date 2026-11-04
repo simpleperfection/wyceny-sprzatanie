@@ -38,7 +38,7 @@ import { przelicz } from './stan.js'
  * @typedef {{ rodzaj: 'nowe_dane' } | { rodzaj: 'poza_szybka', od: number, do: number } | { rodzaj: 'oferta_nieaktualna' }} Ostrzezenie
  * @typedef {{ cena: CenaPodsumowania, rynek: RynekPodsumowania, zostaje: ZostajePodsumowania, koszty: WierszKosztu[],
  *   abonament: AbonamentPodsumowania | null, propozycje: { opisy: string[], kwota: number } | null, ostrzezenia: Ostrzezenie[] }} Podsumowanie
- * @typedef {'edytuj' | 'przyjeta' | 'odrzucona' | 'usun'} AkcjaWyceny
+ * @typedef {'zaplanuj' | 'zaplanuj_kolejne' | 'edytuj' | 'przyjeta' | 'odrzucona' | 'usun'} AkcjaWyceny
  */
 
 /** Cena wpisana recznie: pelne zlote (jak brutto z cenaDlaKlienta) w tych granicach. */
@@ -198,13 +198,16 @@ export function przeliczWycene(kontekst, id) {
 }
 
 /**
- * Akcje zapisanej wyceny wg statusu: decyzja klienta, gdy przejscie do niej jest dozwolone (tez rezygnacja po przyjeciu), edycja
- * i usuniecie; wycena ze zleceniem (czyWycenaZamknieta) jest tylko do odczytu, wiec bez edycji.
- * @param {StatusWyceny} status @param {boolean} czyZamknieta
+ * Akcje zapisanej wyceny wg statusu: planowanie, decyzja klienta, gdy przejscie do niej jest dozwolone (tez rezygnacja po przyjeciu),
+ * edycja i usuniecie. `zaplanuj` ma wycena do zaplanowania (doZaplanowania), a `zaplanuj_kolejne` przyjeta juz zaplanowana; wycena ze
+ * zleceniem (czyWycenaZamknieta) jest tylko do odczytu, wiec bez edycji.
+ * @param {StatusWyceny} status @param {boolean} czyZamknieta @param {boolean} czyDoZaplanowania
  * @returns {AkcjaWyceny[]}
  */
-export function akcjeWyceny(status, czyZamknieta) {
+export function akcjeWyceny(status, czyZamknieta, czyDoZaplanowania) {
   const przejscia = dozwolonePrzejscia(status)
   const decyzje = DECYZJE_KLIENTA.filter((d) => przejscia.includes(d))
-  return czyZamknieta ? [...decyzje, 'usun'] : [...decyzje, 'edytuj', 'usun']
+  /** @type {AkcjaWyceny[]} */
+  const planowanie = czyDoZaplanowania ? ['zaplanuj'] : status === 'przyjeta' && czyZamknieta ? ['zaplanuj_kolejne'] : []
+  return czyZamknieta ? [...planowanie, ...decyzje, 'usun'] : [...planowanie, ...decyzje, 'edytuj', 'usun']
 }

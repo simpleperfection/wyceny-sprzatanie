@@ -16,7 +16,7 @@ import { tempoWlasne, wpisyTempa } from '../silnik/tempo.js'
 import { ukladMieszkania } from '../silnik/uklad.js'
 import { procent } from '../ui/format.js'
 import { daneTempa } from './dane-tempa.js'
-import { czasStartowy, historiaPlanuIFaktu, KROK_CZASU, planZakonczenia, poprawnyCzas } from './plan-fakt.js'
+import { czasStartowy, historiaPlanuIFaktu, KROK_CZASU, planIFaktWizyty, planZakonczenia, poprawnyCzas } from './plan-fakt.js'
 
 /** @typedef {import('../silnik/katalog.js').Katalog} Katalog */
 /** @typedef {import('../dane/ustawienia.js').Domyslne} Domyslne */
@@ -260,6 +260,41 @@ describe('historiaPlanuIFaktu', () => {
 
     assert.deepEqual(historiaPlanuIFaktu(stan, katalog).map((x) => [x.zlecenieId, x.plan, x.fakt, procent(x.procent)]),
       [['z-wyc', 300, 330, '+10%']])
+  })
+})
+
+describe('planIFaktWizyty', () => {
+  it('wizyta z planem 270 min i czasem 300 min daje plan, fakt, różnicę i tę samą stawkę co historiaPlanuIFaktu', () => {
+    const { stan } = stanZWycena((x) => [zlecenieRek({ id: 'z1', wycenaId: x.id, plan: { minutyNormowe: 200, tempo: 1.35 },
+      wizyty: { '2026-10-21': wizyta({ minutyPracy: 300 }) } })])
+
+    const wynik = planIFaktWizyty(stan.zlecenia[0], '2026-10-21', stan, katalog)
+    const [wiersz] = historiaPlanuIFaktu(stan, katalog)
+
+    assert.deepEqual([wynik?.plan, wynik?.fakt, wynik?.procent], [270, 300, 30 / 270])
+    assert.equal(typeof wynik?.stawka, 'number')
+    assert.equal(wynik?.stawka, wiersz?.stawka)
+  })
+
+  it('wizyta starsza niż 10 najnowszych wpisów historii nadal ma plan i fakt', () => {
+    const dni = Array.from({ length: 11 }, (_, i) => `2026-10-${String(i + 1).padStart(2, '0')}`)
+    const wizyty = Object.fromEntries(dni.map((d) => [d, wizyta({ minutyPracy: 300 })]))
+    const z = zlecenieRek({ id: 'z1', plan: { minutyNormowe: 200, tempo: 1.35 }, wizyty })
+    const stan = { zlecenia: [z], wyceny: [], ustawienia: /** @type {never} */ ({}) }
+
+    const wynik = planIFaktWizyty(z, '2026-10-01', stan, katalog)
+
+    assert.equal(historiaPlanuIFaktu(stan, katalog).some((w) => w.dataPierwotna === '2026-10-01'), false)
+    assert.deepEqual([wynik?.plan, wynik?.fakt, wynik?.stawka], [270, 300, null])
+  })
+
+  it('wizyta bez czasu pracy, wizyta bez wpisu i zlecenie bez planu dają null', () => {
+    const zPlanem = zlecenieRek({ id: 'z1', plan: { minutyNormowe: 200, tempo: 1.35 }, wizyty: { '2026-10-21': wizyta({ zrobiona: chwila('2026-10-21') }) } })
+    const bezPlanu = zlecenieRek({ id: 'z2', wizyty: { '2026-10-21': wizyta({ minutyPracy: 300 }) } })
+    const stan = { zlecenia: [zPlanem, bezPlanu], wyceny: [], ustawienia: /** @type {never} */ ({}) }
+
+    assert.deepEqual([planIFaktWizyty(zPlanem, '2026-10-21', stan, katalog), planIFaktWizyty(zPlanem, '2026-10-28', stan, katalog),
+      planIFaktWizyty(bezPlanu, '2026-10-21', stan, katalog)], [null, null, null])
   })
 })
 
