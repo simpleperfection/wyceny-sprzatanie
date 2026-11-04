@@ -81,7 +81,7 @@ function wierszBrudu(i, brud, poziom, naBrud) {
 }
 
 /** @param {number} i @param {PomieszczenieWyceny} p @param {OpcjeKarty} opcje @returns {HTMLButtonElement} */
-function kartaZwinieta(i, p, { katalog, nazwaTypu, akcje }) {
+export function kartaZwinieta(i, p, { katalog, nazwaTypu, akcje }) {
   const brud = (p.brud ?? []).filter((b) => b.poziom > 0).map((b) => `${malaPierwsza(nazwaBrudu(katalog, b.id))} ${b.poziom}`)
   return h('button', { type: 'button', class: 'karta-pomieszczenia', 'aria-expanded': 'false', 'data-pomieszczenie': String(i),
     on: { click: () => akcje.naRozwin(i) } },
@@ -92,7 +92,7 @@ function kartaZwinieta(i, p, { katalog, nazwaTypu, akcje }) {
 }
 
 /** @param {number} i @param {PomieszczenieWyceny} p @param {OpcjeKarty} opcje @returns {HTMLElement} */
-function kartaRozwinieta(i, p, { katalog, nazwaTypu, czyWszystkieBrudy, akcje }) {
+export function kartaRozwinieta(i, p, { katalog, nazwaTypu, czyWszystkieBrudy, akcje }) {
   const nazwa = p.nazwa ?? nazwaTypu(p.typ)
   const tytul = h('h2', { class: 'karta-pomieszczenia__nazwa', id: `pomieszczenie-${i}-tytul` }, nazwa)
   const poleNazwy = pole({ id: `pomieszczenie-${i}-nazwa`, etykieta: 'Nazwa', wartosc: nazwa,

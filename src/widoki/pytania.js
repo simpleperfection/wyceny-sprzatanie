@@ -16,7 +16,7 @@ import { chipy, pole, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
 import { arkusz, baner, karta, naglowek } from '../ui/komponenty/uklad.js'
 import { kopiujDoSchowka } from '../ui/schowek.js'
 import { sciezka } from '../ui/trasy.js'
-import { adresKroku, zglosBladKreatora } from './kreator-wspolne.js'
+import { adresKroku, POWROT_DO_WYCEN, zglosBladKreatora } from './kreator-wspolne.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../ui/router.js').Kontekst} Kontekst */
@@ -29,7 +29,6 @@ import { adresKroku, zglosBladKreatora } from './kreator-wspolne.js'
 /** @typedef {(id: string, odpowiedz: Odpowiedz | null) => string | null} ZapisOdpowiedzi tekst bledu albo null po zapisie */
 
 const TYTUL = 'Pytania do klienta'
-const POWROT_DO_WYCEN = Object.freeze({ wstecz: sciezka('wyceny'), wsteczTekst: 'Wycena' })
 const WCZYTYWANIE = 'Wczytywanie pytań…'
 const BLAD_POLACZENIA = 'Nie udało się wczytać pytań do klienta. Sprawdź połączenie z internetem i spróbuj jeszcze raz.'
 const BLAD_DANYCH = 'Lista pytań do klienta jest niepełna. Odśwież stronę, a jeśli to nie pomoże, zajrzyj tu później.'
@@ -60,7 +59,7 @@ export function tekstBleduPytan(blad) {
 }
 
 /** @param {Pick<Wycena, 'id' | 'rodzaj'>} w @returns {{ wstecz: string, wsteczTekst: string }} ekran, z ktorego otwiera sie pytania, i jego nazwa */
-const powrotPytan = (w) => (w.rodzaj === 'szybka'
+export const powrotPytan = (w) => (w.rodzaj === 'szybka'
   ? { wstecz: sciezka('szybka', {}, { wycena: w.id }), wsteczTekst: 'Szybka wycena' }
   : { wstecz: adresKroku('usluga', w.id), wsteczTekst: 'Usługa' })
 
@@ -195,7 +194,7 @@ function pokazProsbe(element) {
 }
 
 /** @param {HTMLElement} kontener @param {string} tekst */
-function pokazBrakWyceny(kontener, tekst) {
+export function pokazBrakWyceny(kontener, tekst) {
   kontener.replaceChildren(naglowek({ tytul: TYTUL, ...POWROT_DO_WYCEN }),
     h('div', { class: 'tresc' }, baner({ rodzaj: 'info', tekst }), przycisk({ tekst: 'Wróć do wycen', rodzaj: 'drugi', adres: POWROT_DO_WYCEN.wstecz })))
 }

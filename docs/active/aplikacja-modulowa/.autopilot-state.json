@@ -221,153 +221,8 @@
       "nazwa": "Zlecenia i kalendarz",
       "execute": "done",
       "review": "done",
-      "fix": "pending",
-      "otwarteFindingi": [
-        {
-          "severity": "P1",
-          "typ": "TEST",
-          "plik": "src/zlecenia/wizyta-dane.test.js:161",
-          "opis": "Pigułka „Niezapłacone” ma test tylko na zleceniu z jedną wizytą, więc warunek wyboru wizyty w pigulkiWizyty (src/zlecenia/wizyta-dane.js:85) nie jest sprawdzony. Na kopii repo przeżyły dwie mutacje: usunięcie `&& n.klucz === w.dataPierwotna` i usunięcie `n.zlecenieId === z.id &&`. Po każdej z nich opłacona wizyta serii dostaje pigułkę „Niezapłacone”, gdy inna wizyta klienta czeka na zapłatę, a zestaw zostaje zielony. To ścieżka płatności z tej fazy (R16). Poprawka: seria z dwiema zrobionymi wizytami, DZIS opłacona, 2026-11-09 nieopłacona; `model(magazyn, DZIS, '2026-11-09').pigulki` ma równać się ['zrobiona', 'zaplacona'], a model drugiej wizyty ['zrobiona', 'niezaplacona']. Drugi przypadek: drugie zlecenie tego samego klienta z niezapłaconą wizytą tego samego dnia nie zmienia pigułek pierwszego. (Usunięcie `n.rodzaj === 'wizyta'` też przeżywa, ale to mutant równoważny: klucz miesiąca RRRR-MM nigdy nie równa się dacie wizyty.)"
-        },
-        {
-          "severity": "P1",
-          "typ": "TEST",
-          "plik": "src/zlecenia/kalendarz-dane.test.js:121",
-          "opis": "Żaden test modelDnia nie ma wizyty opłaconej i niezrobionej, choć plan pozwala oznaczyć zapłatę przed dniem wizyty. Na kopii przeżyła mutacja usuwająca `&& (w.stan?.zaplata ?? null) === null` w akcjeWizyty (src/zlecenia/kalendarz-dane.js:73): opłacona wizyta dostaje wtedy znowu przycisk „Zapłacone”, a zestaw zostaje zielony. Dotychczasowe testy tego nie widzą, bo opłacona wizyta Jana od razu wypada z „Do zamknięcia”. Poprawka: `oznaczZaplacona(magazyn, 'e2e-zlecenie-anna', DZIS)` bez „Zrobione”, potem `assert.deepEqual(modelDnia(wczytajStan(magazyn), KATALOG, DZIS, DZIS).wizyty[0].akcje, ['zrobione'])`."
-        },
-        {
-          "severity": "P1",
-          "typ": "TEST",
-          "plik": "src/zlecenia/karta-dane.test.js:193",
-          "opis": "Reguła miesięcy do zapłaty po końcu serii (R26) jest sprawdzona tylko dla jednej zrobionej wizyty. Na kopii przeżyły trzy mutacje. (1) Usunięcie `s.zrobiona !== null` w czyMiesiacZWizyta (src/zlecenia/karta-dane.js:171): wizyta po końcu z samym przesunięciem pokazuje miesiąc do zapłaty, a kwotaMiesiaca rzuca wtedy `brak_wizyty`. (2) Usunięcie `!s.odwolana` tamże: zrobiona i odwołana wizyta po końcu zostawia miesiąc. (3) Zamiana linii 188 na `if (!czyMiesiacZWizyta(z, miesiac)) continue`: zapłacony miesiąc bez wizyty, np. po wcześniejszym końcu serii, znika z listy razem z zapłatą i przyciskiem „Cofnij”. Poprawka: trzy przypadki na `miesieczna({ koniec: '2026-09-28', ... })`. Wizyta 2026-10-05 ze `stanWizyty({ przeniesiona: { data: '2026-10-06', godzina: null } })` daje ['2026-09']. Wizyta 2026-10-05 ze `stanWizyty({ zrobiona: CHWILA, odwolana: true })` daje ['2026-09']. `zaplatyMiesieczne: { '2026-10': zaplata }` bez wizyt daje ['2026-10', '2026-09'], a październik ma tekst zapłaty."
-        },
-        {
-          "severity": "P1",
-          "typ": "TEST",
-          "plik": "src/zlecenia/formularz.test.js:317",
-          "opis": "Test nazywa się „plan z migawki i tempa firmy”, ale stan nie ma tempa firmy, a oczekiwane 1.3 to `DOMYSLNE.tempo`. Na kopii przeżyła mutacja `const tempo = domyslne.tempo` w zapiszFormularz (src/zlecenia/formularz.js:251): zlecenie zapisuje wtedy plan z tempem domyślnym zamiast tempa firmy (ręcznego albo własnego), a z tego planu idą później Plan, Fakt i „Zostaje”. To zapisywana ścieżka danych tej fazy. Poprawka: stan z ręcznym tempem w ustawieniach, tak jak w teście tekstPlanu (`ustawienia: { tempo: { reczne: 1 } }`), i `assert.deepEqual(z.plan, { minutyNormowe: 95, tempo: 1 })`."
-        },
-        {
-          "severity": "P2",
-          "typ": "TEST",
-          "plik": "src/ui/statusy.test.js:61",
-          "opis": "Przypięta stała: test przepisuje literał ETYKIETY_FORM_ZAPLATY ze statusy.js, więc sprawdza kopię, a nie zachowanie. Etykieta „Gotówka” nie występuje w żadnym tekście oczekiwanym przez testy modeli; wizyta-dane.test.js pokrywa tylko Przelew i BLIK. Poprawka: zamienić ten test na obserwowalny skutek w wizyta-dane.test.js, np. `oznaczZaplacona(magazyn, 'z1', DZIS, { forma: 'gotowka', ...POLUDNIE })` i `model(magazyn).zaplata.tekst === 'Zapłacone · Gotówka · pn 2 lis'`."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/widoki/wizyta.js:40",
-          "opis": "Stałe tekstowe i opcje są zdefiniowane drugi raz. `BLAD_WIZYTY` i `tekstBleduWizyty` powtarzają się w wizyta.js:40,48 i zlecenia-dzien.js:27,33. 'Wybierz datę.' jest w wizyta.js:42, zlecenie-karta.js:38 i zlecenie-formularz.js:43. 'Wpisz cenę.' i 'Wybierz dni tygodnia.' są w karta-dane.js:44–45 i zlecenie-formularz.js:42,44. `OPCJE_FORM` jest w wizyta.js:45 i zlecenie-karta.js:42. Etykiety cykli są w `ETYKIETY_CYKLI` (formularz.js:51) i wpisane na sztywno w karta-dane.js:89–91, choć ten moduł już importuje z formularz.js. Do tego dwa formularze tych samych pól mają dwa kontrakty błędów: `bledyFormularza` oddaje kody mapowane w widoku, a `bledyZmiany` gotowe teksty. Skutek: każda zmiana treści wymaga poprawek w 2–3 plikach i kopie rozjadą się po cichu. Zmiana: jedno źródło stałych (teksty błędów, `OPCJE_FORM`, wyeksportowane `ETYKIETY_CYKLI`), a `bledyZmiany` przestawić na kody jak `bledyFormularza`."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/widoki/wizyta.js:171",
-          "opis": "Szkielet akcji jest powielony w dwóch nowych plikach około 350 linii: `pokazSkutek` i `wykonaj` są identyczne (wizyta.js:143,155 i zlecenie-karta.js:53,65), `ekranBraku` różni się tekstami, a `otworzArkusz` (wizyta.js:171, zlecenie-karta.js:81) już się rozjechał. Wersja z karty ma `<form>` z submit i czyści komunikat przed zapisem. Wersja z wizyty ma `div` z `naKlik`, więc Enter w arkuszu nie zapisuje, a stary baner błędu zostaje po nieudanej walidacji. To nie jest prosta duplikacja kilku linii, tylko ponad 40 linii logiki zapisu, fokusu i błędów. Skutek: każda poprawka tego przepływu wymaga dwóch zmian, a rozjazd już widać w zachowaniu. Zmiana: wydzielić np. src/widoki/ekran-akcji.js z `pokazSkutek`, `wykonaj` i jednym `otworzArkusz` na `<form>`, parametryzowanymi funkcją `rysuj` i tekstem błędu."
-        },
-        {
-          "severity": "P2",
-          "typ": "TEST",
-          "plik": "src/widoki/wizyta.js:221",
-          "opis": "Bramki walidacji siedzą w widokach bez testu odmowy, a scenariusze E2E ich nie obejmują. Dolna granica daty przesunięcia (`data >= NAJWCZESNIEJSZA_DATA`) istnieje tylko tutaj, bo przesunWizyte (src/dane/wizyty.js:148) sprawdza samo jestDniem. Usunięcie bramki pozwala zapisać niepełny rok 0026-11-03 przy zielonym zestawie. Podobnie sprawdzenie dnia końca serii w src/widoki/zlecenie-karta.js:189. Poprawka: wydzielić czyste funkcje `bladPrzesuniecia(data)` do wizyta-dane.js i `bladKonca(dzien, start)` do karta-dane.js, wzorem bledyZmiany, z testami odmowy: `''`, `'0026-11-03'` i dzień przed startem dają błąd, poprawny dzień daje null."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/widoki/zlecenia-miesiac.js:40",
-          "opis": "IU-15, częściowa realizacja. Widok Miesiąc nie ma przycisku „Nowe zlecenie”. Zamówienie: `zlecenia-wspolne.js` ma przycisk „Nowe zlecenie” (→ `#/zlecenie/nowe?data=<dzień>`), a pole „Wzorce do naśladowania” wskazuje makiety Dzień, Tydzień i Miesiąc. Makieta `zlecenia-miesiac` (docs/operator/aplikacja-modulowa-makiety.html:751) ma ten przycisk pod siatką. Implementacja woła `przyciskNowegoZlecenia` tylko w widoku Dzień (src/widoki/zlecenia-dzien.js:76), a `zlecenia-miesiac.js:40` przekazuje do `ekranKalendarza` samą siatkę. Użytkownik nie założy zlecenia z widoku Miesiąc. Poprawka: dodać `przyciskNowegoZlecenia(dzien)` pod `siatka(tygodnie)`. Tydzień zostaje bez zmian, bo jego makieta nie ma tego przycisku."
-        },
-        {
-          "severity": "P2",
-          "typ": "TEST",
-          "plik": "src/widoki/zlecenie-formularz.js:139",
-          "opis": "Ścieżki błędu zapisu dodane w widokach nie mają testu: tekstBledu tutaj oraz tekstBleduWizyty w src/widoki/zlecenia-dzien.js:33 i src/widoki/wizyta.js:48, a także tekstBledu w src/widoki/zlecenie-karta.js:47. Żadne E2E nie wymusza błędu zapisu, więc zamiana mapowania (BladMagazynu pokazany jak BladZlecenia) albo zgubienie ponownego rzucenia obcego błędu zostawia zielony zestaw. Poprawka: przenieść mapowanie do czystej funkcji obok tekstOdmowy w src/zlecenia/formularz.js i dosłownie sprawdzić trzy przypadki: BladZlecenia('cykl') → „Nie udało się zapisać zlecenia. Spróbuj jeszcze raz.”, BladMagazynu → tekst z tekstBleduZapisu, TypeError → rzucony dalej."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/widoki/zlecenie-formularz.js:229",
-          "opis": "Klient wybrany przy „Zaplanuj” nie trafia do wyceny. naWybor zmienia tylko ekran.wartosci, a zaplanujZWyceny (src/dane/zlecenia.js:170) ustawia klientId wyłącznie na zleceniu. Scenariusz: szybka wycena bez klienta (R19 na to pozwala), status przyjęta, „Zaplanuj”, klient wybrany z listy albo przez „Dodaj nowego klienta”, „Zapisz zlecenie”. Wycena zostaje z klientId null i pustą nazwą w ofercie. Od tej chwili jest zamknięta, więc przypiszKlienta rzuca tylko_odczyt (src/dane/wyceny.js:316) i nie da się tego poprawić. Karta klienta pokazuje „Brak wycen.” (historiaWycen filtruje po w.klientId, src/widoki/klienci-dane.js:86), choć ma zlecenie z tej wyceny, co jest niezgodne z R18. Podsumowanie wyceny nie ma nazwy klienta. Zapis z wyceny powinien w tym samym magazyn.zmien ustawić klienta wyceny, gdy jej klientId jest null. Scenariusz wynika z odczytu kodu, nie był uruchamiany."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/widoki/zlecenie-karta.js:127",
-          "opis": "Komponenty pól są kopiowane między widokami zamiast rozszerzać src/ui/komponenty/formularz.js. `poleDni` jest identyczne w zlecenie-karta.js:127 i zlecenie-formularz.js:93 (różni się tylko id). Pole daty i godziny ma trzy wersje: `poleCzasu` w zlecenie-formularz.js:80, identyczne `poleTerminu` w wizyta.js:126 i wariant w zlecenie-karta.js:115, który po `pole()` podmienia atrybut `type` przez `querySelector('input')?.setAttribute`. `przyciskKroku` (wizyta.js:54) to kopia prywatnego `przyciskLicznika`, a `przelaczDzien` (karta-dane.js:219) powtarza ciało `zDniem` (formularz.js:192). Skutek: poprawka dostępności albo walidacji pola trafi tylko do części ekranów. Zmiana: dodać do `pole()` rodzaje 'data' i 'godzina' z opcją `min`, wyeksportować chipy wielokrotnego wyboru i przycisk licznika, usunąć lokalne kopie."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/zlecenia/formularz.js:262",
-          "opis": "Moduł formularza łączy niezależne odpowiedzialności i stał się punktem zależności dla modułów, które formularza nie używają. Ma stan i walidację formularza, zapis (`zapiszFormularz`), teksty odmów, budowę adresu (`adresZaplanowania`), opis wiersza zlecenia pod wyceną (`opisZlecenia`, linia 262) i słowniki cykli. Z tego powodu karta-dane.js:15, opisana jako czyste funkcje bez zapisu, importuje formularz.js dla jednego `czyMaDni`. wizyta.js:18 importuje go dla `NAJWCZESNIEJSZA_DATA`, a lista-wycen.js:12 i podsumowanie.js:19 dla adresu i opisu wiersza. Skutek: moduł ma kilka powodów do zmiany, a zmiana formularza dotyka ekranów Wyceny, wizyty i karty zlecenia. Zmiana: przenieść `czyMaDni`, `BEZ_POWTARZANIA`, opcje i etykiety do np. src/zlecenia/opcje.js, `opisZlecenia` do modelu z tekstami zlecenia, a `adresZaplanowania` obok `adresKalendarza`."
-        },
-        {
-          "severity": "P2",
-          "typ": "TEST",
-          "plik": "src/zlecenia/formularz.test.js:193",
-          "opis": "Gałęzie formularz.js bez testu; obie grupy przeżyły jako mutacje. (a) domyslneDni (linia 86): po usunięciu osłony wyczyszczenie pola daty woła dzienTygodnia na pustym tekście. Żaden test nie sprawdza zData ze złą datą. Test: `assert.deepEqual(zData(zCyklem(reczne(), 'tydzien'), '').dni, [])`. (b) TEKSTY_ODMOW `brak_wyceny` i `za_duzo` (linie 71 i 73): usunięcie wpisu zamienia odmowę w awarię widoku, a test tekstOdmowy (linia 350) ma tylko `zly_status` i `brak_klienta`. Dodać dosłowne asercje: `tekstOdmowy(new BladZlecenia('brak_wyceny'))` → „Tej wyceny już nie ma, więc zlecenia nie zapisano.”, `tekstOdmowy(new BladZlecenia('za_duzo'))` → „Masz już najwięcej zleceń, ile można zapisać.”."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/zlecenia/kalendarz-dane.js:73",
-          "opis": "Reguła „wizyta jest płatna za wizytę” ma trzy sformułowania: kalendarz-dane.js:73 (`w.kwota !== null && w.kwota > 0`), wizyta-dane.js:69 (`z.rozliczenie !== 'za_wizyte' || (cenaWizyty ?? 0) === 0`) i zapytania.js:76 (`czekaNaZaplate`). Dziś dają to samo tylko dzięki niejawnej zależności: cenaWizyty jest null wyłącznie w rozliczeniu miesięcznym. Skutek: zmiana reguły (np. wizyty za 0 zł albo nowy rodzaj rozliczenia) rozjedzie przycisk „Zapłacone” w widoku Dzień, akcję na ekranie wizyty i listę „Niezapłacone”, czyli ścieżkę zapłaty. Zmiana: wyeksportować z zapytania.js jeden predykat, np. `czyPlatnaZaWizyte(z, okres)`, użyć go w `czekaNaZaplate` i `zaplataWizyty`, a `WizytaDnia` uzupełnić o jego wynik dla `akcjeWizyty`."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/zlecenia/kalendarz-dane.js:88",
-          "opis": "Cena z groszami wyświetla się zaokrąglona do pełnych złotych. Formularz zlecenia i arkusz zmiany przyjmują ułamki (jestKwota, parsujLiczbe), ale kwoty idą przez zl() z maximumFractionDigits: 0. Sprawdzone: zl(149.5) daje „150 zł”, a tekstLiczby(149.5) daje „149,5”. Wejście: cena „149,50” w „Nowe zlecenie”. Kalendarz, ekran wizyty (src/zlecenia/wizyta-dane.js:140), karta zlecenia (src/zlecenia/karta-dane.js:96 i :116) oraz „Niezapłacone” na karcie klienta (src/widoki/klienci-dane.js:121) pokazują 150 zł, a zaplata.kwota zapisuje 149,5. Właściciel widzi inną kwotę do pobrania niż zapisana. W tych miejscach trzeba użyć kwotaJednostki zamiast zl, albo odrzucać grosze przy walidacji ceny zlecenia."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/zlecenia/kalendarz-dane.js:103",
-          "opis": "Koszt widoku Dzień rośnie z całą historią zamkniętych wizyt, a nie z liczbą wizyt do pokazania. `modelDnia` dla dnia dzisiejszego woła `doZamkniecia` (src/zlecenia/zapytania.js:91), które dla każdego zlecenia liczy `wystapienia(z, dzienZalozenia, wczoraj)`, czyli wszystkie wizyty od założenia zlecenia. Dzieje się to przy każdym otwarciu ekranu i po każdym dotknięciu „Zrobione” albo „Zapłacone” (zlecenia-dzien.js:104 → rysuj). Główny koszt to walidacja w gorącej pętli: `porownajDni` (src/kalendarz/daty.js:71) przy każdym porównaniu wywołuje dwa razy `jestDniem`, a ten tworzy `Date` i robi `toISOString`. Te porównania są w oknie (wystapienia.js:176), w sortowaniu (wystapienia.js:153, zapytania.js:34 i :37) i w `okresDnia` (wystapienia.js:116). W profilu CPU `jestDniem` zajmuje 72% czasu. Pomiar w Node na desktopie, prawdziwy kod, stan syntetyczny, sekcja „Do zamknięcia” pusta: 1 rok, 15 serii, 300 zleceń jednorazowych rocznie (2331 wizyt ze stanem, 0,54 MB): `modelDnia` 39 ms. 3 lata (7002 wizyty, 1,55 MB): `modelDnia` 117 ms, z czego `doZamkniecia` 79 ms. 3 lata, 40 serii, 500 zleceń rocznie (18 710 wizyt, 3,78 MB): 259 ms. Jedno dotknięcie w wariancie 3 lata/15 serii to 64 ms zapisu + 23 ms `wczytajStan` + 117 ms modelu, czyli około 200 ms blokady wątku; w wariancie 3 lata/40 serii około 490 ms. Na telefonie będzie to kilka razy więcej (szacunek 3–5×, nie mierzone), a R15 przewiduje zamykanie wizyty dwoma dotknięciami. Ten sam mechanizm obciąża Tydzień i Miesiąc (około 30 ms przy 7002 wizytach, bo `wystapienia` przechodzi po wszystkich kluczach `wizyty` dla każdego okna) oraz kafel Start (start-dane.js:56). Zmiana: w `wystapienia`, `porownajWystapienia`, `okresDnia` i `porownajWizyty` porównywać dni jako teksty (`data < odDnia`, `a.data < b.data`), bez `porownajDni`. Format RRRR-MM-DD jest bezpieczny: klucze `wizyty`, `okresy[].od` i `przeniesiona.data` sprawdza `jestZlecenie` przy odczycie stanu, a granice okna sprawdza `sprawdzOkno`. Na kopii kodu w scratchpadzie ta zmiana dała `modelDnia` 117 → 32 ms i `doZamkniecia` 79 → 22 ms przy 7002 wizytach, ale koszt nadal rośnie liniowo z historią, więc `doZamkniecia` warto też odciąć od wizyt już zamkniętych, jeśli stan urośnie."
-        },
-        {
-          "severity": "P2",
-          "typ": "TEST",
-          "plik": "src/zlecenia/kalendarz-dane.test.js:99",
-          "opis": "Gałęzie kalendarz-dane.js bez testu; pierwsze cztery zmiany przeżyły jako mutacje. (a) Linia 85, zaległa wizyta bez godziny: usunięcie gałęzi daje „pn 26 paź, null”. Test: Biuro z `godzina: null`, `model.doZamkniecia[0].miejsce === 'pn 26 paź'`. (b) Linia 83, fallback `w.klient?.nazwa ?? w.nazwa`, oraz (c) linia 60, `nazwy.get(id) ?? id`: nazwa usługi nigdzie nie jest sprawdzona, więc KATALOG w testach nie ma wpływu na wynik. Test: stan bez klienta zlecenia daje tytuł „9:00 · Sprzątanie mieszkania”, a usługa spoza katalogu daje jej id. (d) Linia 148, etykieta dnia bez wizyt. Test: `model.tygodnie[1][1]?.etykieta === 'Wtorek, 3 listopada'`. (e) Linia 164, `sprawdzDzien` w sasiedni dla miesiąca: dodać `assert.throws(() => sasiedni('miesiac', 'zly', 1), bladKalendarza('dzien'))`; ten kod błędu potwierdziłem wywołaniem. Do tego linia 232 testu przepisuje etykiety WIDOKI_KALENDARZA (przypięta stała), więc nie sprawdza zachowania."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/zlecenia/karta-dane.js:168",
-          "opis": "`czyMiesiacZWizyta` kopiuje warunek `kwotaMiesiaca` z src/dane/wizyty.js:183 i 195–196: to samo okno miesiąca z `wizyty: {}` i ten sam filtr zrobionych, nieodwołanych wizyt. Komentarz w kodzie sam nazywa to warunkiem kwotaMiesiaca. Wynik filtra decyduje, czy linia 189 zawoła `kwotaMiesiaca`, która rzuca BladZlecenia `brak_wizyty`, a `modelKarty` w `rysuj` nie ma try/catch. Skutek: zmiana reguły w dane/wizyty.js bez zmiany kopii wysadzi render karty zlecenia albo ukryje miesiąc do zapłaty (R26). Zmiana: wyeksportować z src/dane/wizyty.js jeden predykat, np. `czyMiesiacMaWizyte(z, miesiac)`, użyć go w `kwotaMiesiaca` i w `miesiaceDoZaplaty`, a `czyMiesiacZWizyta` usunąć."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/zlecenia/karta-dane.js:213",
-          "opis": "„Zmień cenę lub godzinę” nie działa dla przesuniętej wizyty, a zapis wygląda na udany. wartosciZmiany czyta godzinę z okresu, a wystapienia (src/kalendarz/wystapienia.js:178) daje pierwszeństwo przeniesiona.godzina. Scenariusz odtworzony na prawdziwym kodzie: zlecenie jednorazowe pn 2 lis 9:00 przesunięte na śr 4 lis 11:00. Karta pokazuje „Jednorazowe · śr 4 lis, 11:00 · 250 zł”, ale arkusz ma tytuł „Zmiana od pn 2 lis” i pole 09:00. Użytkownik wpisuje 12:00, zmianaDoZapisu daje { godzina: '12:00' }, zmienOdWizyty zapisuje okres, arkusz się zamyka, a wizyta dalej jest o 11:00. Ta sama ścieżka dotyczy serii przez ?od= z przesuniętej wizyty. Właściciel uważa termin za zmieniony, a kalendarz pokazuje stary. Formularz powinien brać dzień i godzinę z wystąpienia, a zmiana godziny na wizycie z przeniesiona.godzina musi trafić do przesunięcia (przesunWizyte) albo zdjąć jego godzinę."
-        },
-        {
-          "severity": "P2",
-          "typ": "TEST",
-          "plik": "src/zlecenia/karta-dane.test.js:58",
-          "opis": "Gałęzie karta-dane.js bez testu; wszystkie trzy zmiany przeżyły jako mutacje. (a) Linia 56, `uslugaId === null` → „Zlecenie”. Test: `nazwaZlecenia(zlecenie({ uslugaId: null }), KATALOG) === 'Zlecenie'`. (b) Linia 153, `.sort()` w domyslnyKoniec: fixture ma klucze rosnąco, więc usunięcie sortowania przechodzi, a w praktyce starszą wizytę można zamknąć później. Test: `wizyty: { '2026-10-05': ZROBIONA, '2026-09-21': ZROBIONA }` daje '2026-10-05'. (c) Linia 263, wycena bez numeru: po usunięciu gałęzi powstaje „Wycena null”. Test: `{ id: 'w1', numer: null }` daje `m.wycena.tekst === 'Wycena'`."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/zlecenia/wizyta-dane.js:55",
-          "opis": "Teksty i reguły wizyty są skopiowane między modelami. `tekstTerminu` jest identyczny w wizyta-dane.js:55 i karta-dane.js:106, a ten sam format „dzień, godzina” liczą jeszcze kalendarz-dane.js:85 i formularz.js:264 (cztery kopie). `tekstZaplaty` jest identyczny w wizyta-dane.js:58 i karta-dane.js:159. Dzień wizyty po przesunięciu liczą trzy miejsca: wizyta-dane.js:50, karta-dane.js:65 i klienci-dane.js (`pozycjaNiezaplacona`, tam bez `Object.hasOwn`). Reguła kodu nakazuje wspólny moduł przy trzecim użyciu. Skutek: zmiana formatu „Zapłacone · {forma} · {data}” albo terminu rozjedzie ekran wizyty, kartę zlecenia i kalendarz. Zmiana: dodać np. src/zlecenia/teksty-wizyty.js z `tekstTerminu(data, godzina)`, `tekstZaplaty(zaplata)` i `dzienWizyty(z, dataPierwotna)` i użyć ich we wszystkich tych miejscach."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/zlecenia/wizyta-dane.js:119",
-          "opis": "Reguła nazwy zlecenia ma trzy definicje z trzema wynikami dla braku opisu i usługi. Prywatna `nazwaZlecenia` w wizyta-dane.js:119 oddaje null. Eksportowana funkcja o tej samej nazwie w karta-dane.js:54 oddaje 'Zlecenie'. zapytania.js:50 oddaje ''. Skutek: zmiana nazwy wyświetlanej (np. nowy fallback) objmie tylko część ekranów, a typecheck tego nie pokaże, bo funkcje mają tę samą nazwę i różne typy zwracane. Zmiana: przenieść jedną `nazwaZlecenia` do wspólnego modułu w src/zlecenia/, usunąć kopię z wizyta-dane.js, a różnicę ukrycia wiersza „Usługa” wyrazić w modelu wizyty."
-        },
-        {
-          "severity": "P2",
-          "typ": "TEST",
-          "plik": "src/zlecenia/wizyta-dane.test.js:129",
-          "opis": "Gałęzie modelWizyty bez testu; wszystkie trzy zmiany przeżyły jako mutacje. (a) Linia 134, `k === null`: test „dają null” ma zlecenie, dzień i regułę, ale nie brak klienta, więc po usunięciu warunku model rzuca TypeError na `k.nazwa`. Test: `modelWizyty({ ...stan, klienci: [] }, katalog, 'z1', DZIS, DZIS)` → null. (b) Linia 122, usługa spoza katalogu: po zamianie `?? uslugaId` na `?? null` wiersz „Usługa” znika. Test: zlecenie z `uslugaId: 'stara'` daje `m.usluga === 'stara'`. (c) Linia 68, `zaplata.forma ?? formaDomyslna(...)`: test z linii 174 oczekuje 'gotowka', a to też domyślna wartość funkcji, więc stała 'gotowka' zamiast formaDomyslna przechodzi. Test: klient z wcześniejszą zapłatą `blik` na innej wizycie i oczekiwane `forma: 'blik'` dla wizyty z formą null."
-        }
-      ],
+      "fix": "done",
+      "otwarteFindingi": [],
       "baza": "f57bbc41b348f8058100208c53052c45780ff806",
       "metryki": {
         "liczniki": {
@@ -417,10 +272,188 @@
     {
       "numer": 6,
       "nazwa": "Wycena w nowym wyglądzie",
-      "execute": "pending",
-      "review": "pending",
-      "fix": "none",
-      "otwarteFindingi": []
+      "execute": "done",
+      "review": "done",
+      "fix": "pending",
+      "otwarteFindingi": [
+        {
+          "severity": "P2",
+          "typ": "E2E",
+          "plik": "e2e/stany/oferta-po-terminie.txt:1",
+          "opis": "Zamówienie: IU-22, scenariusz `oferta-neutralna` (otwórz oferta.html z fragmentem z `e2e/stany/oferta-po-terminie.txt`, zmierz tło, kolor kwoty i rozmiar tekstu). Sprawdzone uruchomieniem: `odkodujOferte` zwraca dla tego seeda `{ ok: false, powod: 'uszkodzony' }`, więc strona nie pokaże oferty i pomiaru nie da się wykonać. Plik ostatnio zmieniono w etapie 5 (commit 7537790), a korekta IU-22 w planie tylko odnotowuje problem i niczego nie naprawia. Tym samym neutralny wygląd oferty, jedyna jednostka tej fazy dla klienta końcowego, nie ma wykonalnego dowodu E2E. Poprawka: wygenerować seed od nowa przez `zakodujOferte` z polami `trybCeny` i `abonament` i zachować termin ważności w przeszłości."
+        },
+        {
+          "severity": "P2",
+          "typ": "TEST",
+          "plik": "src/widoki/kreator-dodatki.js:95",
+          "opis": "Nowa wyliczenieDojazdu (gałęzie kmPonad > 0 i „w promieniu”) oraz opis propozycji `w ofercie · …` (linia 50) nie mają testu. Odwrócenie warunku na kmPonad < 0 i usunięcie „w ofercie” przeszły na zielono (mutacja na kopii), więc wyjaśnienie kosztu dojazdu może pokazywać błędne kilometry. Poprawka: wyeksportuj wyliczenieDojazdu i sprawdź dosłownie dla stawek { darmowy_promien_km: 10, klient_zl_km: 2, koszt_firmy_zl_km: 1 }: 5 km daje „Dla klienta: w promieniu 10 km. Twój koszt: …”, a 25 km daje „Dla klienta: 15 km ponad 10 km × 2 zł…”, z kwotami i kmRazem wziętymi z infoDojazdu."
+        },
+        {
+          "severity": "P2",
+          "typ": "TEST",
+          "plik": "src/widoki/kreator-pomieszczenia.js:84",
+          "opis": "Przebudowana kartaZwinieta (jedna linia `m² · brud`) i link „Inne rodzaje brudu” (linia 104) nie mają testu. Usunięcie metrażu z opisu ([...brud].join) przeszło na zielono (mutacja na kopii), a metraż to wejście ceny widoczne na zwiniętej karcie. Poprawka: wyeksportuj kartaZwinieta i na atrapie sprawdź dosłowny tekst .karta-pomieszczenia__opis dla p = { m2: 12, brud: [{ id: 'kurz', poziom: 2 }, { id: 'tluszcz', poziom: 0 }] }, czyli `12 m² · kurz 2`, bez pozycji z poziomem 0, oraz `12 m²` bez brudu."
+        },
+        {
+          "severity": "P2",
+          "typ": "TEST",
+          "plik": "src/widoki/kreator-pozycje.js:52",
+          "opis": "Przepisana opisPozycji (dopłata lub zwykła pozycja, z linią lub bez) nie ma testu. Usunięcie prefiksu „dopłata · ” i zastąpienie `${m2(linia.ilosc)} × ${kwotaJednostki(linia.cenaJedn)}` samą ceną jednostkową przeszły na zielono (mutacja na kopii). Poprawka: wyeksportuj opisPozycji i sprawdź cztery wyniki dosłownie: { typ: 'doplata' } bez linii daje `dopłata · X/m²`, z linią `dopłata · 20 m² × X`, zwykła pozycja bez linii `X/m²`, z linią `20 m² × X`."
+        },
+        {
+          "severity": "P2",
+          "typ": "TEST",
+          "plik": "src/widoki/kreator-usluga.js:129",
+          "opis": "Nowe gałęzie opcjaUslugi (`!czyWybrana`, `!opis && warianty.length === 0`, podpowiedź ceny tylko pod wybraną usługą) nie mają testu. Usunięcie wczesnego `if (!czyWybrana) return [opcja]` przeszło na zielono (mutacja na kopii): podpowiedzi i chipy wariantów pojawiałyby się pod każdą usługą, wbrew R9. Poprawka: wydziel opcjaUslugi do funkcji z argumentami i na atrapie sprawdź, że niewybrana usługa zwraca jeden element bez .opcja-uslugi__szczegoly, a wybrana z wariantami ma dosłowną podpowiedź i radiogrupę 'kreator-wariant'."
+        },
+        {
+          "severity": "P2",
+          "typ": "TEST",
+          "plik": "src/widoki/kreator-wspolne.js:71",
+          "opis": "Powroty kreatora z planu (tekst verbatim „Wycena” z pierwszego kroku, adres #/wyceny zamiast #/start) nie mają testu; pliku kreator-wspolne.test.js nie ma. Mutacje na kopii przeszły na zielono: adresWstecz na sciezka('start') i wsteczTekst zawsze „Wycena” (linia 85). Bez testu są też pokazKomunikat i wycenaKroku z „Wróć do wycen” (linie 162, 176). Poprawka: wyeksportuj adresWstecz i tekst powrotu albo dodaj test ramaKroku na atrapie: krok 'usluga' bez numeru daje '#/wyceny' i „Wycena”, z numerem adres zapisanej wyceny, krok 'dodatki' adres i etykietę poprzedniego kroku."
+        },
+        {
+          "severity": "P2",
+          "typ": "KOD",
+          "plik": "src/widoki/kreator-wspolne.js:87",
+          "opis": "`naglowekKroku` po zbudowaniu nagłówka sięga do wewnętrznych klas komponentu z src/ui/komponenty/uklad.js: `querySelector('.naglowek__gora')?.append(...)` i `querySelector('.naglowek__tytul')?.before(...)`. Widok zależy więc od prywatnego markupu warstwy ui, a `?.` po cichu odrzuca licznik „Krok n z 5” i pasek postępu. Skutek: zmiana nazwy klasy albo struktury `naglowek` usuwa oba elementy ze wszystkich kroków bez błędu typów i bez wyjątku. Testy jednostkowe też tego nie złapią, bo `querySelector` w tests/atrapa-dom.js zawsze zwraca null. Zmiana: dodaj do `naglowek` opcje, np. `krok?: string` (tekst w `.naglowek__gora`) i `pasek?: Node` (przed `h1`), i przekaż je z `naglowekKroku` zamiast przeszukiwać gotowy element."
+        },
+        {
+          "severity": "P2",
+          "typ": "TEST",
+          "plik": "src/widoki/oferta-edycja-sekcje.test.js:57",
+          "opis": "Stub zapisz = () => null nie sprawdza argumentów i nigdy nie jest wołany: AtrapaElementu.querySelector zawsze zwraca null, więc zapisujPole (oferta-edycja-sekcje.js:177) w teście wychodzi na `if (!wejscie) return element` i nie podpina zapisu. Mutacja na kopii zapisująca adres jako termin (`(adres) => ({ klient: { termin: adres } })`, linia 199) przeszła na zielono. Test przepuszcza więc zapis danych oferty do złego pola po przeniesieniu pól pod „Więcej”. Poprawka: atrapa querySelector('input') zwraca pole, a test ustawia value='ul. Lipowa 1', wywołuje obsługę change i sprawdza, że zapisz dostało dokładnie { klient: { adres: 'ul. Lipowa 1' } }, oraz { klient: { termin: null } } dla pustego terminu."
+        },
+        {
+          "severity": "P2",
+          "typ": "TEST",
+          "plik": "src/widoki/oferta-edycja-sekcje.test.js:75",
+          "opis": "kartaZakresu ma test tylko dla czyZmieniony: true i trybu odczytu. Zamiana `czyZmieniony ? notkaZakresu() : null` na zawsze notkę (oferta-edycja-sekcje.js:209) oraz usunięcie `wiecej({}, notkaZakresu())` z trybu edycji (linia 246) przeszły na zielono (mutacja na kopii). Poprawka: test czyZmieniony: false z dosłownym tekst(szczegoly) === 'Pokaż zakresW cenieMycie okienPoza cenąMycie żaluzji' i bez „Przywróć domyślny” oraz test, który klika „Edytuj” przez obslugi.get('click') i sprawdza NOTKA_ZAKRESU pod „Więcej”. Tak samo trzeba pokryć gałąź edycji w kartaWarunkow."
+        },
+        {
+          "severity": "P2",
+          "typ": "TEST",
+          "plik": "src/widoki/podsumowanie-karty.js:168",
+          "opis": "Gałęzie kart podsumowania bez testu: wszystkie fixture'y mają abonament: null, więc „za wizytę” i oba wiersze miesiecznie (linie 126 i 168) nigdy się nie wykonują. Podstawienie abonament?.miesiecznie zamiast abonament?.zostajeMiesiecznie w „Zostaje dla Ciebie” przeszło na zielono (mutacja na kopii), czyli właściciel widziałby przychód jako zysk. Bez testu są też opisCeny dla statusVat 'zwolniony' i dla rozbicia z dojazdem, przeniesione do „Więcej”, oraz propozycje: null. Poprawka: fixture abonament { wizyt: 4, zaWizyte: 300, miesiecznie: 1200, zostajeMiesiecznie: 820 } z asercjami `miesięcznie (4 wizyt): 1200 zł` w kartaCeny i `miesięcznie (4 wizyt): 820 zł` w kartaZostaje, a do tego dosłowne opisy `bez VAT (firma zwolniona)` i `sprzątanie … + dojazd …`."
+        },
+        {
+          "severity": "P2",
+          "typ": "TEST",
+          "plik": "src/widoki/podsumowanie-karty.test.js:45",
+          "opis": "Żaden test nie sprawdza paska rynku z pasekRynku (podsumowanie-karty.js:105-107). Zamiana pozycji kreski mediany ze znacznikiem ceny (pozycja(rynek.mediana) z pozycja(brutto)) oraz tekst `rynek od ${zl(rynek.do)}` przeszły na zielono (mutacja na kopii). Atrapa zbiera --pozycja w `wlasciwosci`, ale żaden test tego pola nie czyta. Poprawka: dla RYNEK i brutto 300 asercje na dosłowne wlasciwosci.get('--pozycja') elementów .wykres-rynku__kreska i .wykres-rynku__punkt oraz --koniec zakresu, a także tekst `rynek od 120 zł do 450 zł` w .karta-rynku__zakres. Warto też sprawdzić, że klik „?” dostaje akapity z wyjasnienieMediany z województwem wyceny."
+        },
+        {
+          "severity": "P2",
+          "typ": "TEST",
+          "plik": "src/widoki/podsumowanie-karty.test.js:94",
+          "opis": "Test „stan Więcej trzyma ekran” startuje z czyOtwarte: true, nie zmienia open przed zdarzeniem toggle i oczekuje [[true]]. Przepuszcza implementację naPrzelacz(czyOtwarte) zamiast naPrzelacz(szczegoly.open) w podsumowanie-karty.js:165. Sprawdzone mutacją na kopii: suite zielony. Skutek takiego błędu: zwinięte „Więcej” rozwija się po każdym przerysowaniu. Poprawka jak w szybka-wynik-karta.test.js:121: przed wywołaniem toggle ustaw szczegoly.open = false i oczekuj [[false]]."
+        },
+        {
+          "severity": "P2",
+          "typ": "KOD",
+          "plik": "src/widoki/podsumowanie.js:47",
+          "opis": "Powrót do modułu Wycena jest zdefiniowany w fazie pięć razy, w tym dwa razy identycznie: `POWROT_DO_WYCEN = { wstecz: sciezka('wyceny'), wsteczTekst: 'Wycena' }` w podsumowanie.js:47 i pytania.js:32. Do tego `POWROT_DO_WYCEN = 'Wycena'` w kreator-wspolne.js:55 (ta sama nazwa, inny typ: string zamiast obiektu), `POWROT = 'Wycena'` w oferta-edycja.js:37 i literał w `NAGLOWEK` w szybka.js:54. Reguła „Organizacja kodu”: stała w dwóch miejscach to od razu jedno źródło. Skutek: zmiana tekstu albo celu powrotu (tekst jest verbatim w planie) rozjedzie ekrany po cichu, a ta sama nazwa o dwóch kształtach zmyli przy przenoszeniu kodu. Zmiana: wyeksportuj z kreator-wspolne.js jeden `POWROT_DO_WYCEN` w kształcie obiektu (podsumowanie.js, pytania.js, szybka.js i oferta-edycja.js już importują ten moduł), użyj go tam, a w oferta-edycja.js bierz z niego `wsteczTekst`."
+        },
+        {
+          "severity": "P2",
+          "typ": "KOD",
+          "plik": "src/widoki/podsumowanie.js:105",
+          "opis": "Reguła domeny siedzi w widoku. `ukladAkcji` decyduje, która akcja jest główna dla danego statusu (`do_wyslania` → zaplanuj/oferta/przyjeta), a typ `AkcjaEkranu = AkcjaWyceny | 'oferta'` i dołączanie 'oferta' przez `czyStatusOferty` (linia 157) rozszerzają kontrakt akcji poza modułem, który go definiuje. Tymczasem `akcjeWyceny` i `AkcjaWyceny` są w src/kreator/podsumowanie.js, a nagłówek pliku mówi „widok tylko rysuje”. Skutek: zmiana hierarchii akcji albo nowy status wymaga zmian w dwóch warstwach, a test czystej reguły (podsumowanie.test.js) ładuje cały graf importów widoku. Zmiana: przenieś `ukladAkcji`, `AkcjaEkranu` i `AkcjaZOpisem` do src/kreator/podsumowanie.js i dołącz tam 'oferta' (np. `ukladAkcjiWyceny(status, czyZamknieta, czyDoZaplanowania)`), a w widoku zostaw tylko `opisAkcji` i rysowanie. Test przenieś do src/kreator/podsumowanie.test.js."
+        },
+        {
+          "severity": "P2",
+          "typ": "TEST",
+          "plik": "src/widoki/podsumowanie.js:122",
+          "opis": "Testy podsumowanie.test.js obejmują tylko ukladAkcji, a nowe opisAkcji i akcjeZapisanej nie mają testu. Mutacje na kopii przeszły na zielono: „Klient zrezygnował” zapisujący naStatus('przyjeta') (linia 122, czyli zły status wyceny), „Przygotuj ofertę” przy wycenie ze zleceniem zamiast „Pokaż ofertę” (linia 119) i podtytul bez nazwy klienta (linia 52). Bez testu jest też tytulWyceny z fallbackiem „Podsumowanie” (linia 55). Poprawka: wyeksportuj opisAkcji i sprawdź dosłownie dla każdej akcji tekst i adres, a dla 'przyjeta' i 'odrzucona' wywołanie atrapy naStatus z dokładnym argumentem; dodaj 'Pokaż ofertę' przy czyZamknieta=true, podtytul „Pani Test · nr 1/10/2026” i fallback tytułu."
+        },
+        {
+          "severity": "P2",
+          "typ": "TEST",
+          "plik": "src/widoki/podsumowanie.js:184",
+          "opis": "Bramka „wycena ze zleceniem jest tylko do odczytu” w karty() nie ma testu odmowy. Test kartaCeny z null sprawdza tylko komponent, a nie to, że ekran przekazuje null. Mutacja na kopii zastępująca `czyEdytowalna ? () => naZmien(widok.cena.brutto) : null` przez `() => naZmien(0)` przeszła na zielono: wraca „Zmień” przy zamkniętej wycenie, a do arkusza trafia zła kwota. Poprawka: wyeksportuj karty albo wydziel z niej funkcję i sprawdź dla czyZamknieta=true brak [data-akcja=\"zmien\"] i brak „Przelicz” w banerach, a dla false, że obsługa naZmien dostaje brutto 300."
+        },
+        {
+          "severity": "P2",
+          "typ": "KOD",
+          "plik": "src/widoki/podsumowanie.js:204",
+          "opis": "Zamówienie: IU-19 (Cel: „Pięć kroków kreatora w nowym wyglądzie”, Podejście: „pasek postępu w nowym wyglądzie”, scenariusz `kreator-wyglad-cena`: każdy krok ma tekst ≥ 17 px) oraz R8. Realizacja częściowa: nowy wygląd działa tylko na krokach 1–4. Krok Cena rysuje `pasekPostepu` poza `.naglowek` (src/widoki/podsumowanie.js:204), a reguły `.naglowek .postep*` z src/style/kreator.css:15-34 go nie obejmują. Zostaje więc stary pasek z komponenty.css:169-187: widoczne etykiety kroków w `--tekst-drobny` (14 px), ucinane wielokropkiem, z dolną linią. Krok nie ma też „Krok 5 z 5”, a tytuł to „Podsumowanie” zamiast nazwy kroku, choć korekta IU-19 mówi: „Tytuł kroku to nazwa kroku z makiety”. Korekta planu wymienia `podsumowanie.js` tylko jako powód zostawienia reguł `.postep` w komponenty.css i nie zwalnia kroku Cena z nowego wyglądu. Poprawka: w trybie kreatora zbudować nagłówek jak `naglowekKroku` z kreator-wspolne.js, z paskiem wewnątrz `.naglowek` i tekstem „Krok 5 z 5”."
+        },
+        {
+          "severity": "P2",
+          "typ": "TEST",
+          "plik": "src/widoki/pytania.js:63",
+          "opis": "powrotPytan ma dwie gałęzie (szybka albo kreator) i steruje adresem powrotu oraz adresem przycisku „Gotowe”, ale test nie ma żadnej; pytania.test.js importuje tylko tekstBleduPytan. Mutacja na kopii kierująca szybką wycenę do adresKroku('usluga') z tekstem „Usługa” przeszła na zielono. Zmieniony pokazBrakWyceny („Wróć do wycen”, #/wyceny, linia 198) też nie ma testu. Poprawka: wyeksportuj powrotPytan i sprawdź deepEqual dla rodzaj 'szybka' { wstecz: '#/szybka?wycena=w1', wsteczTekst: 'Szybka wycena' } oraz dla dokładnej { wstecz: adres kroku usluga, wsteczTekst: 'Usługa' }."
+        },
+        {
+          "severity": "P2",
+          "typ": "TEST",
+          "plik": "src/widoki/szybka-wynik-karta.test.js:103",
+          "opis": "Test „główna akcja stoi przed Kopiuj tekst” sprawdza tekst i data-akcja, a helper karta() podaje puste naKopiuj i naDokladna bez sprawdzenia. Podpięcie naKopiuj pod „Dokładna wycena” przeszło na zielono (mutacja na kopii szybka-wynik.js:92-93), choć w tej fazie zmieniono kolejność tych przycisków. Bez testu są też gałąź 'blad' (linia 79: BLAD_METRAZU i BLAD_LICZENIA) i czySkopiowano: true („Skopiowano”). Poprawka: mock.fn() dla obu obsług, klik przez obslugi.get('click') i liczba wywołań każdej (1 i 0), test stanu { stan: 'blad', kod: 'metraz' } z dosłownym tekstem błędu i wyłączonymi przyciskami oraz test czySkopiowano: true z tekstem 'Skopiowano'."
+        },
+        {
+          "severity": "P2",
+          "typ": "KOD",
+          "plik": "src/widoki/szybka-wynik.js:14",
+          "opis": "Kontrakt `StanWiecej` (`{ czyOtwarte, naPrzelacz }`) ma dwie definicje dodane w tej fazie: szybka-wynik.js:14 i podsumowanie-karty.js:23. Ten sam kształt jest też wpisany inline w szybka.js:87 i :127, a `ObslugaKart` w podsumowanie.js:41 rozbija go na `czyKosztyOtwarte()` i `naPrzelaczKoszty`. Powiązanie `szczegoly.open = czyOtwarte` + `addEventListener('toggle', ...)` występuje trzeci raz (szybka-wynik.js:58, podsumowanie-karty.js:164, szybka.js:133-140), czyli przekracza próg wydzielenia z reguły „Organizacja kodu”. Skutek: każdy kolejny ekran z zachowaniem stanu „Więcej” po przerysowaniu dopisze czwartą kopię, a zmiana kontraktu w jednym miejscu nie zostanie zauważona w pozostałych. Zmiana: zdefiniuj typ `StanWiecej` raz w src/ui/komponenty/uklad.js, dodaj do `wiecej` opcję `stan?: StanWiecej`, która ustawia `open` i podpina `toggle`, i usuń ręczne powiązania oraz typy z trzech widoków."
+        },
+        {
+          "severity": "P2",
+          "typ": "TEST",
+          "plik": "src/widoki/szybka.js:336",
+          "opis": "Nowa ścieżka kopiowania nie ma testu. Podanie cytat (w zwiniętym details) zamiast zapasowy do kopiujDoSchowka oraz usunięcie otwierania „Więcej” po odmowie schowka (`czyWiecejOtwarte ||= !czyWSchowku`, linia 340) przeszły na zielono (mutacja na kopii). Test szybka-wynik-karta.test.js:110 sprawdza tylko, gdzie w drzewie leży zapasowy, a nie że szybka.js go używa. Od wyniku kopiowania zależy też zapis statusu „wysłana”. Poprawka: wydziel obsługę kopiowania do testowalnej funkcji, wstrzyknij kopiujDoSchowka jako atrapę i sprawdź: argument to element zapasowy; przy false stan „Więcej” jest true, a selectAllChildren dostaje nowy cytat; przy true oznaczWyslana jest wołane z id wyceny."
+        },
+        {
+          "severity": "P2",
+          "typ": "KOD",
+          "plik": "src/widoki/szybka.js:395",
+          "opis": "Zamówienie: IU-20, Podejście: „`szybka.js` zostaje poniżej 300 linii”. Plik ma 395 linii (391 przed fazą). Korekta dopisana w tym samym diffie sama stwierdza „warunek NIE jest spełniony”, a nie uchyla go decyzją, więc zamówienie stoi niezrealizowane. Skutek jest wyłącznie strukturalny: zachowanie dla użytkownika się nie zmienia. Poprawka opisana w korekcie: przenieść `otworzWyborUslugi`, `polaFormularza`, `licznikiPozycji` i `dodatkiAgd` do nowego `src/widoki/szybka-pola.js`, a `ustawOczekiwanie` do `szybka-wynik.js`. Alternatywa: właściciel formalnie uchyla ten warunek w planie."
+        }
+      ],
+      "baza": "b36d698cc6f9a0c1129742cad614323cde5118d8",
+      "metryki": {
+        "liczniki": {
+          "p1": 0,
+          "p2": 22,
+          "p3": 7,
+          "operator": 1
+        },
+        "przebieg": {
+          "pominieci": [],
+          "e2eTryb": "przegladarka",
+          "znalezione": 32,
+          "poDedupJs": 32,
+          "poDedupSem": 30,
+          "weryfikowane": 22,
+          "obalone": 0,
+          "p3Odrzucone": 0,
+          "e2eCheckboxy": 4,
+          "e2eStatus": "wykonany (tryb przegladarka)",
+          "e2ePass": 3,
+          "e2eFail": 0,
+          "e2eSkip": 1,
+          "e2eManual": 0,
+          "dossier": true,
+          "sceptycy": {
+            "p1": 0,
+            "p2Grupy": 6,
+            "p2Findingi": 22
+          },
+          "sceptyk": {
+            "agree": 22,
+            "disagree_evidence": 0,
+            "disagree_concern": 0,
+            "degradacje": 0
+          },
+          "tiery": {
+            "sceptykP2": "medium",
+            "sceptykP1": "high",
+            "reviewer": "high",
+            "spec": "medium",
+            "testCoverage": "medium",
+            "scribe": "low"
+          }
+        }
+      }
     }
   ],
   "zakonczenie": {

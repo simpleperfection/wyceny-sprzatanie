@@ -38,7 +38,7 @@ const kluczDodatku = (d) => `${d.usluga.id}.${d.pozycja.id}`
 const zapisanyDodatek = (wycena, d) => (wycena.wejscie.dodatki ?? []).find((x) => x.uslugaId === d.usluga.id && x.pozycjaId === d.pozycja.id)
 
 /** @param {PozycjaDodatku} d @param {Wycena} wycena @param {Katalog} katalog @param {AkcjeDodatku} akcje @returns {HTMLElement} */
-function wierszDodatku(d, wycena, katalog, akcje) {
+export function wierszDodatku(d, wycena, katalog, akcje) {
   const dodatek = zapisanyDodatek(wycena, d)
   const klucz = kluczDodatku(d)
   const { cenaJedn, kwota } = wycenaDodatku({ uslugaId: d.usluga.id, pozycjaId: d.pozycja.id, ilosc: dodatek?.ilosc ?? 0 },
@@ -92,7 +92,7 @@ function wierszeDojazdu(km, stawki) {
 }
 
 /** @param {number} km @param {StawkiDojazdu} stawki @returns {string} wyliczenie obu kwot dojazdu do „Więcej” */
-function wyliczenieDojazdu(km, stawki) {
+export function wyliczenieDojazdu(km, stawki) {
   const info = infoDojazdu(km, stawki)
   const promien = tekstLiczby(stawki.darmowy_promien_km)
   const dlaKlienta = info.kmPonad > 0

@@ -11,134 +11,41 @@ import { ustawieniaDomyslne } from '../dane/ustawienia.js'
 import { klient as znajdzKlienta } from '../dane/klienci.js'
 import { BladWyceny, wycena as znajdzWycene } from '../dane/wyceny.js'
 import { czyWycenaZamknieta } from '../dane/zlecenia.js'
-import { MAKS_ILOSCI, ustawDodatek, ustawIlosc } from '../kreator/pozycje.js'
-import { pozycjeGlowne } from '../kreator/stan.js'
 import {
-  formularzDomyslny, opcjeUslug, oznaczWyslana, polaUslugi, przypiszKlientaSzybkiej, RODZAJE_MIESZKANIA, wejscieZWyceny, wynikFormularza,
-  zapiszSzybka, zBrudemOdpowiedzi, zMetrazem, zSzybkiej, zUsluga,
+  formularzDomyslny, opcjeUslug, oznaczWyslana, przypiszKlientaSzybkiej, wejscieZWyceny, wynikFormularza, zapiszSzybka, zBrudemOdpowiedzi,
+  zMetrazem, zSzybkiej, zUsluga,
 } from '../kreator/szybka.js'
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
-import { STANY_SZYBKIEJ } from '../silnik/szybka.js'
 import { domyslneLazienki } from '../silnik/uklad.js'
-import { bladZakresu, nazwaJednostki } from '../ui/format.js'
 import { h } from '../ui/h.js'
-import { chipy, licznik, przycisk } from '../ui/komponenty/formularz.js'
-import { arkusz, baner, karta, naglowek, wiersz } from '../ui/komponenty/uklad.js'
+import { licznik, przycisk } from '../ui/komponenty/formularz.js'
+import { baner, naglowek } from '../ui/komponenty/uklad.js'
 import { kopiujDoSchowka } from '../ui/schowek.js'
 import { sciezka } from '../ui/trasy.js'
-import { adresKroku, WYCENA_ZAMKNIETA, zglosBladKreatora } from './kreator-wspolne.js'
+import { adresKroku, POWROT_DO_WYCEN, WYCENA_ZAMKNIETA, zglosBladKreatora } from './kreator-wspolne.js'
 import { tekstBleduPytan, wierszPytan } from './pytania.js'
 import { adresWyceny } from './start-dane.js'
-import { kartaWyniku } from './szybka-wynik.js'
+import { otworzWyborUslugi, polaFormularza } from './szybka-pola.js'
+import { kartaWyniku, kopiujTekstKlienta, ustawOczekiwanie } from './szybka-wynik.js'
 import { wyborKlienta } from './wybor-klienta.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../ui/router.js').Kontekst} Kontekst */
-/** @typedef {import('../silnik/katalog.js').Katalog} Katalog */
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
-/** @typedef {import('../kreator/szybka.js').FormularzSzybkiej} FormularzSzybkiej */
 /** @typedef {import('../kreator/szybka.js').StanWyniku} StanWyniku */
-/** @typedef {(fn: (w: FormularzSzybkiej) => FormularzSzybkiej, opcje?: { fokus?: string, czyPola?: boolean }) => void} Zmiana */
+/** @typedef {import('./szybka-pola.js').Zmiana} Zmiana */
 
-const KROK_METRAZU = 5
-const GRANICE_METRAZU = Object.freeze({ min: 1, max: MAKS_ILOSCI })
 const GRANICE_LAZIENEK = Object.freeze({ min: 0, max: 9 })
-const USLUGA_DODATKOW = 'agd'
-const KUCHNIE = Object.freeze(/** @type {const} */ ([{ wartosc: 'osobna', etykieta: 'Osobna' }, { wartosc: 'aneks', etykieta: 'Aneks' }]))
-const STANY = STANY_SZYBKIEJ.map((s) => ({ wartosc: s.id, etykieta: s.etykieta }))
 const NIE_SKOPIOWANO = 'Nie udało się skopiować automatycznie. Tekst jest zaznaczony – skopiuj go ręcznie.'
 const JUZ_DOKLADNA = 'Ta wycena jest już dokładną wyceną.'
 const NIEAKTUALNA = 'Wycena zmieniła się w innej karcie przeglądarki. Widzisz teraz aktualne dane.'
 const BRAK_WYNIKU = 'Uzupełnij usługę i zakres, żeby zapisać wycenę.'
-const BLAD_ILOSCI = bladZakresu({ min: 0, max: MAKS_ILOSCI })
-const NAGLOWEK = Object.freeze({ tytul: 'Szybka wycena', podtytul: 'Rozmowa z klientem', wstecz: sciezka('wyceny'), wsteczTekst: 'Wycena' })
+const NAGLOWEK = Object.freeze({ tytul: 'Szybka wycena', podtytul: 'Rozmowa z klientem', ...POWROT_DO_WYCEN })
 
 /** @param {HTMLElement} kontener @param {string} tekst @param {{ tekst: string, adres: string }} akcja */
 function pokazKomunikat(kontener, tekst, akcja) {
   kontener.replaceChildren(naglowek(NAGLOWEK),
     h('div', { class: 'tresc' }, baner({ rodzaj: 'info', tekst }), przycisk({ tekst: akcja.tekst, rodzaj: 'drugi', adres: akcja.adres })))
-}
-
-/**
- * Arkusz „Usługa”: lista opcji (wiersze-przyciski, wybrana z opisem „wybrana”); wybor zamyka arkusz i oddaje opcje, a fokus
- * wraca do pola uslugi.
- * @param {Katalog} katalog @param {string} wybrana wartosc opcji @param {(wartosc: string) => void} naWybor
- */
-function otworzWyborUslugi(katalog, wybrana, naWybor) {
-  const wiersze = opcjeUslug(katalog).map((o) => {
-    const element = wiersz({ tytul: o.etykieta, opis: o.wartosc === wybrana ? 'wybrana' : undefined, naKlik: () => {
-      dialog.close()
-      naWybor(o.wartosc)
-    } })
-    if (o.wartosc === wybrana) element.setAttribute('aria-current', 'true')
-    return element
-  })
-  const dialog = arkusz({ tytul: 'Usługa' }, karta({ klasa: 'karta--bez-odstepu' }, wiersze))
-  dialog.addEventListener('close', () => dialog.remove())
-  document.body.append(dialog)
-  dialog.showModal()
-  const zaznaczona = dialog.querySelector('[aria-current="true"]')
-  if (zaznaczona instanceof HTMLElement) zaznaczona.focus()
-}
-
-/**
- * Pola uslugi pod polem „Usługa” (bez lazienek, ktore maja wlasne miejsce, zeby zmiana metrazu nie zabierala fokusu).
- * @param {{ formularz: FormularzSzybkiej, katalog: Katalog, zmien: Zmiana, naMetraz: (m2: number) => void, lazienki: HTMLElement,
- *   dodatki: { czyOtwarte: boolean, naPrzelacz: (czyOtwarte: boolean) => void } }} opcje
- * @returns {Node[]}
- */
-function polaFormularza({ formularz, katalog, zmien, naMetraz, lazienki, dodatki }) {
-  const usluga = katalog.usluga(formularz.uslugaId)
-  const pola = polaUslugi(usluga)
-  const metraz = licznik({ id: 'szybka-metraz', etykieta: 'Metraż', wartosc: formularz.m2, krok: KROK_METRAZU, jednostka: 'm²',
-    ...GRANICE_METRAZU, naZmiane: naMetraz })
-  const stan = chipy({ id: 'szybka-stan', etykieta: 'Spodziewany stan', opcje: STANY, wybrana: formularz.stan,
-    naZmiane: (s) => zmien((w) => ({ ...w, stan: s })) })
-  if (pola === 'biuro') return [metraz, stan]
-  if (pola === 'ogledziny_pomieszczen') return [metraz]
-  if (pola === 'ogledziny_pozycji') {
-    const [glowna] = pozycjeGlowne(usluga)
-    return glowna ? [metraz, h('p', { class: 'szybka__notka' }, `Pozycja: ${glowna.nazwa}`)] : [metraz]
-  }
-  if (pola === 'pozycje') return licznikiPozycji(formularz, katalog, zmien)
-  return [
-    chipy({ id: 'szybka-rodzaj', etykieta: 'Rodzaj sprzątania', opcje: RODZAJE_MIESZKANIA, wybrana: formularz.uslugaId,
-      naZmiane: (id) => zmien((w) => zUsluga(w, id, katalog), { czyPola: true, fokus: 'input[name="szybka-rodzaj"]:checked' }) }),
-    metraz, lazienki,
-    chipy({ id: 'szybka-kuchnia', etykieta: 'Kuchnia', opcje: KUCHNIE, wybrana: formularz.kuchnia ?? 'osobna',
-      naZmiane: (k) => zmien((w) => ({ ...w, kuchnia: k })) }),
-    stan,
-    dodatkiAgd(formularz, katalog, zmien, dodatki),
-  ]
-}
-
-/** @param {FormularzSzybkiej} formularz @param {Katalog} katalog @param {Zmiana} zmien @returns {HTMLElement[]} */
-function licznikiPozycji(formularz, katalog, zmien) {
-  return formularz.pozycje.map((p) => {
-    const pozycja = katalog.pozycja(formularz.uslugaId, p.id)
-    return licznik({ id: `szybka-pozycja-${p.id}`, etykieta: pozycja.nazwa, wartosc: p.ilosc, max: MAKS_ILOSCI, tekstBledu: BLAD_ILOSCI,
-      jednostka: nazwaJednostki(pozycja.jednostka), naZmiane: (n) => zmien((w) => ({ ...w, pozycje: ustawIlosc(w, p.id, n, katalog).pozycje ?? [] })) })
-  })
-}
-
-/**
- * Zwijane „AGD i dodatki”: liczniki pozycji AGD (dodatki w cenie).
- * @param {FormularzSzybkiej} formularz @param {Katalog} katalog @param {Zmiana} zmien
- * @param {{ czyOtwarte: boolean, naPrzelacz: (czyOtwarte: boolean) => void }} stan
- */
-function dodatkiAgd(formularz, katalog, zmien, { czyOtwarte, naPrzelacz }) {
-  const pozycje = katalog.usluga(USLUGA_DODATKOW).pozycje ?? []
-  /** @param {string} pozycjaId */
-  const ilosc = (pozycjaId) => formularz.dodatki.find((d) => d.uslugaId === USLUGA_DODATKOW && d.pozycjaId === pozycjaId)?.ilosc ?? 0
-  const element = h('details', { class: 'szybka__dodatki', open: czyOtwarte || formularz.dodatki.length > 0 },
-    h('summary', { class: 'szybka__dodatki-tytul' }, 'AGD i dodatki'),
-    h('div', { class: 'szybka__dodatki-lista' }, pozycje.map((p) => licznik({
-      id: `szybka-agd-${p.id}`, etykieta: p.nazwa, wartosc: ilosc(p.id), max: MAKS_ILOSCI, tekstBledu: BLAD_ILOSCI,
-      jednostka: nazwaJednostki(p.jednostka),
-      naZmiane: (n) => zmien((w) => ({ ...w, dodatki: ustawDodatek(w, USLUGA_DODATKOW, p.id, n, 'w_cenie', katalog).dodatki ?? [] })),
-    }))))
-  element.addEventListener('toggle', () => naPrzelacz(element.open))
-  return element
 }
 
 /** @type {Widok} */
@@ -314,45 +221,36 @@ export const widokSzybkiejWyceny = {
       }
     }
 
-    /**
-     * Akcja w toku (zapis, schowek, wczytanie pytan): przyciski karty wyniku wylaczone, karta z aria-busy; po zakonczeniu
-     * przyciski wracaja, a fokus wraca na przycisk akcji, gdy wylaczenie go zabralo.
-     * @param {boolean} czy @param {string} [fokus]
-     */
-    function ustawOczekiwanie(czy, fokus) {
-      miejsceWyniku.firstElementChild?.setAttribute('aria-busy', String(czy))
-      for (const akcja of miejsceWyniku.querySelectorAll('button')) akcja.disabled = czy || stanWyniku.stan !== 'wynik'
-      const element = fokus ? miejsceWyniku.querySelector(fokus) : null
-      if (!czy && element instanceof HTMLElement && !miejsceWyniku.contains(document.activeElement)) element.focus()
+    /** @param {boolean} czy @param {string} [fokus] */
+    const oczekuj = (czy, fokus) => ustawOczekiwanie(miejsceWyniku, czy, stanWyniku.stan === 'wynik', fokus)
+
+    /** @param {boolean} czyWSchowku */
+    function pokazKopiowanie(czyWSchowku) {
+      czySkopiowano = czyWSchowku
+      komunikat.replaceChildren(czyWSchowku ? h('p', { class: 'wizualnie-ukryte' }, 'Skopiowano') : baner({ rodzaj: 'info', tekst: NIE_SKOPIOWANO }))
+      rysujWynik('[data-akcja="kopiuj"]')
     }
 
     async function handleKopiuj() {
       if (czyWToku || stanWyniku.stan !== 'wynik') return
       czyWToku = true
-      ustawOczekiwanie(true)
-      const { tekst } = stanWyniku.wynik
+      oczekuj(true)
       try {
-        const w = zapisz()
-        const czyWSchowku = tekstKlienta.zapasowy ? await kopiujDoSchowka(tekst, tekstKlienta.zapasowy) : false
-        if (czyWSchowku && w.id === id) zmieniona = oznaczWyslana(kontekst, w.id).zmieniona
-        if (!czyAktywny) return
-        czySkopiowano = czyWSchowku
-        czyWiecejOtwarte ||= !czyWSchowku
-        komunikat.replaceChildren(czyWSchowku ? h('p', { class: 'wizualnie-ukryte' }, 'Skopiowano') : baner({ rodzaj: 'info', tekst: NIE_SKOPIOWANO }))
-        rysujWynik('[data-akcja="kopiuj"]')
-        if (!czyWSchowku && tekstKlienta.cytat) getSelection()?.selectAllChildren(tekstKlienta.cytat)
+        await kopiujTekstKlienta({ tekst: stanWyniku.wynik.tekst, kopiuj: kopiujDoSchowka, zapisz, tekstKlienta: () => tekstKlienta,
+          naWyslanie: (w) => { if (w.id === id) zmieniona = oznaczWyslana(kontekst, w.id).zmieniona },
+          czyAktywny: () => czyAktywny, naRozwin: () => { czyWiecejOtwarte = true }, naWynik: pokazKopiowanie })
       } catch (blad) {
         if (czyAktywny) obsluzBlad(blad)
       } finally {
         czyWToku = false
-        if (czyAktywny) ustawOczekiwanie(false, '[data-akcja="kopiuj"]')
+        if (czyAktywny) oczekuj(false, '[data-akcja="kopiuj"]')
       }
     }
 
     async function handleDokladna() {
       if (czyWToku || stanWyniku.stan !== 'wynik') return
       czyWToku = true
-      ustawOczekiwanie(true)
+      oczekuj(true)
       try {
         const pytania = await pytaniaAplikacji(katalog).catch((blad) => {
           if (czyAktywny) pokazBlad(tekstBleduPytan(blad))
@@ -366,7 +264,7 @@ export const widokSzybkiejWyceny = {
         if (czyAktywny) obsluzBlad(blad)
       } finally {
         czyWToku = false
-        if (czyAktywny) ustawOczekiwanie(false, '[data-akcja="dokladna"]')
+        if (czyAktywny) oczekuj(false, '[data-akcja="dokladna"]')
       }
     }
 

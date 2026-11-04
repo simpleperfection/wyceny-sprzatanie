@@ -51,8 +51,8 @@ const NIEAKTUALNA = 'Wycena zmieniła się w innej karcie przeglądarki. Widzisz
 const KOD_NIEAKTUALNEJ = 'nieaktualna'
 const BLAD_ZAPISU_WYCENY = 'Nie udało się zapisać wyceny. Spróbuj jeszcze raz.'
 const BLAD_LICZENIA = 'Nie udało się policzyć ceny dla tych danych. Sprawdź wybraną usługę i wpisany zakres.'
-/** Tekst powrotu z pierwszego kroku i z komunikatu zamiast kroku; ekran nadrzedny kreatora to modul Wycena. */
-const POWROT_DO_WYCEN = 'Wycena'
+/** Powrot do modulu Wycena: ekran nadrzedny kreatora, szybkiej wyceny, pytan i podsumowania. */
+export const POWROT_DO_WYCEN = Object.freeze({ wstecz: sciezka('wyceny'), wsteczTekst: 'Wycena' })
 
 /** @param {KrokKreatora} krok */
 const indeksKroku = (krok) => KROKI_KREATORA.findIndex((k) => k.id === krok)
@@ -68,7 +68,7 @@ export const adresKroku = (krok, id = null) => sciezka('kreator', { krok }, id ?
 function adresWstecz(krok, wycena) {
   const poprzedni = KROKI_KREATORA[indeksKroku(krok) - 1]
   if (poprzedni) return adresKroku(poprzedni.id, wycena?.id)
-  return wycena?.numer ? sciezka('wycena', { id: wycena.id }) : sciezka('wyceny')
+  return wycena?.numer ? sciezka('wycena', { id: wycena.id }) : POWROT_DO_WYCEN.wstecz
 }
 
 /**
@@ -76,17 +76,16 @@ function adresWstecz(krok, wycena) {
  * @param {KrokKreatora} krok @param {Wycena | null} wycena
  * @returns {HTMLElement}
  */
-function naglowekKroku(krok, wycena) {
+export function naglowekKroku(krok, wycena) {
   const indeks = indeksKroku(krok)
-  const element = naglowek({
+  return naglowek({
     tytul: KROKI_KREATORA[indeks]?.etykieta ?? krok,
     podtytul: wycena?.numer ? `Wycena ${wycena.numer}` : undefined,
     wstecz: adresWstecz(krok, wycena),
-    wsteczTekst: KROKI_KREATORA[indeks - 1]?.etykieta ?? POWROT_DO_WYCEN,
+    wsteczTekst: KROKI_KREATORA[indeks - 1]?.etykieta ?? POWROT_DO_WYCEN.wsteczTekst,
+    krok: `Krok ${indeks + 1} z ${KROKI_KREATORA.length}`,
+    pasek: pasekPostepu(KROKI_KREATORA.map((k) => k.etykieta), indeks),
   })
-  element.querySelector('.naglowek__gora')?.append(h('span', { class: 'naglowek__krok' }, `Krok ${indeks + 1} z ${KROKI_KREATORA.length}`))
-  element.querySelector('.naglowek__tytul')?.before(pasekPostepu(KROKI_KREATORA.map((k) => k.etykieta), indeks))
-  return element
 }
 
 /** @param {KrokKreatora} krok @param {Wycena | null} wycena @param {Katalog} katalog @param {string} opis @returns {HTMLElement | null} */
@@ -159,7 +158,7 @@ export function widokKreatora(widokiKrokow, nieZnaleziono) {
  */
 export function pokazKomunikat(kontener, tekst, akcja) {
   kontener.replaceChildren(
-    naglowek({ tytul: 'Nowa wycena', wstecz: sciezka('wyceny'), wsteczTekst: POWROT_DO_WYCEN }),
+    naglowek({ tytul: 'Nowa wycena', ...POWROT_DO_WYCEN }),
     h('div', { class: 'tresc' }, baner({ rodzaj: 'info', tekst }), przycisk({ tekst: akcja.tekst, adres: akcja.adres })))
 }
 
@@ -173,7 +172,7 @@ export function wycenaKroku(kontener, zapytanie, kontekst) {
   const stan = wczytajStan(kontekst.magazyn)
   const wycena = id === null ? null : znajdzWycene(stan, id)
   if (!wycena) {
-    pokazKomunikat(kontener, 'Nie ma tej wyceny. Mogła zostać usunięta.', { tekst: 'Wróć do wycen', adres: sciezka('wyceny') })
+    pokazKomunikat(kontener, 'Nie ma tej wyceny. Mogła zostać usunięta.', { tekst: 'Wróć do wycen', adres: POWROT_DO_WYCEN.wstecz })
     return null
   }
   if (!czyWycenaZamknieta(stan, wycena.id)) return wycena

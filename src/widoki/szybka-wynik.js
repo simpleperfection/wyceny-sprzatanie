@@ -8,14 +8,18 @@ import { h } from '../ui/h.js'
 import { przycisk } from '../ui/komponenty/formularz.js'
 import { baner, karta, wiecej } from '../ui/komponenty/uklad.js'
 
+/** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
 /** @typedef {import('../kreator/szybka.js').StanWyniku} StanWyniku */
 /** @typedef {import('../silnik/szybka.js').WynikSzybkiej} WynikSzybkiej */
+/** @typedef {import('../ui/komponenty/uklad.js').StanWiecej} StanWiecej */
 /**
- * @typedef {{ czyOtwarte: boolean, naPrzelacz: (czyOtwarte: boolean) => void }} StanWiecej stan „Więcej” trzyma ekran, bo karta rysuje sie od nowa
  * @typedef {{ stan: StanWyniku, czySkopiowano: boolean, wiecej: StanWiecej, naKopiuj: () => void, naDokladna: () => void }} OpcjeKarty
  * @typedef {{ cytat: HTMLElement | null, zapasowy: HTMLElement | null }} TekstKlienta cytat: tekst pod „Więcej” do recznego
  *   skopiowania; zapasowy: ten sam tekst poza „Więcej” dla kopiowania przez zaznaczenie, bo zwiniete <details> nie jest rysowane
  * @typedef {TekstKlienta & { element: HTMLElement }} KartaWyniku
+ * @typedef {{ tekst: string, kopiuj: (tekst: string, zapasowy: HTMLElement) => Promise<boolean>, zapisz: () => Wycena,
+ *   tekstKlienta: () => TekstKlienta, naWyslanie: (w: Wycena) => void, czyAktywny: () => boolean, naRozwin: () => void,
+ *   naWynik: (czyWSchowku: boolean) => void }} OpcjeKopiowania
  */
 
 const OGLEDZINY = 'Ta usługa wymaga oględzin. Poproś o zdjęcia albo umów się na obejrzenie przed podaniem ceny.'
@@ -50,13 +54,11 @@ export function tekstZostaje(naGodzine) {
 }
 
 /** @param {StanWyniku & { stan: 'wynik' }} stan @param {StanWiecej} stanWiecej @returns {TekstKlienta & { elementy: (Node | null)[] }} */
-function trescWyniku({ wynik, wojewodztwo }, { czyOtwarte, naPrzelacz }) {
+function trescWyniku({ wynik, wojewodztwo }, stanWiecej) {
   const cytat = h('q', { class: 'karta-szybkiej__cytat' }, wynik.tekst)
   const zapasowy = h('p', { class: 'wizualnie-ukryte', 'aria-hidden': 'true' }, wynik.tekst)
-  const szczegoly = wiecej({}, h('p', { class: 'liczba' }, tekstMediany(wynik.mediana, wojewodztwo)),
+  const szczegoly = wiecej({ stan: stanWiecej }, h('p', { class: 'liczba' }, tekstMediany(wynik.mediana, wojewodztwo)),
     h('p', { class: 'liczba' }, tekstRynku(wynik.rynek)), cytat)
-  szczegoly.open = czyOtwarte
-  szczegoly.addEventListener('toggle', () => naPrzelacz(szczegoly.open))
   return {
     cytat,
     zapasowy,
@@ -94,4 +96,35 @@ export function kartaWyniku({ stan, czySkopiowano, wiecej: stanWiecej, naKopiuj,
   kopiuj.dataset.akcja = 'kopiuj'
   dokladna.dataset.akcja = 'dokladna'
   return { element: karta({ klasa: 'karta-szybkiej' }, ...elementy, h('div', { class: 'karta-szybkiej__przyciski' }, dokladna, kopiuj)), cytat, zapasowy }
+}
+
+/**
+ * Akcja w toku (zapis, schowek, wczytanie pytan): przyciski karty wyniku wylaczone, karta z aria-busy; po zakonczeniu
+ * przyciski wracaja, a fokus wraca na przycisk akcji, gdy wylaczenie go zabralo.
+ * @param {HTMLElement} miejsce element z karta wyniku @param {boolean} czy @param {boolean} czyMaWynik bez wyniku przyciski zostaja wylaczone
+ * @param {string} [fokus]
+ */
+export function ustawOczekiwanie(miejsce, czy, czyMaWynik, fokus) {
+  miejsce.firstElementChild?.setAttribute('aria-busy', String(czy))
+  for (const akcja of miejsce.querySelectorAll('button')) akcja.disabled = czy || !czyMaWynik
+  const element = fokus ? miejsce.querySelector(fokus) : null
+  if (!czy && element instanceof HTMLElement && !miejsce.contains(document.activeElement)) element.focus()
+}
+
+/**
+ * „Kopiuj tekst”: zapis wyceny i kopiowanie z elementu `zapasowy`, bo zwiniete „Więcej” nie jest rysowane i zaznaczenie cytatu nic by
+ * nie skopiowalo. Tekst w schowku oznacza wycene jako wyslana; po odmowie schowka „Więcej” sie rozwija, a uzytkownik dostaje
+ * zaznaczony cytat z karty narysowanej przez `naWynik`.
+ * @param {OpcjeKopiowania} opcje
+ */
+export async function kopiujTekstKlienta({ tekst, kopiuj, zapisz, tekstKlienta, naWyslanie, czyAktywny, naRozwin, naWynik }) {
+  const w = zapisz()
+  const { zapasowy } = tekstKlienta()
+  const czyWSchowku = zapasowy ? await kopiuj(tekst, zapasowy) : false
+  if (czyWSchowku) naWyslanie(w)
+  if (!czyAktywny()) return
+  if (!czyWSchowku) naRozwin()
+  naWynik(czyWSchowku)
+  const { cytat } = tekstKlienta()
+  if (!czyWSchowku && cytat) getSelection()?.selectAllChildren(cytat)
 }

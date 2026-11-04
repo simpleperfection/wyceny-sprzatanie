@@ -20,7 +20,7 @@ export class AtrapaElementu {
     /** @type {Map<string, string>} */
     this.wlasciwosci = new Map()
     this.style = { setProperty: (/** @type {string} */ nazwa, /** @type {string} */ wartosc) => this.wlasciwosci.set(nazwa, wartosc) }
-    this.classList = { toggle: () => {} }
+    this.classList = { toggle: () => {}, add: () => {} }
   }
 
   /** @param {string} nazwa @param {string} wartosc */

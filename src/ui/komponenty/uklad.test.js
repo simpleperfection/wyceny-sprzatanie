@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
-import { afterEach, beforeEach, describe, it } from 'node:test'
+import { afterEach, beforeEach, describe, it, mock } from 'node:test'
 
-import { naglowek, podpowiedz, przelaczniki, wiecej } from './uklad.js'
+import { naglowek, podpowiedz, przelaczniki, trzymajRozwiniecie, wiecej } from './uklad.js'
 
 /** Atrapa API przegladarki (Node nie ma DOM): element z atrybutami, dziecmi, zdarzeniami i `showModal`. */
 class AtrapaElementu {
@@ -107,6 +107,25 @@ describe('komponenty układu modułu', () => {
       assert.equal(znajdz(link, poTagu('svg')).length, 1)
     })
 
+    it('krok stoi obok powrotu, a pasek między górą a tytułem', () => {
+      const pasek = new AtrapaElementu('ol')
+
+      const element = jakoAtrapa(naglowek({ tytul: 'Zakres', wstecz: '#/kreator/usluga', wsteczTekst: 'Usługa', krok: 'Krok 2 z 5',
+        pasek: /** @type {Node} */ (/** @type {unknown} */ (pasek)) }))
+
+      const [gora, srodek, tytul] = element.dzieci
+      assert.equal(tekst(gora), 'UsługaKrok 2 z 5')
+      assert.equal(srodek, pasek)
+      assert.equal(jakoAtrapa(tytul).tag, 'h1')
+    })
+
+    it('bez kroku i paska nagłówek ma samą górę i tytuł', () => {
+      const element = jakoAtrapa(naglowek({ tytul: 'Zlecenia', wstecz: '#/start', wsteczTekst: 'Start' }))
+
+      assert.deepEqual(element.dzieci.map((d) => jakoAtrapa(d).tag), ['div', 'h1'])
+      assert.equal(tekst(element.dzieci[0]), 'Start')
+    })
+
     it('bez wstecz nie ma linku powrotu, a podtytuł jest pod tytułem', () => {
       const element = jakoAtrapa(naglowek({ tytul: 'Start', podtytul: 'Firma Lis' }))
 
@@ -150,6 +169,29 @@ describe('komponenty układu modułu', () => {
       assert.equal(podsumowanie.tag, 'summary')
       assert.equal(tekst(podsumowanie), 'Więcej')
       assert.equal(tekst(tresc), 'Meble biurowe; nie zostawia smug.')
+    })
+
+    it('stan z ekranu ustawia rozwinięcie i wraca przy każdym przełączeniu', () => {
+      const naPrzelacz = mock.fn()
+      const element = jakoAtrapa(wiecej({ stan: { czyOtwarte: true, naPrzelacz } }, 'woda'))
+
+      assert.equal(Reflect.get(element, 'open'), true)
+      Reflect.set(element, 'open', false)
+      for (const obsluga of element.obslugi.get('toggle') ?? []) obsluga({})
+
+      assert.deepEqual(naPrzelacz.mock.calls.map((c) => c.arguments), [[false]])
+    })
+
+    it('bez stanu nie podpina przełączania', () => {
+      assert.equal(jakoAtrapa(wiecej({}, 'woda')).obslugi.has('toggle'), false)
+    })
+
+    it('trzymajRozwiniecie działa na dowolnym <details> i oddaje ten sam element', () => {
+      const szczegoly = new AtrapaElementu('details')
+      const wynik = trzymajRozwiniecie(/** @type {HTMLDetailsElement} */ (/** @type {unknown} */ (szczegoly)), { czyOtwarte: true, naPrzelacz: () => {} })
+
+      assert.equal(wynik, szczegoly)
+      assert.equal(Reflect.get(szczegoly, 'open'), true)
     })
 
     it('przyjmuje własną etykietę i odrzuca brak treści', () => {

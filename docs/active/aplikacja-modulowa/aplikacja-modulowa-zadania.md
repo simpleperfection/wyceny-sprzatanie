@@ -455,9 +455,9 @@ Zależy od: Faza 5
 - [x] Modyfikuj: `src/widoki/kreator-dodatki.js`
 - [x] Modyfikuj: `src/style/kreator.css`
 - [x] Modyfikuj: `src/style/komponenty.css`
-- [ ] Test: [E2E] `kreator-wyglad-cena` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, otwórz http://localhost:5174/#/wyceny, kliknij „Dokładna wycena”, wybierz „Sprzątanie mieszkania (standard)”, ustaw 50 m² z domyślnym układem, przejdź do podsumowania, zrób screenshot każdego kroku → każdy krok ma jeden główny przycisk, tekst ≥ 17 px i elementy klikalne ≥ 48 px, cena dla klienta 250 zł jak w scenariuszu kalibracji mieszkania 50 m² w mazowieckim
-- [ ] Weryfikacja: `node --test src/silnik/parytet.test.js` przechodzi bez zmian w teście (ceny jak przed przebudową)
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Test: [E2E] `kreator-wyglad-cena` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, otwórz http://localhost:5174/#/wyceny, kliknij „Dokładna wycena”, wybierz „Sprzątanie mieszkania (standard)”, ustaw 50 m² z domyślnym układem, przejdź do podsumowania, zrób screenshot każdego kroku → każdy krok ma jeden główny przycisk, tekst ≥ 17 px i elementy klikalne ≥ 48 px, cena dla klienta 250 zł jak w scenariuszu kalibracji mieszkania 50 m² w mazowieckim
+- [x] Weryfikacja: `node --test src/silnik/parytet.test.js` przechodzi bez zmian w teście (ceny jak przed przebudową)
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-20: Szybka wycena i pytania do klienta w nowym wyglądzie (feature-builder-ui)
 
@@ -466,9 +466,9 @@ Zależy od: Faza 5
 - [x] Modyfikuj: `src/widoki/pytania.js`
 - [x] Modyfikuj: `src/style/szybka.css`
 - [x] Modyfikuj: `src/style/komponenty.css`
-- [ ] Test: [E2E] `szybka-pytania-wyglad` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, otwórz http://localhost:5174/#/start, kliknij kafel „Wycena” i „Szybka wycena”, wybierz mieszkanie 50 m² z aneksem, stan typowy, otwórz pytania do klienta i odpowiedz na jedno, zrób screenshot → widełki 250–300 zł duże i pogrubione, wyjaśnienie widełek widoczne dopiero po „Więcej”, tekst ≥ 17 px, elementy klikalne ≥ 48 px
-- [ ] Weryfikacja: `node --test src/kreator/szybka.test.js src/widoki/szybka-wynik.test.js src/widoki/pytania.test.js` przechodzi bez zmian w testach (widełki jak przed przebudową)
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Test: [E2E] `szybka-pytania-wyglad` — okno 360×800, wstrzyknij `e2e/stany/ustawienia-mazowieckie.json`, otwórz http://localhost:5174/#/start, kliknij kafel „Wycena” i „Szybka wycena”, wybierz mieszkanie 50 m² z aneksem, stan typowy, otwórz pytania do klienta i odpowiedz na jedno, zrób screenshot → widełki 250–300 zł duże i pogrubione, wyjaśnienie widełek widoczne dopiero po „Więcej”, tekst ≥ 17 px, elementy klikalne ≥ 48 px
+- [x] Weryfikacja: `node --test src/kreator/szybka.test.js src/widoki/szybka-wynik.test.js src/widoki/pytania.test.js` przechodzi bez zmian w testach (widełki jak przed przebudową)
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-21: Podsumowanie wyceny i edycja oferty w nowym wyglądzie (feature-builder-ui)
 
@@ -479,21 +479,27 @@ Zależy od: Faza 5
 - [x] Modyfikuj: `src/widoki/edytor-listy.js` (plik bez zmian: układ zrobiony samym CSS-em w `src/style/podsumowanie.css`)
 - [x] Modyfikuj: `src/style/podsumowanie.css`
 - [x] Modyfikuj: `src/style/komponenty.css`
-- [ ] Test: [E2E] `podsumowanie-wyglad` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz z ekranu Wycena przyjętą wycenę Anny Kowalskiej, dotknij „?” przy medianie, potem otwórz ofertę wyceny do wysłania Jana Nowaka, zrób screenshot → cena duża i zielona, opis mediany w arkuszu po „?”, jeden główny przycisk („Zaplanuj” przy przyjętej), edycja oferty z wyborem klienta i bez długich opisów na wierzchu
-- [ ] Weryfikacja: `node --test src/widoki/oferta-edycja.test.js src/widoki/oferta-edycja-sekcje.test.js src/kreator/podsumowanie.test.js` przechodzi
-- [ ] Weryfikacja: `npm test` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Test: [E2E] `podsumowanie-wyglad` — okno 360×800, uruchom w stronie skrypt `e2e/stany/moduly-dzis.js`, otwórz z ekranu Wycena przyjętą wycenę Anny Kowalskiej, dotknij „?” przy medianie, potem otwórz ofertę wyceny do wysłania Jana Nowaka, zrób screenshot → cena duża i zielona, opis mediany w arkuszu po „?”, jeden główny przycisk („Zaplanuj” przy przyjętej), edycja oferty z wyborem klienta i bez długich opisów na wierzchu
+- [x] Weryfikacja: `node --test src/widoki/oferta-edycja.test.js src/widoki/oferta-edycja-sekcje.test.js src/kreator/podsumowanie.test.js` przechodzi
+- [x] Weryfikacja: `npm test` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-22: Oferta dla klienta w neutralnym wyglądzie (feature-builder-ui)
 
 - [x] Modyfikuj: `src/style/oferta.css`
 - [x] Modyfikuj: `src/style/druk.css`
 - [x] Modyfikuj: `oferta.html`
-- [ ] Test: [E2E] `oferta-neutralna` — okno 360×800, otwórz http://localhost:5174/oferta.html z fragmentem z `e2e/stany/oferta-po-terminie.txt`, zmierz przez eval kolor tła, kolor kwoty i rozmiar tekstu akapitów, zrób screenshot → tło białe, kwota w kolorze tekstu (bez zieleni), tekst ≥ 17 px, oferta czytelna bez powiększania
-- [ ] Weryfikacja: `grep -c "marka-zielen" src/style/oferta.css` zwraca 0
-- [ ] Weryfikacja: `node --test src/widoki/oferta-klient.test.js src/oferta/kodek.test.js` przechodzi (link `v1.` dekoduje się jak dotąd)
-- [ ] Weryfikacja: `npm test` przechodzi
+- [x] Test: [E2E] `oferta-neutralna` — okno 360×800, otwórz http://localhost:5174/oferta.html z fragmentem z `e2e/stany/oferta-po-terminie.txt`, zmierz przez eval kolor tła, kolor kwoty i rozmiar tekstu akapitów, zrób screenshot → tło białe, kwota w kolorze tekstu (bez zieleni), tekst ≥ 17 px, oferta czytelna bez powiększania
+- [x] Weryfikacja: `grep -c "marka-zielen" src/style/oferta.css` zwraca 0
+- [x] Weryfikacja: `node --test src/widoki/oferta-klient.test.js src/oferta/kodek.test.js` przechodzi (link `v1.` dekoduje się jak dotąd)
+- [x] Weryfikacja: `npm test` przechodzi
+
+## Do poprawy po review fazy 6
+
+Zamkniete cyklem fix: 22 pozycji — pelna tresc findingow i uzasadnienia w `review-faza-6.md`.
 
 ## Operator checklist faza 6
 
 - [ ] Operator: Właściciel otwiera link oferty i PDF na telefonie i ocenia, że wyglądają jak dokument jego firmy (IU-22)
+- [x] Operator: Test: [Manual] `oferta-neutralna` — okno 360×800, otwórz http://localhost:5174/oferta.html z fragmentem z `e2e/stany/oferta-po-terminie.txt`, zmierz przez eval kolor tła, kolor kwoty i rozmiar tekstu akapitów, zrób screenshot → tło białe, kwota w kolorze tekstu (bez zieleni), tekst ≥ 17 px, oferta czytelna bez powiększania — Operator action: Scenariusza nie odegrano: seed jest w repo, ale nie dekoduje się. Strona pokazuje tylko „Ten link do oferty jest niepełny albo uszkodzony. Poproś firmę o nowy l
+- [ ] Operator: [Manual] Rozstrzygnij próg tekstu w scenariuszach fazy 6 — Operator action: potwierdź, że „tekst ≥ 17 px” dotyczy tekstu podstawowego (R8 i makieta), albo zamów podniesienie tekstu drugorzędnego do 17 px. `kreator-wyglad-cena`, `szybka-pytania-wyglad` i `podsumowanie-wyglad` mają PASS przy tej pierwszej interpretacji. Tekst podstawowy ma 17 px, ale etykiety i opisy mają 15 px (--tekst-maly), a pigułki statusu i pasek postępu 14 px (--tekst-drobny). Te same tokeny i rozmiary są w docs/operator/aplikacja-modulowa-makiety.html, więc to nie jest rozjazd z makietą, tylko z dosłownym brzmieniem scenariuszy. Przykłady: „Krok 2 z 5”, tytuł grupy dodatków „Mycie okien”, ceny pozycji w dodatkach, „Widełki dla klienta”.

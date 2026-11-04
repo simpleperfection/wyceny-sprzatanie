@@ -22,7 +22,11 @@ import { wierszPytan } from './pytania.js'
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
 /** @typedef {import('../kreator/podpowiedzi.js').PodpowiedzCeny} PodpowiedzCeny */
 /** @typedef {import('../silnik/katalog.js').Usluga} Usluga */
-/** @typedef {{ uslugaId: string | null, wariantId: string | null, wojewodztwoId: string | null }} Wybor */
+/**
+ * @typedef {{ uslugaId: string | null, wariantId: string | null, wojewodztwoId: string | null }} Wybor
+ * @typedef {{ wybor: Wybor, opisCeny: (usluga: Usluga) => string | null, naWybor: (usluga: Usluga) => void,
+ *   naWariant: (wariantId: string) => void }} OpcjeUslugi opisCeny: podpowiedz ceny, liczona tylko dla wybranej uslugi
+ */
 
 const NAZWA_POLA_USLUGI = 'kreator-usluga'
 const FOKUS_USLUGI = `input[name="${NAZWA_POLA_USLUGI}"]:checked`
@@ -41,6 +45,28 @@ function tekstPodpowiedzi(p) {
   if (p.rodzaj === 'za_m2') return `ok. ${kwotaJednostki(p.kwota)}/m²`
   if (p.rodzaj === 'warianty') return 'jednorazowo albo abonament'
   return `od ${kwotaJednostki(p.kwota)}/${nazwaJednostki(p.jednostka)}`
+}
+
+/**
+ * Opcja uslugi (najwyzej dwie linie nazwy); pod wybrana podpowiedz ceny i chipy wariantow, a inne uslugi zostaja same (R9).
+ * @param {Usluga} usluga @param {OpcjeUslugi} opcje @returns {Node[]}
+ */
+export function opcjaUslugi(usluga, { wybor, opisCeny, naWybor, naWariant }) {
+  const czyWybrana = usluga.id === wybor.uslugaId
+  const opcja = h('label', { class: 'opcja-uslugi' },
+    h('input', { type: 'radio', name: NAZWA_POLA_USLUGI, value: usluga.id, class: 'opcja-uslugi__wejscie', checked: czyWybrana,
+      on: { change: () => naWybor(usluga) } }),
+    h('span', { class: 'opcja-uslugi__tytul' }, usluga.nazwa))
+  if (!czyWybrana) return [opcja]
+  const opis = opisCeny(usluga)
+  const warianty = usluga.warianty ?? []
+  if (!opis && warianty.length === 0) return [opcja]
+  return [opcja, h('div', { class: 'opcja-uslugi__szczegoly' },
+    opis ? h('p', { class: 'opcja-uslugi__opis liczba' }, opis) : null,
+    warianty.length === 0 ? null : chipy({
+      id: 'kreator-wariant', etykieta: 'Wariant', opcje: warianty.map((w) => ({ wartosc: w.id, etykieta: w.nazwa })), wybrana: wybor.wariantId,
+      naZmiane: naWariant,
+    }))]
 }
 
 /** @param {Kontekst} kontekst @param {Usluga} usluga @param {string | null} wojewodztwoId @returns {string | null} */
@@ -119,36 +145,20 @@ export const widokKreatoraUslugi = {
       zmienWyborEkranu({ uslugaId: usluga.id, wariantId: usluga.warianty?.[0]?.id ?? null }, FOKUS_USLUGI)
     }
 
-    /** @param {Usluga} usluga @returns {Node[]} opcja uslugi (najwyzej dwie linie nazwy), a pod wybrana podpowiedz ceny i chipy wariantow */
-    function opcjaUslugi(usluga) {
-      const czyWybrana = usluga.id === wybor.uslugaId
-      const opcja = h('label', { class: 'opcja-uslugi' },
-        h('input', { type: 'radio', name: NAZWA_POLA_USLUGI, value: usluga.id, class: 'opcja-uslugi__wejscie', checked: czyWybrana,
-          on: { change: () => handleWyborUslugi(usluga) } }),
-        h('span', { class: 'opcja-uslugi__tytul' }, usluga.nazwa))
-      if (!czyWybrana) return [opcja]
-      const opis = podpowiedz(kontekst, usluga, wybor.wojewodztwoId)
-      const warianty = usluga.warianty ?? []
-      if (!opis && warianty.length === 0) return [opcja]
-      return [opcja, h('div', { class: 'opcja-uslugi__szczegoly' },
-        opis ? h('p', { class: 'opcja-uslugi__opis liczba' }, opis) : null,
-        warianty.length === 0 ? null : chipy({
-          id: 'kreator-wariant', etykieta: 'Wariant', opcje: warianty.map((w) => ({ wartosc: w.id, etykieta: w.nazwa })), wybrana: wybor.wariantId,
-          naZmiane: (wariantId) => zmienWyborEkranu({ wariantId }, 'input[name="kreator-wariant"]:checked'),
-        }))]
-    }
-
     function trescKroku() {
       const wojewodztwo = katalog.wojewodztwo(wybor.wojewodztwoId)
       const wierszWojewodztwa = wiersz({ tytul: 'Województwo', opis: `${wojewodztwo.nazwa} · ${tekstLiczby(wojewodztwo.stawka_h)} zł/h`,
         naKlik: () => otworzWyborWojewodztwa(kontekst, wybor.wojewodztwoId, (wojewodztwoId) => zmienWyborEkranu({ wojewodztwoId }, FOKUS_WOJEWODZTWA)) })
       wierszWojewodztwa.dataset.pole = 'wojewodztwo'
       const wybieralne = katalog.uslugi.filter((u) => !u.tylko_dodatek)
+      /** @type {OpcjeUslugi} */
+      const opcjeUslugi = { wybor, opisCeny: (u) => podpowiedz(kontekst, u, wybor.wojewodztwoId), naWybor: handleWyborUslugi,
+        naWariant: (wariantId) => zmienWyborEkranu({ wariantId }, 'input[name="kreator-wariant"]:checked') }
       const grupy = GRUPY.map(({ tryb, tytul }) => ({ tytul, uslugi: wybieralne.filter((u) => u.tryb === tryb) }))
         .filter((g) => g.uslugi.length > 0)
         .map((g) => h('fieldset', { class: 'lista-uslug' },
           h('legend', { class: 'lista-uslug__tytul' }, g.tytul),
-          h('div', { class: 'lista-uslug__opcje' }, g.uslugi.flatMap(opcjaUslugi))))
+          h('div', { class: 'lista-uslug__opcje' }, g.uslugi.flatMap((u) => opcjaUslugi(u, opcjeUslugi)))))
       return [
         karta({ klasa: 'karta--bez-odstepu' }, wierszWojewodztwa),
         ...grupy,

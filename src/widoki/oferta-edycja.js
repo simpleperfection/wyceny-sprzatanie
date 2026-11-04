@@ -16,7 +16,7 @@ import { baner, naglowek } from '../ui/komponenty/uklad.js'
 import { kopiujDoSchowka } from '../ui/schowek.js'
 import { ETYKIETY_STATUSOW } from '../ui/statusy.js'
 import { sciezka } from '../ui/trasy.js'
-import { zglosBladKreatora } from './kreator-wspolne.js'
+import { POWROT_DO_WYCEN, zglosBladKreatora } from './kreator-wspolne.js'
 import { kartaDodatkow, kartaFirmy, kartaKlienta, kartaWarunkow, kartaZakresu, poZakresach, tekstKwoty } from './oferta-edycja-sekcje.js'
 import { tekstBleduZapisu } from './teksty-bledow.js'
 import { wyborKlienta } from './wybor-klienta.js'
@@ -34,7 +34,6 @@ import { wyborKlienta } from './wybor-klienta.js'
 
 const CZAS_KOMUNIKATU_MS = 3000
 /** Tekst powrotu: nadrzedna jest wycena tej oferty, a gdy jej nie ma — modul Wycena. */
-const POWROT = 'Wycena'
 /** Kontrolki kart oferty wylaczane w wycenie ze zleceniem (zablokujEdycje). */
 const KONTROLKI_EDYCJI = 'input, textarea, select, button'
 const BRAK_DANYCH_FIRMY = 'Uzupełnij nazwę firmy i telefon w ustawieniach, zanim wyślesz ofertę.'
@@ -307,7 +306,7 @@ function uruchomOferte(kontener, kontekst, id, zakresy, czyAktywny) {
     } })
     if (czyWycenaZamknieta(stan, id)) zablokujEdycje([klient, zakres, warunki])
     kontener.replaceChildren(
-      naglowek({ tytul: 'Oferta', podtytul: `Wycena ${oferta.numer} · ${tekstKwoty(oferta.razem)}`, wstecz: sciezka('wycena', { id }), wsteczTekst: POWROT }),
+      naglowek({ tytul: 'Oferta', podtytul: `Wycena ${oferta.numer} · ${tekstKwoty(oferta.razem)}`, wstecz: sciezka('wycena', { id }), wsteczTekst: POWROT_DO_WYCEN.wsteczTekst }),
       h('div', { class: 'tresc oferta-edycja' },
         czyDaneFirmy(oferta) ? null : baner({ rodzaj: 'uwaga', tekst: BRAK_DANYCH_FIRMY, akcja: { tekst: 'Uzupełnij', adres: sciezka('ustawienia') } }),
         kartaFirmy(oferta.firma), klient, zakres, kartaDodatkow(oferta.dodatkiOpcjonalne), warunki,
@@ -335,8 +334,8 @@ function uruchomOferte(kontener, kontekst, id, zakresy, czyAktywny) {
  * @param {HTMLElement} kontener @param {string | null} id @param {string} tekst
  */
 function pokazStan(kontener, id, tekst) {
-  const powrot = id === null ? sciezka('wyceny') : sciezka('wycena', { id })
-  kontener.replaceChildren(naglowek({ tytul: 'Oferta', wstecz: powrot, wsteczTekst: POWROT }),
+  const powrot = id === null ? POWROT_DO_WYCEN.wstecz : sciezka('wycena', { id })
+  kontener.replaceChildren(naglowek({ tytul: 'Oferta', wstecz: powrot, wsteczTekst: POWROT_DO_WYCEN.wsteczTekst }),
     h('div', { class: 'tresc' }, baner({ rodzaj: 'info', tekst }),
       przycisk({ tekst: id === null ? 'Wróć do listy wycen' : 'Wróć do wyceny', rodzaj: 'drugi', adres: powrot })))
 }
@@ -353,7 +352,7 @@ export const widokOferty = {
       return pokazStan(kontener, id, `Ofertę przygotujesz z wyceny do wysłania, wysłanej albo przyjętej. Ta ma status „${ETYKIETY_STATUSOW[w.status]}”.`)
     }
     const tresc = h('div', { class: 'tresc' })
-    kontener.replaceChildren(naglowek({ tytul: 'Oferta', wstecz: sciezka('wycena', { id }), wsteczTekst: POWROT }), tresc)
+    kontener.replaceChildren(naglowek({ tytul: 'Oferta', wstecz: sciezka('wycena', { id }), wsteczTekst: POWROT_DO_WYCEN.wsteczTekst }), tresc)
     void poZakresach(tresc, (zakresy) => { sprzatanie = uruchomOferte(kontener, kontekst, id, zakresy, () => czyAktywny) },
       () => czyAktywny).catch(reportError)
     return () => {

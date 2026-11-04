@@ -49,7 +49,7 @@ const liniePozycji = (wycena, usluga, pozycja) => (wycena.wynik?.linie ?? []).fi
  * @param {Pozycja} pozycja @param {LiniaWyceny | undefined} linia @param {number} cenaJedn cena × wsp (bez linii)
  * @returns {string}
  */
-function opisPozycji(pozycja, linia, cenaJedn) {
+export function opisPozycji(pozycja, linia, cenaJedn) {
   const doplata = pozycja.typ === 'doplata' ? 'dopłata · ' : ''
   return linia ? `${doplata}${m2(linia.ilosc)} × ${kwotaJednostki(linia.cenaJedn)}` : `${doplata}${kwotaJednostki(cenaJedn)}/m²`
 }

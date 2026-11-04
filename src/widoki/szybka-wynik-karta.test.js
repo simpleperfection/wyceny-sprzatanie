@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { afterEach, beforeEach, describe, it, mock } from 'node:test'
 
-import { kartaWyniku } from './szybka-wynik.js'
+import { kartaWyniku, kopiujTekstKlienta } from './szybka-wynik.js'
 
 /** @typedef {import('../kreator/szybka.js').StanWyniku} StanWyniku */
 
@@ -70,6 +70,8 @@ function stanWyniku(zmiany = {}) {
   return /** @type {StanWyniku} */ (/** @type {unknown} */ ({ stan: 'wynik', wynik, wojewodztwo: { id: 'mazowieckie', nazwa: 'mazowieckie' } }))
 }
 
+const ZWINIETE = Object.freeze({ czyOtwarte: false, naPrzelacz: () => {} })
+
 /** @param {StanWyniku} stan @param {{ czyOtwarte?: boolean, naPrzelacz?: (czyOtwarte: boolean) => void }} [wiecej] */
 function karta(stan, { czyOtwarte = false, naPrzelacz = () => {} } = {}) {
   return kartaWyniku({ stan, czySkopiowano: false, wiecej: { czyOtwarte, naPrzelacz }, naKopiuj: () => {}, naDokladna: () => {} })
@@ -130,6 +132,40 @@ describe('karta wyniku szybkiej wyceny', () => {
     assert.deepEqual(naPrzelacz.mock.calls.map((c) => c.arguments), [[false]])
   })
 
+  it('każdy przycisk woła swoją obsługę', () => {
+    const naKopiuj = mock.fn()
+    const naDokladna = mock.fn()
+    const { element } = kartaWyniku({ stan: stanWyniku(), czySkopiowano: false, wiecej: ZWINIETE, naKopiuj, naDokladna })
+    const [dokladna] = znajdz(element, (e) => e.dataset.akcja === 'dokladna')
+
+    dokladna?.obslugi.get('click')?.()
+
+    assert.deepEqual([naDokladna.mock.callCount(), naKopiuj.mock.callCount()], [1, 0])
+    const [kopiuj] = znajdz(element, (e) => e.dataset.akcja === 'kopiuj')
+    kopiuj?.obslugi.get('click')?.()
+    assert.deepEqual([naDokladna.mock.callCount(), naKopiuj.mock.callCount()], [1, 1])
+  })
+
+  it('po skopiowaniu przycisk ma tekst „Skopiowano”', () => {
+    const { element } = kartaWyniku({ stan: stanWyniku(), czySkopiowano: true, wiecej: ZWINIETE, naKopiuj: () => {}, naDokladna: () => {} })
+
+    assert.deepEqual(znajdz(element, (e) => e.tag === 'button').map(tekst), ['Dokładna wycena', 'Skopiowano'])
+  })
+
+  it('błąd metrażu: tekst o metrażu zamiast kwoty i wyłączone przyciski', () => {
+    const { element, cytat, zapasowy } = karta(/** @type {StanWyniku} */ (/** @type {unknown} */ ({ stan: 'blad', kod: 'metraz' })))
+
+    assert.deepEqual([cytat, zapasowy], [null, null])
+    assert.equal(tekst(jakoAtrapa(element).dzieci[0]), 'Za mały metraż na kuchnię, przedpokój i łazienki. Zwiększ metraż albo zmniejsz liczbę łazienek.')
+    assert.deepEqual(znajdz(element, (e) => e.tag === 'button').map((p) => p.disabled), [true, true])
+  })
+
+  it('błąd liczenia: tekst o danych zamiast kwoty', () => {
+    const { element } = karta(/** @type {StanWyniku} */ (/** @type {unknown} */ ({ stan: 'blad', kod: 'liczenie', blad: new Error('x') })))
+
+    assert.equal(tekst(jakoAtrapa(element).dzieci[0]), 'Nie udało się policzyć ceny dla tych danych. Wybierz usługę jeszcze raz albo zmień metraż.')
+  })
+
   it('oględziny: bez etykiety widełek, z zaleceniem oględzin na wierzchu', () => {
     const wynik = jakoAtrapa(karta(stanWyniku({ tryb: 'od', od: 960, do: 960 })).element)
 
@@ -145,5 +181,119 @@ describe('karta wyniku szybkiej wyceny', () => {
     assert.deepEqual(znajdz(element, (e) => e.tag === 'details'), [])
     assert.deepEqual(znajdz(element, (e) => e.tag === 'button').map((p) => p.disabled), [true, true])
     assert.equal(tekst(jakoAtrapa(element).dzieci[0]), 'Wpisz liczbę pozycji, żeby zobaczyć widełki.')
+  })
+})
+
+describe('kopiowanie tekstu dla klienta', () => {
+  /** @type {PropertyDescriptor | undefined} */
+  let poprzedniDokument
+  /** @type {PropertyDescriptor | undefined} */
+  let poprzednieZaznaczenie
+  /** @type {ReturnType<typeof mock.fn>} */
+  let selectAllChildren
+  const WYCENA = Object.freeze({ id: 'w1' })
+
+  beforeEach(() => {
+    poprzedniDokument = Object.getOwnPropertyDescriptor(globalThis, 'document')
+    poprzednieZaznaczenie = Object.getOwnPropertyDescriptor(globalThis, 'getSelection')
+    selectAllChildren = mock.fn()
+    Object.defineProperty(globalThis, 'document', { value: atrapaDokumentu, configurable: true, writable: true })
+    Object.defineProperty(globalThis, 'getSelection', { value: () => ({ selectAllChildren }), configurable: true, writable: true })
+  })
+
+  afterEach(() => {
+    if (poprzedniDokument) Object.defineProperty(globalThis, 'document', poprzedniDokument)
+    else Reflect.deleteProperty(globalThis, 'document')
+    if (poprzednieZaznaczenie) Object.defineProperty(globalThis, 'getSelection', poprzednieZaznaczenie)
+    else Reflect.deleteProperty(globalThis, 'getSelection')
+  })
+
+  /**
+   * Ekran jak w szybka.js: `naWynik` rysuje karte od nowa, wiec po nim `tekstKlienta` daje nowy cytat.
+   * @param {boolean} czyWSchowku wynik schowka @param {{ czyAktywny?: boolean }} [opcje]
+   */
+  function ekran(czyWSchowku, { czyAktywny = true } = {}) {
+    let tekstKlienta = karta(stanWyniku())
+    const pierwotny = tekstKlienta
+    const kopiuj = mock.fn(async () => czyWSchowku)
+    const naWyslanie = mock.fn()
+    const naRozwin = mock.fn()
+    const naWynik = mock.fn(() => { tekstKlienta = karta(stanWyniku()) })
+    const opcje = { tekst: TEKST_KLIENTA, kopiuj, naWyslanie, naRozwin, naWynik, zapisz: () => WYCENA, czyAktywny: () => czyAktywny,
+      tekstKlienta: () => tekstKlienta }
+    return { opcje, pierwotny, kopiuj, naWyslanie, naRozwin, naWynik, obecny: () => tekstKlienta }
+  }
+
+  it('kopiuje z elementu zapasowego, a nie z cytatu w zwiniętym „Więcej”', async () => {
+    const { opcje, pierwotny, kopiuj } = ekran(true)
+
+    await kopiujTekstKlienta(opcje)
+
+    assert.equal(kopiuj.mock.callCount(), 1)
+    const [tekstKopii, element] = kopiuj.mock.calls[0]?.arguments ?? []
+    assert.equal(tekstKopii, TEKST_KLIENTA)
+    assert.equal(element, pierwotny.zapasowy)
+    assert.notEqual(element, pierwotny.cytat)
+  })
+
+  it('tekst w schowku: wycena idzie do oznaczenia jako wysłana, „Więcej” zostaje i nic nie jest zaznaczane', async () => {
+    const { opcje, naWyslanie, naRozwin, naWynik } = ekran(true)
+
+    await kopiujTekstKlienta(opcje)
+
+    assert.deepEqual(naWyslanie.mock.calls.map((c) => c.arguments), [[WYCENA]])
+    assert.equal(naRozwin.mock.callCount(), 0)
+    assert.deepEqual(naWynik.mock.calls.map((c) => c.arguments), [[true]])
+    assert.equal(selectAllChildren.mock.callCount(), 0)
+  })
+
+  it('odmowa schowka: „Więcej” się rozwija, wycena nie jest wysłana, a zaznaczony jest nowy cytat', async () => {
+    const { opcje, pierwotny, naWyslanie, naRozwin, naWynik, obecny } = ekran(false)
+
+    await kopiujTekstKlienta(opcje)
+
+    assert.equal(naRozwin.mock.callCount(), 1)
+    assert.equal(naWyslanie.mock.callCount(), 0)
+    assert.deepEqual(naWynik.mock.calls.map((c) => c.arguments), [[false]])
+    assert.equal(selectAllChildren.mock.callCount(), 1)
+    const [zaznaczony] = selectAllChildren.mock.calls[0]?.arguments ?? []
+    assert.equal(zaznaczony, obecny().cytat)
+    assert.notEqual(zaznaczony, pierwotny.cytat)
+  })
+
+  it('„Więcej” rozwija się przed narysowaniem karty, żeby karta wyszła już rozwinięta', async () => {
+    const kolejnosc = /** @type {string[]} */ ([])
+    const { opcje } = ekran(false)
+
+    await kopiujTekstKlienta({ ...opcje, naRozwin: () => kolejnosc.push('rozwin'), naWynik: () => { kolejnosc.push('rysuj') } })
+
+    assert.deepEqual(kolejnosc, ['rozwin', 'rysuj'])
+  })
+
+  it('ekran zamknięty w trakcie kopiowania: wycena jest wysłana, ale niczego nie rysuje', async () => {
+    const { opcje, naWyslanie, naWynik } = ekran(true, { czyAktywny: false })
+
+    await kopiujTekstKlienta(opcje)
+
+    assert.equal(naWyslanie.mock.callCount(), 1)
+    assert.equal(naWynik.mock.callCount(), 0)
+  })
+
+  it('bez tekstu na karcie nie ma kopiowania i wycena nie jest wysłana', async () => {
+    const { opcje, kopiuj, naWyslanie } = ekran(true)
+
+    await kopiujTekstKlienta({ ...opcje, tekstKlienta: () => ({ cytat: null, zapasowy: null }) })
+
+    assert.equal(kopiuj.mock.callCount(), 0)
+    assert.equal(naWyslanie.mock.callCount(), 0)
+  })
+
+  it('błąd zapisu leci do ekranu, zanim cokolwiek trafi do schowka', async () => {
+    const { opcje, kopiuj } = ekran(true)
+    const blad = new RangeError('zapis')
+
+    await assert.rejects(kopiujTekstKlienta({ ...opcje, zapisz: () => { throw blad } }), blad)
+
+    assert.equal(kopiuj.mock.callCount(), 0)
   })
 })

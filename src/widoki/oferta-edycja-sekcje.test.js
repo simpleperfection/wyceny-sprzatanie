@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { afterEach, beforeEach, describe, it, mock } from 'node:test'
 
-import { pierwszy, tekst, tekstPoza, uzyjAtrapyDom } from '../../tests/atrapa-dom.js'
+import { AtrapaElementu, pierwszy, tekst, tekstPoza, uzyjAtrapyDom, znajdz } from '../../tests/atrapa-dom.js'
 import { warunkiPoEdycji, widoczneWarunki } from '../oferta/tresc.js'
 import { BladKatalogu } from '../silnik/bledy.js'
 import { h } from '../ui/h.js'
@@ -55,6 +55,32 @@ describe('karty oferty bez długich opisów na wierzchu', () => {
   uzyjAtrapyDom()
   const ZAKRES = Object.freeze({ wchodzi: ['Mycie okien'], nie_wchodzi: ['Mycie żaluzji'] })
   const zapisz = () => null
+  // edytor listy potrzebuje CSS.escape i HTMLButtonElement, a atrapa DOM ich nie ma
+  const ATRAPY_EDYTORA = Object.freeze({ CSS: { escape: String }, HTMLButtonElement: AtrapaElementu })
+  /** @type {[string, PropertyDescriptor | undefined][]} */
+  let poprzednie = []
+
+  beforeEach(() => {
+    poprzednie = Object.keys(ATRAPY_EDYTORA).map((nazwa) => [nazwa, Object.getOwnPropertyDescriptor(globalThis, nazwa)])
+    for (const [nazwa, value] of Object.entries(ATRAPY_EDYTORA)) Object.defineProperty(globalThis, nazwa, { value, configurable: true, writable: true })
+  })
+
+  afterEach(() => {
+    for (const [nazwa, opis] of poprzednie) {
+      if (opis) Object.defineProperty(globalThis, nazwa, opis)
+      else Reflect.deleteProperty(globalThis, nazwa)
+    }
+  })
+
+  /** @param {unknown} element @param {string} napis @returns {AtrapaElementu | undefined} przycisk z tym tekstem */
+  const przyciskZTekstem = (element, napis) => znajdz(element, (e) => e.tag === 'button' && tekst(e) === napis)[0]
+
+  /** @param {unknown} element @param {string} napis */
+  function kliknij(element, napis) {
+    const obsluga = przyciskZTekstem(element, napis)?.obslugi.get('click')
+    assert.ok(obsluga, `brak przycisku ${napis}`)
+    obsluga()
+  }
 
   it('firma to wiersz ze strzałką do ustawień z nazwą i telefonem', () => {
     const element = kartaFirmy({ nazwa: 'Monika Lis', telefon: '600 123 456', email: 'a@b.pl', nip: '123' })
@@ -72,6 +98,55 @@ describe('karty oferty bez długich opisów na wierzchu', () => {
     assert.match(tekst(szczegoly), /^Adres i terminAdres \(opcjonalnie\)Termin \(opcjonalnie\)/)
   })
 
+  it('adres i termin zapisują się do swoich pól, a pusty termin to null', (t) => {
+    t.mock.method(AtrapaElementu.prototype, 'querySelector', function (/** @type {string} */ selektor) {
+      return selektor === 'input' ? pierwszy(this, 'input') ?? null : null
+    })
+    const zapisywanie = mock.fn(() => null)
+
+    const szczegoly = pierwszy(kartaKlienta({ nazwa: 'Jan Nowak', adres: '', termin: '2026-11-10T10:00' }, zapisywanie, h('div', null, 'Wybierz klienta')), 'details')
+    const [adres, termin] = znajdz(szczegoly, (e) => e.tag === 'input')
+    assert.ok(adres && termin)
+    adres.value = 'ul. Lipowa 1'
+    adres.obslugi.get('change')?.()
+    termin.value = ''
+    termin.obslugi.get('change')?.()
+    termin.value = '2026-11-12T08:30'
+    termin.obslugi.get('change')?.()
+
+    assert.deepEqual(zapisywanie.mock.calls.map((c) => c.arguments), [
+      [{ klient: { adres: 'ul. Lipowa 1' } }], [{ klient: { termin: null } }], [{ klient: { termin: '2026-11-12T08:30' } }],
+    ])
+  })
+
+  it('niezmieniony zakres ma listę bez notki i bez „Przywróć domyślny”', () => {
+    const element = kartaZakresu({ pobierz: () => ({ zakres: ZAKRES, czyZmieniony: false }), zapisz })
+
+    const szczegoly = pierwszy(element, 'details')
+    assert.equal(tekst(szczegoly), 'Pokaż zakresW cenieMycie okienPoza cenąMycie żaluzji')
+    assert.doesNotMatch(tekst(element), /Przywróć domyślny/)
+  })
+
+  it('po „Edytuj” w zakresie notka o zmianie tylko w tej ofercie jest pod „Więcej”', () => {
+    const element = kartaZakresu({ pobierz: () => ({ zakres: ZAKRES, czyZmieniony: false }), zapisz })
+
+    kliknij(element, 'Edytuj')
+
+    const szczegoly = pierwszy(element, 'details')
+    assert.equal(tekst(szczegoly), `Więcej${NOTKA_ZAKRESU}`)
+    assert.equal(tekst(przyciskZTekstem(element, 'Gotowe')), 'Gotowe')
+    assert.doesNotMatch(tekstPoza(element, szczegoly), new RegExp(NOTKA_ZAKRESU))
+  })
+
+  it('„Gotowe” w zakresie wraca do odczytu z listą pod „Pokaż zakres”', () => {
+    const element = kartaZakresu({ pobierz: () => ({ zakres: ZAKRES, czyZmieniony: false }), zapisz })
+
+    kliknij(element, 'Edytuj')
+    kliknij(element, 'Gotowe')
+
+    assert.match(tekst(pierwszy(element, 'details')), /^Pokaż zakres/)
+  })
+
   it('zakres: liczba punktów i „Edytuj” na wierzchu, lista i notka zmienionego zakresu pod „Pokaż zakres”', () => {
     const element = kartaZakresu({ pobierz: () => ({ zakres: ZAKRES, czyZmieniony: true }), zapisz })
 
@@ -87,6 +162,20 @@ describe('karty oferty bez długich opisów na wierzchu', () => {
     const szczegoly = pierwszy(element, 'details')
     assert.equal(tekstPoza(element, szczegoly), 'WarunkiEdytuj2 punktyOferta ważna do7 listopada 2026 (14 dni)')
     assert.equal(tekst(szczegoly), 'Pokaż warunkiOdwołanie bezpłatne do 24 h.Robimy zdjęcia przed i po pracy.')
+  })
+
+  it('po „Edytuj” w warunkach jest edytor listy zamiast streszczenia i bez „Przywróć domyślne”', () => {
+    const element = kartaWarunkow({ zapisz, dzis: DZIS,
+      pobierz: () => ({ warunki: WARUNKI, szybka: false, czyZmienione: true, waznaDo: '2026-11-07' }) })
+    assert.match(tekst(element), /Przywróć domyślne/)
+
+    kliknij(element, 'Edytuj')
+
+    assert.equal(pierwszy(element, 'details'), undefined)
+    assert.doesNotMatch(tekst(element), /2 punkty|Przywróć domyślne/)
+    assert.equal(tekst(przyciskZTekstem(element, 'Gotowe')), 'Gotowe')
+    const pola = znajdz(element, (e) => e.tag === 'textarea').map((e) => e.atrybuty.get('value') ?? e.value ?? tekst(e))
+    assert.deepEqual(pola, ['Odwołanie bezpłatne do 24 h.', 'Robimy zdjęcia przed i po pracy.'])
   })
 
   it('bez warunków zostaje „Brak punktów.” bez pustego „Więcej”', () => {

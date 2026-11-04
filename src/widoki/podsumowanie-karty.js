@@ -17,10 +17,10 @@ import { arkusz, baner, karta, podpowiedz, wiecej } from '../ui/komponenty/uklad
 /** @typedef {import('../kreator/podsumowanie.js').RynekPodsumowania} RynekPodsumowania */
 /** @typedef {import('../kreator/podsumowanie.js').WierszKosztu} WierszKosztu */
 /** @typedef {import('../kreator/podsumowanie.js').Ostrzezenie} Ostrzezenie */
+/** @typedef {import('../ui/komponenty/uklad.js').StanWiecej} StanWiecej */
 /**
  * @typedef {{ kontekst: DaneAplikacji, id: string, brutto: number, naZmiane: (w: Wycena) => void, naZamkniecie: () => void,
  *   tekstBledu: (blad: unknown) => string }} OpcjeEdycjiCeny
- * @typedef {{ czyOtwarte: boolean, naPrzelacz: (czyOtwarte: boolean) => void }} StanWiecej stan „Więcej” trzyma ekran, bo karty rysuja sie od nowa
  */
 
 const ZNACZNIKI = Object.freeze({ ponizej: 'poniżej widełek rynku', w: 'w widełkach rynku', powyzej: 'powyżej widełek rynku' })
@@ -155,14 +155,12 @@ const notkaPropozycji = (propozycje) => (propozycje
  * @param {Podsumowanie} widok @param {StanWiecej} stanWiecej
  * @returns {HTMLElement}
  */
-export function kartaZostaje({ zostaje, abonament, cena, koszty, propozycje }, { czyOtwarte, naPrzelacz }) {
-  const szczegoly = wiecej({},
+export function kartaZostaje({ zostaje, abonament, cena, koszty, propozycje }, stanWiecej) {
+  const szczegoly = wiecej({ stan: stanWiecej },
     h('p', { class: 'podsumowanie__opis liczba' }, `Czas pracy: ${czas(zostaje.minutyWlasne)} (tempo ${tekstLiczby(zostaje.tempo)}×)`),
     tabelaKosztow(koszty),
     h('p', { class: 'podsumowanie__opis liczba' }, opisCeny(cena)),
     notkaPropozycji(propozycje))
-  szczegoly.open = czyOtwarte
-  szczegoly.addEventListener('toggle', () => naPrzelacz(szczegoly.open))
   return karta({ klasa: 'karta-zostaje' },
     h('p', { class: 'liczba' }, h('strong', null, `Zostaje dla Ciebie ${zl(zostaje.kwota)}`), `, czyli ${zl(zostaje.naGodzine)} za godzinę pracy.`),
     miesiecznie(abonament, abonament?.zostajeMiesiecznie ?? 0),
