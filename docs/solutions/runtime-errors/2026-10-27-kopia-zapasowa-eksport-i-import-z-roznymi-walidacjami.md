@@ -15,6 +15,7 @@ tags:
   - localStorage
 status: verified
 last_verified: 2026-10-27
+last_refreshed: 2026-11-04
 klasa: kontrakt-wspolny
 regula: "Stan zapisywany i stan wczytywany (eksport/import kopii, link oferty, zapis do magazynu) sprawdzaj jedną funkcją walidacji z jednego modułu, wołaną po obu stronach; granice (długości, limity, listy statusów, pola) importuj ze źródła, nie kopiuj. Każda granica importu ma test odmowy i test round-trip eksport → import."
 paths:
@@ -41,24 +42,32 @@ Eksport sprawdzał stan tylko przez `zaktualizujStan` → `jestStanem` (każda w
 
 ## Rozwiązanie
 
-Jedna funkcja kontroli stanu, wołana i przy eksporcie, i przy imporcie (commit 811382a):
+Jedna funkcja kontroli stanu, wołana i przy eksporcie, i przy imporcie (commit 811382a; od kopii v2 przez wspólne `stanKopii`, które najpierw przepuszcza stan przez strażnik magazynu):
 
 ```js
 // src/dane/kopia.js
 function sprawdzStanKopii(stan) {
   if (stan.wyceny.length > MAKS_WYCEN || !maKrotkieTeksty(stan)) throw new BladKopii('uszkodzony', '…')
+  sprawdzLimityRekordow(stan) // klienci i zlecenia
   if (!stan.wyceny.every(jestWycena) || !maUnikalneId(stan.wyceny)) throw new BladKopii('uszkodzony', '…')
   if (Object.values(stan.licznikNumerow).some((n) => n > MAKS_LICZNIKA_NUMEROW)) throw new BladKopii('uszkodzony', '…')
   sprawdzUstawieniaKopii(stan.ustawienia)
 }
 
+function stanKopii(dane, komunikat) {
+  const wynik = zaktualizujStan(dane)
+  if (!('stan' in wynik)) throw new BladKopii(wynik.blad, komunikat)
+  sprawdzStanKopii(wynik.stan)
+  return wynik.stan
+}
+
 export function utworzKopie(stan, teraz) {
   // …
-  sprawdzStanKopii(wynik.stan) // eksport odmawia tego, czego import by nie przyjął
+  const doKopii = stanKopii(stan, '…') // eksport odmawia tego, czego import by nie przyjął
 }
 export function odczytajKopie(tekst) {
   // …
-  sprawdzStanKopii(wynik.stan)
+  return { stan: stanKopii(surowy, '…') }
 }
 ```
 
@@ -86,8 +95,9 @@ grep -rn "MAKS_\|STATUSY_\|POLA_\|RODZAJE_" src/ --include=*.js | grep -v test
 
 ## Powiązane
 
-- `docs/active/etap-5-aplikacja-wyceny/review-faza-2.md` (P1 `kopia.js:220`, P2 `kopia.js:23/60/72/171`)
-- `docs/active/etap-5-aplikacja-wyceny/review-faza-6.md` (P2 `kodek.js:24`, `ksztalt.js:46`)
+- `docs/completed/etap-5-aplikacja-wyceny/review-faza-2.md` (P1 `kopia.js:220`, P2 `kopia.js:23/60/72/171`)
+- `docs/completed/etap-5-aplikacja-wyceny/review-faza-6.md` (P2 `kodek.js:24`, `ksztalt.js:46`)
+- [Miesiąc, którego nie da się opłacić](2026-11-04-regula-rozliczen-wizyty-przepisana-w-modelach-ekranow.md): ta sama klasa między ekranem a zapisem.
 
 ## Kontekst
 

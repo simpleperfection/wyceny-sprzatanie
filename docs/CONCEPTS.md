@@ -5,13 +5,13 @@ Jedno hasło = zwięzła definicja + opcjonalny link do CLAUDE.md/docs. Tylko s�
 Narasta przez /dev-compound, porządkowany przez /dev-compound-refresh.
 
 ## Kopia zapasowa
-Plik JSON z całym stanem aplikacji (ustawienia, wyceny, liczniki numerów), jedyny sposób przeniesienia i odtworzenia danych; import w trybie „zastąp” albo „połącz”. Eksport odmawia stanu, którego import by nie przyjął. → [solution](solutions/runtime-errors/2026-10-27-kopia-zapasowa-eksport-i-import-z-roznymi-walidacjami.md)
+Plik JSON z całym stanem aplikacji (ustawienia, wyceny, klienci, zlecenia, liczniki numerów), jedyny sposób przeniesienia i odtworzenia danych; import w trybie „zastąp” albo „połącz”. Eksport odmawia stanu, którego import by nie przyjął. → [solution](solutions/runtime-errors/2026-10-27-kopia-zapasowa-eksport-i-import-z-roznymi-walidacjami.md)
 
 ## Migawka wyniku
 Zapisany przy wycenie wynik silnika (linie, minuty normowe, wizyty w miesiącu, cena), z którego liczą się podsumowanie i koszt, bez ponownego wyceniania. `wizytWMiesiacu` może być ułamkiem (4,33), a 1 oznacza zlecenie jednorazowe.
 
 ## Oferta nieaktualna
-Flaga oferty ustawiana, gdy po wysłaniu zmieniło się wejście albo cena wyceny: klient ma wcześniejszą wersję.
+Flaga oferty ustawiana, gdy po wysłaniu zmieniło się wejście, cena, numer wyceny albo nazwa lub adres klienta: klient ma wcześniejszą wersję.
 
 ## Status wyceny
 `szkic` → `do_wyslania` → `wyslana` → `przyjeta` (albo `odrzucona`). Statusu `wykonana` już nie ma: wykonanie żyje w wizytach zlecenia, a wycena, z której powstało zlecenie, zostaje `przyjeta` i jest zamknięta (tylko do odczytu).
