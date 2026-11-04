@@ -2,7 +2,6 @@
 
 ## P3 faza 1
 
-- 🟡 [P3] src/dane/magazyn.js:117 — Limity MAKS_KLIENTOW i MAKS_ZLECEN sprawdzają tylko dodajKlienta/dodajZlecenie; jestStanem/maSpojneRekordy i sprawdzStanKopii ich nie egzekwują, więc spreparowana kopia z ogromną liczbą klientów/zleceń zamrozi kartę i zablokuje dodawanie. Naprawa: `klienci.length <= MAKS_KLIENTOW` i `zlecenia.length <= MAKS_ZLECEN` w maSpojneRekordy + test odmowy w magazyn.test.js.
 - 🟡 [P3] src/kalendarz/wystapienia.js:30 — `DNI_TYGODNIA = 7` powtarza stałą z src/kalendarz/daty.js:19, a zlecenia-ksztalt.js:23 używa tej nazwy dla innej wartości. Poprawka: eksport z daty.js, import w wystapienia.js, `DNI_DWOCH_TYGODNI = 2 * DNI_TYGODNIA`.
 - 🟡 [P3] src/dane/zlecenia.js:182 — `zaplanujZWyceny` nie sprawdza `doZaplanowania` (bramka tylko w UI); dwie karty mogą utworzyć dwa zlecenia z jednej przyjętej wyceny jednorazowej. Poprawka: dla wyceny nie-abonamentowej z istniejącym zleceniem rzucić `BladZlecenia('zaplanowana')`.
 - 🟡 [P3] src/dane/klienci.test.js:112 — Gałąź `stan.wyceny.some((w) => nalezyDoKlienta(w, id))` w usunKlienta (klienci.js:183) nie ma testu. Dopisz: klient 'k1' z wyceną `{ id: 'w1', klientId: 'k1' }` → `usunKlienta` rzuca `ma_historie`, klient zostaje.
@@ -14,7 +13,6 @@
 
 - 🟡 [P3] src/widoki/podsumowanie.js:90 — `kartaWpisowCzasu` drugi raz woła `wczytajStan`; podać `stan` z `rysuj` przez `elementyEkranu` i usunąć odczyt.
 - 🟡 [P3] src/ui/format.js:35 — `FORMY.wykonaneZlecenie` martwy; usunąć (część o lokalnym `FORMY_KLIENTA` w kopia-teksty.js zrobiona w fixie fazy 3, 14c0ef9: kopia-teksty.js używa `FORMY.klient`).
-- 🟡 [P3] src/style/tokeny.css:29 — nieużywany token `--status-wykonana-tlo`; usunąć.
 - 🟡 [P3] src/dane/migracja-v2.js:49 — `wykonaniaV1` nie usuwa powtórzonych id wykonań → dwa zlecenia o tym samym id, stan odrzucony (ekran ratunkowy / „kopia uszkodzona”); pomijać powtórki i dodać test.
 - 🟡 [P3] src/dane/wyceny-statusy.test.js:1651 — mutant „zawsze nieaktualnaPoWyslaniu” w `przypiszKlienta` przeżywa; dopisać przypadek tego samego klienta po wysłaniu → `oferta.nieaktualna === false`.
 
@@ -63,3 +61,8 @@
 - 🟡 [P3] src/style/tokeny.css:35 — Faza usunęła ostatnie użycia tokenów: `--zakreslacz-mocny` (klasa `.zakreslacz`) i `--marka-granat` (linia 13, wcześniej oferta.css). Oba zostały martwe; w src/style/ nie ma już żadnego `var()` z nimi. Zmiana: usuń linie 13 i 35 z tokeny.css oraz wzmiankę `// --marka-granat` w scripts/ikony-zastepcze.mjs:13.
 - 🟡 [P3] src/widoki/oferta-klient.js:142 — Faza usunęła regułę `.oferta__kwota--dodatek` z oferta.css, ale widok nadal przekazuje tę klasę, a parametr `klasaWartosci` w `wiersz` (linia 98) nie ma innego użycia. Zmiana: usuń trzeci argument `'oferta__kwota--dodatek'` w linii 142 i parametr `klasaWartosci` z `wiersz` w linii 98.
 - 🟡 [P3] src/widoki/podsumowanie-karty.js:83 — Tekst pomocniczy spod „?” może wywrócić cały ekran wyceny. Scenariusz: plik kopii zawiera wycenę z `wynik.wojewodztwo = { id: 'mazowieckie', nazwa: 'Mazowieckie' }` albo `{}`. Walidator `jestMigawkaWyniku` (src/dane/wyceny.js:129) to przepuszcza, bo sprawdza tylko `jestObiektem(x.wojewodztwo)`. Po otwarciu `#/wycena/<id>` albo kroku Cena `karty()` woła `kartaCeny` → `pasekRynku` → `wyjasnienieMediany`, a ta od razu, jeszcze przed kliknięciem „?”, woła `miejscownikWojewodztwa(nazwa)`. Ta funkcja rzuca `BladFormatu` (sprawdzone uruchomieniem: `THROW BladFormatu` dla obu wejść). `catch` w `karty()` (src/widoki/podsumowanie.js:186) przekazuje błąd do `zglosBladKreatora`, a ta rethrowuje wszystko poza BladWyceny, BladMagazynu, BladWejscia i BladKatalogu. Router pokazuje więc ekran błędu i użytkownik traci dostęp do ceny, oferty i „Usuń wycenę”. Przed fazą 6 podsumowanie nie czytało `nazwa`, więc taka kopia działała. Dane z `data/rynek.json` pasują do wzorca, stąd P3: wymaga to ręcznie zmienionej kopii. Akcja: w `wyjasnienieMediany` złap `BladFormatu` z `miejscownikWojewodztwa(nazwa)` i ustaw wtedy `gdzie = 'na rynku'`, żeby zła nazwa zmieniała tylko zdanie w arkuszu, a nie cały ekran.
+
+## Zamkniete
+
+- 🟡 [P3] src/dane/magazyn.js:117 — Limity MAKS_KLIENTOW i MAKS_ZLECEN sprawdzają tylko dodajKlienta/dodajZlecenie; jestStanem/maSpojneRekordy i sprawdzStanKopii ich nie egzekwują, więc spreparowana kopia z ogromną liczbą klientów/zleceń zamrozi kartę i zablokuje dodawanie. Naprawa: `klienci.length <= MAKS_KLIENTOW` i `zlecenia.length <= MAKS_ZLECEN` w maSpojneRekordy + test odmowy w magazyn.test.js. **Zamknięte fazą 2 (dc87099): `sprawdzLimityRekordow` w src/dane/kopia.js odrzuca nadmiar klientów i zleceń przy odczycie pliku, eksporcie i po połączeniu (testy w src/dane/kopia-v2.test.js), więc spreparowana kopia nie trafia do magazynu.**
+- 🟡 [P3] src/style/tokeny.css:29 — nieużywany token `--status-wykonana-tlo`; usunąć. **Zamknięte fazą 3 (bbb4667): token znów jest używany, tło `.pigulka` w src/style/komponenty.css.**
