@@ -14,9 +14,8 @@ import { dialogPotwierdzenia, karta, naglowek, wiersz } from '../ui/komponenty/u
 import { pigulkaWizyty } from '../ui/statusy.js'
 import { tekstBleduKarty } from '../zlecenia/bledy-zapisu.js'
 import { adresKalendarza } from '../zlecenia/kalendarz-dane.js'
-import { bladKonca, bledyZmiany, modelKarty, wartosciZmiany, wizytaZAdresu, zmianaDoZapisu } from '../zlecenia/karta-dane.js'
+import { bladKonca, bledyZmiany, modelKarty, tytulZmiany, wartosciZmiany, wizytaZAdresu, zmianaDoZapisu } from '../zlecenia/karta-dane.js'
 import { BEZ_POWTARZANIA, czyMaDni, etykietaCeny, OPCJE_DNI, OPCJE_FORM, OPCJE_POWTARZANIA, przelaczDzien, tekstBleduPola } from '../zlecenia/opcje.js'
-import { dzienWizyty } from '../zlecenia/teksty-wizyty.js'
 import { ekranBraku, otworzArkusz, pokazSkutek, wykonaj } from './ekran-akcji.js'
 
 /**
@@ -60,7 +59,7 @@ function handleZmiana(e, { zlecenie: z }, dataPierwotna) {
     dni.hidden = !czyMaDni(cykl)
     ustawBlad(dni, null)
   } })
-  otworzArkusz(e, { tytul: `Zmiana od ${dzienKrotko(dzienWizyty(z, dataPierwotna))}`, zapis: 'Zapisz zmianę', sekcja: 'zmiana' },
+  otworzArkusz(e, { tytul: tytulZmiany(z, dataPierwotna), zapis: 'Zapisz zmianę', sekcja: 'zmiana' },
     [cena, godzina, powtarzaj, powtarzaj === null ? null : dni],
     (zapisz, okno) => {
       const bledy = bledyZmiany(w)

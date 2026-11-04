@@ -189,6 +189,16 @@ export function wartosciZmiany(z, dataPierwotna) {
   return { cena: tekstLiczby(cenaWizyty ?? cenaMiesiaca ?? 0), godzina: czasPrzesuniecia ?? czasOkresu ?? '', cykl: cykl?.co ?? null, dni }
 }
 
+/**
+ * Tytul arkusza zmiany. W serii dzien pierwotny, bo od niego dziala zapisany okres, wiec po przesunieciu za kolejna wizyte tytul z nowym
+ * dniem pomijalby ja. Zlecenie jednorazowe ma jedna wizyte, wiec dzien z kalendarza.
+ * @param {Zlecenie} z @param {string} dataPierwotna @returns {string}
+ */
+export function tytulZmiany(z, dataPierwotna) {
+  const czySeria = okresDnia(z.okresy, dataPierwotna).cykl !== null
+  return `Zmiana od ${dzienKrotko(czySeria ? dataPierwotna : dzienWizyty(z, dataPierwotna))}`
+}
+
 /** @param {WartosciZmiany} w @returns {boolean} */
 const czyZDniami = ({ cykl }) => cykl !== null && czyMaDni(cykl)
 

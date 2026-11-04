@@ -167,13 +167,14 @@ describe('zaplanujZWyceny: klient wyceny', () => {
     assert.equal(w.zmieniona, POZNIEJ.toISOString())
   })
 
-  it('wysłana oferta bez klienta staje się nieaktualna, bo dostaje nową nazwę', () => {
+  it('wysłana oferta bez klienta zostaje aktualna, bo zamkniętej wyceny nie da się wysłać od nowa', () => {
     const oferta = { wyslana: '2026-10-30', nieaktualna: false }
     const { magazyn } = magazynZeStanem({ ...PUSTY_STAN, klienci: [klientTestowy('k1')], wyceny: [wycena({ oferta })] })
 
     zaplanujZWyceny(magazyn, 'w1', DANE, { id: 'z1' })
 
-    assert.equal(wczytajStan(magazyn).wyceny[0].oferta.nieaktualna, true)
+    const [w] = wczytajStan(magazyn).wyceny
+    assert.deepEqual([w.klientId, w.klient.nazwa, w.oferta.nieaktualna], ['k1', 'Klient k1', false])
   })
 
   it('wycena z klientem zostaje przy swoim kliencie, nawet gdy zlecenie ma innego', () => {

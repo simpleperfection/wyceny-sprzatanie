@@ -243,21 +243,13 @@ const poWyslaniu = (w) => w.status === 'wyslana' || w.oferta.wyslana !== null
 export const nieaktualnaPoWyslaniu = (w) => (poWyslaniu(w) ? { ...w.oferta, nieaktualna: true } : w.oferta)
 
 /**
- * Inna kopia nazwy albo adresu klienta po wyslaniu oferty oznacza oferte jako nieaktualna.
- * @param {Wycena} przed @param {Wycena} nowa @returns {Wycena}
- */
-function zOfertaKlienta(przed, nowa) {
-  const czyInnaKopia = nowa.klient.nazwa !== przed.klient.nazwa || nowa.klient.adres !== przed.klient.adres
-  return czyInnaKopia ? { ...nowa, oferta: nieaktualnaPoWyslaniu(nowa) } : nowa
-}
-
-/**
- * Wycena planowana bez klienta dostaje klienta zlecenia (reguly przypiszKlienta); wycena z klientem zostaje bez zmian. Wolajacy
- * zapisuje ja razem ze zleceniem, bo zamknietej wyceny nie da sie juz zmienic.
+ * Wycena planowana bez klienta dostaje kopie danych klienta zlecenia; wycena z klientem zostaje bez zmian. Wolajacy zapisuje ja razem
+ * ze zleceniem, bo zamknietej wyceny nie da sie juz zmienic. Oferta nie staje sie nieaktualna: wyslania nie da sie juz zapisac, wiec
+ * flaga zostalaby na stale, a wyslana oferta dalej mowi o tej samej pracy i cenie.
  * @param {Wycena} w @param {Pick<Stan, 'klienci'>} stan @param {{ klientId: string, utworzone: string }} zlecenie @returns {Wycena}
  */
 export function zKlientemZlecenia(w, stan, { klientId, utworzone }) {
-  return w.klientId !== null ? w : { ...zOfertaKlienta(w, zKlientemZListy(w, stan, klientId)), zmieniona: utworzone }
+  return w.klientId !== null ? w : { ...zKlientemZListy(w, stan, klientId), zmieniona: utworzone }
 }
 
 /**
@@ -336,7 +328,8 @@ export function przypiszKlienta(magazyn, id, klientId, opcje = {}) {
     const nowa = wybrany === null
       ? { ...w, klientId: null, klient: { ...w.klient, nazwa: '', adres: '' } }
       : zKlientemZListy(w, stan, wybrany)
-    return { wycena: zOfertaKlienta(w, nowa) }
+    const czyInnaKopia = nowa.klient.nazwa !== w.klient.nazwa || nowa.klient.adres !== w.klient.adres
+    return { wycena: czyInnaKopia ? { ...nowa, oferta: nieaktualnaPoWyslaniu(nowa) } : nowa }
   })
 }
 

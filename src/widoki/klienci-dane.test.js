@@ -162,6 +162,12 @@ describe('historiaZlecen', () => {
     assert.deepEqual(historiaZlecen(stan, 'k-anna', KATALOG, DZIS), [{ nazwa: 'Mycie okien', opis: `dziś 9:00 · 180${NBSP}zł`, adres: '#/zlecenie/z-seria' }])
   })
 
+  it('cena z groszami zostaje z groszami w opisie zlecenia', () => {
+    const stan = { zlecenia: [seria('z-seria', 'k-anna', { okresy: [{ od: '2026-10-05', cykl: CYKL, godzina: '09:00', cenaWizyty: 149.5, cenaMiesiaca: null }] })] }
+
+    assert.equal(historiaZlecen(stan, 'k-anna', KATALOG, DZIS)[0].opis, `dziś 9:00 · 149,50${NBSP}zł`)
+  })
+
   it('seria z końcem w przeszłości ma „Zakończone”', () => {
     const stan = { zlecenia: [seria('z-koniec', 'k-anna', { koniec: '2026-10-26' })] }
 

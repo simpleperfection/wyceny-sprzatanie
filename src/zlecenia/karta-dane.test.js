@@ -8,7 +8,7 @@ import { przesunWizyte } from '../dane/wizyty.js'
 import { BladZlecenia, utworzZlecenie, zakonczSerie, zlecenie as znajdzZlecenie, zmienOdWizyty } from '../dane/zlecenia.js'
 import { wystapienia } from '../kalendarz/wystapienia.js'
 import {
-  bladKonca, bledyZmiany, domyslnyKoniec, miesiaceDoZaplaty, modelKarty, najblizszaOtwarta, okresyDoPokazania, opisRodzaju, wartosciZmiany,
+  bladKonca, bledyZmiany, domyslnyKoniec, miesiaceDoZaplaty, modelKarty, najblizszaOtwarta, okresyDoPokazania, opisRodzaju, tytulZmiany, wartosciZmiany,
   wizytaZAdresu, zmianaDoZapisu,
 } from './karta-dane.js'
 
@@ -301,12 +301,31 @@ describe('wartosciZmiany', () => {
   })
 })
 
+describe('tytulZmiany', () => {
+  const przesunieta = (data) => ({ [START]: stanWizyty({ przeniesiona: { data, godzina: null } }) })
+
+  it('wizyta serii przesunięta za kolejną ma dzień pierwotny, bo od niego działa zmiana', () => {
+    assert.equal(tytulZmiany({ ...seria([1]), wizyty: przesunieta('2026-09-23') }, START), 'Zmiana od pn 14 wrz')
+  })
+
+  it('zlecenie jednorazowe po przesunięciu ma dzień z kalendarza, a bez przesunięcia swój', () => {
+    assert.equal(tytulZmiany(zlecenie({ wizyty: przesunieta('2026-09-16') }), START), 'Zmiana od śr 16 wrz')
+    assert.equal(tytulZmiany(zlecenie(), START), 'Zmiana od pn 14 wrz')
+  })
+})
+
 describe('bladKonca', () => {
   it('pusty dzień, niepełny rok i dzień przed startem dają błąd', () => {
     assert.equal(bladKonca('', START), 'brak_daty')
     assert.equal(bladKonca('0026-11-03', START), 'brak_daty')
     assert.equal(bladKonca('2026-09-13', START), 'brak_daty')
   })
+
+  for (const dzien of ['2026-02-30', '2026-13-01', '9999-99-99']) {
+    it(`${dzien} po starcie to nie dzień kalendarza, więc daje błąd pod polem`, () => {
+      assert.equal(bladKonca(dzien, START), 'brak_daty')
+    })
+  }
 
   it('dzień startu i późniejszy są poprawne', () => {
     assert.equal(bladKonca(START, START), null)
