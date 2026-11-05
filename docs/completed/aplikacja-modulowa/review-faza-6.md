@@ -10,7 +10,7 @@ Brak.
 
 ### P2 · E2E · `e2e/stany/oferta-po-terminie.txt:1`
 
-Zamówienie: IU-22, scenariusz `oferta-neutralna` (otwórz oferta.html z fragmentem z `e2e/stany/oferta-po-terminie.txt`, zmierz tło, kolor kwoty i rozmiar tekstu). Sprawdzone uruchomieniem: `odkodujOferte` zwraca dla tego seeda `{ ok: false, powod: 'uszkodzony' }`, więc strona nie pokaże oferty i pomiaru nie da się wykonać. Plik ostatnio zmieniono w etapie 5 (commit 7537790), a korekta IU-22 w planie tylko odnotowuje problem i niczego nie naprawia. Tym samym neutralny wygląd oferty, jedyna jednostka tej fazy dla klienta końcowego, nie ma wykonalnego dowodu E2E. Poprawka: wygenerować seed od nowa przez `zakodujOferte` z polami `trybCeny` i `abonament` i zachować termin ważności w przeszłości. (źródło: spec-compliance)
+Zamówienie: IU-22, scenariusz `oferta-neutralna` (otwórz oferta.html z fragmentem z `e2e/stany/oferta-po-terminie.txt`, zmierz tło, kolor kwoty i rozmiar tekstu). Sprawdzone uruchomieniem: `odkodujOferte` zwraca dla tego seeda `{ ok: false, powod: 'uszkodzony' }`, więc strona nie pokaże oferty i pomiaru nie da się wykonać. Plik ostatnio zmieniono w etapie 5 (commit c61a9fd), a korekta IU-22 w planie tylko odnotowuje problem i niczego nie naprawia. Tym samym neutralny wygląd oferty, jedyna jednostka tej fazy dla klienta końcowego, nie ma wykonalnego dowodu E2E. Poprawka: wygenerować seed od nowa przez `zakodujOferte` z polami `trybCeny` i `abonament` i zachować termin ważności w przeszłości. (źródło: spec-compliance)
 
 ### P2 · TEST · `src/widoki/kreator-dodatki.js:95`
 
