@@ -1,7 +1,7 @@
 # Smoke operatora — Aplikacja z modułami, etap 5a (IU-1–IU-22)
 
 Branch: `feature/aplikacja-modulowa` · Utworzono: 2026-11-04
-Status: **do przejścia** — odhaczaj `[ ]` → `[x]` w miarę przechodzenia.
+Status: **zakończony 2026-11-05** na Androidzie (Brave) przez tymczasowy tunel do kopii gałęzi; punkt 7 też na telefonie, z pomocniczą stroną zamiast konsoli. Poprawki po smoke'u: `28506bd` (nazwy kroków), `eb907f1` (wiersze zawijają tekst, pigułka pod tekstem), `e34e914` (cały tekst ≥ 17 px).
 
 Automat (typecheck, testy zielone wg walidacji końcowej, 21 scenariuszy E2E w przeglądarce) jest zielony. Ta lista pokrywa
 **wyłącznie to, czego automat nie mógł sprawdzić**: wygląd na prawdziwym ekranie wobec makiety, natywne okna (wybór pliku,
@@ -49,11 +49,11 @@ Wejście: Wycena → „Dokładna wycena”, potem „Szybka wycena”; rozmiary
 
 ## 6. Oferta u klienta: link i PDF (IU-22)
 Wejście: zapisana wycena → oferta → „Kopiuj link” i „PDF”.
-- [ ] **[fizyczne urządzenie]** Skopiuj link oferty, otwórz go na tym samym telefonie, potem zapisz PDF i obejrzyj go → link i PDF wyglądają jak dokument Twojej firmy: nazwa i dane firmy są na miejscu, tło białe, kwota w kolorze tekstu bez zieleni, wszystko czytelne bez powiększania, PDF ma poprawny układ i nie ma w nim przycisków aplikacji
+- [x] **[fizyczne urządzenie]** Skopiuj link oferty, otwórz go na tym samym telefonie, potem zapisz PDF i obejrzyj go → link i PDF wyglądają jak dokument Twojej firmy: nazwa i dane firmy są na miejscu, tło białe, kwota w kolorze tekstu bez zieleni, wszystko czytelne bez powiększania, PDF ma poprawny układ i nie ma w nim przycisków aplikacji
 
 ## 7. Ekran ratunkowy (IU-7)
 Wejście: Chrome na komputerze, http://127.0.0.1:5174/. Ten punkt celowo psuje dane w przeglądarce, dlatego jest ostatni. Rób go tylko na adresie z serwera dev.
-- [ ] Na `#/kopia` kliknij „Zrób kopię” i zapisz plik. W konsoli DevTools wpisz `localStorage.setItem('wyceny-sprzatanie:stan', '{uszkodzone')` i odśwież stronę. Na ekranie „Nie udało się odczytać danych zapisanych w przeglądarce.” kliknij „Wczytaj kopię z pliku”, wybierz zapisany plik i w dialogu kliknij „Anuluj” → systemowe okno wyboru pliku się otwiera, dialog ma tytuł „Zastąpić dane w tej przeglądarce?”, a po „Anuluj” ekran ratunkowy zostaje i `localStorage.getItem('wyceny-sprzatanie:stan')` nadal zwraca `{uszkodzone`. Na koniec wczytaj plik jeszcze raz i kliknij „Zastąp”, żeby odzyskać dane
+- [x] Na `#/kopia` kliknij „Zrób kopię” i zapisz plik. W konsoli DevTools wpisz `localStorage.setItem('wyceny-sprzatanie:stan', '{uszkodzone')` i odśwież stronę. Na ekranie „Nie udało się odczytać danych zapisanych w przeglądarce.” kliknij „Wczytaj kopię z pliku”, wybierz zapisany plik i w dialogu kliknij „Anuluj” → systemowe okno wyboru pliku się otwiera, dialog ma tytuł „Zastąpić dane w tej przeglądarce?”, a po „Anuluj” ekran ratunkowy zostaje i `localStorage.getItem('wyceny-sprzatanie:stan')` nadal zwraca `{uszkodzone`. Na koniec wczytaj plik jeszcze raz i kliknij „Zastąp”, żeby odzyskać dane
 
 ## Znane problemy (nie blokują, sprawdź czy nadal występują)
 Brak. Poza sekcją „Zamkniete” w `known-issues.md` są tylko nity P3, których smoke nie sprawdza, a wszystkie P1 i P2 z review są zamknięte.
