@@ -166,6 +166,6 @@ Brak dla etapu A. Etapu B nie planujemy przed spełnieniem warunku startu.
 
 ## Następne kroki
 
-→ Etap A: dodać ukrycie przed wyszukiwarkami i wysłać link 5 firmom. Zmiana jest mała, więc wystarczy krótki `/dev-plan` albo pojedynczy commit.
+→ Etap A: ukrycie przed wyszukiwarkami zrobione 2026-11-05 (`97cc657`), zostaje wysłać link firmom testowym.
 
 → Etap B: po spełnieniu warunku startu `/dev-prep` (cena, sprzedawca, prawnik, konta) i `/dev-plan`.
