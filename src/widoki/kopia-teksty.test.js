@@ -6,7 +6,7 @@ import { BladMagazynu } from '../dane/magazyn.js'
 import { BladFormatu } from '../ui/format.js'
 import { BladPliku } from '../ui/plik.js'
 import {
-  czyPytacOTryb, etykietyPodsumowania, jestBledemPliku, nazwaSurowegoPliku, tekstBleduWczytania, tekstOstatniejKopii, tekstWczytania,
+  czyPytacOTryb, etykietyPodsumowania, jestBledemPliku, nazwaSurowegoPliku, tekstBleduWczytania, tekstOstatniejKopii, tekstSprawdzPlik, tekstWczytania,
 } from './kopia-teksty.js'
 
 describe('tekstBleduWczytania', () => {
@@ -139,5 +139,11 @@ describe('czyPytacOTryb', () => {
 
   it('bez wycen, klientów, zleceń i ustawień → nie pyta (kopia od razu zastępuje pustą aplikację)', () => {
     assert.equal(czyPytacOTryb(PUSTY), false)
+  })
+})
+
+describe('tekstSprawdzPlik', () => {
+  it('podaje nazwę pliku i miejsce, gdzie go szukać', () => {
+    assert.equal(tekstSprawdzPlik('wyceny-kopia-2026-11-05.json'), 'Sprawdź w aplikacji Pliki, czy jest tam wyceny-kopia-2026-11-05.json.')
   })
 })

@@ -3,7 +3,7 @@ import { describe, it } from 'node:test'
 
 import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
 import { BladMagazynu, KLUCZ_MAGAZYNU, utworzMagazyn } from '../dane/magazyn.js'
-import { czyPokazacInstrukcjeIos, zamknijInstrukcjeIos, zarejestrujServiceWorker } from './rejestracja.js'
+import { czyPokazacInstrukcjeIos, czyUrzadzenieIos, zamknijInstrukcjeIos, zarejestrujServiceWorker } from './rejestracja.js'
 
 const UA = {
   iphoneSafari: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
@@ -115,5 +115,21 @@ describe('zamknijInstrukcjeIos', () => {
 
     assert.throws(() => zamknijInstrukcjeIos(magazyn), (blad) => blad instanceof BladMagazynu && blad.kod === 'pelny')
     assert.equal(storage.getItem(KLUCZ_MAGAZYNU), null)
+  })
+})
+
+describe('czyUrzadzenieIos', () => {
+  it('iPhone, także w Chrome na iOS, jest urządzeniem iOS', () => {
+    assert.equal(czyUrzadzenieIos({ userAgent: UA.iphoneSafari }), true)
+    assert.equal(czyUrzadzenieIos({ userAgent: UA.iphoneChrome }), true)
+  })
+
+  it('iPad podający się za Maca: tylko z ekranem dotykowym', () => {
+    assert.equal(czyUrzadzenieIos({ userAgent: UA.ipadSafari, punktyDotyku: 5 }), true)
+    assert.equal(czyUrzadzenieIos({ userAgent: UA.ipadSafari, punktyDotyku: 0 }), false)
+  })
+
+  it('Android nie jest urządzeniem iOS', () => {
+    assert.equal(czyUrzadzenieIos({ userAgent: UA.android, punktyDotyku: 5 }), false)
   })
 })

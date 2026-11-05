@@ -1,7 +1,17 @@
-// Pliki bez serwera: pobranie tekstu jako pliku (Blob + <a download>) i wybor pliku z urzadzenia (ukryte <input type="file">)
-// z limitem rozmiaru, zeby wielki plik nie zamrozil karty przy odczycie i JSON.parse.
+// Pliki bez serwera: zapis tekstu jako pliku (Blob + <a download>, na iOS systemowe okno udostepniania) i wybor pliku
+// z urzadzenia (ukryte <input type="file">) z limitem rozmiaru, zeby wielki plik nie zamrozil karty przy odczycie i JSON.parse.
 
+import { czyUrzadzenieIos, srodowiskoPrzegladarki } from '../pwa/rejestracja.js'
 import { h } from './h.js'
+
+/** @typedef {import('../pwa/rejestracja.js').Srodowisko} Srodowisko */
+/**
+ * @typedef {'pobrany' | 'udostepniony' | 'anulowany' | 'niepotwierdzony'} WynikZapisu
+ *   `pobrany`: plik w folderze pobranych; `udostepniony`: uzytkownik zatwierdzil okno udostepniania; `anulowany`: zamknal je
+ *   bez wyboru; `niepotwierdzony`: iOS bez okna udostepniania, wiec pobranie moglo sie nie udac, a aplikacja tego nie widzi
+ * @typedef {{ srodowisko?: Srodowisko, udostepnianie?: Pick<Navigator, 'canShare' | 'share'>,
+ *   pobierz?: (nazwa: string, tresc: string, typ: string) => void }} OpcjeZapisu
+ */
 
 /** Najwiekszy plik do odczytu: 10 MB (kopia z 5000 wycen to kilka MB). */
 export const MAKS_ROZMIAR_PLIKU = 10 * 1024 * 1024
@@ -28,13 +38,45 @@ export class BladPliku extends Error {
  * @param {string} tresc
  * @param {string} typ typ MIME, np. `application/json`
  */
-export function pobierzPlik(nazwa, tresc, typ) {
+function pobierzPlik(nazwa, tresc, typ) {
   const adres = URL.createObjectURL(new Blob([tresc], { type: typ }))
   const link = h('a', { href: adres, download: nazwa, hidden: true })
   document.body.append(link)
   link.click()
   link.remove()
   setTimeout(() => URL.revokeObjectURL(adres), ZWOLNIENIE_ADRESU_MS)
+}
+
+/**
+ * Zapisuje tekst jako plik. Na iOS pobieranie w aplikacji z ekranu poczatkowego potrafi nie zadzialac bez zadnego bledu, wiec
+ * plik idzie przez systemowe okno udostepniania, ktore mowi, czy uzytkownik je zatwierdzil. Trzeba wolac w obsludze klikniecia,
+ * przed pierwszym `await`, bo okno wymaga gestu uzytkownika.
+ * @param {string} nazwa @param {string} tresc @param {string} typ
+ * @param {OpcjeZapisu} [opcje] atrapy do testow
+ * @returns {Promise<WynikZapisu>}
+ */
+export async function zapiszPlik(nazwa, tresc, typ, opcje = {}) {
+  const { srodowisko = srodowiskoPrzegladarki(), udostepnianie = navigator, pobierz = pobierzPlik } = opcje
+  if (!czyUrzadzenieIos(srodowisko)) {
+    pobierz(nazwa, tresc, typ)
+    return 'pobrany'
+  }
+  const pliki = [new File([tresc], nazwa, { type: typ })]
+  if (!udostepnianie.canShare?.({ files: pliki })) {
+    pobierz(nazwa, tresc, typ)
+    return 'niepotwierdzony'
+  }
+  try {
+    await udostepnianie.share({ files: pliki })
+    return 'udostepniony'
+  } catch (blad) {
+    if (!(blad instanceof DOMException)) throw blad
+    if (blad.name === 'AbortError') return 'anulowany'
+    if (blad.name !== 'NotAllowedError') throw blad
+    console.warn(JSON.stringify({ modul: 'plik', kod: 'udostepnianie_odmowa', przyczyna: blad.name }))
+  }
+  pobierz(nazwa, tresc, typ)
+  return 'niepotwierdzony'
 }
 
 /**

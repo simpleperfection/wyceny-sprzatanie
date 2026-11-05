@@ -41,8 +41,8 @@ class PamiecCache {
   }
 }
 
-/** @param {(zadanie: unknown) => Promise<unknown>} implementacjaFetch */
-function uruchomSw(implementacjaFetch) {
+/** @param {(zadanie: unknown) => Promise<unknown>} implementacjaFetch @param {object} [zamiennikiPrzegladarki] np. starsze AbortSignal */
+function uruchomSw(implementacjaFetch, zamiennikiPrzegladarki = {}) {
   /** @type {Record<string, (zdarzenie: unknown) => void>} */
   const obslugi = {}
   const cache = new PamiecCache()
@@ -56,7 +56,7 @@ function uruchomSw(implementacjaFetch) {
     clients: { claim: async () => {} },
   }
   const caches = { open: async () => cache, keys: async () => [], delete: async () => true }
-  vm.runInNewContext(KOD_SW, { self, caches, fetch, URL, Request, AbortSignal, setTimeout, clearTimeout, Promise, Error, TypeError, JSON, String })
+  vm.runInNewContext(KOD_SW, { self, caches, fetch, URL, Request, AbortSignal, AbortController, setTimeout, clearTimeout, Promise, Error, TypeError, JSON, String, ...zamiennikiPrzegladarki })
   return { obslugi, cache, fetch, reportError }
 }
 
@@ -209,5 +209,16 @@ describe('sw.js: komunikat zapisz-zasoby', () => {
     assert.equal(fetch.mock.callCount(), 1)
     assert.equal(fetch.mock.calls[0].arguments[0], `${KATALOG}style/aplikacja.css`)
     assert.equal((await cache.match(`${KATALOG}style/aplikacja.css`))?.tresc, 'styl')
+  })
+
+  it('Safari starsze niż 16 (bez AbortSignal.timeout): zasób i tak jest pobierany z limitem czasu i zapisany', async () => {
+    const zegar = (/** @type {() => void} */ obsluga, /** @type {number} */ ms) => setTimeout(obsluga, ms).unref()
+    const { obslugi, fetch, cache, reportError } = uruchomSw(async () => odpowiedz(200, 'styl'), { AbortSignal: {}, setTimeout: zegar })
+
+    await wyslij(obslugi.message, { typ: 'zapisz-zasoby', adresy: [`${KATALOG}style/aplikacja.css`] })
+
+    assert.ok(fetch.mock.calls[0].arguments[1].signal instanceof AbortSignal)
+    assert.equal((await cache.match(`${KATALOG}style/aplikacja.css`))?.tresc, 'styl')
+    assert.equal(reportError.mock.callCount(), 0)
   })
 })

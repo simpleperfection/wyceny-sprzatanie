@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { afterEach, describe, it } from 'node:test'
 
 import { BladKatalogu } from '../silnik/bledy.js'
-import { pobierzJson } from './pobierz.js'
+import { pobierzJson, sygnalLimitu } from './pobierz.js'
 
 const fetchOryginalny = globalThis.fetch
 
@@ -36,5 +36,33 @@ describe('pobierzJson', () => {
     atrapaFetch(404, null)
 
     await assert.rejects(pobierzJson('data/brak.json'), { name: BladKatalogu.name, kod: 'brak_pliku', message: 'data/brak.json: HTTP 404' })
+  })
+})
+
+describe('sygnalLimitu', () => {
+  /** @param {AbortSignal} sygnal @returns {Promise<void>} */
+  const przerwanie = (sygnal) => new Promise((resolve) => { sygnal.addEventListener('abort', () => resolve(), { once: true }) })
+
+  it('przeglądarka z AbortSignal.timeout: sygnał przerywa się po czasie błędem TimeoutError', async () => {
+    const sygnal = sygnalLimitu(1)
+
+    await przerwanie(sygnal)
+
+    assert.equal(sygnal.reason.name, 'TimeoutError')
+  })
+
+  it('Safari starsze niż 16 (bez AbortSignal.timeout): sygnał też przerywa się po czasie błędem TimeoutError', async () => {
+    const opis = Object.getOwnPropertyDescriptor(AbortSignal, 'timeout')
+    Object.defineProperty(AbortSignal, 'timeout', { value: undefined, configurable: true })
+    try {
+      const sygnal = sygnalLimitu(1)
+      assert.equal(sygnal.aborted, false)
+
+      await przerwanie(sygnal)
+
+      assert.equal(sygnal.reason.name, 'TimeoutError')
+    } finally {
+      if (opis) Object.defineProperty(AbortSignal, 'timeout', opis)
+    }
   })
 })

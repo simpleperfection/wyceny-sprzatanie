@@ -6,14 +6,15 @@ import { odczytajKopie, wczytajKopie } from '../dane/kopia.js'
 import { h, ikona } from '../ui/h.js'
 import { przycisk } from '../ui/komponenty/formularz.js'
 import { baner, dialogPotwierdzenia } from '../ui/komponenty/uklad.js'
-import { pobierzPlik, wybierzPlik } from '../ui/plik.js'
-import { jestBledemPliku, nazwaSurowegoPliku, PLIKI_KOPII, tekstBleduWczytania } from './kopia-teksty.js'
+import { wybierzPlik, zapiszPlik } from '../ui/plik.js'
+import { jestBledemPliku, nazwaSurowegoPliku, PLIKI_KOPII, tekstBleduWczytania, tekstSprawdzPlik } from './kopia-teksty.js'
 
 /** @typedef {import('../dane/magazyn.js').Magazyn} Magazyn */
 /** @typedef {import('../dane/magazyn.js').BladStanu} BladStanu */
 
 const NOWSZA_WERSJA = 'Dane zapisała nowsza wersja aplikacji. Odśwież stronę, a jeśli to nie pomoże, pobierz zapisane dane, zanim je wyczyścisz.'
 const BLAD_CZYSZCZENIA = 'Nie udało się usunąć danych. Odśwież stronę i spróbuj jeszcze raz.'
+const BLAD_POBRANIA = 'Nie udało się zapisać pliku. Spróbuj jeszcze raz.'
 const PYTANIE_O_ZASTAPIENIE = Object.freeze({
   tytul: 'Zastąpić dane w tej przeglądarce?', tresc: 'Dane, których nie ma w pliku, znikną.', potwierdz: 'Zastąp', anuluj: 'Anuluj',
 })
@@ -28,6 +29,18 @@ export function pokazRatunek(kontener, { magazyn, blad, surowe }) {
 
   /** @param {string} tekst */
   const pokazBlad = (tekst) => komunikat.replaceChildren(baner({ rodzaj: 'blad', tekst }))
+
+  /** Zapis surowych danych; na iOS bez okna udostepniania aplikacja nie wie, czy plik powstal, wiec kaze to sprawdzic. */
+  async function handlePobranie() {
+    const nazwa = nazwaSurowegoPliku(new Date())
+    try {
+      const wynik = await zapiszPlik(nazwa, surowe, 'text/plain')
+      if (wynik === 'niepotwierdzony') komunikat.replaceChildren(baner({ rodzaj: 'info', tekst: tekstSprawdzPlik(nazwa) }))
+    } catch (wyjatek) {
+      pokazBlad(BLAD_POBRANIA)
+      reportError(wyjatek)
+    }
+  }
 
   /** Kopia zastepuje zapisane dane dopiero po potwierdzeniu; wynik starszego wyboru pliku (drugie klikniecie) jest pomijany. */
   async function handleWczytanie() {
@@ -67,7 +80,7 @@ export function pokazRatunek(kontener, { magazyn, blad, surowe }) {
     komunikat,
     h('div', { class: 'ratunek__przyciski' },
       przycisk({ tekst: 'Pobierz zapisane dane', ikona: 'download',
-        naKlik: () => pobierzPlik(nazwaSurowegoPliku(new Date()), surowe, 'text/plain') }),
+        naKlik: () => void handlePobranie() }),
       przycisk({ tekst: 'Wczytaj kopię z pliku', rodzaj: 'drugi', ikona: 'upload', naKlik: () => void handleWczytanie() }),
       przycisk({ tekst: 'Wyczyść dane i zacznij od nowa', rodzaj: 'tekstowy', naKlik: () => void handleCzyszczenie() }))))
 }

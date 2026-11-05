@@ -92,13 +92,21 @@ async function siecPotemCache(zdarzenie, cache) {
   }
 }
 
+/** Jak sygnalLimitu w src/dane/pobierz.js (bez importow): `AbortSignal.timeout` ma dopiero Safari 16. @param {number} ms */
+function sygnalLimitu(ms) {
+  if (typeof AbortSignal.timeout === 'function') return AbortSignal.timeout(ms)
+  const kontroler = new AbortController()
+  setTimeout(() => kontroler.abort(), ms)
+  return kontroler.signal
+}
+
 /** Pliki wczytane przez strone przed przejeciem jej przez service workera (src/pwa/rejestracja.js). @param {unknown[]} adresy */
 async function zapiszZasoby(adresy) {
   const cache = await caches.open(WERSJA_CACHE)
   const wlasne = adresy.filter((adres) => typeof adres === 'string' && czyTenSamOrigin(adres)).slice(0, MAKS_ZASOBOW)
   const wyniki = await Promise.allSettled(wlasne.map(async (adres) => {
     if (await cache.match(adres)) return
-    const odpowiedz = await fetch(adres, { signal: AbortSignal.timeout(LIMIT_ZAPISU_W_TLE_MS) })
+    const odpowiedz = await fetch(adres, { signal: sygnalLimitu(LIMIT_ZAPISU_W_TLE_MS) })
     if (czyDoZapisu(odpowiedz)) await cache.put(adres, odpowiedz)
   }))
   const nieudane = wyniki.filter((wynik) => wynik.status === 'rejected')

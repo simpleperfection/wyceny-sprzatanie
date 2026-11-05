@@ -96,6 +96,9 @@ export function nazwaSurowegoPliku(dzis) {
   return `wyceny-surowe-${dzienLokalny(sprawdzDate(dzis))}.txt`
 }
 
+/** @param {string} nazwa @returns {string} pierwsze zdanie komunikatu, gdy iOS nie potwierdzil zapisu pliku */
+export const tekstSprawdzPlik = (nazwa) => `Sprawdź w aplikacji Pliki, czy jest tam ${nazwa}.`
+
 /**
  * Wczytanie kopii pyta o „Połącz” / „Zastąp”, gdy w aplikacji sa wyceny, klienci, zlecenia albo ustawienia; pusta aplikacja
  * od razu je zastepuje.

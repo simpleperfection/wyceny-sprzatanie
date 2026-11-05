@@ -117,10 +117,10 @@ Wejście: aplikacja otwarta raz z siecią.
 
 ## Przeniesione do smoke'a etapu 5a (decyzja właściciela 2026-10-29)
 Etap 5a zmienia wygląd wszystkich ekranów, a iPhone'a nie było pod ręką, więc te punkty sprawdzamy już w nowej wersji:
-- iPhone (Safari i aplikacja z ekranu początkowego): instalacja, „Kopiuj tekst”, „Pobierz PDF”, wczytanie kopii z okna wyboru plików, praca offline;
+- iPhone (Safari i aplikacja z ekranu początkowego): instalacja, „Kopiuj tekst”, „Pobierz PDF”, wczytanie kopii z okna wyboru plików, praca offline; (2026-11-05: tylko symulacja, właściciel nie ma iPhone'a. Chrome z tożsamością iPhone'a: 19 ekranów na 390, 375 i 320 px, offline, „Kopiuj link”, kopia i PDF oferty bez usterek. Bez prawdziwego urządzenia niesprawdzone: instalacja, okno udostępniania, wybór pliku, druk w Safari)
 - kopia zapisana na telefonie, przeniesiona na komputer i wczytana opcją „Połącz”; (2026-11-05: przeszło, klient i seria z telefonu widoczne na komputerze, bez powtórzeń)
 - ekrany na telefonie wobec makiet: ustawienia (punkt 2), pasek, nagłówek i komponenty (3), start (4), podsumowanie dokładnej wyceny (7), oferta u klienta i wydruk (9), zakończenie zlecenia (10); (2026-11-05: główne ekrany zgodne z makietą etapu 5a; zakończenie zlecenia zastąpił ekran wizyty)
-- link oferty otwarty na drugim telefonie (2026-10-29 sprawdzony na tym samym).
+- link oferty otwarty na drugim telefonie (2026-10-29 sprawdzony na tym samym; 2026-11-05 w symulacji: czysta przeglądarka jako iPhone i Android otwiera ofertę bez zapisanych danych).
 
 ## Jak kontynuować w nowej sesji
 Skopiuj jako pierwszą wiadomość:

@@ -39,16 +39,23 @@ export async function zarejestrujServiceWorker(opcje = {}) {
 }
 
 /**
- * Baner instalacji: iPhone albo iPad (iPadOS w Safari podaje sie jako Macintosh z ekranem dotykowym) w Safari, poza
- * aplikacja z ekranu poczatkowego, gdy uzytkownik go nie zamknal.
+ * iPhone albo iPad; iPadOS w Safari podaje sie jako Macintosh z ekranem dotykowym.
+ * @param {Pick<Srodowisko, 'userAgent' | 'punktyDotyku'>} srodowisko
+ * @returns {boolean}
+ */
+export function czyUrzadzenieIos({ userAgent, punktyDotyku = 0 }) {
+  return IOS_MOBILNY.test(userAgent) || (MAC.test(userAgent) && punktyDotyku > 1)
+}
+
+/**
+ * Baner instalacji: iPhone albo iPad w Safari, poza aplikacja z ekranu poczatkowego, gdy uzytkownik go nie zamknal.
  * @param {Srodowisko & { zamknieta: boolean }} opcje
  * @returns {boolean}
  */
 export function czyPokazacInstrukcjeIos({ userAgent, standalone, punktyDotyku = 0, zamknieta }) {
   if (typeof userAgent !== 'string') throw new TypeError('userAgent musi być tekstem')
   if (standalone || zamknieta) return false
-  const czyUrzadzenieIos = IOS_MOBILNY.test(userAgent) || (MAC.test(userAgent) && punktyDotyku > 1)
-  return czyUrzadzenieIos && SAFARI.test(userAgent) && !INNA_PRZEGLADARKA_IOS.test(userAgent)
+  return czyUrzadzenieIos({ userAgent, punktyDotyku }) && SAFARI.test(userAgent) && !INNA_PRZEGLADARKA_IOS.test(userAgent)
 }
 
 /** @returns {Srodowisko} biezaca przegladarka; `navigator.standalone` ma tylko Safari na iOS */
