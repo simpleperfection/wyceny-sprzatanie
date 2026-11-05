@@ -9,7 +9,7 @@ topic: dostep-i-trial
 
 Czysty Zarobek stoi publicznie pod https://czystyzarobek.pl i korzystać może z niego każdy. Właściciel zapytał 2026-11-05, jak zabezpieczyć domenę przed obcymi i czy dawać konta z darmowym okresem próbnym. Jego cel: **najpierw testy z kilkoma znajomymi firmami, potem sprzedaż**.
 
-Dziś nie ma czym tego zrobić. Darmowe GitHub Pages nie ma kontroli dostępu, a hasło albo data triala w samym JS nie są zabezpieczeniem. Dane firm leżą tylko w przeglądarce, więc obcy i tak nie widzą niczyich klientów. Ograniczenie jest potrzebne do sprzedaży, nie do ochrony danych.
+Dziś nie ma czym tego zrobić. Darmowe GitHub Pages nie ma kontroli dostępu, a hasło albo data triala w samym JS nie są zabezpieczeniem. Dane firm leżą tylko w przeglądarce, więc obcy i tak nie widzą niczyich klientów. Ograniczenie jest potrzebne do sprzedaży, nie do ochrony danych. Właściciel chce jednak zamkniętego dostępu już na czas testów, bo obawia się oszukania.
 
 Wnioski z researchu (2026-11-05):
 - [Warunki GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits) zabraniają prowadzenia na nim płatnej aplikacji (SaaS). Testy za darmo są dozwolone, sprzedaż nie.
@@ -25,9 +25,9 @@ Dwa etapy, a drugi rusza tylko po spełnieniu warunku z sekcji „Kryteria sukce
 | | Etap A: testy | Etap B: sprzedaż |
 |---|---|---|
 | Kto | do 5 znajomych firm | każda firma po założeniu konta |
-| Dostęp | strona otwarta, ukryta przed wyszukiwarkami | konto z e-mailem, trial 7 dni, potem abonament |
-| Hosting | GitHub Pages bez zmian | Cloudflare (serwer i pliki aplikacji) |
-| Repo | publiczne | prywatne |
+| Dostęp | logowanie kodem z maila, lista do 5 adresów (Cloudflare Access) | konto z e-mailem, trial 7 dni, potem abonament |
+| Hosting | Cloudflare (pliki aplikacji) | Cloudflare (serwer i pliki aplikacji) |
+| Repo | prywatne | prywatne |
 | Dane firm | tylko w przeglądarce | tylko w przeglądarce |
 | Koszt stały | 0 zł | ok. 0–5 USD/mies. + prowizje |
 
@@ -35,10 +35,16 @@ Dwa etapy, a drugi rusza tylko po spełnieniu warunku z sekcji „Kryteria sukce
 
 Numery R dotyczą tego dokumentu. Odwołania do innych brainstormów mają ich datę.
 
-**Etap A: testy**
-- R1. Aplikacja zostaje na GitHub Pages pod tym samym adresem. Nie ma logowania, listy adresów ani zmian w DNS.
-- R2. Strona znika z wyszukiwarek, a link dostaje tylko grupa testowa. Właściciel wie, że to ukrycie, a nie zabezpieczenie: każdy, kto zna adres, wejdzie.
+**Etap A: testy w zamkniętej grupie**
+- R1. Do aplikacji wchodzą tylko osoby z listy właściciela, do 5 firm. Logują się kodem z maila przez Cloudflare Access. W samej aplikacji nie ma kont.
+- R2. Strona zostaje ukryta przed wyszukiwarkami (zrobione 2026-11-05, `97cc657`). Link do firm idzie dopiero po zamknięciu.
 - R3. Aplikacja nie zbiera danych o użyciu. Właściciel pyta firmy sam, np. raz w tygodniu.
+- R29. Przed testami aplikacja przechodzi z GitHub Pages na Cloudflare, a nameservery z Hostido na Cloudflare, z odtworzeniem rekordów (domena ma rekord MX). Adres się nie zmienia, więc `localStorage` i service worker zostają.
+- R30. Pod domeną są tylko pliki aplikacji. `PLAN.md`, `research/`, `docs/`, `scripts/` i `.claude/` nie są dostępne.
+- R31. Repo staje się prywatne, dopiero gdy nowy hosting działa, bo darmowe Pages nie działa z prywatnego repo. Kolejność: najpierw hosting, potem repo.
+- R33. Linki ofert działają bez logowania, także u klientów firm (R22 z 2026-10-23). Wyjątek obejmuje `oferta.html` i wszystkie pliki, których potrzebuje.
+- R34. Po wygaśnięciu sesji tester z internetem widzi ekran logowania, a nie błąd ani aplikację udającą brak sieci. Sesja trwa jak najdłużej, do miesiąca. Offline aplikacja działa dalej z cache.
+- R35. Właściciel sam dodaje i usuwa testerów. Usunięty tester traci dostęp online, a dane zostają na jego telefonie.
 
 **Etap B: wejście i trial**
 - R4. Kto pierwszy raz wchodzi na czystyzarobek.pl, widzi ekran wejścia: co robi aplikacja, ile kosztuje, regulamin, polityka prywatności i pole na e-mail.
@@ -75,19 +81,24 @@ Numery R dotyczą tego dokumentu. Odwołania do innych brainstormów mają ich d
 - R25. Użytkownik może sam usunąć konto. Zostają tylko dokumenty, które trzeba przechowywać z mocy prawa.
 - R26. Dane konta są przechowywane w UE.
 
-**Etap B: przejście z wersji otwartej**
+**Etap B: przejście z wersji testowej**
 - R27. Kto ma już dane na urządzeniu, po wejściu wersji z licencją widzi ekran wejścia, a dane zostają nietknięte. Z tego ekranu może pobrać kopię bez podawania e-maila.
 - R28. Firmy testowe nie mają wyjątków: 7 dni triala jak wszyscy, potem płatność.
+- R36. Przy starcie sprzedaży logowanie z Cloudflare Access znika, a zastępuje je ekran wejścia z R4.
 
-**Etap B: hosting, repo i prawo**
-- R29. Przed pierwszym trialem aplikacja przechodzi z GitHub Pages na Cloudflare, a nameservery z Hostido na Cloudflare, z odtworzeniem rekordów (domena ma rekord MX). Adres się nie zmienia, więc `localStorage` i service worker zostają.
-- R30. Pod domeną są tylko pliki aplikacji. `PLAN.md`, `research/`, `docs/`, `scripts/` i `.claude/` nie są dostępne.
-- R31. Repo staje się prywatne, dopiero gdy nowy hosting działa, bo darmowe Pages nie działa z prywatnego repo. Kolejność: najpierw hosting, potem repo.
+**Etap B: prawo**
 - R32. Regulamin i polityka prywatności są gotowe przed pierwszym trialem i akceptowane przy zakładaniu konta. Zgoda na maile sprzedażowe jest osobna i dobrowolna.
 
 ## Kryteria sukcesu
 
-**Warunek startu etapu B:** co najmniej 3 z 5 firm używa aplikacji co tydzień przez miesiąc i mówi, że by zapłaciło. Wcześniej nie budujemy serwera, płatności ani przenosin.
+Etap A działa, gdy:
+- osoba spoza listy nie wchodzi do aplikacji, a tester wchodzi kodem z maila;
+- link oferty otwiera się bez logowania na obcym telefonie;
+- zainstalowana aplikacja działa offline, a po wygaśnięciu sesji pokazuje logowanie;
+- dane z telefonu właściciela są na miejscu po przenosinach;
+- `czystyzarobek.pl/PLAN.md` nie działa, a repo jest prywatne.
+
+**Warunek startu etapu B:** co najmniej 3 z 5 firm używa aplikacji co tydzień przez miesiąc i mówi, że by zapłaciło. Wcześniej nie budujemy serwera, kont ani płatności.
 
 Etap B działa, gdy:
 - firma przechodzi drogę od e-maila przez trial i płatność do rezygnacji bez kontaktu z właścicielem;
@@ -95,11 +106,11 @@ Etap B działa, gdy:
 - ruch sieciowy pokazuje, że dane klientów, wycen i zleceń nie opuszczają urządzenia;
 - kopia pobrana z ekranu blokady działa offline i wczytuje się na innym urządzeniu;
 - link oferty otwiera się po zablokowaniu firmy, która go wysłała;
-- po przenosinach dane firm testowych są na miejscu.
+- po wejściu wersji z licencją dane firm testowych są na miejscu.
 
 ## Granice scope'u
 
-- **Nie robimy:** Cloudflare Access, bo nie daje triala, a konfiguracja i tak byłaby do wymiany przed sprzedażą.
+- **Tylko na testy:** Cloudflare Access. Nie daje triala, więc przy sprzedaży zastępuje go konto z R4 i R5.
 - **Nie robimy:** synchronizacji danych. Może wrócić jako płatny dodatek, ale wtedy dochodzi umowa powierzenia z każdą firmą.
 - **Nie robimy:** darmowej wersji po trialu ani trybu podglądu. Właściciel wybrał ekran „zapłać albo pobierz kopię”.
 - **Później:** pełna strona sprzedażowa, reklamy i przekierowania z `ilewziac.pl`.
@@ -109,7 +120,7 @@ Etap B działa, gdy:
 ## Kluczowe decyzje
 
 - **Konto tylko do licencji, dane na urządzeniu:** to najmniejsza zmiana względem dzisiejszej aplikacji. Zwykle odpada umowa powierzenia, bo operator nie ma dostępu do danych klientów ([wytyczne EDPB](https://www.edpb.europa.eu/system/files/2023-10/edpb_guidelines_202007_controllerprocessor_final_en.pdf); to nasz wniosek, bez źródła wprost). Ceną jest brak synchronizacji.
-- **Na testy ukrycie zamiast kłódki:** przy 5 znajomych i braku danych na serwerze nie ma czego chronić. Testy mogą ruszyć od razu i bez przenosin DNS.
+- **Na testy pełne zamknięcie, zmiana decyzji z 2026-11-05:** właściciel najpierw wybrał samo ukrycie, a potem wolał zamknięty dostęp, bo obawia się oszukania. Samo logowanie przy publicznym repo niewiele daje, więc zamknięcie obejmuje też hosting i repo. Przenosiny i tak są potrzebne przed sprzedażą, a do wymiany pójdzie tylko logowanie.
 - **Trial 7 dni, wybór właściciela:** rekomendacja brzmiała 14 dni, bo tyle daje konkurencja, a początkująca firma ma mało zleceń. Właściciel wybrał 7 dni zamiast pierwotnych 5.
 - **Pełna automatyzacja od startu sprzedaży, wybór właściciela:** rekomendacja brzmiała „ręcznie na początek”. Automat to największa budowa, ale działa bez właściciela i pod reklamy. Warunek startu chroni przed budowaniem jej za wcześnie.
 - **Twarda blokada bez okresu na poprawę, wybór właściciela:** rekomendacja brzmiała „podgląd i kopia” oraz 3 dni przy nieudanej płatności.
@@ -118,6 +129,10 @@ Etap B działa, gdy:
 
 ## Świadomie przyjęte ryzyka
 
+- **Kod może już być poza repo.** W ciągu 14 dni do 2026-11-05 repo pobrano 438 razy ze 161 źródeł, bez forków. Mogą to być roboty i własne narzędzia, ale nie da się tego rozróżnić. Prywatne repo chroni tylko nowe wersje.
+- **Zamknięcie nie chroni przed testerem.** Zalogowany tester może zapisać pliki aplikacji, a usunięty z listy dalej używa jej offline. Tu chroni prawo, a przed niepłaceniem dopiero licencja z etapu B.
+- **Testy ruszą później.** Czekają na przenosiny DNS i poprawki aplikacji.
+- **iPhone jest niesprawdzony.** Zachowanie zainstalowanej aplikacji po wygaśnięciu sesji nie jest potwierdzone, a właściciel nie ma iPhone'a, więc sprawdzi to pierwsza firma testowa.
 - **Programista obejdzie blokadę.** Kod działa na urządzeniu klienta, więc pełnego zabezpieczenia nie ma, nawet z R20 i R21. Chroni prywatne repo, prawo autorskie i to, że docelowy klient nie jest programistą. Repo nie ma dziś licencji, więc prawa zostają przy autorze.
 - **Firma może stracić grafik z dnia na dzień.** Wygasła karta w dniu odnowienia zamyka aplikację przed zleceniem, a do odzyskania dostępu trzeba zapłacić.
 - **W dniu odnowienia abonamentu aplikacja potrzebuje internetu.** Bez niego także firma z udaną płatnością zobaczy blokadę, dopóki się nie połączy. To samo po ponad 7 dniach bez sieci.
@@ -129,12 +144,12 @@ Poniższe to wstępne ustalenia, nie porada prawna. Regulamin, politykę prywatn
 
 | Co | Etap A | Etap B |
 |---|---|---|
-| Hosting i serwer | 0 zł | [Workers](https://developers.cloudflare.com/workers/platform/pricing/) Free albo Paid 5 USD/mies., [D1](https://developers.cloudflare.com/d1/platform/pricing/) w planie |
+| Hosting i serwer | 0 zł (Workers Free, Access do 50 osób) | [Workers](https://developers.cloudflare.com/workers/platform/pricing/) Free albo Paid 5 USD/mies., [D1](https://developers.cloudflare.com/d1/platform/pricing/) w planie |
 | E-maile | brak | [Resend](https://resend.com/pricing) 3000/mies. i 100/dzień gratis albo [Cloudflare Email](https://developers.cloudflare.com/email-service/platform/pricing/) (beta, Workers Paid) |
 | Płatności | brak | [Stripe](https://stripe.com/pl/pricing): karta 1,5% + 1 zł, BLIK 1,6% + 1 zł, Billing 0,7%; przy przykładowych 49 zł ok. 4% (ceny jeszcze nie ma) |
 | Faktury | brak | automatyczne faktury, [KSeF przy sprzedaży firmom](https://ksef.podatki.gov.pl/informacje-ogolne-ksef-20/zakres-obowiazkowego-ksef/); koszt narzędzia do sprawdzenia |
 | Regulamin | do oceny, zob. otwarte pytania | [art. 8 ustawy o świadczeniu usług drogą elektroniczną](https://api.sejm.gov.pl/eli/acts/DU/2002/1204/text.html), także przy darmowym trialu |
-| RODO | właściciel nie dostaje danych firm | administrator danych konta: polityka prywatności, lista dostawców, czas przechowywania, usuwanie na żądanie |
+| RODO | właściciel jest administratorem listy e-maili testerów, a Cloudflare ją przetwarza; danych firm nie dostaje | administrator danych konta: polityka prywatności, lista dostawców, czas przechowywania, usuwanie na żądanie |
 | Umowa powierzenia | nie | zwykle nie, dopóki spełnione jest R24; synchronizacja, kopie albo diagnostyka z danymi klientów to zmieniają |
 | Maile sprzedażowe | brak | [zgoda z art. 398 Prawa komunikacji elektronicznej](https://www.prawo.pl/biznes/zgody-marketingowe-i-kontakty-handlowe-co-mowi-prawo-komunikacji-elektronicznej,530981.html), także przy firmach |
 
@@ -143,12 +158,20 @@ Poniższe to wstępne ustalenia, nie porada prawna. Regulamin, politykę prywatn
 - Ta decyzja zmienia wcześniejsze ustalenia: „Dane tylko w przeglądarce” i wykluczenie kont (2026-10-23), konta w „Poza zakresem” (2026-10-28) oraz wiersze „Dane użytkownika” i „Odbiorca” w `PLAN.md`. Dane firm nadal zostają w przeglądarce, ale konta i obowiązki RODO dochodzą.
 - Adres czystyzarobek.pl się nie zmienia, inaczej firmy straciłyby dostęp do danych w `localStorage`.
 - Listę do 5 firm testowych ustala właściciel.
+- Etap A wymaga konta Cloudflare właściciela i dostępu do panelu Hostido. Zmiany w DNS, na GitHubie i w Cloudflare wchodzą dopiero z planem i za osobną zgodą.
 
 ## Otwarte pytania
 
 ### Do rozwiązania przed planowaniem
 
 Brak dla etapu A. Etapu B nie planujemy przed spełnieniem warunku startu.
+
+### Odroczone do planowania etapu A
+
+- [R29][Wymaga researchu] Czy poczta na domenie jest używana i co trzeba odtworzyć w DNS. Czy regulamin Cloudflare dopuszcza takie użycie (nie czytaliśmy go).
+- [R29, R31][Techniczne] Jak publikować nowe wersje z prywatnego repo, skoro push na `main` przestanie publikować aplikację.
+- [R33, R34][Techniczne] Wyjątki w Cloudflare Access i poprawki aplikacji: manifest z `crossorigin="use-credentials"`, `/cdn-cgi` poza service workerem i `sw.js` bez logowania, żeby aktualizacje nie utknęły.
+- [R1][Decyzja użytkownika] Czy dodać do repo informację o zastrzeżeniu praw i spisać z testerami krótkie ustalenie: bez kopiowania i bez przekazywania dalej.
 
 ### Odroczone do planowania etapu B
 
@@ -161,11 +184,10 @@ Brak dla etapu A. Etapu B nie planujemy przed spełnieniem warunku startu.
 - [R25, R32][Decyzja użytkownika] Jak długo trzymać dane konta po zakończeniu korzystania.
 - [R20, R21][Techniczne] Jak wygląda licencja podpisywana przez serwer, jak wykryć cofnięcie daty i jak liczyć urządzenia. Na iPhonie aplikacja zainstalowana i Safari [mają osobne dane](https://firt.dev/notes/pwa-ios/), więc mogą zająć dwa miejsca.
 - [R13, R20][Techniczne] Service worker nie może zapisywać odpowiedzi serwera w cache, a serwer musi być na tym samym adresie, bo CSP ma `connect-src 'self'`.
-- [R29][Wymaga researchu] Czy poczta na domenie jest używana i co trzeba odtworzyć w DNS. Czy regulamin Cloudflare dopuszcza takie użycie (nie czytaliśmy go).
 - [R1, R32][Wymaga prawnika] Czy aplikacja bez kont też potrzebuje regulaminu (art. 8 nie ogranicza się do usług płatnych). Przy etapie A ryzyko jest małe, ale pytanie zostaje.
 
 ## Następne kroki
 
-→ Etap A: ukrycie przed wyszukiwarkami zrobione 2026-11-05 (`97cc657`), zostaje wysłać link firmom testowym.
+→ Etap A: `/dev-plan` zamknięcia (hosting, DNS, repo, logowanie, wyjątek dla ofert). Ukrycie przed wyszukiwarkami jest już zrobione (`97cc657`). Link do firm idzie po zamknięciu.
 
 → Etap B: po spełnieniu warunku startu `/dev-prep` (cena, sprzedawca, prawnik, konta) i `/dev-plan`.
