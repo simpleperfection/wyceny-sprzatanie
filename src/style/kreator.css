@@ -21,6 +21,7 @@
 
 /* Same kreski: nazwy krokow zostaja w DOM dla czytnika ekranu, a widoczny opis to „Krok n z 5” */
 .naglowek .postep__krok {
+  flex: 1;
   height: 6px;
   font-size: inherit;
 }
