@@ -1,7 +1,7 @@
 ---
 zadanie: aplikacja-modulowa
 data: 2026-11-04
-claude_md: do-uzgodnienia
+claude_md: uzgodniono
 ---
 
 # Decyzje — aplikacja-modulowa
