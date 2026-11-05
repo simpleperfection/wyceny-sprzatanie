@@ -203,7 +203,7 @@
   font-weight: 700;
 }
 
-/* Wiersz listy: najwyzej dwie linie, klikalny ma strzalke */
+/* Wiersz listy: tytul i szczegoly zawijaja sie zamiast ucinac (uwaga wlasciciela ze smoke'a 2026-11-05), klikalny ma strzalke */
 .wiersz {
   display: flex;
   align-items: center;
@@ -263,9 +263,13 @@
 
 .wiersz__tytul,
 .wiersz__opis {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+}
+
+/* Pigulka pod tekstem, zeby nie zabierala szerokosci nazwie */
+.wiersz__tresc > .pigulka {
+  align-self: flex-start;
+  margin-top: 6px;
 }
 
 .wiersz__tytul {

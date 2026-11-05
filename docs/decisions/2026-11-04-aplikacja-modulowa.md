@@ -25,3 +25,6 @@ claude_md: do-uzgodnienia
 - Dokumenty: `docs/completed/aplikacja-modulowa/` (gałąź `feature/aplikacja-modulowa`), plan `docs/plans/2026-10-28-001-feat-aplikacja-modulowa-plan.md`, wymagania `docs/brainstorms/2026-10-28-aplikacja-modulowa-requirements.md`, makiety HTML nowego wyglądu `docs/operator/aplikacja-modulowa-makiety.html` (makiety w Figmie dotyczą etapu 5).
 - Dane w przeglądarce mają schemat v2 (klienci, zlecenia, migracja z v1), a stany testowe E2E obejmują skrypt `e2e/stany/moduly-dzis.js`.
 - Testy widoków korzystają ze wspólnej atrapy DOM `tests/atrapa-dom.js`; na Node 24 katalog jako argument `node --test` daje MODULE_NOT_FOUND, więc wskazuje się glob.
+
+## Po smoke'u
+- Wiersze list zawijają tekst zamiast go ucinać wielokropkiem, a pigułka stanu jest pod tekstem, nie obok nazwy — właściciel na telefonie nie widział pełnych nazw klientów i adresów; to zastępuje „wiersz ma najwyżej dwie linie” z R9 (2026-11-05, `src/ui/komponenty/uklad.js`, `src/style/komponenty.css`).

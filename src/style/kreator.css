@@ -203,25 +203,19 @@ button.karta-pomieszczenia:hover {
 }
 
 .karta-pomieszczenia__nazwa {
-  overflow: hidden;
   font-size: var(--tekst-podstawowy);
   font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .karta-pomieszczenia--rozwinieta .karta-pomieszczenia__nazwa {
   font-size: 19px;
-  overflow-wrap: anywhere;
-  white-space: normal;
 }
 
 .karta-pomieszczenia__opis {
-  overflow: hidden;
   font-size: var(--tekst-maly);
   color: var(--tekst-drugi);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 /* Strzalka w dol: zestaw ikon ma tylko chevron-right */
@@ -366,10 +360,8 @@ button.karta-pomieszczenia:hover {
 }
 
 .wiersz-pozycji__nazwa {
-  overflow: hidden;
   font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
   cursor: pointer;
 }
 
@@ -386,11 +378,9 @@ span.wiersz-pozycji__nazwa {
 
 .wiersz-pozycji__opis {
   min-width: 0;
-  overflow: hidden;
   font-size: var(--tekst-maly);
   color: var(--tekst-drugi);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .wiersz-pozycji__kwota {

@@ -115,8 +115,8 @@ export function wiersz({ tytul, opis, wartosc, adres, naKlik, awatar, ikona: naz
     nazwaIkony ? ikona(nazwaIkony, 'wiersz__ikona') : null,
     h('span', { class: 'wiersz__tresc' },
       h('span', { class: 'wiersz__tytul' }, tytul),
-      opis ? h('span', { class: 'wiersz__opis' }, opis) : null),
-    dodatek ?? null,
+      opis ? h('span', { class: 'wiersz__opis' }, opis) : null,
+      dodatek ?? null),
     wartosc ? h('span', { class: 'wiersz__wartosc' }, wartosc) : null,
     czyAkcja ? ikona('chevron-right', 'wiersz__strzalka') : null,
   ]

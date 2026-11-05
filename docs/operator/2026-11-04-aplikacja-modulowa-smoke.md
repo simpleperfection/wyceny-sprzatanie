@@ -17,8 +17,9 @@ Zrzut ani pomiar nie ocenią też, czy oferta wygląda jak dokument firmy, a PDF
 
 > **czystyzarobek.pl pokazuje wersję 1.** Publikuje się tam tylko `main`, więc ta gałąź będzie tam dopiero po scaleniu. Punkty **[fizyczne urządzenie]** wymagają osobnego adresu, patrz drugi punkt poniżej.
 
-- [ ] Aplikacja wstaje (dev server): `npm start` w katalogu projektu → `Serwer: http://127.0.0.1:5174/`, strona otwiera się w przeglądarce na komputerze, bez błędów w konsoli
-- [ ] Telefon ma dostęp do tej gałęzi: serwer dev nasłuchuje tylko na 127.0.0.1, więc telefon potrzebuje przekierowania, np. `adb reverse tcp:5174 tcp:5174` po USB (potem http://localhost:5174/ w Chrome na Androidzie) albo tunelu HTTPS → na telefonie otwiera się Start z kaflami modułów, a nie wersja 1 z dolnym menu
+- [x] Aplikacja wstaje (dev server): `npm start` w katalogu projektu → `Serwer: http://127.0.0.1:5174/`, strona otwiera się w przeglądarce na komputerze, bez błędów w konsoli
+- [x] Telefon ma dostęp do tej gałęzi: serwer dev nasłuchuje tylko na 127.0.0.1, więc telefon potrzebuje przekierowania, np. `adb reverse tcp:5174 tcp:5174` po USB (potem http://localhost:5174/ w Chrome na Androidzie) albo tunelu HTTPS → na telefonie otwiera się Start z kaflami modułów, a nie wersja 1 z dolnym menu
+  - 2026-11-05: Android przez tymczasowy tunel Cloudflare do czystej kopii gałęzi (`git archive`), z danymi testowymi `e2e/stany/moduly-dzis.js`. Te dane mają zaległe wizyty, więc krok „Dzień przed punktem 4” odpada.
 
 **Dzień przed punktem 4:** na telefonie załóż zlecenie jednorazowe z datą tego dnia, z ceną większą od 0 zł i płatnością za wizytę. Sekcja „Do zamknięcia” pomija wizyty sprzed dnia założenia zlecenia, więc zlecenie założone dziś z wczorajszą datą się w niej nie pojawi.
 
@@ -26,20 +27,20 @@ Zrzut ani pomiar nie ocenią też, czy oferta wygląda jak dokument firmy, a PDF
 
 ## 1. Wygląd i ekran Start (IU-8, IU-9)
 Wejście: aplikacja na telefonie → ekran Start (`#/start`); makieta otwarta obok na komputerze.
-- [ ] **[fizyczne urządzenie]** Porównaj nagłówek, przyciski, wiersze i kolory na telefonie z makietą (ekrany `start`, `wycena-modul`, `klienci-lista`, `zlecenia-dzien`) → układ i odcień zieleni zgodne z makietą zaakceptowaną 2026-11-03, tło białe, nie ma dolnego paska, tekst czytelny bez powiększania, przyciski dają się trafić palcem; każdą różnicę spisz jako uwagę
-- [ ] **[fizyczne urządzenie]** Otwórz Start i bez instrukcji oceń, czy widać, że aplikacja ma moduły; potem dotknij kafla „Wycena” i „Szybka wycena” → kafle Zlecenia, Wycena, Klienci i Chemia są czytelne jako moduły, a po dwóch dotknięciach jesteś na formularzu szybkiej wyceny (`#/szybka`)
+- [x] **[fizyczne urządzenie]** Porównaj nagłówek, przyciski, wiersze i kolory na telefonie z makietą (ekrany `start`, `wycena-modul`, `klienci-lista`, `zlecenia-dzien`) → układ i odcień zieleni zgodne z makietą zaakceptowaną 2026-11-03, tło białe, nie ma dolnego paska, tekst czytelny bez powiększania, przyciski dają się trafić palcem; każdą różnicę spisz jako uwagę
+- [x] **[fizyczne urządzenie]** Otwórz Start i bez instrukcji oceń, czy widać, że aplikacja ma moduły; potem dotknij kafla „Wycena” i „Szybka wycena” → kafle Zlecenia, Wycena, Klienci i Chemia są czytelne jako moduły, a po dwóch dotknięciach jesteś na formularzu szybkiej wyceny (`#/szybka`)
 
 ## 2. Klienci (IU-13)
 Wejście: Start → kafel „Klienci” → karta klienta z telefonem i adresem.
-- [ ] **[fizyczne urządzenie]** Dotknij wiersza z numerem („Zadzwoń”), wróć do aplikacji i dotknij wiersza z adresem („Pokaż na mapie”) → pierwszy otwiera dzwonienie z numerem klienta, drugi otwiera mapę z adresem klienta
+- [x] **[fizyczne urządzenie]** Dotknij wiersza z numerem („Zadzwoń”), wróć do aplikacji i dotknij wiersza z adresem („Pokaż na mapie”) → pierwszy otwiera dzwonienie z numerem klienta, drugi otwiera mapę z adresem klienta
 
 ## 3. Zlecenia: nowa seria (IU-16)
 Wejście: Start → kafel „Zlecenia” → „Nowe zlecenie”.
-- [ ] **[fizyczne urządzenie]** Ze stoperem załóż serię co tydzień u stałego klienta: klient, usługa, cena, data, godzina, „Co tydzień”, „Zapisz zlecenie” → całość trwa niecałą minutę; po zapisie widok Dzień daty startu pokazuje wizytę z godziną i nazwą klienta, a w widoku „Tydzień” kolejna wizyta jest tydzień później
+- [x] **[fizyczne urządzenie]** Ze stoperem załóż serię co tydzień u stałego klienta: klient, usługa, cena, data, godzina, „Co tydzień”, „Zapisz zlecenie” → całość trwa niecałą minutę; po zapisie widok Dzień daty startu pokazuje wizytę z godziną i nazwą klienta, a w widoku „Tydzień” kolejna wizyta jest tydzień później
 
 ## 4. Zlecenia: zamknięcie wizyty (IU-17)
 Wejście: Start → kafel „Zlecenia” → widok Dzień, sekcja „Do zamknięcia” (zlecenie z kroku „Dzień przed punktem 4”).
-- [ ] **[fizyczne urządzenie]** Przy wczorajszej wizycie dotknij „Zrobione”, potem „Zapłacone” → wizyta jest zamknięta z zapłatą po dwóch dotknięciach, bez wchodzenia w jej ekran, i znika z „Do zamknięcia”
+- [x] **[fizyczne urządzenie]** Przy wczorajszej wizycie dotknij „Zrobione”, potem „Zapłacone” → wizyta jest zamknięta z zapłatą po dwóch dotknięciach, bez wchodzenia w jej ekran, i znika z „Do zamknięcia”
 
 ## 5. Wycena: próg tekstu (faza 6, R8)
 Wejście: Wycena → „Dokładna wycena”, potem „Szybka wycena”; rozmiary w `src/style/tokeny.css`.

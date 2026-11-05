@@ -20,15 +20,6 @@
   flex: none;
 }
 
-/* Dluga nazwa uslugi zawija sie najwyzej do dwoch linii (R9) */
-.karta-zakresow .wiersz__tytul {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  white-space: normal;
-}
-
 .karta-ustawien .wiersz__tytul {
   font-weight: 500;
 }
@@ -36,9 +27,9 @@
 .karta-ustawien:not(.karta-zakresow) .wiersz__wartosc {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
   text-align: right;
+  white-space: normal;
 }
 
 .karta-ustawien .wiersz__wartosc,

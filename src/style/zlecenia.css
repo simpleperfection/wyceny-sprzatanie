@@ -126,22 +126,6 @@
   margin: 0 12px 12px 16px;
 }
 
-/* Druga linia wiersza: adres ucina sie wielokropkiem, kwota zostaje widoczna */
-.wiersz__opis:has(> .wiersz__miejsce) {
-  display: flex;
-}
-
-.wiersz__miejsce {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.wiersz__kwota {
-  flex: none;
-  white-space: pre;
-}
-
 .wiersz--odwolana .wiersz__tytul,
 .wiersz--odwolana .wiersz__opis {
   color: var(--tekst-drugi);
@@ -317,7 +301,6 @@
   color: var(--tekst-glowny);
   font-size: var(--tekst-podstawowy);
   font-weight: 700;
-  white-space: normal;
 }
 
 .wizyta-ekran__sekcja,

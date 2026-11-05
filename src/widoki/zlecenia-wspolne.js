@@ -59,17 +59,13 @@ function pigulkaWiersza({ czyOdwolana, czyZrobiona, czyPrzesunieta }) {
 }
 
 /**
- * Wiersz wizyty w dwoch liniach → ekran wizyty: za dlugi adres ucina sie wielokropkiem, a kwota zostaje widoczna.
+ * Wiersz wizyty → ekran wizyty: tytul, adres z kwota i pigulka pod nimi.
  * @param {WierszWizyty} w @returns {HTMLElement}
  */
 export function wierszWizyty(w) {
-  const element = wiersz({ tytul: w.tytul, opis: w.kwota, adres: w.adres, dodatek: pigulkaWiersza(w) })
+  const opis = w.miejsce === null ? w.kwota : `${w.miejsce} · ${w.kwota}`
+  const element = wiersz({ tytul: w.tytul, opis, adres: w.adres, dodatek: pigulkaWiersza(w) })
   if (w.czyOdwolana) element.classList.add('wiersz--odwolana')
-  if (w.miejsce !== null) {
-    element.querySelector('.wiersz__opis')?.replaceChildren(
-      h('span', { class: 'wiersz__miejsce' }, w.miejsce),
-      h('span', { class: 'wiersz__kwota' }, ` · ${w.kwota}`))
-  }
   return element
 }
 
