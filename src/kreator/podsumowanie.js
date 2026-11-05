@@ -11,6 +11,7 @@ import { BladWejscia } from '../silnik/bledy.js'
 import { dojazdFirmy, kosztZlecenia } from '../silnik/koszt.js'
 import { tempoDoWyceny } from '../silnik/tempo.js'
 import { cenaDlaKlienta, sprawdzStatusVat, zCenyRecznej } from '../silnik/vat.js'
+import { daneTempa } from '../zlecenia/dane-tempa.js'
 import { przelicz } from './stan.js'
 
 /** @typedef {import('../ui/router.js').DaneAplikacji} DaneAplikacji */
@@ -125,7 +126,7 @@ export function widokPodsumowania(w, kontekst) {
   const { katalog, domyslne, magazyn } = kontekst
   const stan = wczytajStan(magazyn)
   const cena = cenaKlienta(m, w.cenaReczna)
-  const tempo = tempoDoWyceny(stan.ustawienia, stan.wyceny, w.wejscie.uslugaId, domyslne)
+  const tempo = tempoDoWyceny(stan.ustawienia, daneTempa(stan), w.wejscie.uslugaId, domyslne)
   const koszty = scalKoszty(katalog.kosztyFirmy, stan.ustawienia)
   const koszt = kosztZlecenia({ wynik: wynikZMigawki(m), cenaKlienta: cena, tempo: tempo.wartosc, koszty, statusVat: cena.statusVat }, katalog)
   return {
@@ -142,18 +143,17 @@ export function widokPodsumowania(w, kontekst) {
 }
 
 /**
- * Koszt zlecenia z migawki wyceny przy podanym tempie (plan a fakt przy zakonczeniu zlecenia, R16): ta sama cena dla klienta,
- * koszty firmy z ustawien i regula VAT co w widokPodsumowania. Wycena bez migawki daje BladWyceny `brak_wyniku`.
- * @param {Wycena} w @param {DaneAplikacji} kontekst @param {number} tempo krotnosc czasu normowego
- * @param {import('../dane/magazyn.js').Ustawienia | null} [ustawienia] ustawienia firmy juz wczytane (domyslnie z magazynu)
+ * Koszt zlecenia z migawki wyceny przy podanym tempie (plan a fakt wizyty, R16, src/zlecenia/plan-fakt.js): ta sama cena dla
+ * klienta, koszty firmy z ustawien i regula VAT co w widokPodsumowania. Wycena bez migawki daje BladWyceny `brak_wyniku`.
+ * @param {Wycena} w @param {Katalog} katalog @param {number} tempo krotnosc czasu normowego
+ * @param {import('../dane/magazyn.js').Ustawienia | null} ustawienia ustawienia firmy (null = przed kreatorem ustawien)
  * @returns {KosztZlecenia}
  */
-export function kosztPrzyTempie(w, kontekst, tempo, ustawienia) {
+export function kosztPrzyTempie(w, katalog, tempo, ustawienia) {
   const m = w.wynik
   if (m === null) throw new BladWyceny('brak_wyniku', `Wycena ${w.id} nie ma policzonej ceny`)
-  const { katalog, magazyn } = kontekst
   const cena = cenaKlienta(m, w.cenaReczna)
-  const koszty = scalKoszty(katalog.kosztyFirmy, ustawienia === undefined ? wczytajStan(magazyn).ustawienia : ustawienia)
+  const koszty = scalKoszty(katalog.kosztyFirmy, ustawienia)
   return kosztZlecenia({ wynik: wynikZMigawki(m), cenaKlienta: cena, tempo, koszty, statusVat: cena.statusVat }, katalog)
 }
 
@@ -181,7 +181,7 @@ export function ustawCeneReczna(kontekst, id, brutto) {
 export const przywrocCeneModelu = (kontekst, id) => cenaRecznaWyceny(kontekst, id, null)
 
 /**
- * „Przelicz”: nowa migawka z biezacymi danymi i ustawieniami; stara i nowa cena z modelu do komunikatu. Wycena wykonana
+ * „Przelicz”: nowa migawka z biezacymi danymi i ustawieniami; stara i nowa cena z modelu do komunikatu. Wycena ze zleceniem
  * jest tylko do odczytu (BladWyceny `tylko_odczyt` z zapiszWynik).
  * @param {DaneAplikacji} kontekst @param {string} id
  * @returns {{ stara: number, nowa: number, wycena: Wycena }}
@@ -198,12 +198,13 @@ export function przeliczWycene(kontekst, id) {
 }
 
 /**
- * Akcje zapisanej wyceny wg statusu: decyzja klienta, gdy przejscie do niej jest dozwolone, wykonana — tylko usuniecie.
- * @param {StatusWyceny} status
+ * Akcje zapisanej wyceny wg statusu: decyzja klienta, gdy przejscie do niej jest dozwolone (tez rezygnacja po przyjeciu), edycja
+ * i usuniecie; wycena ze zleceniem (czyWycenaZamknieta) jest tylko do odczytu, wiec bez edycji.
+ * @param {StatusWyceny} status @param {boolean} czyZamknieta
  * @returns {AkcjaWyceny[]}
  */
-export function akcjeWyceny(status) {
-  if (status === 'wykonana') return ['usun']
+export function akcjeWyceny(status, czyZamknieta) {
   const przejscia = dozwolonePrzejscia(status)
-  return [...DECYZJE_KLIENTA.filter((d) => przejscia.includes(d)), 'edytuj', 'usun']
+  const decyzje = DECYZJE_KLIENTA.filter((d) => przejscia.includes(d))
+  return czyZamknieta ? [...decyzje, 'usun'] : [...decyzje, 'edytuj', 'usun']
 }

@@ -5,6 +5,7 @@
 
 import { BladMagazynu, wczytajStan } from '../dane/magazyn.js'
 import { BladWyceny, MAKS_WYCEN, wycena as znajdzWycene } from '../dane/wyceny.js'
+import { czyWycenaZamknieta } from '../dane/zlecenia.js'
 import { MAKS_ILOSCI } from '../kreator/pozycje.js'
 import { bledyKroku, KROKI_KREATORA, zmienWejscie } from '../kreator/stan.js'
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
@@ -36,9 +37,11 @@ import { tekstBleduZapisu } from './teksty-bledow.js'
 export const BLAD_ILOSCI = bladZakresu({ min: 0, max: MAKS_ILOSCI })
 /** Kroki ze stopka „Razem {kwota}” (makiety kreator-pomieszczenia, kreator-pozycje, kreator-dodatki). */
 const KROKI_Z_KWOTA = new Set(['zakres', 'dodatki'])
+/** Wycena ze zleceniem jest tylko do odczytu (czyWycenaZamknieta); tekst dla kreatora, szybkiej wyceny i bledu zapisu. */
+export const WYCENA_ZAMKNIETA = 'Z tej wyceny powstało zlecenie – można ją tylko przeglądać.'
 /** @type {ReadonlyMap<string, string>} */
 const TEKSTY_BLEDOW_WYCENY = new Map([
-  ['tylko_odczyt', 'Ta wycena jest wykonana – można ją tylko przeglądać.'],
+  ['tylko_odczyt', WYCENA_ZAMKNIETA],
   ['brak_wyceny', 'Nie ma już tej wyceny. Mogła zostać usunięta w innej karcie przeglądarki.'],
   ['limit_wycen', `Masz już ${MAKS_WYCEN} zapisanych wycen. Usuń niepotrzebne, żeby dodać nową.`],
   ['pusty_zakres', 'Zapisana wycena musi mieć co najmniej jedno pomieszczenie albo pozycję.'],
@@ -105,7 +108,7 @@ export function ramaKroku({ krok, wycena, katalog, tresc, naDalej, opisKwoty = '
 }
 
 /**
- * Tekst bledu operacji kreatora dla uzytkownika. Odmowa (wycena wykonana, usunieta, limit wycen) ma wlasny tekst i nie jest
+ * Tekst bledu operacji kreatora dla uzytkownika. Odmowa (wycena ze zleceniem, usunieta, limit wycen) ma wlasny tekst i nie jest
  * zglaszana; awaria zapisu albo liczenia ceny jest zglaszana przez `reportError`. Inne bledy leca dalej (ekran bledu routera).
  * @param {unknown} blad
  * @returns {string}
@@ -142,7 +145,7 @@ export function widokKreatora(widokiKrokow, nieZnaleziono) {
 }
 
 /**
- * Komunikat zamiast kroku (brak wyceny, wycena wykonana, usluga innego trybu) z jedna akcja.
+ * Komunikat zamiast kroku (brak wyceny, wycena ze zleceniem, usluga innego trybu) z jedna akcja.
  * @param {HTMLElement} kontener @param {string} tekst @param {{ tekst: string, adres: string }} akcja
  */
 export function pokazKomunikat(kontener, tekst, akcja) {
@@ -152,19 +155,20 @@ export function pokazKomunikat(kontener, tekst, akcja) {
 }
 
 /**
- * Wycena kroku z `?wycena=<id>`; brak wyceny albo wycena wykonana rysuje komunikat i daje null.
+ * Wycena kroku z `?wycena=<id>`; brak wyceny albo wycena ze zleceniem (tylko do odczytu) rysuje komunikat i daje null.
  * @param {HTMLElement} kontener @param {Record<string, string>} zapytanie @param {Kontekst} kontekst
  * @returns {Wycena | null}
  */
 export function wycenaKroku(kontener, zapytanie, kontekst) {
   const id = zapytanie.wycena ?? null
-  const wycena = id === null ? null : znajdzWycene(wczytajStan(kontekst.magazyn), id)
+  const stan = wczytajStan(kontekst.magazyn)
+  const wycena = id === null ? null : znajdzWycene(stan, id)
   if (!wycena) {
     pokazKomunikat(kontener, 'Nie ma tej wyceny. Mogła zostać usunięta.', { tekst: 'Wróć na start', adres: sciezka('start') })
     return null
   }
-  if (wycena.status !== 'wykonana') return wycena
-  pokazKomunikat(kontener, 'Ta wycena jest wykonana – można ją tylko przeglądać.', { tekst: 'Pokaż wycenę', adres: sciezka('wycena', { id: wycena.id }) })
+  if (!czyWycenaZamknieta(stan, wycena.id)) return wycena
+  pokazKomunikat(kontener, WYCENA_ZAMKNIETA, { tekst: 'Pokaż wycenę', adres: sciezka('wycena', { id: wycena.id }) })
   return null
 }
 

@@ -1,11 +1,12 @@
-// Sekcje ustawien firmy z makiety `ustawienia-firmy`: karty z wierszami „etykieta — wartość — strzałka”, a wiersz otwiera
-// arkusz z polem. Te same sekcje sklada ekran ustawien (`#/ustawienia`) i kreator pierwszego uruchomienia; zapis robi widok.
+// Sekcje ustawien firmy z makiety `ustawienia`: karty z wierszami „etykieta — wartość — strzałka”, a wiersz otwiera arkusz
+// z polem i jedna glowna akcja „Zapisz”; wyjasnienia sa pod „Więcej” (R9). Te same sekcje sklada ekran ustawien
+// (`#/ustawienia`) i kreator pierwszego uruchomienia; zapis robi widok.
 
 import { scalKoszty } from '../dane/ustawienia.js'
 import { zl } from '../ui/format.js'
 import { h } from '../ui/h.js'
 import { chipy, pole, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
-import { arkusz, baner, karta, wiersz } from '../ui/komponenty/uklad.js'
+import { arkusz, baner, karta, wiecej, wiersz } from '../ui/komponenty/uklad.js'
 import { METRAZ_WZORCOWY, mieszkanieWzorcowe, tekstLiczby, zmianaZPol } from './ustawienia-formularz.js'
 
 /** @typedef {import('../dane/magazyn.js').Ustawienia} Ustawienia */
@@ -13,13 +14,14 @@ import { METRAZ_WZORCOWY, mieszkanieWzorcowe, tekstLiczby, zmianaZPol } from './
 /** @typedef {import('../dane/ustawienia.js').Domyslne} Domyslne */
 /** @typedef {import('../dane/ustawienia.js').ZmianaUstawien} ZmianaUstawien */
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
+/** @typedef {import('../dane/zlecenia-ksztalt.js').Zlecenie} Zlecenie */
 /** @typedef {import('../silnik/katalog.js').Katalog} Katalog */
 /** @typedef {import('../silnik/katalog.js').KosztyFirmy} KosztyFirmy */
 /** @typedef {import('../silnik/vat.js').StatusVat} StatusVat */
 /** @typedef {import('../ui/komponenty/formularz.js').RodzajPola} RodzajPola */
 /** @typedef {import('./ustawienia-formularz.js').PolaFormularza} PolaFormularza */
 /**
- * @typedef {{ ustawienia: Ustawienia, katalog: Katalog, domyslne: Domyslne, wyceny: readonly Wycena[],
+ * @typedef {{ ustawienia: Ustawienia, katalog: Katalog, domyslne: Domyslne, wyceny: Wycena[], zlecenia: Zlecenie[],
  *   zapisz: (zmiana: ZmianaUstawien, fokus?: string) => string | null }} DaneSekcji
  *   `zapisz` zwraca tekst bledu zapisu albo null; widok rysuje potem sekcje od nowa i ustawia fokus na selektorze `fokus`
  * @typedef {{ czyZamknac: true } | { czyZamknac: false, blad: string | null }} WynikZatwierdzenia
@@ -146,14 +148,14 @@ export function trescWojewodztwa(dane) {
   ]
 }
 
-/** @param {DaneSekcji} dane @returns {HTMLElement[]} chipy statusu VAT z opisem */
+/** @param {DaneSekcji} dane @returns {HTMLElement[]} chipy statusu VAT, a wyjasnienie cen pod „Więcej” (R9) */
 export function trescVat(dane) {
   const id = 'ustawienia-status-vat'
   return [
     chipy({ id, etykieta: 'Status VAT', opcje: STATUSY_VAT, wybrana: dane.ustawienia.statusVat,
       naZmiane: (statusVat) => { dane.zapisz({ statusVat }, `input[name="${id}"]:checked`) } }),
-    h('p', { class: 'ustawienia__opis' },
-      `Ceny w ofercie bez VAT. Czynny podatnik zobaczy cenę brutto (VAT ${dane.domyslne.stawka_vat_proc}%) i netto obok.`),
+    wiecej({}, h('p', { class: 'ustawienia__opis' },
+      `Ceny w ofercie bez VAT. Czynny podatnik zobaczy cenę brutto (VAT ${dane.domyslne.stawka_vat_proc}%) i netto obok.`)),
   ]
 }
 

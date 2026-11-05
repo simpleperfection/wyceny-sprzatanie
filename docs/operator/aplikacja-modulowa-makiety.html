@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Czysty Zarobek – makiety etapu 5a</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+/*
+ * Makiety nowego wyglądu „Czystego Zarobku” (etap 5a, plan docs/plans/2026-10-28-001-feat-aplikacja-modulowa-plan.md).
+ * Wygląd biało-zielony: białe tło, jedna mocna zieleń dla głównych akcji i kwot, duże pogrubione tytuły i kwoty.
+ * Builder IU-8 przepisuje wartości z :root do src/style/tokeny.css (nazwy tokenów zostają z wariantu B).
+ * Kontrast (WCAG): biały na --marka-zielen 5,37:1, --tekst-drugi na białym 7,76:1, --tekst-trzeci na białym 5,62:1.
+ */
+:root {
+  --tlo-strona: #ffffff;
+  --tlo-karta: #ffffff;
+  --tlo-miekkie: #f3f5f4;
+  --marka-granat: #14201a;
+  --marka-granat-jasny: #5f6a65;
+  --marka-zielen: #0e7a4e;
+  --marka-zielen-ciemna: #0a5c3a;
+  --marka-zielen-tlo: #e7f5ee;
+  --marka-zielen-wykres: #b9e2cc;
+  --tekst-glowny: #14201a;
+  --tekst-drugi: #4a5550;
+  --tekst-trzeci: #5f6a65;
+  --tekst-na-ciemnym: #ffffff;
+  --linia-podzial: #e4e9e6;
+  --linia-obrys: #b9c3be;
+  --uwaga-tlo: #fff4d6;
+  --uwaga-tekst: #7a5200;
+  --info-tlo: #e8f1fb;
+  --info-tekst: #1f5a99;
+  --blad-tlo: #fdecea;
+  --blad-tekst: #b3261e;
+  --status-szkic-tekst: #4a5550;
+  --status-wykonana-tlo: #eef1ef;
+  --sukces-tlo: #e7f5ee;
+  --sukces-tekst: #0a5c3a;
+  --zakreslacz-mocny: #ffe08a;
+
+  --promien-karta: 16px;
+  --promien-przycisk: 14px;
+  --promien-chip: 999px;
+  --promien-pigulka: 999px;
+  --promien-arkusz: 24px;
+
+  --font: 'Source Sans 3', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --tekst-podstawowy: 17px;
+  --tekst-maly: 15px;
+  --tekst-drobny: 14px;
+  --tekst-tytul-ekranu: 22px;
+  --tekst-tytul-powitalny: 28px;
+  --tekst-tytul-modulu: 28px;
+  --tekst-kwota: 40px;
+
+  --szerokosc-kolumny: 560px;
+  --odstep-ekranu: 20px;
+  --cel-dotyku: 48px;
+}
+
+/* ---------- Strona z makietami (nie należy do aplikacji) ---------- */
+* { box-sizing: border-box; }
+body { margin: 0; background: #e9edeb; color: #14201a; font-family: var(--font); font-size: 16px; line-height: 1.45; }
+.m-strona { max-width: 1680px; margin: 0 auto; padding: 32px 24px 64px; }
+.m-strona > header h1 { font-size: 30px; line-height: 1.15; margin: 0 0 8px; font-weight: 800; }
+.m-wstep { max-width: 880px; color: #3d4843; margin: 0 0 8px; }
+.m-kolumny { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin: 20px 0 8px; max-width: 1240px; }
+.m-pudlo { background: #fff; border-radius: 14px; padding: 18px 20px; }
+.m-pudlo h2 { font-size: 18px; margin: 0 0 10px; }
+.m-pudlo ul { margin: 0; padding-left: 20px; color: #3d4843; }
+.m-pudlo li + li { margin-top: 4px; }
+.m-pudlo a { color: #0a5c3a; }
+.m-grupa { margin-top: 44px; }
+.m-grupa > h2 { font-size: 24px; margin: 0 0 6px; }
+.m-grupa > p { margin: 0 0 20px; color: #3d4843; max-width: 880px; }
+.m-ekrany { display: flex; flex-wrap: wrap; gap: 40px 32px; align-items: flex-start; }
+.m-ekran { width: 376px; margin: 0; }
+.m-ekran figcaption { margin-bottom: 12px; min-height: 92px; }
+.m-ekran figcaption b { display: block; font-size: 17px; }
+.m-ekran figcaption code { font-size: 13px; background: #dfe5e2; padding: 1px 6px; border-radius: 6px; }
+.m-ekran figcaption span { display: block; font-size: 14px; color: #3d4843; margin-top: 2px; }
+.m-paleta { border-collapse: collapse; width: 100%; font-size: 14px; }
+.m-paleta td { padding: 5px 6px; border-bottom: 1px solid #e4e9e6; vertical-align: middle; }
+.m-probka { display: inline-block; width: 40px; height: 22px; border-radius: 6px; border: 1px solid rgba(0, 0, 0, .1); vertical-align: middle; }
+.m-mono { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; color: #3d4843; }
+
+/* ---------- Ramka telefonu ---------- */
+.tel { width: 376px; border: 8px solid #1d2622; border-radius: 40px; overflow: hidden; background: var(--tlo-strona);
+  color: var(--tekst-glowny); font-family: var(--font); font-size: var(--tekst-podstawowy); line-height: 1.4;
+  box-shadow: 0 10px 30px rgba(20, 32, 26, .18); display: flex; flex-direction: column; min-height: 780px; }
+.tel__stan { height: 34px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 24px;
+  font-size: 14px; font-weight: 700; }
+.tel__stan i { width: 22px; height: 11px; border: 1.5px solid currentColor; border-radius: 3px; position: relative; }
+.tel__stan i::after { content: ''; position: absolute; inset: 1.5px 5px 1.5px 1.5px; background: currentColor; border-radius: 1px; }
+
+/* ---------- Aplikacja: podstawy ---------- */
+.i { width: 24px; height: 24px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.i--m { width: 20px; height: 20px; }
+.ekr { padding: 4px var(--odstep-ekranu) 28px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+.ekr p { margin: 0; }
+.nag { padding: 0 var(--odstep-ekranu); }
+.nag__gora { display: flex; align-items: center; justify-content: space-between; min-height: var(--cel-dotyku); }
+.nag__wstecz { display: inline-flex; align-items: center; gap: 2px; min-height: var(--cel-dotyku); margin-left: -10px;
+  padding: 0 12px 0 6px; border-radius: 12px; color: var(--marka-zielen); font-weight: 700; text-decoration: none; }
+.nag h1 { font-size: var(--tekst-tytul-modulu); font-weight: 800; line-height: 1.15; letter-spacing: -.01em; margin: 4px 0 14px; }
+.nag__pod { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: -8px 0 16px; color: var(--tekst-drugi); }
+.ukryty { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* Przyciski: główny (zieleń), drugi (biały z obrysem), akcja w wierszu (jasna zieleń), tekstowy (sam tekst w zieleni) */
+.btn { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 56px; width: 100%; padding: 0 20px;
+  border: 0; border-radius: var(--promien-przycisk); font: 700 18px/1.2 var(--font); text-decoration: none; cursor: pointer; }
+.btn--glowny { background: var(--marka-zielen); color: var(--tekst-na-ciemnym); }
+.btn--drugi { background: var(--tlo-karta); color: var(--tekst-glowny); border: 1.5px solid var(--linia-obrys); }
+.btn--akcja { background: var(--marka-zielen-tlo); color: var(--marka-zielen-ciemna); }
+.btn--maly { min-height: var(--cel-dotyku); font-size: var(--tekst-podstawowy); padding: 0 16px; }
+.btn--tekstowy { width: auto; min-height: var(--cel-dotyku); padding: 0 10px; background: none; color: var(--marka-zielen); font-size: var(--tekst-podstawowy); }
+.btn--blad { color: var(--blad-tekst); }
+.btn--auto { width: auto; }
+.rzad { display: flex; gap: 10px; }
+.rzad > * { flex: 1; }
+
+/* Karta i wiersz listy: najwyżej dwie linie, klikalny wiersz ma strzałkę */
+.karta { background: var(--tlo-karta); border: 1px solid var(--linia-podzial); border-radius: var(--promien-karta); }
+.karta--pad { padding: 16px; }
+.wiersz { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 12px 10px 16px; color: inherit; text-decoration: none; }
+.wiersz + .wiersz, .wiersz + .wizyta__akcje + .wiersz { border-top: 1px solid var(--linia-podzial); }
+.wiersz__tx { flex: 1; min-width: 0; }
+.wiersz__t { display: block; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wiersz__o { display: block; font-size: var(--tekst-maly); color: var(--tekst-drugi); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wiersz__o--para { display: flex; }
+.wiersz__o--para > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.wiersz__o--para > span + span { flex: none; white-space: pre; }
+.wiersz__l { display: block; font-size: var(--tekst-maly); color: var(--tekst-drugi); }
+.wiersz__akcja { display: block; font-size: var(--tekst-maly); color: var(--marka-zielen); font-weight: 700; }
+.wiersz__strz { color: var(--tekst-trzeci); }
+.ik-kolo { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--tlo-miekkie); color: var(--tekst-drugi); flex: none; }
+.ik-kolo--zielone { background: var(--marka-zielen-tlo); color: var(--marka-zielen); }
+.awatar { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  background: var(--marka-zielen-tlo); color: var(--marka-zielen-ciemna); font-weight: 800; font-size: 16px; }
+.awatar--duzy { width: 72px; height: 72px; font-size: 26px; }
+
+/* Nagłówki sekcji */
+.sekcja { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 14px 0 -2px; }
+.sekcja h2 { font-size: 20px; font-weight: 800; margin: 0; }
+
+/* Pigułki stanu (nieklikalne: bez obrysu i bez strzałki) */
+.pig { display: inline-flex; align-items: center; height: 28px; padding: 0 10px; border-radius: var(--promien-pigulka);
+  font-size: var(--tekst-drobny); font-weight: 700; white-space: nowrap; }
+.pig--zielona { background: var(--sukces-tlo); color: var(--sukces-tekst); }
+.pig--info { background: var(--info-tlo); color: var(--info-tekst); }
+.pig--uwaga { background: var(--uwaga-tlo); color: var(--uwaga-tekst); }
+.pig--blad { background: var(--blad-tlo); color: var(--blad-tekst); }
+.pig--szara { background: var(--status-wykonana-tlo); color: var(--status-szkic-tekst); }
+
+/* Przełączniki widoków */
+.przel { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; margin: 0 0 4px; border-radius: 16px; background: var(--tlo-miekkie); }
+.przel a { display: grid; place-items: center; min-height: var(--cel-dotyku); border-radius: 12px; color: var(--tekst-drugi); font-weight: 600; text-decoration: none; }
+.przel a[aria-current='page'] { background: var(--tlo-karta); color: var(--tekst-glowny); font-weight: 800; box-shadow: 0 1px 3px rgba(20, 32, 26, .14); }
+
+/* Pasek daty */
+.data { display: flex; align-items: center; gap: 8px; }
+.data__strz { width: var(--cel-dotyku); height: var(--cel-dotyku); flex: none; display: grid; place-items: center; border-radius: 12px;
+  border: 1.5px solid var(--linia-obrys); background: var(--tlo-karta); color: var(--tekst-glowny); }
+.data__t { flex: 1; text-align: center; font-size: 19px; font-weight: 800; }
+
+/* Chipy wyboru */
+.chipy { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: var(--cel-dotyku); padding: 0 18px;
+  border-radius: var(--promien-chip); border: 1.5px solid var(--linia-obrys); background: var(--tlo-karta); color: var(--tekst-glowny); font-weight: 600; }
+.chip--on { background: var(--marka-zielen-tlo); border-color: var(--marka-zielen); color: var(--marka-zielen-ciemna); font-weight: 800; }
+.chipy--dni { gap: 4px; flex-wrap: nowrap; }
+.chipy--dni .chip { flex: 1; padding: 0; }
+.chipy--rowne { display: grid; grid-template-columns: repeat(3, 1fr); }
+.chipy--rowne .chip { padding: 0 8px; }
+.chipy--poziom .chip { width: 52px; padding: 0; }
+
+/* Pola formularza */
+.pole { display: block; }
+.pole__l { display: block; margin-bottom: 6px; font-size: var(--tekst-maly); font-weight: 700; color: var(--tekst-drugi); }
+.pole__v { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 14px; border: 1.5px solid var(--linia-obrys);
+  border-radius: 12px; background: var(--tlo-karta); }
+.pole__v > span { flex: 1; }
+.pole__v--puste > span { color: var(--tekst-trzeci); }
+.pole__v--fokus { border-color: var(--marka-zielen); box-shadow: 0 0 0 3px var(--marka-zielen-tlo); }
+.pole__pod { margin-top: 6px; font-size: var(--tekst-maly); color: var(--tekst-drugi); }
+.dwa-pola { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* Licznik */
+.licz { display: flex; align-items: center; gap: 10px; }
+.licz__t { flex: 1; font-weight: 700; }
+.licz__b { width: var(--cel-dotyku); height: var(--cel-dotyku); flex: none; display: grid; place-items: center; border-radius: 50%;
+  border: 1.5px solid var(--linia-obrys); background: var(--tlo-karta); color: var(--tekst-glowny); }
+.licz__v { min-width: 76px; text-align: center; font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* „Więcej” i „?” */
+details.wiecej > summary { display: inline-flex; align-items: center; gap: 4px; min-height: var(--cel-dotyku); list-style: none;
+  color: var(--marka-zielen); font-weight: 700; cursor: pointer; }
+details.wiecej > summary::-webkit-details-marker { display: none; }
+details.wiecej[open] > summary .i { transform: rotate(180deg); }
+.wiecej__tresc { display: flex; flex-direction: column; gap: 10px; padding-bottom: 6px; color: var(--tekst-drugi); }
+.pomoc { width: var(--cel-dotyku); height: var(--cel-dotyku); margin: -12px -12px -12px 0; display: inline-grid; place-items: center;
+  border: 0; border-radius: 50%; background: none; color: var(--tekst-drugi); }
+
+/* Baner (jeden naraz) */
+.baner { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px 16px; border-radius: var(--promien-karta);
+  background: var(--uwaga-tlo); color: var(--uwaga-tekst); }
+.baner p { font-weight: 600; }
+.baner .btn { background: var(--tlo-karta); border-color: #e6d39e; color: var(--uwaga-tekst); }
+
+/* Kwota */
+.kwota-l { display: block; font-size: var(--tekst-maly); font-weight: 700; color: var(--tekst-drugi); }
+.kwota { font-size: var(--tekst-kwota); font-weight: 800; line-height: 1.05; letter-spacing: -.02em; color: var(--marka-zielen); font-variant-numeric: tabular-nums; }
+
+/* Pasek widełek rynku */
+.rynek__pasek { position: relative; height: 10px; margin-top: 18px; border-radius: 999px; background: var(--tlo-miekkie); }
+.rynek__zakres { position: absolute; top: 0; bottom: 0; border-radius: 999px; background: var(--marka-zielen-wykres); }
+.rynek__znak { position: absolute; top: -6px; width: 4px; height: 22px; margin-left: -2px; border-radius: 2px; background: var(--marka-zielen); }
+.rynek__opis { display: flex; justify-content: space-between; margin-top: 8px; font-size: var(--tekst-maly); color: var(--tekst-drugi); }
+
+/* Dolny pasek kreatora */
+.dol { display: flex; align-items: center; gap: 14px; padding: 12px var(--odstep-ekranu) 20px; border-top: 1px solid var(--linia-podzial); background: var(--tlo-karta); }
+.dol__suma { flex: 1; }
+.dol__suma b { display: block; font-size: 24px; font-weight: 800; color: var(--marka-zielen); line-height: 1.1; }
+.dol .btn { width: auto; flex: 1.3; }
+
+/* ---------- Start ---------- */
+.powitanie { font-size: var(--tekst-tytul-powitalny); font-weight: 800; line-height: 1.15; letter-spacing: -.01em; margin: 20px 0 0; }
+.zdanie { font-size: 19px; color: var(--tekst-drugi); margin-bottom: 8px !important; }
+.zdanie b { color: var(--tekst-glowny); }
+.zdanie b.zdanie__uwaga { color: var(--uwaga-tekst); }
+.kafle { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; list-style: none; margin: 0; padding: 0; }
+.kafel { display: flex; flex-direction: column; gap: 6px; min-height: 152px; padding: 16px; border-radius: 20px; border: 1px solid var(--linia-podzial);
+  background: var(--tlo-karta); box-shadow: 0 1px 2px rgba(20, 32, 26, .06), 0 6px 16px rgba(20, 32, 26, .06); color: inherit; text-decoration: none; }
+.kafel__ik { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: var(--marka-zielen-tlo); color: var(--marka-zielen); margin-bottom: auto; }
+.kafel__n { font-size: 20px; font-weight: 800; line-height: 1.2; margin-top: 12px; }
+.kafel__s { font-size: var(--tekst-maly); line-height: 1.3; color: var(--tekst-drugi); }
+.kafel__s--akcja { color: var(--marka-zielen-ciemna); font-weight: 700; }
+
+/* ---------- Wycena: duże przyciski ---------- */
+.duzy { display: flex; align-items: center; gap: 14px; min-height: 84px; padding: 14px 14px 14px 16px; border-radius: 20px; text-decoration: none; }
+.duzy__tx { flex: 1; }
+.duzy__tx b { display: block; font-size: 20px; font-weight: 800; line-height: 1.2; }
+.duzy__tx span { display: block; font-size: var(--tekst-maly); }
+.duzy__ik { width: 48px; height: 48px; flex: none; display: grid; place-items: center; border-radius: 14px; }
+.duzy--glowny { background: var(--marka-zielen); color: var(--tekst-na-ciemnym); }
+.duzy--glowny .duzy__ik { background: rgba(255, 255, 255, .16); }
+.duzy--drugi { background: var(--tlo-karta); color: var(--tekst-glowny); border: 1.5px solid var(--linia-obrys); }
+.duzy--drugi .duzy__ik { background: var(--marka-zielen-tlo); color: var(--marka-zielen); }
+.duzy--drugi .duzy__tx span { color: var(--tekst-drugi); }
+
+/* ---------- Zlecenia ---------- */
+.wizyta { background: var(--tlo-karta); border: 1px solid var(--linia-podzial); border-radius: var(--promien-karta); overflow: hidden; }
+.wizyta__akcje { display: flex; gap: 8px; padding: 0 12px 12px 16px; }
+.wizyta__akcje .btn { min-height: var(--cel-dotyku); font-size: var(--tekst-podstawowy); }
+.wizyta--zaleg { border-color: #ecd9a4; }
+.wizyta--zaleg .wiersz { background: linear-gradient(90deg, var(--uwaga-tlo) 0 5px, transparent 5px); }
+.lista { display: flex; flex-direction: column; gap: 10px; }
+.dzien-t { display: flex; align-items: baseline; justify-content: space-between; margin: 10px 0 -2px; }
+.dzien-t b { font-size: 19px; font-weight: 800; }
+.dzien-t span { font-size: var(--tekst-maly); color: var(--tekst-drugi); }
+.dzien-t--dzis b { color: var(--marka-zielen); }
+.pusto { color: var(--tekst-trzeci); padding: 2px 0 4px; }
+.mies { display: grid; grid-template-columns: repeat(7, 1fr); margin: 0 -8px; }
+.mies__dt { padding: 6px 0; text-align: center; font-size: var(--tekst-drobny); font-weight: 700; color: var(--tekst-trzeci); }
+.mies__d { height: 64px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 4px; border-radius: 12px;
+  color: var(--tekst-glowny); font-weight: 600; text-decoration: none; }
+.mies__n { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; }
+.mies__d--inny { color: var(--tekst-trzeci); font-weight: 400; }
+.mies__d--dzis .mies__n { background: var(--marka-zielen); color: var(--tekst-na-ciemnym); font-weight: 800; }
+.mies__l { min-width: 22px; height: 22px; padding: 0 6px; display: grid; place-items: center; border-radius: 999px;
+  background: var(--marka-zielen-tlo); color: var(--marka-zielen-ciemna); font-size: var(--tekst-drobny); font-weight: 800; }
+.mies__d--inny .mies__l { background: var(--tlo-miekkie); color: var(--tekst-drugi); }
+.termin { font-size: 26px; font-weight: 800; line-height: 1.15; margin: 0 0 8px; }
+.stan { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 8px 8px 8px 16px; border-radius: var(--promien-karta); background: var(--sukces-tlo); color: var(--sukces-tekst); font-weight: 800; }
+.stan span { flex: 1; }
+
+/* ---------- Chemia ---------- */
+.produkt { padding: 12px 12px 4px 16px; }
+.produkt + .produkt { border-top: 1px solid var(--linia-podzial); }
+.produkt .wiersz__t { white-space: normal; }
+
+/* ---------- Kreator ---------- */
+.postep { display: flex; gap: 6px; margin: 2px 0 6px; }
+.postep span { flex: 1; height: 6px; border-radius: 3px; background: var(--linia-podzial); }
+.postep span.on { background: var(--marka-zielen); }
+.postep-t { font-size: var(--tekst-maly); color: var(--tekst-drugi); font-weight: 700; }
+.pomieszczenie { padding: 14px 12px 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.pomieszczenie__g { display: flex; align-items: center; gap: 10px; }
+.pomieszczenie__g b { flex: 1; font-size: 19px; }
+.brud { display: flex; align-items: center; gap: 10px; }
+.brud > span { flex: 1; font-weight: 600; }
+
+/* ---------- Oferta dla klienta: neutralna, bez zieleni aplikacji ---------- */
+.oferta { padding: 8px var(--odstep-ekranu) 28px; display: flex; flex-direction: column; gap: 16px; }
+.oferta p { margin: 0; }
+.oferta__firma { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--linia-podzial); }
+.oferta__znak { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; background: var(--tekst-glowny); color: var(--tekst-na-ciemnym); font-weight: 800; }
+.oferta__firma b { display: block; font-size: 19px; line-height: 1.2; }
+.oferta__firma span { color: var(--tekst-drugi); font-size: var(--tekst-maly); }
+.oferta h1 { font-size: 26px; font-weight: 800; line-height: 1.15; margin: 0; }
+.oferta__drobny { color: var(--tekst-drugi); }
+.oferta__l { font-size: var(--tekst-maly); font-weight: 700; color: var(--tekst-drugi); margin-bottom: 2px; }
+.oferta__pozycja { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid var(--linia-podzial); border-bottom: 1px solid var(--linia-podzial); }
+.oferta__razem { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.oferta__razem strong { font-size: var(--tekst-kwota); font-weight: 800; letter-spacing: -.02em; }
+.oferta ul { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.oferta li { display: flex; gap: 8px; }
+.oferta li .i { margin-top: 1px; }
+.oferta__warunki { color: var(--tekst-drugi); }
+.btn--ciemny { background: var(--tekst-glowny); color: var(--tekst-na-ciemnym); }
+
+/* ---------- Arkusz (np. po „?”) ---------- */
+.zaciemnienie { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; background: rgba(20, 32, 26, .45); }
+.arkusz { background: var(--tlo-karta); border-radius: var(--promien-arkusz) var(--promien-arkusz) 0 0; padding: 10px var(--odstep-ekranu) 24px; display: flex; flex-direction: column; gap: 12px; }
+.arkusz__uchwyt { width: 40px; height: 5px; border-radius: 3px; background: var(--linia-obrys); margin: 0 auto 4px; }
+.arkusz__g { display: flex; align-items: center; justify-content: space-between; }
+.arkusz__g b { font-size: var(--tekst-tytul-ekranu); }
+.arkusz p { margin: 0; color: var(--tekst-drugi); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- Tabler Icons 3.49.0 (MIT), te same ścieżki co src/ui/ikony.js; nowe: calendar, users, help-circle, chevron-left, chevron-down, settings, search, notes -->
+  <symbol id="i-calendar" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/><path d="M11 15h1"/><path d="M12 15v3"/></symbol>
+  <symbol id="i-file-text" viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2"/><path d="M9 9l1 0"/><path d="M9 13l6 0"/><path d="M9 17l6 0"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M5 7a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/><path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0 -3 -3.85"/></symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3l6 0"/><path d="M10 9l4 0"/><path d="M10 3v6l-4 11a.7 .7 0 0 0 .5 1h11a.7 .7 0 0 0 .5 -1l-4 -11v-6"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/></symbol>
+  <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="M15 6l-6 6l6 6"/></symbol>
+  <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="M9 6l6 6l-6 6"/></symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6l6 -6"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2"/></symbol>
+  <symbol id="i-map-pin" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5l0 14"/><path d="M5 12l14 0"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12l14 0"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5l10 -10"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"/><path d="M12 7v5l3 3"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></symbol>
+  <symbol id="i-help-circle" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M12 16v.01"/><path d="M12 13a2 2 0 0 0 .914 -3.782a1.98 1.98 0 0 0 -2.414 .483"/></symbol>
+  <symbol id="i-ruler-measure" viewBox="0 0 24 24"><path d="M19.875 12c.621 0 1.125 .512 1.125 1.143v5.714c0 .631 -.504 1.143 -1.125 1.143h-15.875a1 1 0 0 1 -1 -1v-5.857c0 -.631 .504 -1.143 1.125 -1.143h15.75"/><path d="M9 12v2"/><path d="M6 12v3"/><path d="M12 12v3"/><path d="M18 12v3"/><path d="M15 12v2"/><path d="M3 3v4"/><path d="M3 5h18"/><path d="M21 3v4"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 11l5 5l5 -5"/><path d="M12 4l0 12"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><path d="M7 9.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667l0 -8.666"/><path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M3 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/><path d="M15 6a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/><path d="M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/><path d="M8.7 10.7l6.6 -3.4"/><path d="M8.7 13.3l6.6 3.4"/></symbol>
+  <symbol id="i-clipboard-list" viewBox="0 0 24 24"><path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2"/><path d="M9 5a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2"/><path d="M9 12l.01 0"/><path d="M13 12l2 0"/><path d="M9 16l.01 0"/><path d="M13 16l2 0"/></symbol>
+  <symbol id="i-briefcase" viewBox="0 0 24 24"><path d="M3 9a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2l0 -9"/><path d="M8 7v-2a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v2"/><path d="M12 12l0 .01"/><path d="M3 13a20 20 0 0 0 18 0"/></symbol>
+  <symbol id="i-droplet" viewBox="0 0 24 24"><path d="M7.502 19.423c2.602 2.105 6.395 2.105 8.996 0c2.602 -2.105 3.262 -5.708 1.566 -8.546l-4.89 -7.26c-.42 -.625 -1.287 -.803 -1.936 -.397a1.376 1.376 0 0 0 -.41 .397l-4.893 7.26c-1.695 2.838 -1.035 6.441 1.567 8.546"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></symbol>
+</svg>
+
+<div class="m-strona">
+<header>
+  <h1>Czysty Zarobek – makiety nowego wyglądu (etap 5a)</h1>
+  <p class="m-wstep">Biało-zielony wygląd wszystkich ekranów w ramkach telefonu 360 px. Teksty pochodzą z pól „Teksty (verbatim)” planu
+    <code>docs/plans/2026-10-28-001-feat-aplikacja-modulowa-plan.md</code>, a dane z przykładu, na którym działają testy (dziś: poniedziałek 2 listopada 2026).
+    Po akceptacji builder fazy 3 przepisuje kolory i rozmiary z <code>:root</code> tego pliku do <code>src/style/tokeny.css</code>.</p>
+  <div class="m-kolumny">
+    <section class="m-pudlo">
+      <h2>Na co patrzeć przy akceptacji</h2>
+      <ul>
+        <li>Czy od razu widać, gdzie kliknąć: przyciski są pełnymi prostokątami, wiersze mają strzałkę, a pigułki stanu i zwykły tekst nie wyglądają jak przyciski.</li>
+        <li>Czy litery są dość duże: tekst 17 px, drugie linie wierszy 15 px, tytuły 28 px, kwoty 40 px.</li>
+        <li>Czy odcień zieleni Ci pasuje. Biały tekst na zieleni ma kontrast 5,4:1, więc spełnia WCAG AA także w słońcu.</li>
+        <li>Na ekranie jest jedna główna akcja (zielony przycisk), a wyjaśnienia są schowane pod „Więcej” albo „?”.</li>
+      </ul>
+    </section>
+    <section class="m-pudlo">
+      <h2>Wzorce z Mobbin (wymagają zalogowania)</h2>
+      <ul>
+        <li><a href="https://mobbin.com/screens/fba90558-d255-4d0e-aa0f-7d9e7a5b22ea">Fresha – szczegóły wizyty</a>: duży termin, pigułka stanu, akcje w wierszach ze strzałką → ekran Wizyta.</li>
+        <li><a href="https://mobbin.com/screens/e7f0bf07-0aa9-402e-9b35-182a0345ac82">Fresha – wybór terminu</a> i <a href="https://mobbin.com/screens/5ca873e7-4fd8-45f1-9fab-3d6aee89310d">Square Go – przesunięcie</a>: pasek dnia ze strzałkami, duże pola → widok Dzień i formularz zlecenia.</li>
+        <li><a href="https://mobbin.com/screens/fc139036-8355-42a5-adfc-23765bdddf07">Square Go – wizyta</a> i <a href="https://mobbin.com/screens/eef0daad-490b-4e23-862c-2f97c11f1b6a">Shopify – karta klienta</a>: duże imię, dzwonienie i dojazd jednym dotknięciem, notatka w karcie → karta klienta.</li>
+        <li><a href="https://mobbin.com/screens/5df3aa13-fd9c-4879-8130-9c9c68469d36">Quo – kontakty</a>: duży tytuł, wyszukiwarka, wiersze z inicjałami → lista klientów.</li>
+        <li><a href="https://mobbin.com/screens/b9a46a83-165c-4a0c-b29b-1a07664552fe">Cash App – przycisk w wierszu</a>: akcja przy samym wierszu, bez wchodzenia w szczegóły → „Zaplanuj”, „Zrobione”, „Zapłacone” (u nas pod wierszem, na całą szerokość, bo polskie nazwy usług są długie).</li>
+        <li><a href="https://mobbin.com/screens/7ab24037-4bcd-4a7f-bb1d-c771e8b695da">Cash App</a> i <a href="https://mobbin.com/screens/e86dfc7e-4038-4ac1-8393-1ed2651b7485">Klarna – duża kwota</a> → kwoty wyceny 40 px.</li>
+        <li><a href="https://mobbin.com/screens/18c687b5-87d8-4344-a5bf-c92fa1abddb0">Google Calendar – agenda</a> → Tydzień jako lista dni, nie siatka.</li>
+        <li><a href="https://mobbin.com/screens/6bc16c51-3854-4127-be0c-e2a2e205ed23">Insight Timer – pusty ekran</a>: jedno zdanie i jeden przycisk.</li>
+      </ul>
+    </section>
+    <section class="m-pudlo">
+      <h2>Kolory (<code>:root</code>)</h2>
+      <table class="m-paleta">
+        <tr><td><span class="m-probka" style="background:#0e7a4e"></span></td><td>Zieleń: przyciski, kwoty</td><td class="m-mono">#0e7a4e · biały 5,37:1</td></tr>
+        <tr><td><span class="m-probka" style="background:#0a5c3a"></span></td><td>Ciemna zieleń: tekst na jasnej zieleni</td><td class="m-mono">#0a5c3a · 7,18:1</td></tr>
+        <tr><td><span class="m-probka" style="background:#e7f5ee"></span></td><td>Jasna zieleń: ikony, wybrane chipy</td><td class="m-mono">#e7f5ee</td></tr>
+        <tr><td><span class="m-probka" style="background:#14201a"></span></td><td>Tekst główny</td><td class="m-mono">#14201a · 16,8:1</td></tr>
+        <tr><td><span class="m-probka" style="background:#4a5550"></span></td><td>Tekst drugi (drugie linie)</td><td class="m-mono">#4a5550 · 7,76:1</td></tr>
+        <tr><td><span class="m-probka" style="background:#5f6a65"></span></td><td>Tekst trzeci (strzałki, puste dni)</td><td class="m-mono">#5f6a65 · 5,62:1</td></tr>
+        <tr><td><span class="m-probka" style="background:#fff4d6"></span></td><td>Uwaga: baner, „Do zamknięcia”</td><td class="m-mono">#7a5200 na #fff4d6 · 6,32:1</td></tr>
+        <tr><td><span class="m-probka" style="background:#ffffff"></span></td><td>Tło strony i kart</td><td class="m-mono">#ffffff</td></tr>
+      </table>
+    </section>
+  </div>
+</header>
+
+<!-- ================= START I MODUŁY ================= -->
+<section class="m-grupa">
+  <h2>Start i moduły</h2>
+  <p>Bez dolnego paska. Na Start są tylko gotowe moduły, a w module na górze jest „‹ Start”. Szybka wycena jest dwa dotknięcia od Start: kafel Wycena, potem „Szybka wycena”.</p>
+  <div class="m-ekrany">
+
+    <figure class="m-ekran">
+      <figcaption><b>Start <code>start</code></b><span>Powitanie, jedno zdanie o dniu, kafle w dwóch kolumnach, jeden baner, odnośnik do ustawień. Linia stanu wymagająca działania jest pogrubiona w ciemnej zieleni.</span></figcaption>
+      <div class="tel" data-ekran="start">
+        <div class="tel__stan"><span>9:41</span><i></i></div>
+        <main class="ekr">
+          <h1 class="powitanie">Dzień dobry, Usługi Sprzątające Monika Lis</h1>
+          <p class="zdanie">Dziś <b>2 zlecenia</b> · <b class="zdanie__uwaga">1 niezapłacone</b></p>
+          <ul class="kafle">
+            <li><a class="kafel" href="#"><span class="kafel__ik"><svg class="i"><use href="#i-calendar"/></svg></span><span class="kafel__n">Zlecenia</span><span class="kafel__s kafel__s--akcja">2 do zamknięcia</span></a></li>
+            <li><a class="kafel" href="#"><span class="kafel__ik"><svg class="i"><use href="#i-file-text"/></svg></span><span class="kafel__n">Wycena</span><span class="kafel__s kafel__s--akcja">1 do wysłania</span></a></li>
+            <li><a class="kafel" href="#"><span class="kafel__ik"><svg class="i"><use href="#i-users"/></svg></span><span class="kafel__n">Klienci</span><span class="kafel__s">3 klientów</span></a></li>
+            <li><a class="kafel" href="#"><span class="kafel__ik"><svg class="i"><use href="#i-flask"/></svg></span><span class="kafel__n">Chemia</span><span class="kafel__s">Środki do każdego brudu</span></a></li>
+          </ul>
+          <div class="baner">
+            <p>Nie masz jeszcze kopii danych. Dane są tylko w tej przeglądarce.</p>
+            <a class="btn btn--drugi btn--maly btn--auto" href="#"><svg class="i i--m"><use href="#i-download"/></svg>Zrób kopię</a>
+          </div>
+          <div class="karta">
+            <a class="wiersz" href="#"><span class="ik-kolo"><svg class="i"><use href="#i-settings"/></svg></span><span class="wiersz__tx"><span class="wiersz__t">Ustawienia firmy</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+          </div>
+        </main>
+      </div>
+    </figure>
+
+    <figure class="m-ekran">
+      <figcaption><b>Moduł Wycena <code>wycena-modul</code></b><span>Dwa duże przyciski na górze, pod nimi sekcje według tego, co trzeba zrobić. „Zaplanuj” jest pod wierszem, tak jak „Zrobione” w zleceniach. Pigułka stanu tylko w „Pozostałe”.</span></figcaption>
+      <div class="tel" data-ekran="wycena-modul">
+        <div class="tel__stan"><span>9:41</span><i></i></div>
+        <header class="nag">
+          <div class="nag__gora"><a class="nag__wstecz" href="#"><svg class="i"><use href="#i-chevron-left"/></svg>Start</a></div>
+          <h1>Wycena</h1>
+        </header>
+        <main class="ekr">
+          <a class="duzy duzy--glowny" href="#"><span class="duzy__ik"><svg class="i"><use href="#i-phone"/></svg></span><span class="duzy__tx"><b>Szybka wycena</b><span>przez telefon</span></span><svg class="i"><use href="#i-chevron-right"/></svg></a>
+          <a class="duzy duzy--drugi" href="#"><span class="duzy__ik"><svg class="i"><use href="#i-ruler-measure"/></svg></span><span class="duzy__tx"><b>Dokładna wycena</b><span>na miejscu</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+
+          <div class="sekcja"><h2>Do wysłania</h2></div>
+          <div class="karta">
+            <a class="wiersz" href="#"><span class="wiersz__tx"><span class="wiersz__t">Jan Nowak</span><span class="wiersz__o">180 zł · Mycie okien</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+          </div>
+
+          <div class="sekcja"><h2>Do zaplanowania</h2></div>
+          <div class="wizyta">
+            <a class="wiersz" href="#"><span class="wiersz__tx"><span class="wiersz__t">Anna Kowalska</span><span class="wiersz__o">250 zł · Sprzątanie mieszkania</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+            <div class="wizyta__akcje"><a class="btn btn--akcja" href="#"><svg class="i i--m"><use href="#i-calendar"/></svg>Zaplanuj</a></div>
+          </div>
+
+          <div class="sekcja"><h2>Czekają na odpowiedź</h2></div>
+          <div class="karta">
+            <a class="wiersz" href="#"><span class="wiersz__tx"><span class="wiersz__t">Anna Kowalska</span><span class="wiersz__o">150 zł · Pranie tapicerki</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+          </div>
+
+          <div class="sekcja"><h2>Pozostałe</h2></div>
+          <div class="karta">
+            <a class="wiersz" href="#"><span class="wiersz__tx"><span class="wiersz__t">Biuro Rachunkowe Lis</span><span class="wiersz__o">179 zł · Sprzątanie biur</span></span><span class="pig pig--zielona">Przyjęta</span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+            <a class="wiersz" href="#"><span class="wiersz__tx"><span class="wiersz__t">Sprzątanie mieszkania</span><span class="wiersz__o">28 paź</span></span><span class="pig pig--szara">Szkic</span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+          </div>
+        </main>
+      </div>
+    </figure>
+
+    <figure class="m-ekran">
+      <figcaption><b>Chemia, kategoria <code>chemia</code></b><span>Wiersz środka w dwóch liniach. Przeznaczenie i karta charakterystyki są schowane pod „Więcej” (tu rozwinięte przy pierwszym środku).</span></figcaption>
+      <div class="tel" data-ekran="chemia">
+        <div class="tel__stan"><span>9:41</span><i></i></div>
+        <header class="nag">
+          <div class="nag__gora"><a class="nag__wstecz" href="#"><svg class="i"><use href="#i-chevron-left"/></svg>Chemia</a></div>
+          <h1>Środek uniwersalny</h1>
+          <p class="nag__pod">kurz, sierść, brud bieżący</p>
+        </header>
+        <main class="ekr">
+          <div class="karta">
+            <div class="produkt">
+              <span class="wiersz__t">OFFICE CLEAN</span>
+              <span class="wiersz__o">pH 7 · Tenzi · 82,87 zł za 5 l</span>
+              <details class="wiecej" open>
+                <summary>Więcej<svg class="i i--m"><use href="#i-chevron-down"/></svg></summary>
+                <div class="wiecej__tresc">
+                  <p>Meble biurowe i inne powierzchnie ponadpodłogowe; nie zostawia smug.</p>
+                  <a class="btn btn--drugi btn--maly" href="#"><svg class="i i--m"><use href="#i-download"/></svg>Karta charakterystyki</a>
+                </div>
+              </details>
+            </div>
+            <div class="produkt">
+              <span class="wiersz__t">TopEfekt NORMAL</span>
+              <span class="wiersz__o">pH 11 · Tenzi · 77,79 zł za 5 l</span>
+              <details class="wiecej"><summary>Więcej<svg class="i i--m"><use href="#i-chevron-down"/></svg></summary></details>
+            </div>
+            <div class="produkt">
+              <span class="wiersz__t">MERIDA ECO-UNI</span>
+              <span class="wiersz__o">pH 7 · Merida · 169,86 zł za 10 l</span>
+              <details class="wiecej"><summary>Więcej<svg class="i i--m"><use href="#i-chevron-down"/></svg></summary></details>
+            </div>
+            <div class="produkt">
+              <span class="wiersz__t">CLINEX PROFIT Uni</span>
+              <span class="wiersz__o">pH 12 · Clinex (Amtra) · 155 zł za 5 l</span>
+              <details class="wiecej"><summary>Więcej<svg class="i i--m"><use href="#i-chevron-down"/></svg></summary></details>
+            </div>
+          </div>
+        </main>
+      </div>
+    </figure>
+
+    <figure class="m-ekran">
+      <figcaption><b>Ustawienia firmy <code>ustawienia</code></b><span>Sekcje jako wiersze ze strzałką; każda otwiera osobny ekran z jednym przyciskiem „Zapisz”. Brak kopii widać w pigułce.</span></figcaption>
+      <div class="tel" data-ekran="ustawienia">
+        <div class="tel__stan"><span>9:41</span><i></i></div>
+        <header class="nag">
+          <div class="nag__gora"><a class="nag__wstecz" href="#"><svg class="i"><use href="#i-chevron-left"/></svg>Start</a></div>
+          <h1>Ustawienia firmy</h1>
+        </header>
+        <main class="ekr">
+          <div class="karta">
+            <a class="wiersz" href="#"><span class="ik-kolo"><svg class="i"><use href="#i-briefcase"/></svg></span><span class="wiersz__tx"><span class="wiersz__t">Dane do oferty</span><span class="wiersz__o">Usługi Sprzątające Monika Lis</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+            <a class="wiersz" href="#"><span class="ik-kolo"><svg class="i"><use href="#i-map-pin"/></svg></span><span class="wiersz__tx"><span class="wiersz__t">Rynek i VAT</span><span class="wiersz__o">mazowieckie · zwolniony z VAT</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+          </div>
+          <div class="karta">
+            <a class="wiersz" href="#"><span class="ik-kolo"><svg class="i"><use href="#i-clock"/></svg></span><span class="wiersz__tx"><span class="wiersz__t">Tempo pracy</span><span class="wiersz__o">1,3 × normy · domyślne</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+            <a class="wiersz" href="#"><span class="ik-kolo"><svg class="i"><use href="#i-droplet"/></svg></span><span class="wiersz__tx"><span class="wiersz__t">Koszty zlecenia</span><span class="wiersz__o">chemia 4 zł/h · dojazd 2 zł/km</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+            <a class="wiersz" href="#"><span class="ik-kolo"><svg class="i"><use href="#i-file-text"/></svg></span><span class="wiersz__tx"><span class="wiersz__t">Zakres i warunki oferty</span><span class="wiersz__o">domyślne</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+          </div>
+          <div class="karta">
+            <a class="wiersz" href="#"><span class="ik-kolo"><svg class="i"><use href="#i-download"/></svg></span><span class="wiersz__tx"><span class="wiersz__t">Kopia danych</span><span class="wiersz__o">4 wyceny · 3 klientów</span></span><span class="pig pig--uwaga">Brak</span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+          </div>
+        </main>
+      </div>
+    </figure>
+
+  </div>
+</section>
+
+<!-- ================= KLIENCI ================= -->
+<section class="m-grupa">
+  <h2>Klienci</h2>
+  <p>Lista jak kontakty w telefonie, karta jak w Shopify i Square: duże imię, dzwonienie i mapa jednym dotknięciem, historia w sekcjach.</p>
+  <div class="m-ekrany">
+
+    <figure class="m-ekran">
+      <figcaption><b>Lista klientów <code>klienci-lista</code></b><span>Wyszukiwarka, główny przycisk „Dodaj klienta”, wiersz z inicjałami: nazwa i telefon, a bez telefonu adres.</span></figcaption>
+      <div class="tel" data-ekran="klienci-lista">
+        <div class="tel__stan"><span>9:41</span><i></i></div>
+        <header class="nag">
+          <div class="nag__gora"><a class="nag__wstecz" href="#"><svg class="i"><use href="#i-chevron-left"/></svg>Start</a></div>
+          <h1>Klienci</h1>
+        </header>
+        <main class="ekr">
+          <label class="pole"><span class="ukryty">Szukaj klienta</span><span class="pole__v pole__v--puste"><svg class="i"><use href="#i-search"/></svg><span>Szukaj klienta</span></span></label>
+          <a class="btn btn--glowny" href="#"><svg class="i"><use href="#i-plus"/></svg>Dodaj klienta</a>
+          <div class="karta">
+            <a class="wiersz" href="#"><span class="awatar">AK</span><span class="wiersz__tx"><span class="wiersz__t">Anna Kowalska</span><span class="wiersz__o">600 100 200</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+            <a class="wiersz" href="#"><span class="awatar">BL</span><span class="wiersz__tx"><span class="wiersz__t">Biuro Rachunkowe Lis</span><span class="wiersz__o">ul. Prosta 10, Warszawa</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+            <a class="wiersz" href="#"><span class="awatar">JN</span><span class="wiersz__tx"><span class="wiersz__t">Jan Nowak</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+          </div>
+        </main>
+      </div>
+    </figure>
+
+    <figure class="m-ekran">
+      <figcaption><b>Karta klienta <code>karta-klienta</code></b><span>Numer i adres to wiersze-linki z akcją w drugiej linii. „Niezapłacone” pojawia się nad „Zlecenia”, gdy klient ma zaległość; „Usuń klienta” tylko bez historii.</span></figcaption>
+      <div class="tel" data-ekran="karta-klienta">
+        <div class="tel__stan"><span>9:41</span><i></i></div>
+        <header class="nag">
+          <div class="nag__gora"><a class="nag__wstecz" href="#"><svg class="i"><use href="#i-chevron-left"/></svg>Klienci</a><a class="btn btn--tekstowy" href="#">Edytuj</a></div>
+          <span class="awatar awatar--duzy">AK</span>
+          <h1>Anna Kowalska</h1>
+        </header>
+        <main class="ekr">
+          <div class="karta">
+            <a class="wiersz" href="#"><span class="ik-kolo ik-kolo--zielone"><svg class="i"><use href="#i-phone"/></svg></span><span class="wiersz__tx"><span class="wiersz__t">600 100 200</span><span class="wiersz__akcja">Zadzwoń</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+            <a class="wiersz" href="#"><span class="ik-kolo ik-kolo--zielone"><svg class="i"><use href="#i-map-pin"/></svg></span><span class="wiersz__tx"><span class="wiersz__t">ul. Lipowa 3, Warszawa</span><span class="wiersz__akcja">Pokaż na mapie</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+          </div>
+          <div class="karta karta--pad">
+            <span class="wiersz__l">Notatki</span>
+            <p>Klucze u sąsiadki, kod 1234</p>
+          </div>
+          <div class="rzad">
+            <a class="btn btn--glowny" href="#">Nowa wycena</a>
+            <a class="btn btn--drugi" href="#">Nowe zlecenie</a>
+          </div>
+          <div class="sekcja"><h2>Zlecenia</h2></div>
+          <div class="karta">
+            <a class="wiersz" href="#"><span class="wiersz__tx"><span class="wiersz__t">Sprzątanie mieszkania</span><span class="wiersz__o">dziś 9:00 · 250 zł</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+          </div>
+          <div class="sekcja"><h2>Wyceny</h2></div>
+          <div class="karta">
+            <a class="wiersz" href="#"><span class="wiersz__tx"><span class="wiersz__t">Pranie tapicerki</span><span class="wiersz__o">150 zł · 30 paź</span></span><span class="pig pig--info">Wysłana</span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+            <a class="wiersz" href="#"><span class="wiersz__tx"><span class="wiersz__t">Sprzątanie mieszkania</span><span class="wiersz__o">250 zł · 29 paź</span></span><span class="pig pig--zielona">Przyjęta</span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+          </div>
+        </main>
+      </div>
+    </figure>
+
+  </div>
+</section>
+
+<!-- ================= ZLECENIA ================= -->
+<section class="m-grupa">
+  <h2>Zlecenia i kalendarz</h2>
+  <p>Dzień jest widokiem domyślnym. Zaległe wizyty są na górze w „Do zamknięcia”, a zamknięcie wizyty to dwa dotknięcia: „Zrobione” i „Zapłacone” w karcie wizyty. Tydzień to lista dni, Miesiąc to siatka z liczbą wizyt.</p>
+  <div class="m-ekrany">
+
+    <figure class="m-ekran">
+      <figcaption><b>Dzień <code>zlecenia-dzien</code></b><span>Przyciski wizyty są pod jej opisem, na całą szerokość karty. W „Do zamknięcia” druga linia ma dzień i godzinę zamiast adresu (zmiana tekstu do planu). Za długi adres ucina się wielokropkiem, a kwota zostaje widoczna.</span></figcaption>
+      <div class="tel" data-ekran="zlecenia-dzien">
+        <div class="tel__stan"><span>9:41</span><i></i></div>
+        <header class="nag">
+          <div class="nag__gora"><a class="nag__wstecz" href="#"><svg class="i"><use href="#i-chevron-left"/></svg>Start</a></div>
+          <h1>Zlecenia</h1>
+        </header>
+        <main class="ekr">
+          <nav class="przel" aria-label="Widok kalendarza"><a href="#" aria-current="page">Dzień</a><a href="#">Tydzień</a><a href="#">Miesiąc</a></nav>
+          <div class="data">
+            <a class="data__strz" href="#" aria-label="Poprzedni dzień"><svg class="i"><use href="#i-chevron-left"/></svg></a>
+            <span class="data__t">pn 2 lis</span>
+            <a class="data__strz" href="#" aria-label="Następny dzień"><svg class="i"><use href="#i-chevron-right"/></svg></a>
+            <a class="btn btn--drugi btn--maly btn--auto" href="#">Dziś</a>
+          </div>
+
+          <div class="sekcja"><h2>Do zamknięcia</h2><span class="pig pig--uwaga">2</span></div>
+          <div class="lista">
+            <div class="wizyta wizyta--zaleg">
+              <a class="wiersz" href="#"><span class="wiersz__tx"><span class="wiersz__t">Biuro Rachunkowe Lis</span><span class="wiersz__o">pn 26 paź, 15:00 · w abonamencie</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+              <div class="wizyta__akcje"><a class="btn btn--akcja" href="#"><svg class="i i--m"><use href="#i-check"/></svg>Zrobione</a></div>
+            </div>
+            <div class="wizyta wizyta--zaleg">
+              <a class="wiersz" href="#"><span class="wiersz__tx"><span class="wiersz__t">Jan Nowak</span><span class="wiersz__o">nd 1 lis, 10:00 · 180 zł</span></span><span class="pig pig--zielona">Zrobione</span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+              <div class="wizyta__akcje"><a class="btn btn--akcja" href="#">Zapłacone</a></div>
+            </div>
+          </div>
+
+          <div class="sekcja"><h2>Wizyty dnia</h2></div>
+          <div class="lista">
+            <div class="wizyta">
+              <a class="wiersz" href="#"><span class="wiersz__tx"><span class="wiersz__t">9:00 · Anna Kowalska</span><span class="wiersz__o wiersz__o--para"><span>ul. Lipowa 3, Warszawa</span><span> · 250 zł</span></span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+              <div class="wizyta__akcje"><a class="btn btn--akcja" href="#"><svg class="i i--m"><use href="#i-check"/></svg>Zrobione</a><a class="btn btn--akcja" href="#">Zapłacone</a></div>
+            </div>
+            <div class="wizyta">
+              <a class="wiersz" href="#"><span class="wiersz__tx"><span class="wiersz__t">15:00 · Biuro Rachunkowe Lis</span><span class="wiersz__o wiersz__o--para"><span>ul. Prosta 10, Warszawa</span><span> · w abonamencie</span></span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+              <div class="wizyta__akcje"><a class="btn btn--akcja" href="#"><svg class="i i--m"><use href="#i-check"/></svg>Zrobione</a></div>
+            </div>
+          </div>
+          <a class="btn btn--drugi" href="#" style="margin-top:6px"><svg class="i"><use href="#i-plus"/></svg>Nowe zlecenie</a>
+        </main>
+      </div>
+    </figure>
+
+    <figure class="m-ekran">
+      <figcaption><b>Tydzień <code>zlecenia-tydzien</code></b><span>Lista 7 dni od poniedziałku; dziś w zieleni, liczba wizyt po prawej. Wiersze bez przycisków zamykania, pusty dzień jednym słowem.</span></figcaption>
+      <div class="tel" data-ekran="zlecenia-tydzien">
+        <div class="tel__stan"><span>9:41</span><i></i></div>
+        <header class="nag">
+          <div class="nag__gora"><a class="nag__wstecz" href="#"><svg class="i"><use href="#i-chevron-left"/></svg>Start</a></div>
+          <h1>Zlecenia</h1>
+        </header>
+        <main class="ekr">
+          <nav class="przel" aria-label="Widok kalendarza"><a href="#">Dzień</a><a href="#" aria-current="page">Tydzień</a><a href="#">Miesiąc</a></nav>
+          <div class="data">
+            <a class="data__strz" href="#" aria-label="Poprzedni tydzień"><svg class="i"><use href="#i-chevron-left"/></svg></a>
+            <span class="data__t">2–8 lis</span>
+            <a class="data__strz" href="#" aria-label="Następny tydzień"><svg class="i"><use href="#i-chevron-right"/></svg></a>
+            <a class="btn btn--drugi btn--maly btn--auto" href="#">Dziś</a>
+          </div>
+          <div class="dzien-t dzien-t--dzis"><b>pn 2 lis</b><span>2 wizyty</span></div>
+          <div class="karta">
+            <a class="wiersz" href="#"><span class="wiersz__tx"><span class="wiersz__t">9:00 · Anna Kowalska</span><span class="wiersz__o wiersz__o--para"><span>ul. Lipowa 3, Warszawa</span><span> · 250 zł</span></span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+            <a class="wiersz" href="#"><span class="wiersz__tx"><span class="wiersz__t">15:00 · Biuro Rachunkowe Lis</span><span class="wiersz__o wiersz__o--para"><span>ul. Prosta 10, Warszawa</span><span> · w abonamencie</span></span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+          </div>
+          <div class="dzien-t"><b>wt 3 lis</b></div>
+          <p class="pusto">Brak wizyt</p>
+          <div class="dzien-t"><b>śr 4 lis</b></div>
+          <p class="pusto">Brak wizyt</p>
+          <div class="dzien-t"><b>czw 5 lis</b><span>1 wizyta</span></div>
+          <div class="karta">
+            <a class="wiersz" href="#"><span class="wiersz__tx"><span class="wiersz__t">12:00 · Ewa Zielińska</span><span class="wiersz__o wiersz__o--para"><span>ul. Polna 5, Warszawa</span><span> · 300 zł</span></span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+          </div>
+          <div class="dzien-t"><b>pt 6 lis</b></div>
+          <p class="pusto">Brak wizyt</p>
+          <div class="dzien-t"><b>sb 7 lis</b></div>
+          <p class="pusto">Brak wizyt</p>
+          <div class="dzien-t"><b>nd 8 lis</b></div>
+          <p class="pusto">Brak wizyt</p>
+        </main>
+      </div>
+    </figure>
+
+    <figure class="m-ekran">
+      <figcaption><b>Miesiąc <code>zlecenia-miesiac</code></b><span>Siatka pn–nd, komórka 48 × 64 px z numerem dnia i liczbą wizyt; dziś na zielonym kółku. Dotknięcie dnia otwiera widok Dzień.</span></figcaption>
+      <div class="tel" data-ekran="zlecenia-miesiac">
+        <div class="tel__stan"><span>9:41</span><i></i></div>
+        <header class="nag">
+          <div class="nag__gora"><a class="nag__wstecz" href="#"><svg class="i"><use href="#i-chevron-left"/></svg>Start</a></div>
+          <h1>Zlecenia</h1>
+        </header>
+        <main class="ekr">
+          <nav class="przel" aria-label="Widok kalendarza"><a href="#">Dzień</a><a href="#">Tydzień</a><a href="#" aria-current="page">Miesiąc</a></nav>
+          <div class="data">
+            <a class="data__strz" href="#" aria-label="Poprzedni miesiąc"><svg class="i"><use href="#i-chevron-left"/></svg></a>
+            <span class="data__t">Listopad 2026</span>
+            <a class="data__strz" href="#" aria-label="Następny miesiąc"><svg class="i"><use href="#i-chevron-right"/></svg></a>
+            <a class="btn btn--drugi btn--maly btn--auto" href="#">Dziś</a>
+          </div>
+          <div class="mies">
+            <span class="mies__dt">pn</span><span class="mies__dt">wt</span><span class="mies__dt">śr</span><span class="mies__dt">czw</span><span class="mies__dt">pt</span><span class="mies__dt">sb</span><span class="mies__dt">nd</span>
+            <a class="mies__d mies__d--inny" href="#"><span class="mies__n">26</span><span class="mies__l">1</span></a>
+            <a class="mies__d mies__d--inny" href="#"><span class="mies__n">27</span></a>
+            <a class="mies__d mies__d--inny" href="#"><span class="mies__n">28</span></a>
+            <a class="mies__d mies__d--inny" href="#"><span class="mies__n">29</span></a>
+            <a class="mies__d mies__d--inny" href="#"><span class="mies__n">30</span></a>
+            <a class="mies__d mies__d--inny" href="#"><span class="mies__n">31</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">1</span><span class="mies__l">1</span></a>
+            <a class="mies__d mies__d--dzis" href="#"><span class="mies__n">2</span><span class="mies__l">2</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">3</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">4</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">5</span><span class="mies__l">1</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">6</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">7</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">8</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">9</span><span class="mies__l">1</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">10</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">11</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">12</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">13</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">14</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">15</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">16</span><span class="mies__l">1</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">17</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">18</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">19</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">20</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">21</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">22</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">23</span><span class="mies__l">1</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">24</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">25</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">26</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">27</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">28</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">29</span></a>
+            <a class="mies__d" href="#"><span class="mies__n">30</span><span class="mies__l">1</span></a>
+            <a class="mies__d mies__d--inny" href="#"><span class="mies__n">1</span></a>
+            <a class="mies__d mies__d--inny" href="#"><span class="mies__n">2</span></a>
+            <a class="mies__d mies__d--inny" href="#"><span class="mies__n">3</span></a>
+            <a class="mies__d mies__d--inny" href="#"><span class="mies__n">4</span></a>
+            <a class="mies__d mies__d--inny" href="#"><span class="mies__n">5</span></a>
+            <a class="mies__d mies__d--inny" href="#"><span class="mies__n">6</span></a>
+          </div>
+          <a class="btn btn--drugi" href="#" style="margin-top:6px"><svg class="i"><use href="#i-plus"/></svg>Nowe zlecenie</a>
+        </main>
+      </div>
+    </figure>
+
+    <figure class="m-ekran">
+      <figcaption><b>Wizyta <code>wizyta</code></b><span>Stan po „Zrobione”: zostaje zapłata z wyborem formy (zaznaczona forma ostatniej zapłaty klienta) i jednym głównym przyciskiem. Wiersz „Wycena {numer}” pojawia się, gdy zlecenie powstało z wyceny.</span></figcaption>
+      <div class="tel" data-ekran="wizyta">
+        <div class="tel__stan"><span>9:41</span><i></i></div>
+        <header class="nag">
+          <div class="nag__gora"><a class="nag__wstecz" href="#"><svg class="i"><use href="#i-chevron-left"/></svg>Zlecenia</a></div>
+          <h1>Wizyta</h1>
+        </header>
+        <main class="ekr">
+          <p class="termin">pn 2 lis, 9:00</p>
+          <div class="karta">
+            <a class="wiersz" href="#"><span class="wiersz__tx"><span class="wiersz__l">Klient</span><span class="wiersz__t">Anna Kowalska</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+            <a class="wiersz" href="#"><span class="wiersz__tx"><span class="wiersz__l">Adres</span><span class="wiersz__t">ul. Lipowa 3, Warszawa</span></span><svg class="i wiersz__strz"><use href="#i-map-pin"/></svg></a>
+            <div class="wiersz"><span class="wiersz__tx"><span class="wiersz__l">Kwota</span><span class="wiersz__t">250 zł</span></span></div>
+            <div class="wiersz"><span class="wiersz__tx"><span class="wiersz__l">Usługa</span><span class="wiersz__t">Sprzątanie mieszkania (standard)</span></span></div>
+          </div>
+          <div class="stan"><svg class="i"><use href="#i-check"/></svg><span>Zrobione</span><a class="btn btn--tekstowy" href="#" style="color:var(--sukces-tekst)">Cofnij</a></div>
+          <div class="karta karta--pad" style="display:flex;flex-direction:column;gap:12px">
+            <span class="wiersz__l">Jak zapłacił klient?</span>
+            <div class="chipy chipy--rowne"><span class="chip chip--on">Gotówka</span><span class="chip">Przelew</span><span class="chip">BLIK</span></div>
+            <a class="btn btn--glowny" href="#">Zapłacone</a>
+          </div>
+          <div class="karta">
+            <a class="wiersz" href="#"><span class="ik-kolo"><svg class="i"><use href="#i-clock"/></svg></span><span class="wiersz__tx"><span class="wiersz__t">Dopisz czas pracy</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+            <a class="wiersz" href="#"><span class="ik-kolo"><svg class="i"><use href="#i-calendar"/></svg></span><span class="wiersz__tx"><span class="wiersz__t">Przesuń</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+            <a class="wiersz" href="#"><span class="ik-kolo"><svg class="i"><use href="#i-clipboard-list"/></svg></span><span class="wiersz__tx"><span class="wiersz__t">Zlecenie</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+          </div>
+          <a class="btn btn--tekstowy btn--blad" href="#" style="align-self:center">Odwołaj wizytę</a>
+        </main>
+      </div>
+    </figure>
+
+    <figure class="m-ekran">
+      <figcaption><b>Nowe zlecenie <code>zlecenie-formularz</code></b><span>Seria co tydzień u stałego klienta: klient, usługa, cena, data, godzina, „Co tydzień”, „Zapisz zlecenie”. Dni tygodnia wybiera się chipami (domyślnie dzień daty).</span></figcaption>
+      <div class="tel" data-ekran="zlecenie-formularz">
+        <div class="tel__stan"><span>9:41</span><i></i></div>
+        <header class="nag">
+          <div class="nag__gora"><a class="nag__wstecz" href="#"><svg class="i"><use href="#i-chevron-left"/></svg>Zlecenia</a></div>
+          <h1>Nowe zlecenie</h1>
+        </header>
+        <main class="ekr" style="gap:16px">
+          <div class="pole"><span class="pole__l">Klient</span>
+            <div class="karta"><div class="wiersz"><span class="awatar">JN</span><span class="wiersz__tx"><span class="wiersz__t">Jan Nowak</span></span><a class="btn btn--tekstowy" href="#">Zmień</a></div></div>
+          </div>
+          <label class="pole"><span class="pole__l">Usługa</span><span class="pole__v"><span>Sprzątanie mieszkania (standard)</span><svg class="i"><use href="#i-chevron-down"/></svg></span></label>
+          <label class="pole"><span class="pole__l">Cena (zł)</span><span class="pole__v pole__v--fokus"><span>200</span></span></label>
+          <div class="dwa-pola">
+            <label class="pole"><span class="pole__l">Data</span><span class="pole__v"><span>wt 3 lis</span><svg class="i"><use href="#i-calendar"/></svg></span></label>
+            <label class="pole"><span class="pole__l">Godzina</span><span class="pole__v"><span>10:00</span><svg class="i"><use href="#i-clock"/></svg></span></label>
+          </div>
+          <div class="pole"><span class="pole__l">Powtarzaj</span>
+            <div class="chipy"><span class="chip">Nie</span><span class="chip chip--on">Co tydzień</span><span class="chip">Co 2 tygodnie</span><span class="chip">Co miesiąc</span></div>
+          </div>
+          <div class="pole"><span class="pole__l">Dni</span>
+            <div class="chipy chipy--dni"><span class="chip">pn</span><span class="chip chip--on">wt</span><span class="chip">śr</span><span class="chip">czw</span><span class="chip">pt</span><span class="chip">sb</span><span class="chip">nd</span></div>
+          </div>
+          <div class="pole"><span class="pole__l">Płatność</span>
+            <div class="chipy"><span class="chip chip--on">Za wizytę</span><span class="chip">Raz w miesiącu</span></div>
+          </div>
+          <a class="btn btn--glowny" href="#">Zapisz zlecenie</a>
+        </main>
+      </div>
+    </figure>
+
+  </div>
+</section>
+
+<!-- ================= WYCENA ================= -->
+<section class="m-grupa">
+  <h2>Wycena</h2>
+  <p>Działanie i ceny bez zmian (te same widełki i scenariusze kalibracji). Zmieniają się wygląd i ilość tekstu: kwota jest duża i zielona, skąd się wzięła – pod „Więcej” albo „?”.</p>
+  <div class="m-ekrany">
+
+    <figure class="m-ekran">
+      <figcaption><b>Szybka wycena <code>szybka-wycena</code></b><span>Formularz z chipami i licznikami 48 px, wynik z dużymi widełkami. Mediana, rynek i tekst dla klienta są pod „Więcej”; „Zostaje” zostaje na wierzchu, bo pomaga w decyzji.</span></figcaption>
+      <div class="tel" data-ekran="szybka-wycena">
+        <div class="tel__stan"><span>9:41</span><i></i></div>
+        <header class="nag">
+          <div class="nag__gora"><a class="nag__wstecz" href="#"><svg class="i"><use href="#i-chevron-left"/></svg>Wycena</a></div>
+          <h1>Szybka wycena</h1>
+          <p class="nag__pod">Rozmowa z klientem</p>
+        </header>
+        <main class="ekr" style="gap:16px">
+          <label class="pole"><span class="pole__l">Usługa</span><span class="pole__v"><span>Sprzątanie mieszkania</span><svg class="i"><use href="#i-chevron-down"/></svg></span></label>
+          <div class="pole"><span class="pole__l">Rodzaj sprzątania</span>
+            <div class="chipy"><span class="chip chip--on">Standard</span><span class="chip">Gruntowne</span><span class="chip">Po wynajmie</span></div>
+          </div>
+          <div class="licz"><span class="licz__t">Metraż</span><a class="licz__b" href="#" aria-label="Mniej"><svg class="i"><use href="#i-minus"/></svg></a><span class="licz__v">50 m²</span><a class="licz__b" href="#" aria-label="Więcej"><svg class="i"><use href="#i-plus"/></svg></a></div>
+          <div class="pole"><span class="pole__l">Kuchnia</span>
+            <div class="chipy"><span class="chip">Osobna</span><span class="chip chip--on">Aneks</span></div>
+          </div>
+          <div class="pole"><span class="pole__l">Spodziewany stan</span>
+            <div class="chipy"><span class="chip">Lekki</span><span class="chip chip--on">Typowy</span><span class="chip">Mocny</span></div>
+          </div>
+          <div class="karta karta--pad" style="border-color:var(--marka-zielen-wykres);background:linear-gradient(var(--marka-zielen-tlo),var(--tlo-karta) 70%)">
+            <span class="kwota-l">Widełki dla klienta</span>
+            <p class="kwota">250–300 zł</p>
+            <p style="margin-top:6px;font-weight:700">Zostaje ok. 41–51 zł/h</p>
+            <details class="wiecej">
+              <summary>Więcej<svg class="i i--m"><use href="#i-chevron-down"/></svg></summary>
+              <div class="wiecej__tresc">
+                <p>Mediana w mazowieckiem: 250 zł</p>
+                <p>Rynek: 120–450 zł</p>
+                <p>Cena zależy od stanu lokalu. Podaj klientowi widełki, a dokładną cenę po obejrzeniu.</p>
+              </div>
+            </details>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+              <a class="btn btn--glowny" href="#">Dokładna wycena</a>
+              <a class="btn btn--drugi" href="#"><svg class="i i--m"><use href="#i-copy"/></svg>Kopiuj tekst</a>
+            </div>
+          </div>
+          <div class="karta">
+            <a class="wiersz" href="#"><span class="ik-kolo"><svg class="i"><use href="#i-help-circle"/></svg></span><span class="wiersz__tx"><span class="wiersz__t">Pytania do klienta</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+          </div>
+        </main>
+      </div>
+    </figure>
+
+    <figure class="m-ekran">
+      <figcaption><b>Kreator: pomieszczenia <code>kreator-pomieszczenia</code></b><span>Pasek postępu z 5 odcinków, rozwinięte jedno pomieszczenie naraz. Legenda poziomów brudu jest pod „?”. Na dole suma i jeden przycisk „Dalej”.</span></figcaption>
+      <div class="tel" data-ekran="kreator-pomieszczenia">
+        <div class="tel__stan"><span>9:41</span><i></i></div>
+        <header class="nag">
+          <div class="nag__gora"><a class="nag__wstecz" href="#"><svg class="i"><use href="#i-chevron-left"/></svg>Usługa</a><span class="postep-t">Krok 2 z 5</span></div>
+          <div class="postep"><span class="on"></span><span class="on"></span><span></span><span></span><span></span></div>
+          <h1 style="margin-top:12px">Zakres</h1>
+        </header>
+        <main class="ekr">
+          <div class="karta">
+            <a class="wiersz" href="#"><span class="wiersz__tx"><span class="wiersz__t">Pokój</span><span class="wiersz__o">32 m² · kurz 1</span></span><svg class="i wiersz__strz"><use href="#i-chevron-down"/></svg></a>
+          </div>
+          <div class="karta">
+            <div class="pomieszczenie">
+              <div class="pomieszczenie__g"><b>Kuchnia</b><button class="pomoc" aria-label="Wyjaśnienie: Poziom brudu"><svg class="i"><use href="#i-help-circle"/></svg></button></div>
+              <div class="licz"><span class="licz__t">Metraż</span><a class="licz__b" href="#" aria-label="Mniej"><svg class="i"><use href="#i-minus"/></svg></a><span class="licz__v">8 m²</span><a class="licz__b" href="#" aria-label="Więcej"><svg class="i"><use href="#i-plus"/></svg></a></div>
+              <div class="brud"><span>Kurz</span><div class="chipy chipy--poziom" style="gap:4px"><span class="chip">–</span><span class="chip chip--on">1</span><span class="chip">2</span><span class="chip">3</span></div></div>
+              <div class="brud"><span>Tłuszcz</span><div class="chipy chipy--poziom" style="gap:4px"><span class="chip">–</span><span class="chip">1</span><span class="chip chip--on">2</span><span class="chip">3</span></div></div>
+            </div>
+          </div>
+          <div class="karta">
+            <a class="wiersz" href="#"><span class="wiersz__tx"><span class="wiersz__t">Łazienka</span><span class="wiersz__o">4 m² · kamień 1</span></span><svg class="i wiersz__strz"><use href="#i-chevron-down"/></svg></a>
+          </div>
+          <div class="karta">
+            <a class="wiersz" href="#"><span class="wiersz__tx"><span class="wiersz__t">Przedpokój</span><span class="wiersz__o">6 m² · kurz 1</span></span><svg class="i wiersz__strz"><use href="#i-chevron-down"/></svg></a>
+          </div>
+          <a class="btn btn--drugi" href="#"><svg class="i"><use href="#i-plus"/></svg>Dodaj pomieszczenie</a>
+        </main>
+        <div class="dol"><div class="dol__suma"><span class="kwota-l">Razem</span><b>262 zł</b></div><a class="btn btn--glowny" href="#">Dalej</a></div>
+      </div>
+    </figure>
+
+    <figure class="m-ekran">
+      <figcaption><b>Podsumowanie wyceny <code>podsumowanie-wyceny</code></b><span>Cena 40 px w zieleni, pasek rynku, zdanie „zostaje dla Ciebie”. Opis mediany jest pod „?” (arkusz obok), rozbicie kosztów pod „Więcej”. Główna akcja zależy od stanu – przy przyjętej „Zaplanuj”.</span></figcaption>
+      <div class="tel" data-ekran="podsumowanie-wyceny">
+        <div class="tel__stan"><span>9:41</span><i></i></div>
+        <header class="nag">
+          <div class="nag__gora"><a class="nag__wstecz" href="#"><svg class="i"><use href="#i-chevron-left"/></svg>Wycena</a></div>
+          <h1>Sprzątanie mieszkania</h1>
+          <p class="nag__pod">Anna Kowalska · nr 1/10/2026 <span class="pig pig--zielona">Przyjęta</span></p>
+        </header>
+        <main class="ekr">
+          <div class="karta karta--pad">
+            <div style="display:flex;align-items:center;justify-content:space-between"><span class="kwota-l">Cena dla klienta</span><button class="pomoc" aria-label="Wyjaśnienie: Mediana rynku"><svg class="i"><use href="#i-help-circle"/></svg></button></div>
+            <p class="kwota">250 zł</p>
+            <div class="rynek__pasek"><span class="rynek__zakres" style="left:0;right:0"></span><span class="rynek__znak" style="left:39%"></span></div>
+            <div class="rynek__opis"><span>120 zł</span><span>Rynek w mazowieckiem</span><span>450 zł</span></div>
+          </div>
+          <div class="karta karta--pad">
+            <p><b>Zostaje dla Ciebie 205 zł</b>, czyli 41 zł za godzinę pracy.</p>
+            <details class="wiecej">
+              <summary>Więcej<svg class="i i--m"><use href="#i-chevron-down"/></svg></summary>
+              <div class="wiecej__tresc">
+                <div class="rynek__opis" style="margin:0"><span>Czas pracy</span><b>ok. 5 h</b></div>
+                <div class="rynek__opis" style="margin:0"><span>Chemia</span><b>20 zł</b></div>
+                <div class="rynek__opis" style="margin:0"><span>Sprzęt</span><b>25 zł</b></div>
+                <div class="rynek__opis" style="margin:0"><span>Dojazd</span><b>0 zł</b></div>
+              </div>
+            </details>
+          </div>
+          <a class="btn btn--glowny" href="#"><svg class="i"><use href="#i-calendar"/></svg>Zaplanuj</a>
+          <div class="karta">
+            <a class="wiersz" href="#"><span class="ik-kolo"><svg class="i"><use href="#i-share"/></svg></span><span class="wiersz__tx"><span class="wiersz__t">Oferta dla klienta</span><span class="wiersz__o">link albo PDF</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+            <a class="wiersz" href="#"><span class="ik-kolo"><svg class="i"><use href="#i-ruler-measure"/></svg></span><span class="wiersz__tx"><span class="wiersz__t">Zakres</span><span class="wiersz__o">4 pomieszczenia · 50 m²</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+            <a class="wiersz" href="#"><span class="ik-kolo"><svg class="i"><use href="#i-flask"/></svg></span><span class="wiersz__tx"><span class="wiersz__t">Chemia</span><span class="wiersz__o">3 środki</span></span><svg class="i wiersz__strz"><use href="#i-chevron-right"/></svg></a>
+          </div>
+        </main>
+      </div>
+    </figure>
+
+    <figure class="m-ekran">
+      <figcaption><b>Arkusz po „?” <code>arkusz-wyjasnienie</code></b><span>Wyjaśnienie wysuwa się z dołu na tle przyciemnionego ekranu; zamyka go „×” albo dotknięcie tła. Tak samo działa wybór klienta w wycenie.</span></figcaption>
+      <div class="tel" data-ekran="arkusz-wyjasnienie">
+        <div class="tel__stan"><span>9:41</span><i></i></div>
+        <div class="zaciemnienie">
+          <div class="arkusz">
+            <div class="arkusz__uchwyt"></div>
+            <div class="arkusz__g"><b>Mediana rynku</b><button class="pomoc" aria-label="Zamknij"><svg class="i"><use href="#i-x"/></svg></button></div>
+            <p>Środkowa cena z cenników firm w Twoim województwie: połowa firm bierze mniej, połowa więcej.</p>
+            <p>Pasek pokazuje, ile za takie sprzątanie biorą firmy w mazowieckiem: od 120 do 450 zł.</p>
+            <a class="btn btn--drugi" href="#">Rozumiem</a>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+  </div>
+</section>
+
+<!-- ================= OFERTA ================= -->
+<section class="m-grupa">
+  <h2>Oferta dla klienta</h2>
+  <p>Neutralna: białe tło, ciemny tekst, bez zieleni aplikacji, bo oferta pokazuje firmę, a nie aplikację. Wydruk zostaje czarno-biały.</p>
+  <div class="m-ekrany">
+
+    <figure class="m-ekran">
+      <figcaption><b>Oferta (link) <code>oferta-klient</code></b><span>Kwota 40 px w kolorze tekstu, zakres w punktach z ptaszkiem, „Poza ceną” i warunki jednym akapitem. Przyciski 56 px w graficie.</span></figcaption>
+      <div class="tel" data-ekran="oferta-klient">
+        <div class="tel__stan"><span>9:41</span><i></i></div>
+        <main class="oferta">
+          <div class="oferta__firma"><span class="oferta__znak">UL</span><div><b>Usługi Sprzątające Monika Lis</b><span>600 123 456</span></div></div>
+          <div>
+            <h1>Wycena nr 1/11/2026</h1>
+            <p class="oferta__drobny">ważna do 16 lis 2026</p>
+          </div>
+          <div>
+            <div class="oferta__l">Dla</div>
+            <p style="font-weight:700">Jan Nowak</p>
+          </div>
+          <div class="oferta__pozycja"><span>Okno 1-skrzydłowe × 6</span><b>180 zł</b></div>
+          <div>
+            <p class="oferta__razem"><span>Razem do zapłaty</span><strong>180 zł</strong></p>
+            <p class="oferta__drobny">Kwota bez VAT – firma zwolniona z VAT.</p>
+          </div>
+          <div>
+            <div class="oferta__l">W cenie</div>
+            <ul>
+              <li><svg class="i i--m"><use href="#i-check"/></svg>Mycie szyb z obu stron</li>
+              <li><svg class="i i--m"><use href="#i-check"/></svg>Ramy i uszczelki</li>
+              <li><svg class="i i--m"><use href="#i-check"/></svg>Parapety wewnętrzne i zewnętrzne</li>
+              <li><svg class="i i--m"><use href="#i-check"/></svg>Wycieranie do sucha, bez smug</li>
+            </ul>
+          </div>
+          <p class="oferta__warunki">Poza ceną: rolety, żaluzje i moskitiery, usuwanie farby, kleju i naklejek po remoncie.</p>
+          <p class="oferta__warunki">Odwołanie zlecenia jest bezpłatne do 24 godzin przed terminem. Przy późniejszym odwołaniu opłata wynosi 50% ceny.</p>
+          <a class="btn btn--ciemny" href="#"><svg class="i"><use href="#i-phone"/></svg>Zadzwoń</a>
+          <a class="btn btn--drugi" href="#"><svg class="i"><use href="#i-download"/></svg>Pobierz PDF</a>
+        </main>
+      </div>
+    </figure>
+
+  </div>
+</section>
+
+<section class="m-grupa">
+  <h2>Teksty spoza pierwotnego planu</h2>
+  <p>Makieta dodaje trzy krótkie teksty, których nie było w polach „Teksty (verbatim)” planu. Po akceptacji 2026-11-03 są dopisane do IU-15 i IU-17:</p>
+  <div class="m-kolumny" style="margin-top:0">
+    <section class="m-pudlo">
+      <ul>
+        <li>IU-15, widok Dzień: nagłówek „Wizyty dnia” nad wizytami, gdy wyżej jest „Do zamknięcia”.</li>
+        <li>IU-15, „Do zamknięcia”: druga linia wiersza to „{dzień}, {godzina} · {kwota}” zamiast adresu, a pierwsza to sama nazwa klienta, bo zaległa wizyta jest z innego dnia.</li>
+        <li>IU-17, wizyta: podpis „Jak zapłacił klient?” nad chipami formy zapłaty.</li>
+      </ul>
+    </section>
+  </div>
+</section>
+</div>
+</body>
+</html>

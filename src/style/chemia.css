@@ -1,0 +1,117 @@
+/*
+ * Modul Chemia: katalog srodkow i kategoria (src/widoki/katalog-chemii.js) oraz krok chemii kreatora (dobor-chemii.js),
+ * oba z wierszem srodka z karta-produktu.js. Wymiary z makiety „Chemia, kategoria” w docs/operator/aplikacja-modulowa-makiety.html.
+ * Dolaczony w index.html po komponenty.css; inne jednostki go nie zmieniaja.
+ */
+
+/* Krok chemii kreatora: jedno zdanie wstepu z „?”, karty kategorii, notki pozycji bez kategorii */
+.dobor-chemii__wstep {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--tekst-drugi);
+}
+
+.dobor-chemii__notka {
+  color: var(--tekst-drugi);
+}
+
+.dobor-chemii__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dobor-chemii__dezynfekcja {
+  align-self: flex-start;
+}
+
+/* Karta kategorii w kreatorze: nazwa i powody doboru, wiersze srodkow, „Pokaż wszystkie” */
+.karta-chemii {
+  overflow: hidden;
+  border: 1px solid var(--linia-podzial);
+  border-radius: var(--promien-karta);
+  background: var(--tlo-karta);
+}
+
+.karta-chemii__naglowek {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--linia-podzial);
+}
+
+.karta-chemii__tytul {
+  font-size: var(--tekst-podstawowy);
+  font-weight: 800;
+}
+
+.karta-chemii__opis {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.karta-chemii__wszystkie {
+  width: 100%;
+  min-height: var(--cel-dotyku);
+  padding: 10px 16px;
+  border: 0;
+  border-top: 1px solid var(--linia-podzial);
+  background: none;
+  color: var(--marka-zielen);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.karta-chemii__wszystkie:hover {
+  background: var(--tlo-miekkie);
+}
+
+/* Wiersz srodka: nazwa, w drugiej linii pH i dostawca (skracane wielokropkiem) oraz cena opakowania (zawsze w calosci),
+   pod nimi „Więcej”. Nazwa sie zawija jak w makiecie, bo skrocona nazwa srodka nie wystarcza do zakupu. */
+.produkt-chemii {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 12px 4px 16px;
+}
+
+.produkt-chemii + .produkt-chemii {
+  border-top: 1px solid var(--linia-podzial);
+}
+
+.produkt-chemii__nazwa {
+  font-size: var(--tekst-podstawowy);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.produkt-chemii__opis {
+  display: flex;
+  min-width: 0;
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+  white-space: nowrap;
+}
+
+.produkt-chemii__ph {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.produkt-chemii__cena {
+  flex: none;
+  white-space: pre;
+}
+
+.produkt-chemii__karta {
+  min-height: var(--cel-dotyku);
+  padding: 4px 16px;
+}
+
+.produkt-chemii__dopisek {
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}

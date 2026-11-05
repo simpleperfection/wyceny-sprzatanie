@@ -1,11 +1,12 @@
 // Przygotowanie oferty z zapisanej wyceny (`#/wycena/<id>/oferta`, makieta oferta-edycja): karty z oferta-edycja-sekcje.js,
 // banery (brak danych firmy, oferta nieaktualna, dlugi link) i stopka „PDF” / „Kopiuj link”. Tresc oferty liczy
-// src/oferta/tresc.js, link src/oferta/kodek.js, zapis src/dane/wyceny.js (zapiszOferte, oznaczWyslana); widok tylko rysuje.
+// src/oferta/tresc.js, link src/oferta/kodek.js, zapis src/dane/wyceny.js (zapiszOferte, zapiszWyslanieOferty); widok tylko rysuje.
 // Link liczy sie w tle po kazdej zmianie (numer wersji odrzuca wynik starszej), zeby schowek i nowa karta dostaly go od razu.
 
 import { BladMagazynu, wczytajStan } from '../dane/magazyn.js'
 import { BladUstawien, POLA_WYMAGANE_W_OFERCIE } from '../dane/ustawienia.js'
-import { BladWyceny, czyStatusOferty, oznaczWyslana, wycena as znajdzWycene, zapiszOferte } from '../dane/wyceny.js'
+import { BladWyceny, czyStatusOferty, wycena as znajdzWycene, zapiszOferte, zapiszWyslanieOferty } from '../dane/wyceny.js'
+import { czyWycenaZamknieta } from '../dane/zlecenia.js'
 import { BladKodeka, linkOferty } from '../oferta/kodek.js'
 import { BladOferty, ofertaZWyceny, warunkiZrodlowe } from '../oferta/tresc.js'
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
@@ -30,8 +31,11 @@ import { tekstBleduZapisu } from './teksty-bledow.js'
 /** @typedef {{ w: Wycena, stan: Stan, oferta: Oferta }} BiezacaOferta */
 
 const CZAS_KOMUNIKATU_MS = 3000
+/** Kontrolki kart oferty wylaczane w wycenie ze zleceniem (zablokujEdycje). */
+const KONTROLKI_EDYCJI = 'input, textarea, select, button'
 const BRAK_DANYCH_FIRMY = 'Uzupełnij nazwę firmy i telefon w ustawieniach, zanim wyślesz ofertę.'
 const NIEAKTUALNA = 'Wycena zmieniła się po wysłaniu oferty. Wysłany wcześniej link pokazuje starą wersję — wyślij nowy.'
+const OFERTA_ZAMKNIETA = 'Z tej wyceny powstało zlecenie – ofertę możesz przejrzeć, wysłać i wydrukować, ale nie zmienić.'
 const NIE_SKOPIOWANO = 'Nie udało się skopiować automatycznie. Link jest zaznaczony – skopiuj go ręcznie.'
 const BLAD_LINKU = 'Nie udało się przygotować linku do oferty. Sprawdź dane w ofercie i spróbuj jeszcze raz.'
 const BLAD_UDOSTEPNIENIA = 'Nie udało się udostępnić linku. Spróbuj jeszcze raz.'
@@ -84,6 +88,19 @@ async function wyslijLink(url, zapasowy) {
 }
 
 /**
+ * Wycena ze zleceniem jest tylko do odczytu: pola i przyciski edycji kart oferty sa wylaczone, podglad tresci zostaje.
+ * @param {Pick<ParentNode, 'querySelectorAll'>[]} karty
+ * @returns {void}
+ */
+export function zablokujEdycje(karty) {
+  for (const karta of karty) {
+    for (const element of karta.querySelectorAll(KONTROLKI_EDYCJI)) {
+      if ('disabled' in element) element.disabled = true
+    }
+  }
+}
+
+/**
  * Ekran oferty jednej wyceny po wczytaniu zakresow.
  * @param {HTMLElement} kontener @param {Kontekst} kontekst @param {string} id @param {Zakresy} zakresy @param {() => boolean} czyAktywny
  * @returns {() => void} sprzatanie (zegar komunikatu)
@@ -124,6 +141,7 @@ function uruchomOferte(kontener, kontekst, id, zakresy, czyAktywny) {
     const czyFirma = czyDaneFirmy(teraz.oferta)
     const gotowy = link?.wersja === wersja ? link : null
     banery.replaceChildren(...[
+      czyWycenaZamknieta(teraz.stan, id) ? baner({ rodzaj: 'info', tekst: OFERTA_ZAMKNIETA }) : null,
       teraz.w.oferta.nieaktualna ? baner({ rodzaj: 'uwaga', tekst: NIEAKTUALNA }) : null,
       gotowy?.dlugi ? baner({ rodzaj: 'uwaga', tekst: tekstDlugiegoLinku(gotowy.dlugosc) }) : null,
     ].filter((x) => x !== null))
@@ -168,11 +186,12 @@ function uruchomOferte(kontener, kontekst, id, zakresy, czyAktywny) {
     return null
   }
 
-  /** Oferta trafila do klienta: data waznosci zostaje taka jak w linku, status `wyslana`. */
+  /**
+   * Oferta trafila do klienta: data waznosci zostaje taka jak w linku, status `wyslana`. Wycena ze zleceniem jest tylko
+   * do odczytu, wiec jej wyslanie niczego nie zapisuje (zapiszWyslanieOferty).
+   */
   function oznacz() {
-    const teraz = biezaca()
-    if (teraz && teraz.w.oferta.waznaDo === null) zapiszOferte(magazyn, id, { waznaDo: teraz.oferta.waznaDo })
-    oznaczWyslana(magazyn, id)
+    zapiszWyslanieOferty(magazyn, id, biezaca()?.oferta.waznaDo ?? null)
   }
 
   /** @param {() => Promise<void>} akcja wysylka linku; blad daje baner, a przyciski wracaja do uzycia */
@@ -239,23 +258,23 @@ function uruchomOferte(kontener, kontekst, id, zakresy, czyAktywny) {
 
   /** @param {BiezacaOferta} poczatek stan przy otwarciu (zapasowo, gdy swiezego nie da sie odczytac) */
   function rysuj(poczatek) {
-    const { w, oferta } = poczatek
+    const { w, stan, oferta } = poczatek
+    const klient = kartaKlienta(w.klient, zapisz)
+    const zakres = kartaZakresu({ zapisz, pobierz: () => {
+      const teraz = biezaca() ?? poczatek
+      return { zakres: teraz.oferta.zakres, czyZmieniony: teraz.w.oferta.zakres !== null }
+    } })
+    const warunki = kartaWarunkow({ zapisz, dzis, pobierz: () => {
+      const teraz = biezaca() ?? poczatek
+      const zrodlowe = warunkiZrodlowe(teraz.w.oferta.warunki, teraz.stan.ustawienia, domyslne)
+      return { warunki: zrodlowe, szybka: teraz.oferta.szybka, czyZmienione: teraz.w.oferta.warunki !== null, waznaDo: teraz.oferta.waznaDo }
+    } })
+    if (czyWycenaZamknieta(stan, id)) zablokujEdycje([klient, zakres, warunki])
     kontener.replaceChildren(
       naglowek({ tytul: 'Oferta', podtytul: `Wycena ${oferta.numer} · ${tekstKwoty(oferta.razem)}`, wstecz: sciezka('wycena', { id }) }),
       h('div', { class: 'tresc oferta-edycja' },
         czyDaneFirmy(oferta) ? null : baner({ rodzaj: 'uwaga', tekst: BRAK_DANYCH_FIRMY, akcja: { tekst: 'Uzupełnij', adres: sciezka('ustawienia') } }),
-        kartaFirmy(oferta.firma),
-        kartaKlienta(w.klient, zapisz),
-        kartaZakresu({ zapisz, pobierz: () => {
-          const teraz = biezaca() ?? poczatek
-          return { zakres: teraz.oferta.zakres, czyZmieniony: teraz.w.oferta.zakres !== null }
-        } }),
-        kartaDodatkow(oferta.dodatkiOpcjonalne),
-        kartaWarunkow({ zapisz, dzis, pobierz: () => {
-          const teraz = biezaca() ?? poczatek
-          const warunki = warunkiZrodlowe(teraz.w.oferta.warunki, teraz.stan.ustawienia, domyslne)
-          return { warunki, szybka: teraz.oferta.szybka, czyZmienione: teraz.w.oferta.warunki !== null, waznaDo: teraz.oferta.waznaDo }
-        } }),
+        kartaFirmy(oferta.firma), klient, zakres, kartaDodatkow(oferta.dodatkiOpcjonalne), warunki,
         banery, komunikat, zapasowy),
       h('div', { class: 'stopka-kreatora oferta-edycja__stopka' }, pdf, kopiuj))
     odswiezStan()

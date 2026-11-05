@@ -1,54 +1,58 @@
 /*
- * Tokeny wygladu: wariant B „kartka i długopis” (docs/plans/etap-5-aplikacja-wyceny-figma/SPEC.md).
- * Nazwy kolorow = zmienne Figmy z kolekcji „Kolory v3” (`/` → `-`). Nazwy „zielen” to spuscizna wersji 3:
- * w wariancie B to kolor akcji (niebieski tusz). Zmiana wariantu albo barw marki = zmiana wartosci tylko w tym pliku.
+ * Tokeny wygladu: biało-zielony „Czysty Zarobek” (etap 5a, R7–R11), wartosci z :root zaakceptowanej makiety
+ * docs/operator/aplikacja-modulowa-makiety.html. Biale tlo, jedna mocna zielen dla glownych akcji i kwot, duze pogrubione
+ * tytuly i kwoty, tekst co najmniej 17 px, wszystko klikalne co najmniej 48 px.
+ * Nazwy tokenow zostaja z wariantu B (zmiana wygladu = zmiana wartosci tylko w tym pliku); „granat” to kolor tekstu.
+ * Kontrast (WCAG AA): bialy na --marka-zielen 5,37:1, --marka-zielen na bialym 5,37:1, --marka-zielen-ciemna na
+ * --marka-zielen-tlo 7,18:1, --tekst-drugi na --tlo-karta 7,76:1, --tekst-trzeci na bialym 5,62:1.
  */
 :root {
-  --tlo-strona: #f4f1ea;
-  --tlo-karta: #fffdf8;
-  --tlo-miekkie: #ebe6dc;
-  --marka-granat: #26282c;
-  --marka-granat-jasny: #aaa59b;
-  --marka-zielen: #2340a8;
-  --marka-zielen-ciemna: #1a2f7d;
-  --marka-zielen-tlo: #e6ebf8;
-  --marka-zielen-wykres: #c9d3ef;
-  --tekst-glowny: #26282c;
-  --tekst-drugi: #5f5b54;
-  --tekst-trzeci: #948f86;
-  --tekst-na-ciemnym: #fffdf8;
-  --linia-podzial: #e4ded3;
-  --linia-obrys: #d3ccbf;
-  --uwaga-tlo: #fbefb6;
-  --uwaga-tekst: #6e5300;
-  --info-tlo: #e6ebf8;
-  --info-tekst: #2340a8;
-  --blad-tlo: #f8e1dc;
-  --blad-tekst: #a8321f;
-  --status-szkic-tekst: #5f5b54;
-  --status-wykonana-tlo: #e2ddd3;
-  --sukces-tlo: #e3efe2;
-  --sukces-tekst: #2f6b3a;
-  --zakreslacz-mocny: #f5dc62;
+  --tlo-strona: #ffffff;
+  --tlo-karta: #ffffff;
+  --tlo-miekkie: #f3f5f4;
+  --marka-granat: #14201a;
+  --marka-granat-jasny: #5f6a65;
+  --marka-zielen: #0e7a4e;
+  --marka-zielen-ciemna: #0a5c3a;
+  --marka-zielen-tlo: #e7f5ee;
+  --marka-zielen-wykres: #b9e2cc;
+  --tekst-glowny: #14201a;
+  --tekst-drugi: #4a5550;
+  --tekst-trzeci: #5f6a65;
+  --tekst-na-ciemnym: #ffffff;
+  --linia-podzial: #e4e9e6;
+  --linia-obrys: #b9c3be;
+  --uwaga-tlo: #fff4d6;
+  --uwaga-tekst: #7a5200;
+  --info-tlo: #e8f1fb;
+  --info-tekst: #1f5a99;
+  --blad-tlo: #fdecea;
+  --blad-tekst: #b3261e;
+  --status-szkic-tekst: #4a5550;
+  --status-wykonana-tlo: #eef1ef;
+  --sukces-tlo: #e7f5ee;
+  --sukces-tekst: #0a5c3a;
+  --zakreslacz-mocny: #ffe08a;
 
-  /* Zaokraglenia wariantu B */
-  --promien-karta: 10px;
-  --promien-przycisk: 8px;
-  --promien-chip: 8px;
-  --promien-pigulka: 6px;
-  --promien-arkusz: 14px;
-  --rozmiar-plus: 48px;
+  /* Zaokraglenia */
+  --promien-karta: 16px;
+  --promien-przycisk: 14px;
+  --promien-chip: 999px;
+  --promien-pigulka: 999px;
+  --promien-arkusz: 24px;
 
-  /* Typografia (podglad wariantu B) */
+  /* Typografia */
   --font: 'Source Sans 3', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --tekst-podstawowy: 14px;
-  --tekst-maly: 12.5px;
-  --tekst-drobny: 11.5px;
-  --tekst-tytul-ekranu: 19px;
-  --tekst-tytul-powitalny: 21px;
+  --tekst-podstawowy: 17px;
+  --tekst-maly: 15px;
+  --tekst-drobny: 14px;
+  --tekst-tytul-ekranu: 22px;
+  --tekst-tytul-powitalny: 28px;
+  --tekst-tytul-modulu: 28px;
+  --tekst-kwota: 40px;
 
   /* Uklad */
   --szerokosc-kolumny: 560px;
-  --odstep-ekranu: 16px;
-  --cel-dotyku: 44px;
+  --odstep-ekranu: 20px;
+  --cel-dotyku: 48px;
 }

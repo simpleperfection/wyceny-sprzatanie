@@ -57,7 +57,7 @@ const miesiecznie = (abonament, kwota) => (abonament
   ? h('p', { class: 'podsumowanie__opis liczba' }, `miesięcznie (${tekstLiczby(abonament.wizyt)} wizyt): ${zl(kwota)}`) : null)
 
 /**
- * @param {Podsumowanie} widok @param {(() => void) | null} naZmien null = bez „Zmień” (wycena wykonana)
+ * @param {Podsumowanie} widok @param {(() => void) | null} naZmien null = bez „Zmień” (wycena ze zleceniem)
  * @returns {HTMLElement}
  */
 export function kartaCeny({ cena, rynek, abonament }, naZmien) {
@@ -151,7 +151,7 @@ export const notkaPropozycji = (propozycje) => (propozycje
   : null)
 
 /**
- * @param {Ostrzezenie[]} ostrzezenia @param {(() => void) | null} naPrzelicz null = bez „Przelicz” (wycena wykonana)
+ * @param {Ostrzezenie[]} ostrzezenia @param {(() => void) | null} naPrzelicz null = bez „Przelicz” (wycena ze zleceniem)
  * @returns {HTMLElement[]}
  */
 export function banery(ostrzezenia, naPrzelicz) {

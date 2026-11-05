@@ -12,7 +12,6 @@ export const ETYKIETY_STATUSOW = Object.freeze({
   wyslana: 'Wysłana',
   przyjeta: 'Przyjęta',
   odrzucona: 'Odrzucona',
-  wykonana: 'Wykonana',
 })
 
 /**

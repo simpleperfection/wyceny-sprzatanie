@@ -1,12 +1,13 @@
-// Ekran kopii danych (`#/kopia`, makieta kopia-zapasowa): zapis calego stanu do pliku, wczytanie kopii z pliku z wyborem
-// „Połącz” / „Zastąp” i czestotliwosc przypomnien o kopii (R23). Przed kreatorem ustawien karta przypomnien jest ukryta.
+// Ekran kopii danych (`#/kopia`, powrot „Ustawienia firmy”): zapis calego stanu do pliku jedyna glowna akcja „Zrób kopię”,
+// wczytanie kopii z pliku z wyborem „Połącz” / „Zastąp” i czestotliwosc przypomnien o kopii (R23); wyjasnienia pod „Więcej”.
+// Przed kreatorem ustawien karta przypomnien jest ukryta.
 
 import { dniOdKopii, odczytajKopie, oznaczKopie, podsumowanieKopii, utworzKopie, wczytajKopie } from '../dane/kopia.js'
 import { wczytajStan } from '../dane/magazyn.js'
 import { DNI_PRZYPOMNIENIA_KOPII, zapiszUstawienia } from '../dane/ustawienia.js'
-import { h, ikona } from '../ui/h.js'
+import { h } from '../ui/h.js'
 import { chipy, przycisk } from '../ui/komponenty/formularz.js'
-import { baner, karta, naglowek } from '../ui/komponenty/uklad.js'
+import { baner, karta, naglowek, wiecej } from '../ui/komponenty/uklad.js'
 import { pobierzPlik, wybierzPlik } from '../ui/plik.js'
 import { sciezka } from '../ui/trasy.js'
 import {
@@ -20,7 +21,9 @@ import { tekstBleduZapisu } from './teksty-bledow.js'
 
 const ID_PRZYPOMNIEN = 'przypomnienie-kopii'
 const BLAD_ZAPISU_KOPII = 'Nie udało się zapisać kopii. Spróbuj jeszcze raz.'
-const BANER_INFORMACJI = 'Aplikacja nie ma konta ani serwera. Zapisz kopię do pliku i trzymaj ją np. w mailu albo w chmurze.'
+const BEZ_KONTA_I_SERWERA = 'Aplikacja nie ma konta ani serwera. Zapisz kopię do pliku i trzymaj ją np. w mailu albo w chmurze.'
+const DANE_KLIENTOW_W_PLIKU = 'Plik kopii zawiera dane klientów, także notatki. Trzymaj go w bezpiecznym miejscu.'
+const ID_UWAGI_O_DANYCH = 'kopia-dane-klientow'
 
 /** @param {HTMLDialogElement} dialog @param {string} tryb @param {string} tytul @param {string} opis */
 function opcjaWczytania(dialog, tryb, tytul, opis) {
@@ -54,25 +57,29 @@ function zapytajOTryb(naOtwarcie) {
   })
 }
 
-/** @param {Stan} stan @param {() => void} naZapis */
+/** @param {Stan} stan @param {() => void} naZapis @returns {HTMLElement} karta z jedyna glowna akcja ekranu „Zrób kopię” */
 function kartaZapisu(stan, naZapis) {
   const dni = dniOdKopii(stan, new Date())
-  return karta({},
-    ikona('download', 'kopia__ikona'),
+  const zapisz = przycisk({ tekst: 'Zrób kopię', ikona: 'download', naKlik: naZapis })
+  zapisz.setAttribute('aria-describedby', ID_UWAGI_O_DANYCH)
+  return karta({ klasa: 'kopia__karta' },
     h('h2', { class: 'karta__tytul' }, 'Zapisz kopię do pliku'),
     h('p', { class: 'kopia__opis' }, tekstOstatniejKopii(dni, stan.kopia.ostatnia)),
     h('ul', { class: 'kopia__podsumowanie', 'aria-label': 'Zawartość kopii' },
       etykietyPodsumowania(podsumowanieKopii(stan)).map((etykieta) => h('li', { class: 'pigulka' }, etykieta))),
-    h('div', { class: 'kopia__akcja', 'data-akcja': 'zapisz' }, przycisk({ tekst: 'Zapisz kopię', naKlik: naZapis })))
+    h('div', { class: 'kopia__akcja', 'data-akcja': 'zapisz' },
+      zapisz,
+      h('p', { class: 'kopia__uwaga', id: ID_UWAGI_O_DANYCH }, DANE_KLIENTOW_W_PLIKU)),
+    wiecej({}, h('p', null, BEZ_KONTA_I_SERWERA)))
 }
 
 /** @param {() => void} naWybor */
 function kartaOdczytu(naWybor) {
-  return karta({},
-    ikona('upload', 'kopia__ikona'),
+  return karta({ klasa: 'kopia__karta' },
     h('h2', { class: 'karta__tytul' }, 'Wczytaj kopię z pliku'),
-    h('p', { class: 'kopia__opis' }, 'Zanim wczytamy kopię, zapytamy, czy połączyć ją z danymi na tym urządzeniu, czy je zastąpić.'),
-    h('div', { class: 'kopia__akcja', 'data-akcja': 'wczytaj' }, przycisk({ tekst: 'Wybierz plik', rodzaj: 'drugi', naKlik: naWybor })))
+    h('div', { class: 'kopia__akcja', 'data-akcja': 'wczytaj' },
+      przycisk({ tekst: 'Wybierz plik', rodzaj: 'drugi', ikona: 'upload', naKlik: naWybor })),
+    wiecej({}, h('p', null, 'Zanim wczytamy kopię, zapytamy, czy połączyć ją z danymi na tym urządzeniu, czy je zastąpić.')))
 }
 
 /** @param {number} wybrane @param {(dni: number) => void} naZmiane */
@@ -108,7 +115,6 @@ export const widokKopii = {
     function rysuj(fokus) {
       const stan = wczytajStan(magazyn)
       tresc.replaceChildren(
-        baner({ rodzaj: 'info', tekst: BANER_INFORMACJI }),
         komunikat,
         kartaZapisu(stan, handleZapis),
         kartaOdczytu(() => void handleWczytanie()),
@@ -164,7 +170,8 @@ export const widokKopii = {
     }
 
     kontener.append(
-      naglowek({ tytul: 'Kopia danych', podtytul: 'Twoje dane są tylko na tym urządzeniu', wstecz: sciezka('ustawienia') }),
+      naglowek({ tytul: 'Kopia danych', podtytul: 'Twoje dane są tylko na tym urządzeniu', wstecz: sciezka('ustawienia'),
+        wsteczTekst: 'Ustawienia firmy' }),
       tresc)
     rysuj()
     return () => {

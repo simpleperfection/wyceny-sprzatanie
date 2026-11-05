@@ -4,6 +4,7 @@
 import { wczytajStan } from '../dane/magazyn.js'
 import { scalKoszty, ustawieniaDomyslne } from '../dane/ustawienia.js'
 import { BladWyceny, utworzSzkic, wycena as znajdzWycene, zapiszPolaWyceny, zapiszWejscie } from '../dane/wyceny.js'
+import { czyWycenaZamknieta } from '../dane/zlecenia.js'
 import { BladWejscia } from '../silnik/bledy.js'
 import { wycenUsluge } from '../silnik/cena.js'
 import { zBrudem } from '../silnik/czas.js'
@@ -152,7 +153,7 @@ export function zmienWejscie(kontekst, id, fn) {
   const stan = wczytajStan(magazyn)
   const obecna = znajdzWycene(stan, id)
   if (!obecna) throw new BladWyceny('brak_wyceny', `Nie ma wyceny ${id}`)
-  if (obecna.status === 'wykonana') throw new BladWyceny('tylko_odczyt', `Wycena ${obecna.numer ?? id} jest wykonana`)
+  if (czyWycenaZamknieta(stan, id)) throw new BladWyceny('tylko_odczyt', `Z wyceny ${obecna.numer ?? id} powstało zlecenie`)
   const wejscie = fn(obecna.wejscie)
   katalog.usluga(wejscie.uslugaId)
   const wynik = czyPustyZakres(wejscie) ? null : migawkaWyniku(wejscie, kontekst, stan.ustawienia)

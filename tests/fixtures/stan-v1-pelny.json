@@ -1,0 +1,149 @@
+{
+  "wersja": 1,
+  "ustawienia": {
+    "wojewodztwoId": "mazowieckie",
+    "statusVat": "zwolniony",
+    "firma": { "nazwa": "Lśniący Dom", "telefon": "600 100 200", "email": "", "nip": "" },
+    "tempo": { "reczne": null },
+    "koszty": { "sprzet": {}, "dojazd": {} },
+    "zakresy": {},
+    "warunki": null,
+    "przypomnienieKopiiDni": 14,
+    "kreatorZakonczony": true
+  },
+  "wyceny": [
+    {
+      "id": "w-wykonana",
+      "numer": "1/10/2026",
+      "utworzona": "2026-10-01T08:00:00.000Z",
+      "zmieniona": "2026-10-05T16:00:00.000Z",
+      "status": "wykonana",
+      "rodzaj": "dokladna",
+      "klient": { "nazwa": "anna  kowalska", "adres": "ul. Lipowa 4, Warszawa", "termin": "2026-10-05T10:00" },
+      "wejscie": { "uslugaId": "mieszkanie_standard", "wojewodztwoId": "mazowieckie", "pomieszczenia": [{ "typ": "pokoj", "m2": 20 }, { "typ": "kuchnia", "m2": 8 }] },
+      "szybka": null,
+      "odpowiedzi": {},
+      "wynik": {
+        "cena": 250, "netto": 250, "vat": 0, "mediana": 240, "widelki": { "od": 200, "do": 300, "pelne": true },
+        "minutyNormowe": 180, "linie": [], "propozycje": [], "dojazd": { "km": 0, "kwota": 0 },
+        "wojewodztwo": { "id": "mazowieckie", "nazwa": "mazowieckie", "stawka_h": 65, "wsp": 1 },
+        "statusVat": "zwolniony", "stawkaVatProc": 23, "podstawaCeny": "brutto", "wizytWMiesiacu": null,
+        "wersjaDanych": { "ceny": "2026-10-23", "normy": "2026-10-23", "rynek": "2026-10-23" }
+      },
+      "cenaReczna": 280,
+      "wykonania": [{ "id": "e-1", "data": "2026-10-05", "minuty": 240, "tempoPlanu": 1.3 }],
+      "oferta": { "zakres": null, "warunki": null, "waznaDo": "2026-10-15", "wyslana": "2026-10-01T09:00:00.000Z", "nieaktualna": false }
+    },
+    {
+      "id": "w-abonament",
+      "numer": "2/10/2026",
+      "utworzona": "2026-10-02T08:00:00.000Z",
+      "zmieniona": "2026-10-21T17:00:00.000Z",
+      "status": "przyjeta",
+      "rodzaj": "dokladna",
+      "klient": { "nazwa": "Biuro Rachunkowe Bilans", "adres": "ul. Długa 1, Warszawa", "termin": null },
+      "wejscie": { "uslugaId": "sprzatanie_biur", "wojewodztwoId": "mazowieckie", "pomieszczenia": [{ "typ": "biuro", "m2": 80 }] },
+      "szybka": null,
+      "odpowiedzi": {},
+      "wynik": {
+        "cena": 200, "netto": 200, "vat": 0, "mediana": 200, "widelki": { "od": 180, "do": 240, "pelne": true },
+        "minutyNormowe": 120, "linie": [], "propozycje": [], "dojazd": { "km": 0, "kwota": 0 },
+        "wojewodztwo": { "id": "mazowieckie", "nazwa": "mazowieckie", "stawka_h": 65, "wsp": 1 },
+        "statusVat": "zwolniony", "stawkaVatProc": 23, "podstawaCeny": "brutto", "wizytWMiesiacu": 4.33,
+        "wersjaDanych": { "ceny": "2026-10-23", "normy": "2026-10-23", "rynek": "2026-10-23" }
+      },
+      "cenaReczna": null,
+      "wykonania": [
+        { "id": "e-2", "data": "2026-10-07", "minuty": 150, "tempoPlanu": 1.3 },
+        { "id": "e-3", "data": "2026-10-14", "minuty": 130, "tempoPlanu": 1.25 },
+        { "id": "e-4", "data": "2026-10-21", "minuty": 140, "tempoPlanu": 1.2 }
+      ],
+      "oferta": { "zakres": null, "warunki": null, "waznaDo": null, "wyslana": "2026-10-02T09:00:00.000Z", "nieaktualna": false }
+    },
+    {
+      "id": "w-termin",
+      "numer": "3/10/2026",
+      "utworzona": "2026-10-10T08:00:00.000Z",
+      "zmieniona": "2026-10-12T08:00:00.000Z",
+      "status": "przyjeta",
+      "rodzaj": "dokladna",
+      "klient": { "nazwa": "Anna Kowalska", "adres": "ul. Polna 7, Warszawa", "termin": "2026-11-14T09:00" },
+      "wejscie": { "uslugaId": "mieszkanie_standard", "wojewodztwoId": "mazowieckie", "pomieszczenia": [{ "typ": "pokoj", "m2": 30 }] },
+      "szybka": null,
+      "odpowiedzi": {},
+      "wynik": {
+        "cena": 300, "netto": 300, "vat": 0, "mediana": 290, "widelki": { "od": 250, "do": 350, "pelne": true },
+        "minutyNormowe": 200, "linie": [], "propozycje": [], "dojazd": { "km": 0, "kwota": 0 },
+        "wojewodztwo": { "id": "mazowieckie", "nazwa": "mazowieckie", "stawka_h": 65, "wsp": 1 },
+        "statusVat": "zwolniony", "stawkaVatProc": 23, "podstawaCeny": "brutto", "wizytWMiesiacu": null,
+        "wersjaDanych": { "ceny": "2026-10-23", "normy": "2026-10-23", "rynek": "2026-10-23" }
+      },
+      "cenaReczna": null,
+      "wykonania": [],
+      "oferta": { "zakres": null, "warunki": null, "waznaDo": null, "wyslana": null, "nieaktualna": false }
+    },
+    {
+      "id": "w-sobota",
+      "numer": "4/10/2026",
+      "utworzona": "2026-10-11T08:00:00.000Z",
+      "zmieniona": "2026-10-11T09:00:00.000Z",
+      "status": "przyjeta",
+      "rodzaj": "dokladna",
+      "klient": { "nazwa": "Jan Nowak", "adres": "", "termin": "sobota rano" },
+      "wejscie": { "uslugaId": "mieszkanie_standard", "wojewodztwoId": "mazowieckie", "pomieszczenia": [{ "typ": "pokoj", "m2": 15 }] },
+      "szybka": null,
+      "odpowiedzi": {},
+      "wynik": {
+        "cena": 180, "netto": 180, "vat": 0, "mediana": 180, "widelki": { "od": 150, "do": 220, "pelne": true },
+        "minutyNormowe": 120, "linie": [], "propozycje": [], "dojazd": { "km": 0, "kwota": 0 },
+        "wojewodztwo": { "id": "mazowieckie", "nazwa": "mazowieckie", "stawka_h": 65, "wsp": 1 },
+        "statusVat": "zwolniony", "stawkaVatProc": 23, "podstawaCeny": "brutto", "wizytWMiesiacu": null,
+        "wersjaDanych": { "ceny": "2026-10-23", "normy": "2026-10-23", "rynek": "2026-10-23" }
+      },
+      "cenaReczna": null,
+      "wykonania": [],
+      "oferta": { "zakres": null, "warunki": null, "waznaDo": null, "wyslana": null, "nieaktualna": false }
+    },
+    {
+      "id": "w-szkic",
+      "numer": null,
+      "utworzona": "2026-10-12T08:00:00.000Z",
+      "zmieniona": "2026-10-12T08:05:00.000Z",
+      "status": "szkic",
+      "rodzaj": "dokladna",
+      "klient": { "nazwa": "test", "adres": "", "termin": null },
+      "wejscie": { "uslugaId": "okna" },
+      "szybka": null,
+      "odpowiedzi": {},
+      "wynik": null,
+      "cenaReczna": null,
+      "wykonania": [],
+      "oferta": { "zakres": null, "warunki": null, "waznaDo": null, "wyslana": null, "nieaktualna": false }
+    },
+    {
+      "id": "w-szybka",
+      "numer": "5/10/2026",
+      "utworzona": "2026-10-13T08:00:00.000Z",
+      "zmieniona": "2026-10-13T08:10:00.000Z",
+      "status": "do_wyslania",
+      "rodzaj": "szybka",
+      "klient": { "nazwa": "", "adres": "", "termin": null },
+      "wejscie": { "uslugaId": "mieszkanie_standard", "wojewodztwoId": "mazowieckie", "pomieszczenia": [{ "typ": "pokoj", "m2": 40 }] },
+      "szybka": { "stan": "typowy", "tryb": "widelki", "od": 220, "do": 280 },
+      "odpowiedzi": {},
+      "wynik": {
+        "cena": 250, "netto": 250, "vat": 0, "mediana": 250, "widelki": { "od": 220, "do": 280, "pelne": true },
+        "minutyNormowe": 170, "linie": [], "propozycje": [], "dojazd": { "km": 0, "kwota": 0 },
+        "wojewodztwo": { "id": "mazowieckie", "nazwa": "mazowieckie", "stawka_h": 65, "wsp": 1 },
+        "statusVat": "zwolniony", "stawkaVatProc": 23, "podstawaCeny": "brutto", "wizytWMiesiacu": null,
+        "wersjaDanych": { "ceny": "2026-10-23", "normy": "2026-10-23", "rynek": "2026-10-23" }
+      },
+      "cenaReczna": null,
+      "wykonania": [],
+      "oferta": { "zakres": null, "warunki": null, "waznaDo": null, "wyslana": null, "nieaktualna": false }
+    }
+  ],
+  "licznikNumerow": { "2026-10": 5 },
+  "kopia": { "ostatnia": "2026-10-20T18:00:00.000Z", "zmianaOd": "2026-10-21T17:00:00.000Z" },
+  "preferencje": { "iosInstrukcjaZamknieta": false }
+}

@@ -1,0 +1,220 @@
+/*
+ * Ustawienia firmy, kreator pierwszego uruchomienia, kopia danych i ekran ratunkowy (src/widoki/ustawienia*.js,
+ * kreator-startowy.js, kopia.js, ratunek.js; makieta „ustawienia” w docs/operator/aplikacja-modulowa-makiety.html).
+ * Dolaczony w index.html po komponenty.css; inne jednostki go nie zmieniaja. Wyjasnienia sa pod „Więcej” (R9), a jedyna
+ * glowna akcja ekranu ma zielen: „Zapisz” w arkuszu pola, „Zrób kopię”, „Dalej” / „Gotowe”, „Pobierz zapisane dane”.
+ */
+
+/* Ustawienia firmy: karty z wierszami „etykieta — wartość — strzałka” */
+.karta-ustawien {
+  display: flex;
+  flex-direction: column;
+}
+
+.karta-ustawien .wiersz {
+  padding-inline: 0;
+}
+
+/* Karta „Zakres prac” (komponenty.css, .karta-zakresow) daje nazwie uslugi cala szerokosc, wiec jej tu nie zwezamy */
+.karta-ustawien:not(.karta-zakresow) .wiersz__tresc {
+  flex: none;
+}
+
+/* Dluga nazwa uslugi zawija sie najwyzej do dwoch linii (R9) */
+.karta-zakresow .wiersz__tytul {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  white-space: normal;
+}
+
+.karta-ustawien .wiersz__tytul {
+  font-weight: 500;
+}
+
+.karta-ustawien:not(.karta-zakresow) .wiersz__wartosc {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+}
+
+.karta-ustawien .wiersz__wartosc,
+.karta-kopii .wiersz__wartosc {
+  color: var(--tekst-drugi);
+  font-weight: 500;
+}
+
+.karta-ustawien .grupa-chipow {
+  padding-top: 12px;
+}
+
+.karta-ustawien > .przycisk--tekstowy {
+  align-self: flex-start;
+  margin-left: -10px;
+}
+
+.ustawienia__linia {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--linia-podzial);
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.ustawienia__linia:last-child {
+  border-bottom: 0;
+}
+
+/* Wyjasnienie pod „Więcej” ma tekst podstawowy (R8) w kolorze drugim z .wiecej__tresc */
+.ustawienia__opis {
+  color: var(--tekst-drugi);
+  text-wrap: pretty;
+}
+
+.karta-ustawien > .wiecej {
+  margin-top: 4px;
+}
+
+/* Brak kopii: pigulka ostrzezenia (nieklikalna), klikalny jest caly wiersz ze strzalka */
+.pigulka--brak-kopii {
+  background: var(--uwaga-tlo);
+  color: var(--uwaga-tekst);
+}
+
+/* Komunikat „Zapisano” i blad zapisu przy dolnej krawedzi ekranu (aplikacja nie ma dolnego paska) */
+.ustawienia__komunikat {
+  position: sticky;
+  bottom: 0;
+  padding-inline: var(--odstep-ekranu);
+}
+
+.ustawienia__komunikat:not(:empty) {
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+}
+
+.karta-tempa__gora {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.karta-tempa__gora .karta__tytul {
+  margin-bottom: 0;
+}
+
+.karta-tempa__wartosc {
+  margin-top: 6px;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.pigulka--tempo {
+  background: var(--marka-zielen-tlo);
+  color: var(--marka-zielen-ciemna);
+}
+
+/* Kreator pierwszego uruchomienia: „Wstecz” i jedna glowna akcja w pasku przyklejonym do dolu ekranu */
+.kreator-startowy > .przycisk--tekstowy {
+  align-self: flex-start;
+  margin-left: -10px;
+}
+
+.kreator-startowy__komunikat:empty {
+  display: none;
+}
+
+.kreator-startowy__przyciski {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+  padding: 12px var(--odstep-ekranu) calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--linia-podzial);
+  background: var(--tlo-karta);
+}
+
+.kreator-startowy__przyciski .przycisk {
+  flex: 1;
+}
+
+.kreator-startowy__przyciski .przycisk--glowny {
+  flex: 1.3;
+}
+
+/* Kopia danych: karta zapisu z podsumowaniem zawartosci i karta wczytania */
+.kopia__karta {
+  display: flex;
+  flex-direction: column;
+}
+
+.kopia__opis,
+.ratunek__opis {
+  color: var(--tekst-drugi);
+  text-wrap: pretty;
+}
+
+.kopia__podsumowanie {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kopia__podsumowanie .pigulka {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.kopia__akcja {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.kopia__uwaga {
+  color: var(--tekst-drugi);
+  text-wrap: pretty;
+}
+
+.kopia__karta > .wiecej {
+  margin-top: 4px;
+}
+
+.kopia__komunikat:empty {
+  display: none;
+}
+
+.opcja-dialogu {
+  width: 100%;
+  background: var(--tlo-karta);
+  text-align: left;
+}
+
+.opcja-dialogu:active {
+  transform: scale(0.98);
+}
+
+/* Ekran ratunkowy: ikona ostrzezenia, tytul, opis i przyciski na cala szerokosc */
+.ratunek__ikona {
+  width: 40px;
+  height: 40px;
+  color: var(--uwaga-tekst);
+}
+
+.ratunek__przyciski {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-self: stretch;
+}
