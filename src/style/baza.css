@@ -96,7 +96,7 @@ svg {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: var(--odstep-ekranu);
+  padding: 4px var(--odstep-ekranu) 28px;
 }
 
 .wizualnie-ukryte {
@@ -115,22 +115,14 @@ svg {
   font-variant-numeric: tabular-nums;
 }
 
-/* Fokus z klawiatury: obrys w kolorze akcji, na ciemnym tle jasny; nie chowa sie pod dolnym paskiem. */
+/* Fokus z klawiatury: obrys 3 px w kolorze akcji (5,37:1 z bialym tlem). */
 :focus-visible {
-  outline: 2px solid var(--marka-zielen);
+  outline: 3px solid var(--marka-zielen);
   outline-offset: 2px;
-}
-
-.naglowek :focus-visible {
-  outline-color: var(--tekst-na-ciemnym);
 }
 
 [tabindex='-1']:focus {
   outline: none;
-}
-
-html {
-  scroll-padding-bottom: calc(var(--cel-dotyku) + 32px);
 }
 
 @media (prefers-reduced-motion: reduce) {

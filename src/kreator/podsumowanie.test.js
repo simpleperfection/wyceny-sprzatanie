@@ -3,9 +3,11 @@ import { before, describe, it } from 'node:test'
 
 import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
 import { assertBlisko, czytajJson, katalogZDysku } from '../../tests/pomocnicze.js'
+import { dodajKlienta } from '../dane/klienci.js'
 import { utworzMagazyn } from '../dane/magazyn.js'
 import { wczytajDomyslne, zapiszUstawienia } from '../dane/ustawienia.js'
-import { BladWyceny, dodajWykonanie, utworzSzkic, wycena, zapiszWycene, zmienStatus } from '../dane/wyceny.js'
+import { BladWyceny, utworzSzkic, wycena, zapiszWycene, zmienStatus } from '../dane/wyceny.js'
+import { zaplanujZWyceny } from '../dane/zlecenia.js'
 import { BladWejscia } from '../silnik/bledy.js'
 import { ukladMieszkania } from '../silnik/uklad.js'
 import { procent } from '../ui/format.js'
@@ -181,7 +183,7 @@ describe('ustawCeneReczna i przywrocCeneModelu', () => {
     assert.equal(widokPodsumowania(przywrocona, kontekst).cena.brutto, 250)
   })
 
-  it('zła kwota daje BladWejscia cena_reczna i nic nie zapisuje; wykonana wycena jest tylko do odczytu', () => {
+  it('zła kwota daje BladWejscia cena_reczna i nic nie zapisuje; wycena ze zleceniem jest tylko do odczytu', () => {
     const kontekst = kontekstFirmy()
     const { id } = mieszkanie(kontekst)
     zapiszWycene(kontekst.magazyn, id)
@@ -192,7 +194,8 @@ describe('ustawCeneReczna i przywrocCeneModelu', () => {
       assert.throws(() => ustawCeneReczna(kontekst, id, zla), { name: BladWejscia.name, kod: 'cena_reczna' })
     }
     assert.deepEqual(kontekst.magazyn.wczytaj(), stanPrzed)
-    dodajWykonanie(kontekst.magazyn, id, { data: '2026-10-25', minuty: 240, tempoPlanu: 1.3 })
+    dodajKlienta(kontekst.magazyn, { nazwa: 'Anna Kowalska' }, { id: 'k1' })
+    zaplanujZWyceny(kontekst.magazyn, id, { klientId: 'k1', rozliczenie: 'za_wizyte', start: '2026-10-25', cenaWizyty: 250, tempo: 1.3 }, { id: 'z1' })
     assert.throws(() => ustawCeneReczna(kontekst, id, 300), { name: BladWyceny.name, kod: 'tylko_odczyt' })
     assert.throws(() => przywrocCeneModelu(kontekst, 'brak'), { name: BladWyceny.name, kod: 'brak_wyceny' })
   })
@@ -246,10 +249,10 @@ describe('przeliczWycene', () => {
 })
 
 describe('akcjeWyceny', () => {
-  it('decyzja klienta przy wycenie do wysłania i wysłanej, przyjęta bez niej, wykonana tylko do usunięcia', () => {
-    assert.deepEqual(akcjeWyceny('do_wyslania'), ['przyjeta', 'odrzucona', 'edytuj', 'usun'])
-    assert.deepEqual(akcjeWyceny('wyslana'), ['przyjeta', 'odrzucona', 'edytuj', 'usun'])
-    assert.deepEqual(akcjeWyceny('przyjeta'), ['edytuj', 'usun'])
-    assert.deepEqual(akcjeWyceny('wykonana'), ['usun'])
+  it('decyzja klienta przy wycenie do wysłania i wysłanej, przyjęta z rezygnacją, ze zleceniem bez edycji', () => {
+    assert.deepEqual(akcjeWyceny('do_wyslania', false), ['przyjeta', 'odrzucona', 'edytuj', 'usun'])
+    assert.deepEqual(akcjeWyceny('wyslana', false), ['przyjeta', 'odrzucona', 'edytuj', 'usun'])
+    assert.deepEqual(akcjeWyceny('przyjeta', false), ['odrzucona', 'edytuj', 'usun'])
+    assert.deepEqual(akcjeWyceny('przyjeta', true), ['odrzucona', 'usun'])
   })
 })

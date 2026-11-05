@@ -3,9 +3,11 @@ import { before, describe, it } from 'node:test'
 
 import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
 import { assertBlisko, czytajJson, katalogZDysku } from '../../tests/pomocnicze.js'
+import { dodajKlienta } from '../dane/klienci.js'
 import { utworzMagazyn } from '../dane/magazyn.js'
 import { wczytajDomyslne, zapiszUstawienia } from '../dane/ustawienia.js'
-import { BladWyceny, dodajWykonanie, utworzSzkic, wycena, zmienStatus } from '../dane/wyceny.js'
+import { BladWyceny, utworzSzkic, wycena, zmienStatus } from '../dane/wyceny.js'
+import { zaplanujZWyceny } from '../dane/zlecenia.js'
 import { BladWejscia } from '../silnik/bledy.js'
 import { ukladMieszkania } from '../silnik/uklad.js'
 import {
@@ -65,6 +67,12 @@ function zapisana(kontekst, id) {
   const w = wycena(wynik.stan, id)
   assert.ok(w, `brak wyceny ${id}`)
   return w
+}
+
+/** Zlecenie z przyjetej wyceny: od niego wycena jest tylko do odczytu. @param {DaneAplikacji['magazyn']} magazyn @param {string} id */
+function zaplanujWizyte(magazyn, id) {
+  dodajKlienta(magazyn, { nazwa: 'Anna Kowalska' }, { id: 'k1' })
+  zaplanujZWyceny(magazyn, id, { klientId: 'k1', rozliczenie: 'za_wizyte', start: '2026-10-20', cenaWizyty: 250, tempo: 1.3 }, { id: `z-${id}` })
 }
 
 /** Typowe mieszkanie 50 m² (pokoje, przedpokoj, kuchnia, lazienka) z kurzem na poziomie 1. */
@@ -265,16 +273,16 @@ describe('zmienWejscie i zmienWybor', () => {
     assert.equal(po.wynik?.cena, Math.round(250.055 * 75.5 / 65))
   })
 
-  it('wycena wykonana jest tylko do odczytu: BladWyceny tylko_odczyt i wejście bez zmian', () => {
+  it('wycena ze zleceniem jest tylko do odczytu: BladWyceny tylko_odczyt i wejście bez zmian', () => {
     const kontekst = kontekstFirmy()
     const { id } = nowySzkic(kontekst, { uslugaId: 'mieszkanie_standard', wojewodztwoId: 'mazowieckie' })
     zmienWejscie(kontekst, id, (wejscie) => ({ ...wejscie, pomieszczenia: mieszkanie50() }))
     zmienStatus(kontekst.magazyn, id, 'do_wyslania')
     zmienStatus(kontekst.magazyn, id, 'przyjeta')
-    dodajWykonanie(kontekst.magazyn, id, { data: '2026-10-20', minuty: 240, tempoPlanu: 1.3 })
+    zaplanujWizyte(kontekst.magazyn, id)
 
     assert.throws(() => zmienWejscie(kontekst, id, (wejscie) => ({ ...wejscie, pomieszczenia: [] })), bladWyceny('tylko_odczyt'))
-    assert.equal(zapisana(kontekst, id).status, 'wykonana')
+    assert.equal(zapisana(kontekst, id).status, 'przyjeta')
     assert.equal(zapisana(kontekst, id).wejscie.pomieszczenia?.length, 4)
   })
 
@@ -354,13 +362,13 @@ describe('zapiszZmianyWyceny', () => {
     assert.deepEqual([po.rodzaj, po.wejscie, po.wynik, po.oferta], [przed.rodzaj, przed.wejscie, przed.wynik, przed.oferta])
   })
 
-  it('wycena wykonana daje BladWyceny tylko_odczyt, a nieznana — brak_wyceny; nic się nie zapisuje', () => {
+  it('wycena ze zleceniem daje BladWyceny tylko_odczyt, a nieznana — brak_wyceny; nic się nie zapisuje', () => {
     const kontekst = kontekstFirmy()
     const { id } = nowySzkic(kontekst, { uslugaId: 'mieszkanie_standard', wojewodztwoId: 'mazowieckie' })
     zmienWejscie(kontekst, id, (wejscie) => ({ ...wejscie, pomieszczenia: mieszkanie50() }))
     zmienStatus(kontekst.magazyn, id, 'do_wyslania')
     zmienStatus(kontekst.magazyn, id, 'przyjeta')
-    dodajWykonanie(kontekst.magazyn, id, { data: '2026-10-20', minuty: 240, tempoPlanu: 1.3 })
+    zaplanujWizyte(kontekst.magazyn, id)
 
     assert.throws(() => zapiszZmianyWyceny(kontekst, id, () => ({ odpowiedzi: { termin: { wartosc: 'jutro' } } })), bladWyceny('tylko_odczyt'))
     assert.throws(() => zapiszZmianyWyceny(kontekst, 'nie-ma', () => ({})), bladWyceny('brak_wyceny'))

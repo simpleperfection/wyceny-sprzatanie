@@ -1,0 +1,105 @@
+/*
+ * Modul Wycena: szybka i dokladna wycena, lista wycen w sekcjach. Arkusz wypelnia IU-10: style ekranow modulu, takze przeniesione tu z komponenty.css.
+ * Dolaczony w index.html po komponenty.css; inne jednostki go nie zmieniaja.
+ * Wymiary z makiety „Moduł Wycena” w docs/operator/aplikacja-modulowa-makiety.html (20 px nazw i naglowkow sekcji: skala
+ * tekstu nie ma tego stopnia, tak jak nazwa kafla w start.css).
+ */
+
+/* Duze przyciski „Szybka wycena” (glowny, zielony) i „Dokładna wycena” (drugi, bialy z obrysem) */
+.wybor-wyceny {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 84px;
+  padding: 14px 14px 14px 16px;
+  border-radius: 20px;
+  text-decoration: none;
+  transition: background-color 0.15s, transform 0.15s;
+}
+
+.wybor-wyceny:active {
+  transform: scale(0.96);
+}
+
+.wybor-wyceny--glowny {
+  background: var(--marka-zielen);
+  color: var(--tekst-na-ciemnym);
+}
+
+.wybor-wyceny--glowny:hover {
+  background: var(--marka-zielen-ciemna);
+}
+
+.wybor-wyceny--drugi {
+  border: 1.5px solid var(--linia-obrys);
+  background: var(--tlo-karta);
+  color: var(--tekst-glowny);
+}
+
+.wybor-wyceny--drugi:hover {
+  background: var(--tlo-miekkie);
+}
+
+.wybor-wyceny__ikona {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--cel-dotyku);
+  height: var(--cel-dotyku);
+  border-radius: var(--promien-przycisk);
+}
+
+.wybor-wyceny--glowny .wybor-wyceny__ikona {
+  background: rgb(255 255 255 / 0.16);
+}
+
+.wybor-wyceny--drugi .wybor-wyceny__ikona {
+  background: var(--marka-zielen-tlo);
+  color: var(--marka-zielen);
+}
+
+.wybor-wyceny__tekst {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.wybor-wyceny__nazwa {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.wybor-wyceny__podpis {
+  font-size: var(--tekst-maly);
+}
+
+.wybor-wyceny--drugi .wybor-wyceny__podpis {
+  color: var(--tekst-drugi);
+}
+
+.wybor-wyceny--drugi .wybor-wyceny__strzalka {
+  color: var(--tekst-trzeci);
+}
+
+/* Sekcja listy wycen: naglowek nad karta z wierszami */
+.sekcja-wycen {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.sekcja-wycen__tytul {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+/* Brak wycen: jedno zdanie pod przyciskami */
+.wyceny-pusto {
+  margin: 14px 0 0;
+  color: var(--tekst-drugi);
+}

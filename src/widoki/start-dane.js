@@ -1,153 +1,119 @@
-// Dane ekranu startowego i listy wycen (czyste funkcje, bez DOM): zadania „do zrobienia”, podsumowanie miesiaca
-// z realna stawka z wykonan, opis tempa oraz kwota i adres wiersza wyceny.
+// Dane ekranu Start i listy wycen (czyste funkcje, bez DOM): powitanie, zdanie o dniu, linie stanu kafli modulow, jeden
+// baner (R2, R3, R5) oraz adres i inicjal wiersza wyceny. Dzien `dzis` (RRRR-MM-DD, dzienLokalny) przychodzi w argumencie;
+// wizyty, „Do zamknięcia” i „Niezapłacone” licza zapytania modulu Zlecenia (src/zlecenia/zapytania.js).
 
-import { dzienLokalny, miesiacLokalny } from '../dane/ksztalt.js'
-import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
-import { kosztZlecenia } from '../silnik/koszt.js'
-import { opisTempa } from '../silnik/tempo.js'
-import { sprawdzStatusVat, zCenyRecznej } from '../silnik/vat.js'
-import { sprawdzDate } from '../ui/format.js'
+import { czyPrzypomniecOKopii } from '../dane/kopia.js'
+import { brakujeUstawien } from '../dane/ustawienia.js'
+import { czyPokazacInstrukcjeIos } from '../pwa/rejestracja.js'
+import { FORMY, kiedy, odmiana } from '../ui/format.js'
 import { sciezka } from '../ui/trasy.js'
+import { doZamkniecia, liczbaDzis, najblizsza, niezaplacone } from '../zlecenia/zapytania.js'
+import { sekcjeWycen } from './lista-wycen-dane.js'
 
+/** @typedef {import('../dane/magazyn.js').Stan} Stan */
+/** @typedef {import('../dane/ustawienia.js').Ustawienia} Ustawienia */
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
-/** @typedef {import('../dane/wyceny.js').MigawkaWyniku} MigawkaWyniku */
-/** @typedef {import('../dane/wyceny.js').Wykonanie} Wykonanie */
-/** @typedef {import('../silnik/katalog.js').Katalog} Katalog */
-/** @typedef {import('../silnik/katalog.js').KosztyFirmy} KosztyFirmy */
-/** @typedef {import('../silnik/cena.js').WynikWyceny} WynikWyceny */
-/** @typedef {import('../silnik/tempo.js').TempoWyceny} TempoWyceny */
+/** @typedef {import('../pwa/rejestracja.js').Srodowisko} Srodowisko */
+/** @typedef {import('../ui/moduly.js').IdModulu} IdModulu */
+/** @typedef {import('./lista-wycen-dane.js').IdSekcji} IdSekcji */
 /**
- * @typedef {'wyslij' | 'czas' | 'dokoncz'} RodzajZadania
- * @typedef {{ rodzaj: RodzajZadania, tytul: string, wycena: Wycena }} Zadanie
- * @typedef {{ wycen: number, przyjetych: number, stawka: number | null, pominiete: number }} PodsumowanieMiesiaca
- *   stawka: srednia realna stawka (zl/h) z wykonan miesiaca; pominiete: wykonania, ktorych stawki nie da sie policzyc
- * @typedef {{ katalog: Katalog, koszty: KosztyFirmy }} DaneKosztow koszty: koszty_firmy scalone z ustawieniami (scalKoszty)
+ * @typedef {{ tekst: string, czyAkcja: boolean }} StanKafla czyAkcja: linia wymaga dzialania (wyrozniona na kaflu)
+ * @typedef {{ rodzaj: 'ios' } | { rodzaj: 'kopia' } | { rodzaj: 'ustawienia' }} BanerStartu
  */
-
-export const TYTULY_ZADAN = Object.freeze({ wyslij: 'Wyślij ofertę', czas: 'Wpisz czas pracy', dokoncz: 'Dokończ wycenę' })
 
 const JEZYK = 'pl-PL'
-/** Termin klienta zaczyna sie od dnia RRRR-MM-DD (pole daty albo daty i godziny). */
-const DZIEN_TERMINU = /^(\d{4}-\d{2}-\d{2})/
-const formatMiesiaca = new Intl.DateTimeFormat(JEZYK, { month: 'long' })
+const POWITANIE = 'Dzień dobry'
+const CHEMIA = 'Środki do każdego brudu'
+/** Liczniki kafli nie pokazuja nazw uslug wizyt. */
+const BEZ_NAZWY_USLUGI = () => ''
 
-/** Przyjete zlecenie czeka na czas pracy: bez terminu, z terminem do dzis albo z terminem, ktorego dnia nie da sie odczytac. */
-function czyCzekaNaCzas(/** @type {string | null} */ termin, /** @type {string} */ dzis) {
-  if (termin === null) return true
-  const dzien = DZIEN_TERMINU.exec(termin)
-  return dzien === null || dzien[1] <= dzis
+/** @param {string} tekst @returns {StanKafla} */
+const akcja = (tekst) => ({ tekst, czyAkcja: true })
+/** @param {string} tekst @returns {StanKafla} */
+const informacja = (tekst) => ({ tekst, czyAkcja: false })
+
+/** @param {Ustawienia | null} ustawienia @returns {string} „Dzień dobry, Firma” albo samo „Dzień dobry” bez nazwy firmy */
+export function powitanie(ustawienia) {
+  const nazwa = ustawienia?.firma.nazwa.trim() ?? ''
+  return nazwa === '' ? POWITANIE : `${POWITANIE}, ${nazwa}`
 }
 
-/** @param {Wycena} w @param {string} dzis @returns {RodzajZadania | null} */
-function rodzajZadania(w, dzis) {
-  if (w.status === 'do_wyslania') return 'wyslij'
-  if (w.status === 'szkic') return 'dokoncz'
-  if (w.status === 'przyjeta' && czyCzekaNaCzas(w.klient.termin, dzis)) return 'czas'
+/**
+ * Jedno zdanie o dniu: wizyty dzis (nieodwolane) i, gdy sa, niezaplacone wizyty i miesiace serii.
+ * Zly dzien → BladKalendarza `dzien`.
+ * @param {Pick<Stan, 'klienci' | 'zlecenia'>} stan @param {string} dzis RRRR-MM-DD
+ * @returns {string} „Dziś 2 zlecenia · 1 niezapłacone”, „Dziś nie masz zleceń”
+ */
+export function zdanieDnia(stan, dzis) {
+  const wizyt = liczbaDzis(stan, dzis)
+  const doZaplaty = niezaplacone(stan, dzis).length
+  const poczatek = wizyt === 0 ? 'Dziś nie masz zleceń' : `Dziś ${wizyt} ${odmiana(wizyt, FORMY.zlecenie)}`
+  return doZaplaty === 0 ? poczatek : `${poczatek} · ${doZaplaty} ${odmiana(doZaplaty, FORMY.niezaplacone)}`
+}
+
+/** @param {Pick<Stan, 'klienci' | 'zlecenia'>} stan @param {string} dzis @returns {StanKafla} */
+function stanZlecen(stan, dzis) {
+  const zamkniecia = doZamkniecia(stan, dzis, BEZ_NAZWY_USLUGI).length
+  if (zamkniecia > 0) return akcja(`${zamkniecia} do zamknięcia`)
+  const dzisiaj = liczbaDzis(stan, dzis)
+  if (dzisiaj > 0) return informacja(`${dzisiaj} dziś`)
+  const wizyta = najblizsza(stan, dzis, BEZ_NAZWY_USLUGI)
+  if (wizyta !== null) return informacja(`Najbliższe: ${kiedy(wizyta.data, wizyta.godzina, dzis)}`)
+  return stan.zlecenia.length === 0 ? akcja('Dodaj pierwsze zlecenie') : informacja('Brak zaplanowanych wizyt')
+}
+
+/**
+ * Kafel Wycena liczy z sekcji ekranu `#/wyceny` (sekcjeWycen), wiec pokazuje te same liczby co lista.
+ * @param {Pick<Stan, 'wyceny' | 'zlecenia'>} stan @returns {StanKafla}
+ */
+function stanWycen(stan) {
+  const { wyceny } = stan
+  if (wyceny.length === 0) return akcja('Zrób pierwszą wycenę')
+  const sekcje = sekcjeWycen(stan)
+  /** @param {IdSekcji} id @returns {number} */
+  const ile = (id) => sekcje.find((s) => s.id === id)?.wyceny.length ?? 0
+  const doWyslania = ile('do_wyslania')
+  if (doWyslania > 0) return akcja(`${doWyslania} do wysłania`)
+  const zaplanowania = ile('do_zaplanowania')
+  if (zaplanowania > 0) return akcja(`${zaplanowania} do zaplanowania`)
+  const czekaja = ile('czekaja')
+  if (czekaja > 0) return informacja(`${czekaja} ${odmiana(czekaja, FORMY.czeka)} na odpowiedź`)
+  return informacja(`${wyceny.length} ${odmiana(wyceny.length, FORMY.wycena)}`)
+}
+
+/** @param {Pick<Stan, 'klienci'>} stan @returns {StanKafla} */
+function stanKlientow({ klienci }) {
+  if (klienci.length === 0) return akcja('Dodaj pierwszego klienta')
+  return informacja(`${klienci.length} ${odmiana(klienci.length, FORMY.klient)}`)
+}
+
+/**
+ * Linia stanu kafla modulu (R3): pierwszy spelniony warunek z liczba; bez uzycia modulu pierwszy krok. Chemia ma staly
+ * tekst (bez wczytywania data/chemia.json na Start). Nieznany modul → RangeError, zly dzien → BladKalendarza `dzien`.
+ * @param {IdModulu} id @param {Pick<Stan, 'wyceny' | 'klienci' | 'zlecenia'>} stan @param {string} dzis RRRR-MM-DD
+ * @returns {StanKafla}
+ */
+export function stanKafla(id, stan, dzis) {
+  switch (id) {
+    case 'zlecenia': return stanZlecen(stan, dzis)
+    case 'wycena': return stanWycen(stan)
+    case 'klienci': return stanKlientow(stan)
+    case 'chemia': return informacja(CHEMIA)
+    default: throw new RangeError(`Nieznany moduł: ${String(id)}`)
+  }
+}
+
+/**
+ * Najwyzej jeden baner na Start (R5), w kolejnosci: instrukcja dla iPhone'a, przypomnienie o kopii, ustawienia domyslne.
+ * @param {Stan} stan @param {Date} teraz dzien przypomnienia o kopii @param {Srodowisko} srodowisko przegladarka (instrukcja iOS)
+ * @returns {BanerStartu | null}
+ */
+export function banerStartu(stan, teraz, srodowisko) {
+  if (czyPokazacInstrukcjeIos({ ...srodowisko, zamknieta: stan.preferencje.iosInstrukcjaZamknieta })) return { rodzaj: 'ios' }
+  if (czyPrzypomniecOKopii(stan, teraz)) return { rodzaj: 'kopia' }
+  if (brakujeUstawien(stan.ustawienia).length > 0) return { rodzaj: 'ustawienia' }
   return null
 }
-
-/**
- * Lista „Do zrobienia”: do wysłania → „Wyślij ofertę”, przyjęta z terminem do dziś albo bez terminu → „Wpisz czas pracy”,
- * szkic → „Dokończ wycenę”; najstarsze (data utworzenia) najpierw.
- * @param {readonly Wycena[]} wyceny
- * @param {Date} dzis
- * @returns {Zadanie[]}
- */
-export function doZrobienia(wyceny, dzis) {
-  const dzien = dzienLokalny(sprawdzDate(dzis))
-  /** @type {Zadanie[]} */
-  const zadania = []
-  for (const w of wyceny) {
-    const rodzaj = rodzajZadania(w, dzien)
-    if (rodzaj) zadania.push({ rodzaj, tytul: TYTULY_ZADAN[rodzaj], wycena: w })
-  }
-  return zadania.sort((a, b) => Date.parse(a.wycena.utworzona) - Date.parse(b.wycena.utworzona))
-}
-
-/**
- * Migawka w ksztalcie wyniku silnika; kosztZlecenia czyta z niego tylko linie, dojazd, minutyNormowe i wizytWMiesiacu.
- * @param {MigawkaWyniku} m
- * @returns {WynikWyceny}
- */
-function wynikZMigawki(m) {
-  return { linie: m.linie, propozycje: m.propozycje, cenaUslugi: m.cena - m.dojazd.kwota, minimum: 0, czyMinimum: false, dojazd: m.dojazd,
-    cena: m.cena, cenaZaokraglona: m.cena, minutyNormowe: m.minutyNormowe, wizytWMiesiacu: m.wizytWMiesiacu, cenaMiesieczna: null,
-    podstawaCeny: m.podstawaCeny }
-}
-
-/**
- * Realna stawka wykonania: ile zostaje za godzine faktycznej pracy przy cenie wyceny (reczna wygrywa), tempo = fakt / norma.
- * @param {MigawkaWyniku} wynik @param {number | null} cenaReczna @param {Wykonanie} wykonanie @param {DaneKosztow} dane
- * @returns {number | null} null, gdy migawki nie da sie policzyc z biezacym katalogiem (np. pozycja usunieta z danych)
- */
-function realnaStawka(wynik, cenaReczna, wykonanie, { katalog, koszty }) {
-  try {
-    const statusVat = wynik.statusVat
-    sprawdzStatusVat(statusVat)
-    const cenaKlienta = cenaReczna === null ? { brutto: wynik.cena, netto: wynik.netto, vat: wynik.vat }
-      : zCenyRecznej(cenaReczna, statusVat, wynik.stawkaVatProc)
-    const tempo = wykonanie.minuty / wynik.minutyNormowe
-    return kosztZlecenia({ wynik: wynikZMigawki(wynik), cenaKlienta, tempo, koszty, statusVat }, katalog).zostajeNaGodzine
-  } catch (blad) {
-    if (blad instanceof BladWejscia || blad instanceof BladKatalogu) return null
-    throw blad
-  }
-}
-
-/**
- * Karta miesiaca: zapisane wyceny utworzone w miesiacu `dzis` (bez szkicow), z nich przyjete (przyjęta + wykonana) i srednia
- * realna stawka z wykonan, ktorych data wypada w tym miesiacu.
- * @param {readonly Wycena[]} wyceny
- * @param {Date} dzis
- * @param {DaneKosztow} dane
- * @returns {PodsumowanieMiesiaca}
- */
-export function podsumowanieMiesiaca(wyceny, dzis, dane) {
-  const miesiac = miesiacLokalny(sprawdzDate(dzis))
-  const zMiesiaca = wyceny.filter((w) => w.status !== 'szkic' && miesiacLokalny(new Date(w.utworzona)) === miesiac)
-  /** @type {number[]} */
-  const stawki = []
-  let pominiete = 0
-  for (const w of wyceny) {
-    if (w.wynik === null) continue
-    for (const wykonanie of w.wykonania) {
-      if (!wykonanie.data.startsWith(`${miesiac}-`)) continue
-      const stawka = realnaStawka(w.wynik, w.cenaReczna, wykonanie, dane)
-      if (stawka === null) pominiete += 1
-      else stawki.push(stawka)
-    }
-  }
-  return {
-    wycen: zMiesiaca.length,
-    przyjetych: zMiesiaca.filter((w) => w.status === 'przyjeta' || w.status === 'wykonana').length,
-    stawka: stawki.length === 0 ? null : stawki.reduce((suma, s) => suma + s, 0) / stawki.length,
-    pominiete,
-  }
-}
-
-/** @param {Date} dzis @returns {string} „Październik” */
-export function nazwaMiesiaca(dzis) {
-  const nazwa = formatMiesiaca.format(sprawdzDate(dzis))
-  return nazwa.charAt(0).toLocaleUpperCase(JEZYK) + nazwa.slice(1)
-}
-
-/**
- * Wiersz tempa w karcie miesiaca: etykieta i wartosc, razem np. „Twoje tempo 1,18× normy · z 7 zleceń”.
- * @param {TempoWyceny} tempo wynik tempoDoWyceny
- * @returns {{ etykieta: string, wartosc: string }}
- */
-export function wierszTempa(tempo) {
-  // opisTempa przy tempie recznym daje sama krotnosc („1,18×”); zrodlo opisuje ta funkcja.
-  const krotnosc = opisTempa({ ...tempo, zrodlo: 'reczne' })
-  if (tempo.zrodlo === 'usluga' || tempo.zrodlo === 'wspolne') {
-    return { etykieta: 'Twoje tempo', wartosc: `${krotnosc} normy · z ${tempo.liczba} zleceń` }
-  }
-  const opis = tempo.zrodlo === 'reczne' ? 'ustawione ręcznie' : 'domyślne dla nowej firmy'
-  return { etykieta: 'Tempo', wartosc: `${krotnosc} normy · ${opis}` }
-}
-
-/** @param {Wycena} w @returns {number | null} kwota dla klienta (cena reczna wygrywa); null, gdy szkic nie ma jeszcze ceny */
-export const kwotaWyceny = (w) => w.cenaReczna ?? w.wynik?.cena ?? null
 
 /**
  * Adres wiersza wyceny: szkic wraca do kreatora (dokładna) albo szybkiej wyceny, zapisana otwiera `#/wycena/<id>`.

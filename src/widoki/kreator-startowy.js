@@ -1,5 +1,6 @@
-// Kreator pierwszego uruchomienia (`#/ustawienia/start`, R24): sekcje ustawien firmy po jednej z paskiem postepu
-// (Województwo, VAT, Firma, Tempo). Wybory trzyma szkic, a „Gotowe” zapisuje je razem; „Pomiń” zostawia wartosci domyslne.
+// Kreator pierwszego uruchomienia (`#/ustawienia/start`, R24, R5): sekcje ustawien firmy po jednej z paskiem postepu
+// (Województwo, VAT, Firma, Tempo), a na dole przyklejony pasek z „Wstecz” i jedna glowna akcja „Dalej” / „Gotowe”.
+// Wybory trzyma szkic, a „Gotowe” zapisuje je razem; „Pomiń” zostawia wartosci domyslne. Oba koncza sie na Start.
 
 import { wczytajStan } from '../dane/magazyn.js'
 import { pominKreator, ustawieniaDomyslne, zapiszUstawienia } from '../dane/ustawienia.js'
@@ -96,16 +97,16 @@ export const widokKreatoraStartowego = {
     /** @param {string} [fokus] selektor elementu do fokusu po narysowaniu */
     function rysuj(fokus) {
       /** @type {DaneSekcji} */
-      const dane = { ustawienia: szkic, katalog, domyslne, wyceny: stan.wyceny, zapisz }
+      const dane = { ustawienia: szkic, katalog, domyslne, wyceny: stan.wyceny, zlecenia: stan.zlecenia, zapisz }
       kontener.replaceChildren(
         naglowek({ tytul: 'Ustawienia firmy', podtytul: `Krok ${krok + 1} z ${KROKI.length}` }),
         pasekPostepu(KROKI, krok),
-        h('div', { class: 'tresc' },
+        h('div', { class: 'tresc kreator-startowy' },
           SEKCJE[krok](dane),
           krok === 0 ? przycisk({ tekst: 'Mam kopię danych — przywróć', rodzaj: 'tekstowy', adres: sciezka('kopia') }) : null,
-          komunikat,
-          przyciski(),
-          przycisk({ tekst: 'Pomiń', rodzaj: 'tekstowy', naKlik: handlePomin })))
+          przycisk({ tekst: 'Pomiń', rodzaj: 'tekstowy', naKlik: handlePomin }),
+          komunikat),
+        przyciski())
       const element = fokus ? kontener.querySelector(fokus) : null
       if (element instanceof HTMLElement) element.focus()
     }

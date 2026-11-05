@@ -43,8 +43,7 @@ const wycena = (zmiana = {}) => ({
   id: 'w1', numer: '15/10/2026', utworzona: '2026-10-24T10:00:00.000Z', zmieniona: '2026-10-24T10:00:00.000Z', status: 'do_wyslania',
   rodzaj: 'dokladna', klient: { nazwa: 'Anna Kowalska', adres: 'ul. Przykładowa 1, Warszawa', termin: '2026-11-14T09:00' },
   wejscie: { uslugaId: 'mieszkanie_standard', pomieszczenia: [{ typ: 'pokoj', m2: 30 }, { typ: 'kuchnia', m2: 20 }], dojazdKm: 12 },
-  szybka: null, odpowiedzi: {}, wynik: migawka(), cenaReczna: null,
-  wykonania: [{ id: 'x', data: '2026-10-20', minuty: 200, tempoPlanu: 1.3 }],
+  klientId: null, szybka: null, odpowiedzi: {}, wynik: migawka(), cenaReczna: null,
   oferta: { zakres: null, warunki: null, waznaDo: null, wyslana: null, nieaktualna: false },
   ...zmiana,
 })

@@ -18,6 +18,7 @@ import { czas, m2, odmiana, tekstLiczby } from '../ui/format.js'
 import { h, ikona } from '../ui/h.js'
 import { chipy, licznik, pole, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
 import { arkusz, baner, karta, wiersz } from '../ui/komponenty/uklad.js'
+import { daneTempa } from '../zlecenia/dane-tempa.js'
 import { adresKroku, odswiezStopke, pokazKomunikat, ramaKroku, wycenaKroku, zapisKroku } from './kreator-wspolne.js'
 import { tekstBleduPytan } from './pytania.js'
 
@@ -133,7 +134,7 @@ export const widokKreatoraPomieszczen = {
     }
     const zestaw = katalog.zestaw(usluga.zestaw_pomieszczen)
     const stan = wczytajStan(magazyn)
-    const tempo = tempoDoWyceny(stan.ustawienia, stan.wyceny, usluga.id, domyslne).wartosc
+    const tempo = tempoDoWyceny(stan.ustawienia, daneTempa(stan), usluga.id, domyslne).wartosc
     let wycena = poczatkowa
     /** @type {number | null} */
     let rozwiniety = null

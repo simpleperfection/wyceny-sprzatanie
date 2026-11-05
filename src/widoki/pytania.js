@@ -6,6 +6,7 @@
 import { wczytajStan } from '../dane/magazyn.js'
 import { pytaniaAplikacji } from '../dane/pytania.js'
 import { BladWyceny, wycena as znajdzWycene } from '../dane/wyceny.js'
+import { czyWycenaZamknieta } from '../dane/zlecenia.js'
 import { odpowiedziUslugi, pytaniaWyceny, zapiszOdpowiedz } from '../kreator/pytania.js'
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
 import { ODPOWIEDZI_TAK_NIE } from '../silnik/pytania.js'
@@ -165,7 +166,7 @@ function otworzArkusz({ pytanie, odpowiedz }, zapisz, poZapisie) {
 }
 
 /**
- * Pozycja listy: tresc pytania, odpowiedz (przycisk zmiany) z pigulka skutku albo „+ Dodaj odpowiedź”; wycena wykonana — bez akcji.
+ * Pozycja listy: tresc pytania, odpowiedz (przycisk zmiany) z pigulka skutku albo „+ Dodaj odpowiedź”; wycena ze zleceniem — bez akcji.
  * @param {PytanieEkranu} wpis @param {number} i @param {{ czyEdycja: boolean, naOtworz: (wpis: PytanieEkranu) => void }} opcje
  */
 function elementPytania(wpis, i, { czyEdycja, naOtworz }) {
@@ -266,7 +267,7 @@ export const widokPytan = {
       const nowa = naglowek({ tytul: TYTUL, podtytul: `${nazwaUslugi} · ${ekran.odpowiedziane} z ${ekran.liczba}`, wstecz: powrot })
       gora.replaceWith(nowa)
       gora = nowa
-      const opcje = { czyEdycja: wycena.status !== 'wykonana',
+      const opcje = { czyEdycja: !czyWycenaZamknieta(wczytajStan(magazyn), wycena.id),
         naOtworz: (/** @type {PytanieEkranu} */ wpis) => otworzArkusz(wpis, zapisOdpowiedzi(pytania), poZapisie(pytania)) }
       tresc.replaceChildren(
         karta({ klasa: 'karta--bez-odstepu' }, h('ul', { class: 'lista-pytan' }, ekran.lista.map((wpis, i) => elementPytania(wpis, i, opcje)))),

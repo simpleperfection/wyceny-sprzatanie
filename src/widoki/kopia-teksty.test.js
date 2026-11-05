@@ -21,6 +21,13 @@ describe('tekstBleduWczytania', () => {
     assert.equal(tekstBleduWczytania(new BladKopii('za_duzo_wycen')), 'Po połączeniu byłoby ponad 5000 wycen. Wczytaj kopię opcją „Zastąp”.')
   })
 
+  it('za dużo klientów albo zleceń w kopii podaje limit z modułu danych', () => {
+    assert.equal(tekstBleduWczytania(new BladKopii('za_duzo_klientow')),
+      'W aplikacji może być najwyżej 5000 klientów, a po wczytaniu tej kopii byłoby ich więcej.')
+    assert.equal(tekstBleduWczytania(new BladKopii('za_duzo_zlecen')),
+      'W aplikacji może być najwyżej 10000 zleceń, a po wczytaniu tej kopii byłoby ich więcej.')
+  })
+
   it('za duży plik i odmowa odczytu mają własne teksty', () => {
     assert.equal(tekstBleduWczytania(new BladPliku('za_duzy', 'x')), 'Ten plik jest za duży na kopię tej aplikacji (ponad 10 MB).')
     assert.equal(tekstBleduWczytania(new BladPliku('odczyt', 'x')), 'Nie udało się odczytać pliku. Spróbuj jeszcze raz.')
@@ -64,17 +71,23 @@ describe('tekstOstatniejKopii', () => {
 })
 
 describe('etykietyPodsumowania', () => {
-  it('12 wycen, 7 wykonanych zleceń i ustawienia firmy (makieta z napisem „wykonanych”, decyzja właściciela 2026-10-28)', () => {
-    assert.deepEqual(etykietyPodsumowania({ wycen: 12, wykonan: 7, czyUstawienia: true }), ['12 wycen', '7 wykonanych zleceń', 'ustawienia firmy'])
+  it('12 wycen, 2 klientów, 5 zleceń i ustawienia firmy', () => {
+    assert.deepEqual(etykietyPodsumowania({ wycen: 12, klientow: 2, zlecen: 5, czyUstawienia: true }),
+      ['12 wycen', '2 klientów', '5 zleceń', 'ustawienia firmy'])
   })
 
-  it('odmiana: 1 wycena, 1 wykonane zlecenie, 3 wykonane zlecenia; bez ustawień bez trzeciego chipa', () => {
-    assert.deepEqual(etykietyPodsumowania({ wycen: 1, wykonan: 3, czyUstawienia: false }), ['1 wycena', '3 wykonane zlecenia'])
-    assert.deepEqual(etykietyPodsumowania({ wycen: 2, wykonan: 1, czyUstawienia: false }), ['2 wyceny', '1 wykonane zlecenie'])
+  it('odmiana: 1 wycena, 1 klient, 1 zlecenie; 2 wyceny, 22 klientów, 3 zlecenia; bez ustawień bez czwartego chipa', () => {
+    assert.deepEqual(etykietyPodsumowania({ wycen: 1, klientow: 1, zlecen: 1, czyUstawienia: false }), ['1 wycena', '1 klient', '1 zlecenie'])
+    assert.deepEqual(etykietyPodsumowania({ wycen: 2, klientow: 22, zlecen: 3, czyUstawienia: false }), ['2 wyceny', '22 klientów', '3 zlecenia'])
   })
 
-  it('ujemna liczba wycen daje BladFormatu', () => {
-    assert.throws(() => etykietyPodsumowania({ wycen: -1, wykonan: 0, czyUstawienia: false }), BladFormatu)
+  it('zero klientów i zleceń: „0 klientów”, „0 zleceń”', () => {
+    assert.deepEqual(etykietyPodsumowania({ wycen: 0, klientow: 0, zlecen: 0, czyUstawienia: false }), ['0 wycen', '0 klientów', '0 zleceń'])
+  })
+
+  it('ujemna liczba wycen albo klientów daje BladFormatu', () => {
+    assert.throws(() => etykietyPodsumowania({ wycen: -1, klientow: 0, zlecen: 0, czyUstawienia: false }), BladFormatu)
+    assert.throws(() => etykietyPodsumowania({ wycen: 0, klientow: -1, zlecen: 0, czyUstawienia: false }), BladFormatu)
   })
 })
 
@@ -107,16 +120,24 @@ describe('nazwaSurowegoPliku', () => {
 describe('czyPytacOTryb', () => {
   const USTAWIENIA = /** @type {any} */ ({ wojewodztwoId: null })
   const WYCENA = /** @type {any} */ ({ id: 'w1' })
+  const KLIENT = /** @type {any} */ ({ id: 'k1' })
+  const ZLECENIE = /** @type {any} */ ({ id: 'z1' })
+  const PUSTY = { wyceny: [], klienci: [], zlecenia: [], ustawienia: null }
 
   it('jedna wycena bez ustawień → pyta o Połącz/Zastąp', () => {
-    assert.equal(czyPytacOTryb({ wyceny: [WYCENA], ustawienia: null }), true)
+    assert.equal(czyPytacOTryb({ ...PUSTY, wyceny: [WYCENA] }), true)
   })
 
   it('ustawienia bez wycen → pyta o Połącz/Zastąp', () => {
-    assert.equal(czyPytacOTryb({ wyceny: [], ustawienia: USTAWIENIA }), true)
+    assert.equal(czyPytacOTryb({ ...PUSTY, ustawienia: USTAWIENIA }), true)
   })
 
-  it('bez wycen i bez ustawień → nie pyta (kopia od razu zastępuje pustą aplikację)', () => {
-    assert.equal(czyPytacOTryb({ wyceny: [], ustawienia: null }), false)
+  it('sam klient albo samo zlecenie → pyta o Połącz/Zastąp', () => {
+    assert.equal(czyPytacOTryb({ ...PUSTY, klienci: [KLIENT] }), true)
+    assert.equal(czyPytacOTryb({ ...PUSTY, zlecenia: [ZLECENIE] }), true)
+  })
+
+  it('bez wycen, klientów, zleceń i ustawień → nie pyta (kopia od razu zastępuje pustą aplikację)', () => {
+    assert.equal(czyPytacOTryb(PUSTY), false)
   })
 })

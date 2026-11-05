@@ -1,7 +1,8 @@
 // Formatowanie liczb, kwot, czasu i dat po polsku (Intl `pl-PL`) oraz odmiana liczebnikow i nazw wojewodztw.
 // Tysiace grupuje twarda spacja takze przy liczbach czterocyfrowych (`useGrouping: 'always'`), jak na makietach.
 
-import { jestData, jestDniem } from '../dane/ksztalt.js'
+import { jestData, jestDniem, TERMIN_ISO } from '../dane/ksztalt.js'
+import { dodajDni, dzienTygodnia, jestGodzina } from '../kalendarz/daty.js'
 
 const JEZYK = 'pl-PL'
 const NBSP = ' '
@@ -10,8 +11,6 @@ const GROSZE_W_ZLOTYM = 100
 /** @type {Readonly<Record<string, string>>} */
 const NAZWY_JEDNOSTEK = Object.freeze({ m2: 'm²', szt: 'szt.' })
 const DZIEN_ISO = /^(\d{4})-(\d{2})-(\d{2})$/
-/** Termin z pola daty (RRRR-MM-DD) albo daty i godziny (RRRR-MM-DDTHH:mm, opcjonalnie z sekundami). */
-const TERMIN_ISO = /^(\d{4}-\d{2}-\d{2})(?:T([01]\d|2[0-3]):([0-5]\d)(?::[0-5]\d(?:\.\d+)?)?)?$/
 const LICZBA_DODATNIA = /^\d+(\.\d+)?$/
 const ODSTEPY = /[\s  ]/g
 
@@ -23,6 +22,11 @@ const formatTempa = new Intl.NumberFormat(JEZYK, { minimumFractionDigits: 2, max
 const formatProcentu = new Intl.NumberFormat(JEZYK, { style: 'percent', maximumFractionDigits: 0, signDisplay: 'exceptZero' })
 const formatDaty = new Intl.DateTimeFormat(JEZYK, { day: 'numeric', month: 'long', year: 'numeric' })
 const formatDnia = new Intl.DateTimeFormat(JEZYK, { weekday: 'long', day: 'numeric', month: 'long' })
+/** Dzien i skrot miesiaca dnia RRRR-MM-DD liczonego w UTC: „6 lis”. */
+const formatDniaKrotki = new Intl.DateTimeFormat(JEZYK, { day: 'numeric', month: 'short', timeZone: 'UTC' })
+
+/** Skroty dni tygodnia od poniedzialku (indeks = dzien ISO − 1). */
+export const SKROTY_DNI = Object.freeze(/** @type {const} */ (['pn', 'wt', 'śr', 'czw', 'pt', 'sb', 'nd']))
 
 /** Formy rzeczownika po liczebniku: [1, 2–4 (bez 12–14), pozostale], np. wycena / wyceny / wycen. */
 export const FORMY = Object.freeze({
@@ -30,6 +34,10 @@ export const FORMY = Object.freeze({
   zlecenie: /** @type {const} */ (['zlecenie', 'zlecenia', 'zleceń']),
   wykonaneZlecenie: /** @type {const} */ (['wykonane zlecenie', 'wykonane zlecenia', 'wykonanych zleceń']),
   przyjeta: /** @type {const} */ (['przyjęta', 'przyjęte', 'przyjętych']),
+  niezaplacone: /** @type {const} */ (['niezapłacone', 'niezapłacone', 'niezapłaconych']),
+  /** Rzeczownik meskoosobowy: 1 klient, 2 klientów, 5 klientów. */
+  klient: /** @type {const} */ (['klient', 'klientów', 'klientów']),
+  czeka: /** @type {const} */ (['czeka', 'czekają', 'czeka']),
 })
 
 /** Wartosci nie da sie sformatowac, np. `nie_liczba`, `ujemna`, `zla_data`, `zle_dni`, `nie_wojewodztwo`. */
@@ -153,6 +161,24 @@ export function dniTemu(dni) {
   if (!Number.isInteger(dni) || dni < 0) throw new BladFormatu('zle_dni', `Liczba dni musi być całkowita i nieujemna: ${dni}`)
   if (dni === 0) return 'dziś'
   return dni === 1 ? 'wczoraj' : `${dni} dni temu`
+}
+
+/**
+ * Termin wizyty wzgledem dnia `dzis` (dni RRRR-MM-DD liczone w UTC): dzis i jutro slowem, dalsze dni skrotem dnia tygodnia.
+ * Zly dzien → BladFormatu `zla_data`, godzina spoza HH:MM → `zla_godzina`.
+ * @param {string} dzien @param {string | null} godzina HH:MM albo null (wizyta bez godziny) @param {string} dzis
+ * @returns {string} „jutro 9:00”, „pt 6 lis, 9:00”, „dziś”, „pt 6 lis”
+ */
+export function kiedy(dzien, godzina, dzis) {
+  for (const d of [dzien, dzis]) {
+    if (!jestDniem(d)) throw new BladFormatu('zla_data', `Dzień musi mieć postać RRRR-MM-DD, jest ${String(d)}`)
+  }
+  if (godzina !== null && !jestGodzina(godzina)) throw new BladFormatu('zla_godzina', `Godzina musi mieć postać HH:MM, jest ${String(godzina)}`)
+  const slowo = dzien === dzis ? 'dziś' : dzien === dodajDni(dzis, 1) ? 'jutro' : null
+  const dzienTekst = slowo ?? `${SKROTY_DNI[dzienTygodnia(dzien) - 1]} ${formatDniaKrotki.format(new Date(`${dzien}T00:00:00Z`))}`
+  if (godzina === null) return dzienTekst
+  const czasTekst = `${Number(godzina.slice(0, 2))}:${godzina.slice(3)}`
+  return slowo === null ? `${dzienTekst}, ${czasTekst}` : `${dzienTekst} ${czasTekst}`
 }
 
 /**

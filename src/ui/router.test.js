@@ -13,7 +13,7 @@ describe('dopasuj', () => {
 
   it('odróżnia trasę wyceny od jej podstron', () => {
     assert.deepEqual(dopasuj('#/wycena/abc', TRASY), { nazwa: 'wycena', parametry: { id: 'abc' }, zapytanie: {} })
-    assert.equal(dopasuj('#/wycena/abc/koniec', TRASY)?.nazwa, 'zakonczenie')
+    assert.equal(dopasuj('#/wycena/abc/koniec', TRASY), null)
   })
 
   it('oddaje krok kreatora i zapytanie', () => {

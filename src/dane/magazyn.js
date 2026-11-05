@@ -3,10 +3,15 @@
 
 import { BladWejscia } from '../silnik/bledy.js'
 import { sprawdzStatusVat } from '../silnik/vat.js'
-import { jestDataIso, jestListaTekstow, jestLiczba, jestObiektem, jestTekstemLubNull, jestWarunkiem, maWartosci, POLA_FIRMY } from './ksztalt.js'
+import { jestKlient } from './klienci.js'
+import { jestDataIso, jestListaTekstow, jestLiczba, jestMiesiacem, jestObiektem, jestTekstemLubNull, jestWarunkiem, maWartosci, POLA_FIRMY } from './ksztalt.js'
+import { zV1DoV2 } from './migracja-v2.js'
+import { jestZlecenie } from './zlecenia-ksztalt.js'
 
 /** @typedef {import('../silnik/vat.js').StatusVat} StatusVat */
 /** @typedef {import('./wyceny.js').Wycena} Wycena */
+/** @typedef {import('./klienci.js').Klient} Klient */
+/** @typedef {import('./zlecenia-ksztalt.js').Zlecenie} Zlecenie */
 /**
  * @typedef {{ nazwa: string, telefon: string, email: string, nip: string }} Firma
  * @typedef {{ klient_zl_km?: number, darmowy_promien_km?: number, koszt_firmy_zl_km?: number }} DojazdUstawien
@@ -16,27 +21,27 @@ import { jestDataIso, jestListaTekstow, jestLiczba, jestObiektem, jestTekstemLub
  * @typedef {{ wojewodztwoId: string | null, statusVat: StatusVat, firma: Firma, tempo: { reczne: number | null },
  *   koszty: KosztyUstawien, zakresy: Record<string, ZakresUslugi>, warunki: WarunekOferty[] | null,
  *   przypomnienieKopiiDni: number, kreatorZakonczony: boolean }} Ustawienia
- * @typedef {{ wersja: number, ustawienia: Ustawienia | null, wyceny: Wycena[], licznikNumerow: Record<string, number>,
- *   kopia: { ostatnia: string | null, zmianaOd: string | null }, preferencje: { iosInstrukcjaZamknieta: boolean } }} Stan
+ * @typedef {{ wersja: number, ustawienia: Ustawienia | null, wyceny: Wycena[], klienci: Klient[], zlecenia: Zlecenie[],
+ *   licznikNumerow: Record<string, number>, kopia: { ostatnia: string | null, zmianaOd: string | null }, preferencje: { iosInstrukcjaZamknieta: boolean } }} Stan
  * @typedef {'uszkodzony' | 'nowsza_wersja'} BladStanu
  * @typedef {{ stan: Stan } | { blad: BladStanu, surowe: string }} WynikWczytania
  * @typedef {{ kod: string, przyczyna?: string }} WpisLogu
  * @typedef {{ teraz?: () => Date, loguj?: (wpis: WpisLogu) => void, poprosOTrwalosc?: () => unknown,
  *   okno?: Pick<Window, 'addEventListener' | 'removeEventListener'> }} OpcjeMagazynu
  * @typedef {{ wczytaj: () => WynikWczytania, zmien: (fn: (stan: Stan) => Stan) => Stan, zapiszCalosc: (stan: Stan) => void,
- *   naZmiane: (callback: () => void) => () => void, wyczysc: () => void }} Magazyn
+ *   utrwalAktualizacje: () => boolean, naZmiane: (callback: () => void) => () => void, wyczysc: () => void }} Magazyn
  */
 
 export const KLUCZ_MAGAZYNU = 'wyceny-sprzatanie:stan'
-export const WERSJA_SCHEMATU = 1
+export const WERSJA_SCHEMATU = 2
 
 /**
- * Aktualizacja starszych wersji stanu: wersja → funkcja dajaca stan wersji o 1 wyzszej. Pusta, dopoki schemat ma jedna wersje.
+ * Aktualizacja starszych wersji stanu: wersja → funkcja dajaca stan wersji o 1 wyzszej. Kazdy krok jest czysty (bez zegara
+ * i losowych id), bo stan przechodzi przez aktualizacje przy kazdym odczycie.
  * @type {ReadonlyMap<number, (stan: Record<string, unknown>) => Record<string, unknown>>}
  */
-const AKTUALIZACJE = new Map()
+const AKTUALIZACJE = new Map([[1, zV1DoV2]])
 const NAZWY_PRZEPELNIENIA = ['QuotaExceededError', 'NS_ERROR_DOM_QUOTA_REACHED']
-const MIESIAC_NUMERACJI = /^\d{4}-(0[1-9]|1[0-2])$/
 
 /** Blad magazynu: `pelny` (brak miejsca), `uszkodzony`, `nowsza_wersja` (stanu nie da sie zmienic), `zly_stan` (zapis zlego ksztaltu). */
 export class BladMagazynu extends Error {
@@ -86,20 +91,52 @@ function jestUstawieniami(x) {
     Number.isInteger(x.przypomnienieKopiiDni) && typeof x.kreatorZakonczony === 'boolean'
 }
 
-/** @param {unknown} x @returns {x is Stan} */
+/** @param {readonly { id: string }[]} rekordy */
+const maUnikalneId = (rekordy) => new Set(rekordy.map((r) => r.id)).size === rekordy.length
+
+/**
+ * Odwolania miedzy rekordami: `zlecenie.klientId` wskazuje zapisanego klienta, `zlecenie.wycenaId` null albo zapisana wycene,
+ * `wycena.klientId` null albo zapisanego klienta. Operacje utrzymuja te spojnosc same; stan, ktory jej nie ma, magazyn i kopia
+ * odrzucaja.
+ * @param {{ klienci: readonly Klient[], zlecenia: readonly Zlecenie[], wyceny: readonly Record<string, unknown>[] }} stan
+ * @returns {boolean}
+ */
+function odwolaniaSpojne({ klienci, zlecenia, wyceny }) {
+  const idKlientow = new Set(klienci.map((k) => k.id))
+  const idWycen = new Set(wyceny.map((w) => w.id))
+  const wycenySpojne = wyceny.every((w) => w.klientId === null || (typeof w.klientId === 'string' && idKlientow.has(w.klientId)))
+  return wycenySpojne && zlecenia.every((z) => idKlientow.has(z.klientId) && (z.wycenaId === null || idWycen.has(z.wycenaId)))
+}
+
+/**
+ * Listy wycen, klientow i zlecen: rekordy wlasciwego ksztaltu, bez powtorzonych id, ze spojnymi odwolaniami.
+ * @param {Record<string, unknown>} x
+ */
+function maSpojneRekordy(x) {
+  const { wyceny, klienci, zlecenia } = x
+  if (!Array.isArray(wyceny) || !wyceny.every(jestObiektem)) return false
+  if (!Array.isArray(klienci) || !klienci.every(jestKlient) || !maUnikalneId(klienci)) return false
+  if (!Array.isArray(zlecenia) || !zlecenia.every(jestZlecenie) || !maUnikalneId(zlecenia)) return false
+  return odwolaniaSpojne({ klienci, zlecenia, wyceny })
+}
+
+/**
+ * Jedyny opis stanu biezacej wersji: przy zapisie, przy odczycie z magazynu i przy imporcie kopii.
+ * @param {unknown} x @returns {x is Stan}
+ */
 function jestStanem(x) {
   return jestObiektem(x) && x.wersja === WERSJA_SCHEMATU && (x.ustawienia === null || jestUstawieniami(x.ustawienia)) &&
-    Array.isArray(x.wyceny) && x.wyceny.every(jestObiektem) &&
+    maSpojneRekordy(x) &&
     jestObiektem(x.licznikNumerow) &&
-    Object.entries(x.licznikNumerow).every(([miesiac, n]) => MIESIAC_NUMERACJI.test(miesiac) && Number.isInteger(n) && Number(n) >= 0) &&
+    Object.entries(x.licznikNumerow).every(([miesiac, n]) => jestMiesiacem(miesiac) && Number.isInteger(n) && Number(n) >= 0) &&
     jestObiektem(x.kopia) && jestDataIsoLubNull(x.kopia.ostatnia) && jestDataIsoLubNull(x.kopia.zmianaOd) &&
     jestObiektem(x.preferencje) && typeof x.preferencje.iosInstrukcjaZamknieta === 'boolean'
 }
 
 /** @returns {Stan} */
 function pustyStan() {
-  return { wersja: WERSJA_SCHEMATU, ustawienia: null, wyceny: [], licznikNumerow: {}, kopia: { ostatnia: null, zmianaOd: null },
-    preferencje: { iosInstrukcjaZamknieta: false } }
+  return { wersja: WERSJA_SCHEMATU, ustawienia: null, wyceny: [], klienci: [], zlecenia: [], licznikNumerow: {},
+    kopia: { ostatnia: null, zmianaOd: null }, preferencje: { iosInstrukcjaZamknieta: false } }
 }
 
 /**
@@ -190,6 +227,27 @@ export function utworzMagazyn(storage = globalThis.localStorage, opcje = {}) {
     return oznaczony
   }
 
+  /**
+   * Zapis wyniku aktualizacji starszej wersji stanu (raz przy starcie aplikacji) bez oznaczania zmiany do kopii: `kopia.zmianaOd`
+   * zostaje z danych. Brak miejsca zostawia stary zapis i wpis w logu, a aktualizacja dziala dalej przy kazdym odczycie.
+   * @returns {boolean} czy zapisano stan biezacej wersji
+   */
+  function utrwalAktualizacje() {
+    const surowe = storage.getItem(KLUCZ_MAGAZYNU)
+    const dane = surowe === null ? undefined : parsuj(surowe)
+    if (!jestObiektem(dane) || dane.wersja === WERSJA_SCHEMATU) return false
+    const wynik = zaktualizujStan(dane)
+    if (!('stan' in wynik)) return false
+    try {
+      zapisz(wynik.stan)
+      return true
+    } catch (blad) {
+      if (!(blad instanceof BladMagazynu) || blad.kod !== 'pelny') throw blad
+      loguj({ kod: 'aktualizacja_niezapisana', przyczyna: blad.message })
+      return false
+    }
+  }
+
   /** @param {() => void} callback @returns {() => void} odpina callback */
   function naZmiane(callback) {
     /** @param {StorageEvent} zdarzenie */
@@ -200,7 +258,7 @@ export function utworzMagazyn(storage = globalThis.localStorage, opcje = {}) {
     return () => okno.removeEventListener('storage', obsluz)
   }
 
-  return { wczytaj, zmien, zapiszCalosc: zapisz, naZmiane, wyczysc: () => storage.removeItem(KLUCZ_MAGAZYNU) }
+  return { wczytaj, zmien, zapiszCalosc: zapisz, utrwalAktualizacje, naZmiane, wyczysc: () => storage.removeItem(KLUCZ_MAGAZYNU) }
 }
 
 /**

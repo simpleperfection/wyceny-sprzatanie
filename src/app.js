@@ -10,6 +10,7 @@ import { przycisk } from './ui/komponenty/formularz.js'
 import { baner } from './ui/komponenty/uklad.js'
 import { uruchomRouter } from './ui/router.js'
 import { jestNazwaTrasy, TRASY } from './ui/trasy.js'
+import { odswiezajPoZmianieDnia } from './ui/zmiana-dnia.js'
 import { WIDOKI } from './widoki/indeks.js'
 import { pokazRatunek } from './widoki/ratunek.js'
 
@@ -62,12 +63,14 @@ function pokazBlad(kontener, tekst) {
 
 /**
  * Magazyn ze stanem odczytanym przy starcie; null, gdy przegladarka blokuje localStorage (SecurityError przy zablokowanych
- * danych witryn).
+ * danych witryn). Dane starszej wersji zapisuja sie raz w biezacej wersji (bez oznaczania zmiany do kopii); brak miejsca nie
+ * blokuje startu, bo aktualizacja dziala tez przy kazdym odczycie.
  * @returns {{ magazyn: Magazyn, wynik: WynikWczytania } | null}
  */
 function otworzMagazyn() {
   try {
     const magazyn = utworzMagazyn()
+    magazyn.utrwalAktualizacje()
     return { magazyn, wynik: magazyn.wczytaj() }
   } catch (blad) {
     if (!(blad instanceof DOMException) || blad.name !== 'SecurityError') throw blad
@@ -91,6 +94,7 @@ async function uruchom(kontener) {
     const [katalog, domyslne] = await Promise.all([wczytajKatalog(pobierzJson), wczytajDomyslne(pobierzJson)])
     const router = uruchomRouter(kontener, zKreatoremStartowym(WIDOKI), { katalog, domyslne, magazyn })
     magazyn.naZmiane(() => ('stan' in magazyn.wczytaj() ? router.odswiez() : location.reload()))
+    odswiezajPoZmianieDnia({ router })
   } catch (blad) {
     pokazBlad(kontener, BLAD_DANYCH)
     reportError(blad)

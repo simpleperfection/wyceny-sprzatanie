@@ -1,6 +1,6 @@
-// Krok chemii kreatora (`#/kreator/chemia?wycena=<id>`, makieta dobor-chemii): zdanie wstepne z szacunkiem kosztu chemii z ustawien,
-// karty kategorii srodkow dobranych do brudu i pozycji wyceny (pierwsze dwa produkty i „Pokaż wszystkie”), notki pozycji bez
-// kategorii, dezynfekcja dodawana recznie (`wejscie.dezynfekcja`) i stopka „Pomiń” / „Dalej”. Dobor liczy src/silnik/chemia.js,
+// Krok chemii kreatora (`#/kreator/chemia?wycena=<id>`, makieta dobor-chemii): zdanie wstepne z szacunkiem kosztu chemii z ustawien
+// pod „?”, karty kategorii dobranych do brudu i pozycji wyceny z wierszami srodkow jak w module Chemia (przeznaczenie i karta
+// pod „Więcej”; pierwsze dwa produkty i „Pokaż wszystkie”), notki pozycji bez kategorii, dezynfekcja dodawana recznie (`wejscie.dezynfekcja`) i stopka „Pomiń” / „Dalej”. Dobor liczy src/silnik/chemia.js,
 // zapis idzie przez `zmienWejscie` (zapisKroku); widok tylko rysuje. Kosztu chemii z tej listy nie liczymy (decyzja 2026-10-23).
 
 import { wczytajStan } from '../dane/magazyn.js'
@@ -9,7 +9,8 @@ import { bezKategorii, kategorieDlaWyceny, kategorieDoRecznegoDodania, produktyK
 import { tekstLiczby } from '../ui/format.js'
 import { h } from '../ui/h.js'
 import { przycisk } from '../ui/komponenty/formularz.js'
-import { kartaKategorii } from './karta-produktu.js'
+import { podpowiedz } from '../ui/komponenty/uklad.js'
+import { kartaKategorii, podzielNazweKategorii } from './karta-produktu.js'
 import { poChemii } from './katalog-chemii.js'
 import { adresKroku, ramaKroku, wycenaKroku, zapisKroku } from './kreator-wspolne.js'
 
@@ -26,14 +27,18 @@ const DODAJ_DEZYNFEKCJE = '+ Dodaj dezynfekcję'
 const USUN_DEZYNFEKCJE = 'Usuń dezynfekcję'
 const DODANA_RECZNIE = 'dodana ręcznie'
 const BRAK_DOBORU = 'Do tego zakresu nie ma dobranych środków.'
-/** Dopisek w nawiasie na koncu nazwy kategorii (np. „(kurz, sierść, brud bieżący)”) — rodzaje brudu sa w drugiej linii naglowka. */
-const DOPISEK_W_NAWIASIE = /\s*\([^()]*\)$/
 /** @type {ReadonlyMap<string, string>} */
 const BEZ_BLEDOW_WPISU = new Map()
 
-/** @param {number} chemiaH szacunek kosztu chemii (zł/h) z ustawien albo data/ceny.json */
-const wstep = (chemiaH) =>
-  `Środki dobrane do zaznaczonego brudu. To podpowiedź – koszt chemii liczymy z Twojego szacunku (${tekstLiczby(chemiaH)} zł/h), nie z tej listy.`
+/**
+ * Jedno zdanie wstepu, a skad koszt chemii — pod „?” (R9).
+ * @param {number} chemiaH szacunek kosztu chemii (zł/h) z ustawien albo data/ceny.json
+ * @returns {HTMLElement}
+ */
+const wstep = (chemiaH) => h('div', { class: 'dobor-chemii__wstep' },
+  h('p', null, 'Środki dobrane do zaznaczonego brudu.'),
+  podpowiedz({ tytul: 'Koszt chemii',
+    tresc: `To podpowiedź – koszt chemii liczymy z Twojego szacunku (${tekstLiczby(chemiaH)} zł/h), nie z tej listy.` }))
 
 /** @param {string} tekst @returns {string} „Kurz” → „kurz”; skrot („AGD”) zostaje */
 function zMalej(tekst) {
@@ -59,7 +64,7 @@ function elementyListy({ wycena, chemia, katalog, naDezynfekcje }) {
   const dezynfekcja = kategorieDoRecznegoDodania(chemia).find((k) => k.id === KATEGORIA_DEZYNFEKCJI)
   const czyDodana = dezynfekcja !== undefined && wejscie.dezynfekcja === true
   const karty = kategorieDlaWyceny(wejscie, chemia, katalog).map(({ kategoria, powody }) => kartaKategorii({
-    id: kategoria.id, tytul: kategoria.nazwa.replace(DOPISEK_W_NAWIASIE, ''), opis: opisPowodow(powody),
+    id: kategoria.id, tytul: podzielNazweKategorii(kategoria.nazwa).nazwa, opis: opisPowodow(powody),
     produkty: produktyKategorii(kategoria, chemia), chemia, limit: PRODUKTOW_NA_KARCIE,
   }))
   if (czyDodana) {
@@ -111,7 +116,7 @@ export const widokDoboruChemii = {
 
     const handleDalej = () => nawiguj(adresKroku('cena', wycena.id))
     const rama = ramaKroku({ krok: 'chemia', wycena, katalog, naDalej: handleDalej,
-      tresc: [h('p', { class: 'dobor-chemii__wstep' }, wstep(chemiaH)), komunikat, lista] })
+      tresc: [wstep(chemiaH), komunikat, lista] })
     rama.dalej.before(przycisk({ tekst: 'Pomiń', rodzaj: 'drugi', naKlik: handleDalej }))
     kontener.replaceChildren(...rama.elementy)
     void poChemii(lista, (wczytana) => {
