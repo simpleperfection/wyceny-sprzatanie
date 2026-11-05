@@ -59,7 +59,7 @@ Wejście: Chrome na komputerze, http://127.0.0.1:5174/. Ten punkt celowo psuje d
 Brak. Poza sekcją „Zamkniete” w `known-issues.md` są tylko nity P3, których smoke nie sprawdza, a wszystkie P1 i P2 z review są zamknięte.
 
 ## Punkty ze smoke'a etapu 5
-Ta lista ich nie obejmuje, bo nie pochodzą z tego zadania. `PLAN.md` przewiduje jednak ich sprawdzenie razem z tym smokiem: iPhone, kopia przeniesiona z telefonu na komputer, link oferty na drugim telefonie i ekrany wobec makiet. Lista jest na końcu `docs/operator/2026-10-27-etap-5-aplikacja-wyceny-smoke.md`.
+Ta lista ich nie obejmuje, bo nie pochodzą z tego zadania. `PLAN.md` przewiduje jednak ich sprawdzenie razem z tym smokiem: iPhone, kopia przeniesiona z telefonu na komputer, link oferty na drugim telefonie i ekrany wobec makiet. Lista jest na końcu `docs/operator/2026-10-27-etap-5-aplikacja-wyceny-smoke.md`. Kopia z telefonu na komputer przeszła 2026-11-05; iPhone i link oferty na drugim telefonie zostają na czas po scaleniu.
 
 ## Jak kontynuować w nowej sesji
 Skopiuj jako pierwszą wiadomość:
