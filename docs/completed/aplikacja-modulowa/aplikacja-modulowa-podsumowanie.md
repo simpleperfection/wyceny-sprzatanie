@@ -61,3 +61,14 @@ Pomiar całego projektu (201 plików JS/TS, commit 4b38e93); w nawiasie przyrost
 Bez oceny — bez oceny: przyrost ponizej progu wzgledem poprzedniego zadania, 2/5 pomiarow do przegladu okresowego.
 
 Ogrodnik niczego nie zmienił w kodzie — każda propozycja czeka na decyzję operatora.
+
+## Części PR
+
+PR w 2 częściach (cięcie: sekcja „Części PR” planu; pliki do recenzji bota po filtrach .coderabbit.yaml, próg 150).
+
+| Część | Fazy | Od | Do | Plików do recenzji |
+|---|---|---|---|---|
+| 1 | 1–3 | 3f0601c4e569 | 0068aadab0f6 | 108 |
+| 2 | 4–6 | 0068aadab0f6 | czubek gałęzi | 123 |
+
+Wysyłka: `/clear`, potem `/dev-pr --czesc 1`; po merge'u każdej części `/clear` i następna, do `/dev-pr --czesc 2` (rebase na główną gałąź).
