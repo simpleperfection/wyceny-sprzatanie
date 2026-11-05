@@ -136,6 +136,21 @@ describe('nowySzkic', () => {
     assert.equal(abonament.wejscie.wariantId, 'abonament_2')
   })
 
+  it('z klientem z karty (parametr `klient`): szkic ma klientId i kopię nazwy i adresu; nieznany klient daje szkic bez klienta', () => {
+    const kontekst = kontekstFirmy()
+    dodajKlienta(kontekst.magazyn, { nazwa: 'Anna Kowalska', adres: 'ul. Lipowa 3' }, { id: 'k-anna' })
+
+    const zKlientem = nowySzkic(kontekst, { uslugaId: 'mieszkanie_standard', wojewodztwoId: 'mazowieckie' }, 'k-anna')
+    const bezKlienta = nowySzkic(kontekst, { uslugaId: 'mieszkanie_standard', wojewodztwoId: 'mazowieckie' }, 'k-usuniety')
+
+    const w = zapisana(kontekst, zKlientem.id)
+    assert.equal(w.klientId, 'k-anna')
+    assert.deepEqual([w.klient.nazwa, w.klient.adres], ['Anna Kowalska', 'ul. Lipowa 3'])
+    const bez = zapisana(kontekst, bezKlienta.id)
+    assert.equal(bez.klientId, null)
+    assert.deepEqual([bez.klient.nazwa, bez.klient.adres], ['', ''])
+  })
+
   it('AGD tylko jako dodatek, nieznany wariant i nieznane województwo dają BladWejscia i nie zapisują szkicu', () => {
     const kontekst = kontekstFirmy()
 

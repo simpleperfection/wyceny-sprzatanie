@@ -11,7 +11,7 @@ import { zaplanujZWyceny } from '../dane/zlecenia.js'
 import { BladWejscia } from '../silnik/bledy.js'
 import { ukladMieszkania } from '../silnik/uklad.js'
 import { procent } from '../ui/format.js'
-import { akcjeWyceny, przeliczWycene, przywrocCeneModelu, ustawCeneReczna, widokPodsumowania } from './podsumowanie.js'
+import { akcjeWyceny, przeliczWycene, przywrocCeneModelu, ustawCeneReczna, ukladAkcjiWyceny, widokPodsumowania } from './podsumowanie.js'
 import { nowySzkic, przelicz, zmienWejscie } from './stan.js'
 
 /** @typedef {import('../silnik/katalog.js').Katalog} Katalog */
@@ -250,9 +250,51 @@ describe('przeliczWycene', () => {
 
 describe('akcjeWyceny', () => {
   it('decyzja klienta przy wycenie do wysłania i wysłanej, przyjęta z rezygnacją, ze zleceniem bez edycji', () => {
-    assert.deepEqual(akcjeWyceny('do_wyslania', false), ['przyjeta', 'odrzucona', 'edytuj', 'usun'])
-    assert.deepEqual(akcjeWyceny('wyslana', false), ['przyjeta', 'odrzucona', 'edytuj', 'usun'])
-    assert.deepEqual(akcjeWyceny('przyjeta', false), ['odrzucona', 'edytuj', 'usun'])
-    assert.deepEqual(akcjeWyceny('przyjeta', true), ['odrzucona', 'usun'])
+    assert.deepEqual(akcjeWyceny('do_wyslania', false, false), ['przyjeta', 'odrzucona', 'edytuj', 'usun'])
+    assert.deepEqual(akcjeWyceny('wyslana', false, false), ['przyjeta', 'odrzucona', 'edytuj', 'usun'])
+    assert.deepEqual(akcjeWyceny('odrzucona', true, false), ['usun'])
+  })
+
+  it('przyjęta do zaplanowania ma `zaplanuj` przed innymi akcjami, a ze zleceniem tylko `zaplanuj_kolejne`', () => {
+    assert.deepEqual(akcjeWyceny('przyjeta', false, true), ['zaplanuj', 'odrzucona', 'edytuj', 'usun'])
+    assert.deepEqual(akcjeWyceny('przyjeta', true, false), ['zaplanuj_kolejne', 'odrzucona', 'usun'])
+  })
+
+  it('abonament z samym zleceniem jednorazowym jest dalej do zaplanowania i bez edycji', () => {
+    assert.deepEqual(akcjeWyceny('przyjeta', true, true), ['zaplanuj', 'odrzucona', 'usun'])
+  })
+})
+
+describe('ukladAkcjiWyceny', () => {
+  it('wycena do wysłania: główna jest oferta, decyzje klienta i edycja to wiersze, usunięcie osobno', () => {
+    assert.deepEqual(ukladAkcjiWyceny('do_wyslania', false, false),
+      { glowna: 'oferta', wiersze: ['przyjeta', 'odrzucona', 'edytuj'], czyUsun: true })
+  })
+
+  it('wycena wysłana: główna jest decyzja klienta, oferta schodzi do wierszy', () => {
+    assert.deepEqual(ukladAkcjiWyceny('wyslana', false, false),
+      { glowna: 'przyjeta', wiersze: ['oferta', 'odrzucona', 'edytuj'], czyUsun: true })
+  })
+
+  it('przyjęta do zaplanowania: główne jest „Zaplanuj”', () => {
+    assert.deepEqual(ukladAkcjiWyceny('przyjeta', false, true),
+      { glowna: 'zaplanuj', wiersze: ['oferta', 'odrzucona', 'edytuj'], czyUsun: true })
+  })
+
+  it('wycena ze zleceniem bez czekającej akcji nie ma głównej, „Zaplanuj kolejne” jest wierszem', () => {
+    assert.deepEqual(ukladAkcjiWyceny('przyjeta', true, false),
+      { glowna: null, wiersze: ['oferta', 'zaplanuj_kolejne', 'odrzucona'], czyUsun: true })
+  })
+
+  it('odrzucona ze zleceniem zostawia samo usunięcie', () => {
+    assert.deepEqual(ukladAkcjiWyceny('odrzucona', true, false), { glowna: null, wiersze: [], czyUsun: true })
+  })
+
+  it('oferta dochodzi tylko przy statusach oferty, a odrzucona bez zlecenia ma sam powrót do edycji', () => {
+    const { wiersze, glowna } = ukladAkcjiWyceny('odrzucona', false, false)
+
+    assert.equal(glowna, null)
+    assert.equal(wiersze.includes('oferta'), false)
+    assert.equal(wiersze.includes('edytuj'), true)
   })
 })

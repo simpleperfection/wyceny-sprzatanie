@@ -1,4 +1,463 @@
 /*
- * Podsumowanie wyceny i edycja oferty. Arkusz wypelnia IU-21: style ekranow modulu, takze przeniesione tu z komponenty.css.
- * Dolaczony w index.html po komponenty.css; inne jednostki go nie zmieniaja.
+ * Podsumowanie wyceny i edycja oferty (src/widoki/podsumowanie.js, podsumowanie-karty.js, oferta-edycja.js,
+ * oferta-edycja-sekcje.js, edytor-listy.js; makieta podsumowanie-wyceny). Dolaczony w index.html po komponenty.css; inne
+ * jednostki go nie zmieniaja. Tresc ma --tekst-podstawowy, a --tekst-maly tylko pigulki i dopiski. Na wierzchu zostaje kwota,
+ * pasek rynku i jedna glowna akcja; wyjasnienia sa pod „?” i „Więcej”.
  */
+
+/* Podsumowanie wyceny */
+.podsumowanie__status {
+  display: flex;
+}
+
+.podsumowanie__komunikat:empty,
+.podsumowanie__akcje:empty {
+  display: none;
+}
+
+.podsumowanie__opis {
+  color: var(--tekst-drugi);
+  text-wrap: pretty;
+}
+
+.podsumowanie__akcje {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.podsumowanie__usun {
+  align-self: center;
+  color: var(--blad-tekst);
+}
+
+.karta-ceny__gora {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.karta-ceny__tytul {
+  font-size: var(--tekst-podstawowy);
+  font-weight: 700;
+  color: var(--tekst-drugi);
+}
+
+/* Cel dotyku 48 px bez rozpychania wiersza: bez „Zmień” (wycena ze zleceniem) tytul zostaje w tym samym miejscu */
+.karta-ceny__gora .przycisk--tekstowy {
+  margin: -12px -10px;
+}
+
+.karta-ceny__gora .przycisk--tekstowy .ikona {
+  width: 16px;
+  height: 16px;
+}
+
+.karta-ceny__kwota {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 4px 0;
+}
+
+.karta-ceny__liczba {
+  font-size: var(--tekst-kwota);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--marka-zielen);
+}
+
+.karta-ceny .pigulka {
+  font-size: var(--tekst-maly);
+}
+
+.pigulka--rynek-w {
+  background: var(--sukces-tlo);
+  color: var(--sukces-tekst);
+}
+
+.pigulka--rynek-ponizej,
+.pigulka--rynek-powyzej {
+  background: var(--uwaga-tlo);
+  color: var(--uwaga-tekst);
+}
+
+/* Pasek widelek rynku: polozenie elementow z wlasciwosci --pozycja (ustawianej w JS przez CSSOM, bez stylow inline) */
+.karta-rynku {
+  margin-top: 14px;
+}
+
+.wykres-rynku {
+  position: relative;
+  height: 22px;
+}
+
+.wykres-rynku__tor,
+.wykres-rynku__zakres {
+  position: absolute;
+  top: 6px;
+  height: 10px;
+  border-radius: 5px;
+}
+
+.wykres-rynku__tor {
+  left: 0;
+  right: 0;
+  background: var(--tlo-miekkie);
+}
+
+.wykres-rynku__zakres {
+  left: var(--pozycja);
+  right: calc(100% - var(--koniec));
+  background: var(--marka-zielen-wykres);
+}
+
+.wykres-rynku__kreska {
+  position: absolute;
+  top: 0;
+  left: var(--pozycja);
+  width: 2px;
+  height: 22px;
+  transform: translateX(-1px);
+  background: var(--tekst-drugi);
+}
+
+.wykres-rynku__punkt {
+  position: absolute;
+  top: 1px;
+  left: var(--pozycja);
+  width: 20px;
+  height: 20px;
+  transform: translateX(-50%);
+  border: 3px solid var(--tlo-karta);
+  border-radius: 50%;
+  background: var(--marka-zielen);
+}
+
+.karta-rynku__zakres {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 8px;
+  margin-top: 6px;
+  color: var(--tekst-drugi);
+}
+
+.karta-rynku__mediana {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+.karta-rynku__mediana .podpowiedz {
+  flex: none;
+}
+
+.karta-zostaje strong {
+  font-weight: 800;
+}
+
+.karta-zostaje .wiecej {
+  margin-top: 4px;
+}
+
+.koszty {
+  margin: 0;
+}
+
+.koszty__wiersz {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--linia-podzial);
+  font-size: var(--tekst-podstawowy);
+}
+
+.koszty__wiersz:last-child {
+  border-bottom: 0;
+}
+
+.koszty__wiersz dd {
+  margin: 0;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.koszty__wiersz--razem,
+.koszty__wiersz--razem dd {
+  font-weight: 700;
+}
+
+/* Lista „Plan a fakt” (ustawienia-tempo.js, podsumowanie.js; makieta ustawienia-firmy) */
+.plan-fakt-ustawienia {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--linia-podzial);
+}
+
+.plan-fakt-ustawienia__tytul {
+  font-size: var(--tekst-podstawowy);
+  font-weight: 700;
+}
+
+.plan-fakt-lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plan-fakt-lista__wiersz {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--linia-podzial);
+  color: var(--tekst-drugi);
+  text-wrap: pretty;
+}
+
+.plan-fakt-lista__wiersz:last-child {
+  border-bottom: 0;
+}
+
+.karta--bez-odstepu > .plan-fakt-lista {
+  padding: 0 14px 4px;
+}
+
+/* Edycja oferty i sekcje oferty w ustawieniach (src/widoki/oferta-edycja.js, oferta-edycja-sekcje.js, edytor-listy.js,
+   ustawienia-oferta.js; makieta ustawienia-firmy) */
+.karta-oferty {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.karta-oferty > .karta__tytul,
+.karta-oferty__gora .karta__tytul {
+  margin-bottom: 0;
+}
+
+.karta-oferty__gora {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.karta-oferty__gora .przycisk--tekstowy {
+  flex: none;
+  min-height: var(--cel-dotyku);
+  padding-block: 0;
+  font-size: var(--tekst-podstawowy);
+}
+
+.karta-oferty__gora .przycisk--tekstowy .ikona {
+  width: 16px;
+  height: 16px;
+}
+
+.karta-oferty__streszczenie,
+.karta-oferty__pusto,
+.karta-oferty__notka {
+  color: var(--tekst-drugi);
+  text-wrap: pretty;
+}
+
+.karta-oferty__podtytul {
+  font-size: var(--tekst-podstawowy);
+  font-weight: 700;
+  color: var(--tekst-glowny);
+}
+
+.karta-oferty__przywroc:empty,
+.karta-oferty__komunikat:empty {
+  display: none;
+}
+
+.karta-oferty > .przycisk--tekstowy,
+.karta-oferty__przywroc .przycisk--tekstowy {
+  align-self: flex-start;
+}
+
+.karta-oferty .wiersz {
+  padding-inline: 0;
+  border-top: 1px solid var(--linia-podzial);
+}
+
+.karta-oferty .wiecej__tresc {
+  color: var(--tekst-glowny);
+}
+
+.lista-punktow,
+.lista-dodatkow,
+.edytor-listy__lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lista-punktow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lista-punktow__punkt {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-wrap: pretty;
+}
+
+.lista-punktow__znak {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+}
+
+.lista-punktow--w-cenie .lista-punktow__znak {
+  color: var(--marka-zielen);
+}
+
+.lista-punktow--poza-cena {
+  color: var(--tekst-drugi);
+}
+
+.lista-punktow--poza-cena .lista-punktow__znak,
+.lista-punktow--warunek .lista-punktow__znak {
+  color: var(--tekst-trzeci);
+}
+
+.lista-punktow__opis {
+  display: block;
+  font-size: var(--tekst-maly);
+  color: var(--tekst-drugi);
+}
+
+.lista-dodatkow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lista-dodatkow__wiersz {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lista-dodatkow__kwota {
+  flex: none;
+  font-weight: 700;
+}
+
+.edytor-listy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.edytor-listy__etykieta {
+  font-weight: 700;
+  color: var(--tekst-drugi);
+}
+
+.edytor-listy__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Pole na cala szerokosc, przyciski pod nim: trzy cele 48 px obok pola zostawilyby na telefonie za malo miejsca na tekst */
+.edytor-listy__wiersz {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.edytor-listy__pole {
+  width: 100%;
+  min-height: var(--cel-dotyku);
+  padding: 10px 12px;
+  border: 1px solid var(--tekst-trzeci);
+  border-radius: var(--promien-przycisk);
+  background: var(--tlo-karta);
+  font: inherit;
+  font-size: var(--tekst-podstawowy);
+  resize: vertical;
+  field-sizing: content;
+}
+
+.edytor-listy__przyciski {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.edytor-listy__przycisk {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cel-dotyku);
+  height: var(--cel-dotyku);
+  border: 0;
+  border-radius: var(--promien-przycisk);
+  background: none;
+  color: var(--tekst-drugi);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.edytor-listy__przycisk:hover:not(:disabled) {
+  background: var(--tlo-miekkie);
+}
+
+.edytor-listy__przycisk:disabled {
+  color: var(--linia-obrys);
+  cursor: not-allowed;
+}
+
+.edytor-listy__przycisk .ikona {
+  width: 20px;
+  height: 20px;
+}
+
+.edytor-listy__dodaj {
+  align-self: flex-start;
+  font-size: var(--tekst-podstawowy);
+}
+
+.oferta-edycja__banery,
+.oferta-edycja__komunikat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.oferta-edycja__banery:empty,
+.oferta-edycja__komunikat:empty {
+  display: none;
+}
+
+.oferta-edycja__link {
+  color: var(--tekst-drugi);
+  overflow-wrap: anywhere;
+}
+
+.oferta-edycja__stopka .przycisk:first-child {
+  flex: 0 0 32%;
+}
+
+.oferta-edycja__stopka .przycisk[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ustawienia-oferta__edytory {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}

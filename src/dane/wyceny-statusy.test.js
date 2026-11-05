@@ -360,7 +360,7 @@ describe('zmiany po wysłaniu oferty: wejście przyjętej wyceny i klient z list
     assert.equal(zMagazynu(magazyn, id).oferta.nieaktualna, true)
   })
 
-  it('po wysłaniu oferty inny klient ustawia ofertę jako nieaktualną; null odłącza klienta i zostawia kopię nazwy', () => {
+  it('po wysłaniu oferty inny klient ustawia ofertę jako nieaktualną; null odłącza klienta i czyści kopię nazwy', () => {
     const magazyn = nowyMagazyn()
     const id = wycenaWStatusie(magazyn, ['do_wyslania'])
     oznaczWyslana(magazyn, id, PAZDZIERNIK)
@@ -371,6 +371,6 @@ describe('zmiany po wysłaniu oferty: wejście przyjętej wyceny i klient z list
     przypiszKlienta(magazyn, id, null)
 
     assert.deepEqual([poWyborze.klientId, poWyborze.klient.nazwa, poWyborze.klient.adres, poWyborze.oferta.nieaktualna], ['k-jan', 'Jan Nowak', '', true])
-    assert.deepEqual([zMagazynu(magazyn, id).klientId, zMagazynu(magazyn, id).klient.nazwa], [null, 'Jan Nowak'])
+    assert.deepEqual([zMagazynu(magazyn, id).klientId, zMagazynu(magazyn, id).klient.nazwa], [null, ''])
   })
 })

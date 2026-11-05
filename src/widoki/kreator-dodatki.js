@@ -1,15 +1,15 @@
 // Krok dodatkow kreatora (`#/kreator/dodatki?wycena=<id>`, makieta kreator-dodatki): karta „Dodatki” z pozycjami uslug z listy
 // `dodatki` wybranej uslugi (pogrupowane wg uslugi, przelacznik „w cenie”, arkusz ilosci z „Zaproponuj w ofercie”), karta
-// „Dojazd” z licznikiem km, kwota dla klienta i kosztem firmy, stopka z „Razem” i suma propozycji. Zmiany przez
+// „Dojazd” z licznikiem km, kwota dla klienta i kosztem firmy (wyliczenie pod „Więcej”), stopka z „Razem” i suma propozycji. Zmiany przez
 // src/kreator/pozycje.js i `zmienWejscie`; widok tylko rysuje.
 
 import { wczytajStan } from '../dane/magazyn.js'
 import { scalKoszty } from '../dane/ustawienia.js'
 import { infoDojazdu, MAKS_DOJAZDU_KM, MAKS_ILOSCI, ustawDodatek, ustawDojazd, wycenaDodatku } from '../kreator/pozycje.js'
 import { bladZakresu, kwotaJednostki, nazwaJednostki, tekstLiczby, zl } from '../ui/format.js'
-import { h } from '../ui/h.js'
+import { h, ikona } from '../ui/h.js'
 import { licznik, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
-import { arkusz, karta } from '../ui/komponenty/uklad.js'
+import { arkusz, karta, wiecej } from '../ui/komponenty/uklad.js'
 import { adresKroku, BLAD_ILOSCI, odswiezStopke, ramaKroku, wycenaKroku, zapisKroku } from './kreator-wspolne.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
@@ -38,7 +38,7 @@ const kluczDodatku = (d) => `${d.usluga.id}.${d.pozycja.id}`
 const zapisanyDodatek = (wycena, d) => (wycena.wejscie.dodatki ?? []).find((x) => x.uslugaId === d.usluga.id && x.pozycjaId === d.pozycja.id)
 
 /** @param {PozycjaDodatku} d @param {Wycena} wycena @param {Katalog} katalog @param {AkcjeDodatku} akcje @returns {HTMLElement} */
-function wierszDodatku(d, wycena, katalog, akcje) {
+export function wierszDodatku(d, wycena, katalog, akcje) {
   const dodatek = zapisanyDodatek(wycena, d)
   const klucz = kluczDodatku(d)
   const { cenaJedn, kwota } = wycenaDodatku({ uslugaId: d.usluga.id, pozycjaId: d.pozycja.id, ilosc: dodatek?.ilosc ?? 0 },
@@ -47,17 +47,21 @@ function wierszDodatku(d, wycena, katalog, akcje) {
   const iloczyn = dodatek ? `${tekstLiczby(dodatek.ilosc)} × ${kwotaJednostki(cenaJedn)}` : cena
   const czyPropozycja = dodatek?.tryb === 'propozycja'
   const idOpisu = `dodatek-${d.usluga.id}-${d.pozycja.id}-opis`
+  const opis = czyPropozycja ? `w ofercie · ${iloczyn}` : iloczyn
   return h('div', { class: ['wiersz-pozycji', dodatek?.tryb !== 'w_cenie' && 'wiersz-pozycji--wylaczona'] },
     h('input', {
       type: 'checkbox', role: 'switch', class: 'przelacznik__wejscie', checked: dodatek?.tryb === 'w_cenie', 'data-przelacznik': klucz,
       'aria-label': `W cenie: ${d.pozycja.nazwa}`, 'aria-describedby': idOpisu,
       on: { change: (zdarzenie) => akcje.naPrzelacz(d, zdarzenie.currentTarget instanceof HTMLInputElement && zdarzenie.currentTarget.checked) },
     }),
-    h('button', { type: 'button', class: 'wiersz-pozycji__tresc wiersz-pozycji__przycisk', 'aria-haspopup': 'dialog', 'data-dodatek': klucz,
+    h('button', { type: 'button', class: 'wiersz-pozycji__przycisk', 'aria-haspopup': 'dialog', 'data-dodatek': klucz,
       on: { click: () => akcje.naOtworz(d) } },
-    h('span', { class: 'wiersz-pozycji__nazwa' }, d.pozycja.nazwa),
-    h('span', { class: 'wiersz-pozycji__opis', id: idOpisu }, czyPropozycja ? `${iloczyn} · zaproponuj w ofercie` : iloczyn)),
-    h('span', { class: 'wiersz-pozycji__kwota liczba' }, dodatek ? `${czyPropozycja ? '+' : ''}${zl(kwota)}` : '–'))
+    h('span', { class: 'wiersz-pozycji__tresc' },
+      h('span', { class: 'wiersz-pozycji__nazwa' }, d.pozycja.nazwa),
+      h('span', { class: 'wiersz-pozycji__dol' },
+        h('span', { class: 'wiersz-pozycji__opis', id: idOpisu }, opis),
+        h('span', { class: 'wiersz-pozycji__kwota liczba' }, dodatek ? `${czyPropozycja ? '+' : ''}${zl(kwota)}` : '–'))),
+    ikona('chevron-right', 'wiersz-pozycji__strzalka')))
 }
 
 /** @param {Usluga} usluga @param {Katalog} katalog @returns {{ usluga: Usluga, pozycje: PozycjaDodatku[] }[]} */
@@ -71,27 +75,30 @@ function kartaDodatkow(usluga, wycena, katalog, akcje) {
   const grupy = grupyDodatkow(usluga, katalog)
   if (grupy.length === 0) return [h('p', { class: 'kreator-pozycje__notka' }, BEZ_DODATKOW)]
   return [
-    karta({ tytul: 'Dodatki', klasa: 'karta-pozycji' }, grupy.map((g) => h('section', { class: 'grupa-dodatkow', 'aria-label': g.usluga.nazwa },
-      h('h3', { class: 'grupa-dodatkow__tytul' }, g.usluga.nazwa),
+    karta({ klasa: 'karta-pozycji' }, grupy.map((g) => h('section', { class: 'grupa-dodatkow', 'aria-label': g.usluga.nazwa },
+      h('h2', { class: 'grupa-dodatkow__tytul' }, g.usluga.nazwa),
       g.pozycje.map((d) => wierszDodatku(d, wycena, katalog, akcje))))),
-    h('p', { class: 'kreator-pozycje__notka' }, NOTKA),
+    wiecej({}, NOTKA),
   ]
 }
 
 /** @param {number} km @param {StawkiDojazdu} stawki @returns {Node[]} wiersze „Dla klienta” i „Twój koszt” */
 function wierszeDojazdu(km, stawki) {
   const info = infoDojazdu(km, stawki)
-  const promien = tekstLiczby(stawki.darmowy_promien_km)
-  const dlaKlienta = info.kmPonad > 0
-    ? `Dla klienta (${tekstLiczby(info.kmPonad)} km ponad ${promien} km × ${kwotaJednostki(stawki.klient_zl_km)})`
-    : `Dla klienta (w promieniu ${promien} km)`
   /** @param {string} tekst @param {number} kwota @param {string} [klasa] */
   const wiersz = (tekst, kwota, klasa) => h('p', { class: ['wiersz-dojazdu', klasa] },
     h('span', null, tekst), h('span', { class: 'wiersz-dojazdu__kwota liczba' }, kwotaJednostki(kwota)))
-  return [
-    wiersz(dlaKlienta, info.kwotaKlienta),
-    wiersz(`Twój koszt (${tekstLiczby(info.kmRazem)} km × ${kwotaJednostki(stawki.koszt_firmy_zl_km)})`, info.kosztFirmy, 'wiersz-dojazdu--koszt'),
-  ]
+  return [wiersz('Dla klienta', info.kwotaKlienta), wiersz('Twój koszt', info.kosztFirmy, 'wiersz-dojazdu--koszt')]
+}
+
+/** @param {number} km @param {StawkiDojazdu} stawki @returns {string} wyliczenie obu kwot dojazdu do „Więcej” */
+export function wyliczenieDojazdu(km, stawki) {
+  const info = infoDojazdu(km, stawki)
+  const promien = tekstLiczby(stawki.darmowy_promien_km)
+  const dlaKlienta = info.kmPonad > 0
+    ? `${tekstLiczby(info.kmPonad)} km ponad ${promien} km × ${kwotaJednostki(stawki.klient_zl_km)}`
+    : `w promieniu ${promien} km`
+  return `Dla klienta: ${dlaKlienta}. Twój koszt: ${tekstLiczby(info.kmRazem)} km × ${kwotaJednostki(stawki.koszt_firmy_zl_km)}.`
 }
 
 /** @type {Widok} */
@@ -104,6 +111,7 @@ export const widokKreatoraDodatkow = {
     const stawki = scalKoszty(katalog.kosztyFirmy, wczytajStan(magazyn).ustawienia).dojazd
     let wycena = poczatkowa
     const dojazd = h('div', { class: 'kreator-dodatki__dojazd', 'aria-live': 'polite' })
+    const wyliczenie = h('p', null)
     const { zapisz, pokazBlad, komunikat } = zapisKroku({
       kontekst, wycena: () => wycena, teksty: TEKSTY_BLEDOW, naZapis: (w) => { wycena = w },
       naEkranie: (w) => JSON.stringify([w.dodatki ?? [], w.dojazdKm ?? 0]),
@@ -158,13 +166,19 @@ export const widokKreatoraDodatkow = {
       dialog.showModal()
     }
 
+    /** @param {number} km */
+    function pokazDojazd(km) {
+      dojazd.replaceChildren(...wierszeDojazdu(km, stawki))
+      wyliczenie.textContent = wyliczenieDojazdu(km, stawki)
+    }
+
     /** @param {number} km @param {HTMLElement} pole licznik z bledem pod spodem */
     function handleDojazd(km, pole) {
       const blad = zapisz((w) => ustawDojazd(w, km))
       if (blad !== null && blad !== BLAD_DOJAZDU) return pokazBlad(blad)
       ustawBlad(pole, blad)
       if (blad !== null) return
-      dojazd.replaceChildren(...wierszeDojazdu(km, stawki))
+      pokazDojazd(km)
       odswiezStopke(kontener, rama)
     }
 
@@ -172,8 +186,8 @@ export const widokKreatoraDodatkow = {
       const km = wycena.wejscie.dojazdKm ?? 0
       const pole = licznik({ id: 'dojazd-km', etykieta: 'Odległość w jedną stronę', wartosc: Math.min(km, MAKS_DOJAZDU_KM), max: MAKS_DOJAZDU_KM,
         jednostka: 'km', tekstBledu: BLAD_DOJAZDU, naZmiane: (n) => handleDojazd(n, pole) })
-      dojazd.replaceChildren(...wierszeDojazdu(km, stawki))
-      return karta({ tytul: 'Dojazd', klasa: 'karta-dojazdu' }, pole, dojazd)
+      pokazDojazd(km)
+      return karta({ tytul: 'Dojazd', klasa: 'karta-dojazdu' }, pole, dojazd, wiecej({}, wyliczenie))
     }
 
     /** @param {string} [fokus] selektor elementu do fokusu po narysowaniu */

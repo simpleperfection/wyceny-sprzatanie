@@ -1,5 +1,6 @@
 // Krok zakresu kreatora dla uslug w trybie pomieszczen (`#/kreator/zakres?wycena=<id>`, makieta kreator-pomieszczenia):
-// karty pomieszczen (zwinieta: nazwa, typ, m², aktywny brud; rozwinieta: nazwa, metraz, poziomy brudu, usuwanie), arkusz typow
+// karty pomieszczen (zwinieta: nazwa, m² i aktywny brud; rozwinieta: nazwa z „?”, metraz, poziomy brudu, pod „Więcej” zmiana nazwy
+// i usuwanie), arkusz typow
 // z zestawu uslugi, chipy wariantu przy biurach, baner po zamianie szybkiej wyceny i stopka z m², czasem z tempem i kwota.
 // Zmiany ida przez src/kreator/pomieszczenia.js i `zapisKroku` (src/widoki/kreator-wspolne.js); cene liczy silnik, widok tylko rysuje.
 
@@ -17,7 +18,7 @@ import { tempoDoWyceny } from '../silnik/tempo.js'
 import { czas, m2, odmiana, tekstLiczby } from '../ui/format.js'
 import { h, ikona } from '../ui/h.js'
 import { chipy, licznik, pole, przycisk, ustawBlad } from '../ui/komponenty/formularz.js'
-import { arkusz, baner, karta, wiersz } from '../ui/komponenty/uklad.js'
+import { arkusz, baner, karta, podpowiedz, wiecej, wiersz } from '../ui/komponenty/uklad.js'
 import { daneTempa } from '../zlecenia/dane-tempa.js'
 import { adresKroku, odswiezStopke, pokazKomunikat, ramaKroku, wycenaKroku, zapisKroku } from './kreator-wspolne.js'
 import { tekstBleduPytan } from './pytania.js'
@@ -80,22 +81,18 @@ function wierszBrudu(i, brud, poziom, naBrud) {
 }
 
 /** @param {number} i @param {PomieszczenieWyceny} p @param {OpcjeKarty} opcje @returns {HTMLButtonElement} */
-function kartaZwinieta(i, p, { katalog, nazwaTypu, akcje }) {
-  const aktywne = (p.brud ?? []).filter((b) => b.poziom > 0)
-  const gora = h('span', { class: 'karta-pomieszczenia__gora' },
-    h('span', { class: 'karta-pomieszczenia__nazwy' },
-      h('span', { class: 'karta-pomieszczenia__nazwa' }, p.nazwa ?? nazwaTypu(p.typ)),
-      h('span', { class: 'karta-pomieszczenia__typ' }, malaPierwsza(nazwaTypu(p.typ)))),
-    h('span', { class: 'karta-pomieszczenia__metraz liczba' }, m2(p.m2)),
-    ikona('chevron-right', 'karta-pomieszczenia__strzalka'))
-  const brud = aktywne.length === 0 ? null : h('span', { class: 'karta-pomieszczenia__brud' },
-    aktywne.map((b) => h('span', { class: 'znacznik-brudu' }, `${nazwaBrudu(katalog, b.id)} ${b.poziom}`)))
+export function kartaZwinieta(i, p, { katalog, nazwaTypu, akcje }) {
+  const brud = (p.brud ?? []).filter((b) => b.poziom > 0).map((b) => `${malaPierwsza(nazwaBrudu(katalog, b.id))} ${b.poziom}`)
   return h('button', { type: 'button', class: 'karta-pomieszczenia', 'aria-expanded': 'false', 'data-pomieszczenie': String(i),
-    on: { click: () => akcje.naRozwin(i) } }, gora, brud)
+    on: { click: () => akcje.naRozwin(i) } },
+  h('span', { class: 'karta-pomieszczenia__nazwy' },
+    h('span', { class: 'karta-pomieszczenia__nazwa' }, p.nazwa ?? nazwaTypu(p.typ)),
+    h('span', { class: 'karta-pomieszczenia__opis liczba' }, [m2(p.m2), ...brud].join(' · '))),
+  ikona('chevron-right', 'karta-pomieszczenia__strzalka'))
 }
 
 /** @param {number} i @param {PomieszczenieWyceny} p @param {OpcjeKarty} opcje @returns {HTMLElement} */
-function kartaRozwinieta(i, p, { katalog, nazwaTypu, czyWszystkieBrudy, akcje }) {
+export function kartaRozwinieta(i, p, { katalog, nazwaTypu, czyWszystkieBrudy, akcje }) {
   const nazwa = p.nazwa ?? nazwaTypu(p.typ)
   const tytul = h('h2', { class: 'karta-pomieszczenia__nazwa', id: `pomieszczenie-${i}-tytul` }, nazwa)
   const poleNazwy = pole({ id: `pomieszczenie-${i}-nazwa`, etykieta: 'Nazwa', wartosc: nazwa,
@@ -104,22 +101,21 @@ function kartaRozwinieta(i, p, { katalog, nazwaTypu, czyWszystkieBrudy, akcje })
   const wiersze = czyWszystkieBrudy ? katalog.brud : widoczne
   const pierwszyPozostaly = pozostale[0]
   const link = czyWszystkieBrudy || !pierwszyPozostaly ? null : przycisk({
-    tekst: `+ ${pozostale.map((b, j) => (j === 0 ? b.nazwa : malaPierwsza(b.nazwa))).join(', ')}`, rodzaj: 'tekstowy',
+    tekst: 'Inne rodzaje brudu', rodzaj: 'tekstowy', ikona: 'plus',
     naKlik: () => akcje.naWszystkieBrudy(i, pierwszyPozostaly.id),
   })
   const gora = h('div', { class: 'karta-pomieszczenia__gora' },
-    h('div', { class: 'karta-pomieszczenia__nazwy' }, tytul, h('span', { class: 'karta-pomieszczenia__typ' }, malaPierwsza(nazwaTypu(p.typ)))),
+    h('div', { class: 'karta-pomieszczenia__nazwy' }, tytul),
+    podpowiedz({ tytul: 'Poziom brudu', tresc: LEGENDA }),
     h('button', { type: 'button', class: 'karta-pomieszczenia__zwin', 'aria-expanded': 'true', on: { click: () => akcje.naZwin(i) } }, 'Zwiń'))
   const metraz = licznik({ id: `metraz-${i}`, etykieta: 'Metraż', wartosc: p.m2, krok: 1, jednostka: 'm²', tekstBledu: BLAD_METRAZU,
     min: Math.min(GRANICE_METRAZU.min, p.m2), max: Math.max(GRANICE_METRAZU.max, p.m2), naZmiane: (w) => akcje.naMetraz(i, w) })
   return h('section', { class: 'karta-pomieszczenia karta-pomieszczenia--rozwinieta', 'aria-labelledby': tytul.id, 'data-pomieszczenie': String(i) },
     gora,
-    poleNazwy,
     metraz,
-    h('p', { class: 'karta-pomieszczenia__legenda' }, LEGENDA),
     wiersze.map((b) => wierszBrudu(i, b, poziomBrudu(p, b.id), akcje.naBrud)),
     link,
-    przycisk({ tekst: 'Usuń pomieszczenie', rodzaj: 'tekstowy', ikona: 'trash', naKlik: () => akcje.naUsun(i) }))
+    wiecej({}, poleNazwy, przycisk({ tekst: 'Usuń pomieszczenie', rodzaj: 'tekstowy', ikona: 'trash', naKlik: () => akcje.naUsun(i) })))
 }
 
 /** @type {Widok} */
@@ -246,7 +242,7 @@ export const widokKreatoraPomieszczen = {
           : h('ul', { class: 'lista-pomieszczen' }, pomieszczenia.map(kartaPomieszczenia)),
         komunikat,
         h('div', { class: 'kreator-pomieszczenia__dodaj' },
-          przycisk({ tekst: '+ Dodaj pomieszczenie', rodzaj: 'tekstowy', naKlik: handleOtworzTypy })),
+          przycisk({ tekst: 'Dodaj pomieszczenie', rodzaj: 'drugi', ikona: 'plus', naKlik: handleOtworzTypy })),
       ].filter((element) => element !== null)
     }
 

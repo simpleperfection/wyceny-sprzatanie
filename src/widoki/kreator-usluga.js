@@ -1,7 +1,7 @@
-// Pierwszy krok kreatora dokladnej wyceny (`#/kreator/usluga`, opcjonalnie `?wycena=<id>`, makieta kreator-wybor-uslugi):
-// wojewodztwo (podpowiedziane z ustawien) ze stawka, uslugi w dwoch grupach wg trybu z podpowiedzia ceny z silnika, warianty biur.
-// „Dalej” tworzy szkic albo zapisuje zmiane wyboru i przechodzi do kroku zakresu. Po utworzeniu szkicu pod uslugami jest wiersz
-// „Pytania do klienta · a z n” do ekranu pytan.
+// Pierwszy krok kreatora dokladnej wyceny (`#/kreator/usluga`, opcjonalnie `?wycena=<id>` albo `?klient=<id>` z karty klienta,
+// makieta kreator-wybor-uslugi): wojewodztwo (podpowiedziane z ustawien) ze stawka, uslugi w dwoch grupach wg trybu, a pod wybrana
+// podpowiedz ceny z silnika i warianty biur. „Dalej” tworzy szkic (z klientem z adresu) albo zapisuje zmiane wyboru i przechodzi do kroku
+// zakresu. Po utworzeniu szkicu pod uslugami jest wiersz „Pytania do klienta · a z n” do ekranu pytan.
 
 import { wczytajStan } from '../dane/magazyn.js'
 import { ustawieniaDomyslne } from '../dane/ustawienia.js'
@@ -12,7 +12,7 @@ import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
 import { kwotaJednostki, m2, nazwaJednostki, tekstLiczby, zl } from '../ui/format.js'
 import { h } from '../ui/h.js'
 import { chipy, przycisk } from '../ui/komponenty/formularz.js'
-import { arkusz, baner, dialogPotwierdzenia, karta, wiersz } from '../ui/komponenty/uklad.js'
+import { arkusz, baner, dialogPotwierdzenia, karta, wiecej, wiersz } from '../ui/komponenty/uklad.js'
 import { sciezka } from '../ui/trasy.js'
 import { adresKroku, ramaKroku, wycenaKroku, zglosBladKreatora } from './kreator-wspolne.js'
 import { wierszPytan } from './pytania.js'
@@ -22,7 +22,11 @@ import { wierszPytan } from './pytania.js'
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
 /** @typedef {import('../kreator/podpowiedzi.js').PodpowiedzCeny} PodpowiedzCeny */
 /** @typedef {import('../silnik/katalog.js').Usluga} Usluga */
-/** @typedef {{ uslugaId: string | null, wariantId: string | null, wojewodztwoId: string | null }} Wybor */
+/**
+ * @typedef {{ uslugaId: string | null, wariantId: string | null, wojewodztwoId: string | null }} Wybor
+ * @typedef {{ wybor: Wybor, opisCeny: (usluga: Usluga) => string | null, naWybor: (usluga: Usluga) => void,
+ *   naWariant: (wariantId: string) => void }} OpcjeUslugi opisCeny: podpowiedz ceny, liczona tylko dla wybranej uslugi
+ */
 
 const NAZWA_POLA_USLUGI = 'kreator-usluga'
 const FOKUS_USLUGI = `input[name="${NAZWA_POLA_USLUGI}"]:checked`
@@ -41,6 +45,28 @@ function tekstPodpowiedzi(p) {
   if (p.rodzaj === 'za_m2') return `ok. ${kwotaJednostki(p.kwota)}/m²`
   if (p.rodzaj === 'warianty') return 'jednorazowo albo abonament'
   return `od ${kwotaJednostki(p.kwota)}/${nazwaJednostki(p.jednostka)}`
+}
+
+/**
+ * Opcja uslugi (najwyzej dwie linie nazwy); pod wybrana podpowiedz ceny i chipy wariantow, a inne uslugi zostaja same (R9).
+ * @param {Usluga} usluga @param {OpcjeUslugi} opcje @returns {Node[]}
+ */
+export function opcjaUslugi(usluga, { wybor, opisCeny, naWybor, naWariant }) {
+  const czyWybrana = usluga.id === wybor.uslugaId
+  const opcja = h('label', { class: 'opcja-uslugi' },
+    h('input', { type: 'radio', name: NAZWA_POLA_USLUGI, value: usluga.id, class: 'opcja-uslugi__wejscie', checked: czyWybrana,
+      on: { change: () => naWybor(usluga) } }),
+    h('span', { class: 'opcja-uslugi__tytul' }, usluga.nazwa))
+  if (!czyWybrana) return [opcja]
+  const opis = opisCeny(usluga)
+  const warianty = usluga.warianty ?? []
+  if (!opis && warianty.length === 0) return [opcja]
+  return [opcja, h('div', { class: 'opcja-uslugi__szczegoly' },
+    opis ? h('p', { class: 'opcja-uslugi__opis liczba' }, opis) : null,
+    warianty.length === 0 ? null : chipy({
+      id: 'kreator-wariant', etykieta: 'Wariant', opcje: warianty.map((w) => ({ wartosc: w.id, etykieta: w.nazwa })), wybrana: wybor.wariantId,
+      naZmiane: naWariant,
+    }))]
 }
 
 /** @param {Kontekst} kontekst @param {Usluga} usluga @param {string | null} wojewodztwoId @returns {string | null} */
@@ -92,6 +118,8 @@ export const widokKreatoraUslugi = {
   render(kontener, { zapytanie, kontekst }) {
     const { magazyn, katalog, domyslne, nawiguj } = kontekst
     const id = zapytanie.wycena ?? null
+    /** Klient z karty klienta („Nowa wycena”, `?klient=<id>`); nowySzkic pomija klienta, ktorego nie ma. */
+    const klientId = zapytanie.klient ?? null
     const zapisana = id === null ? null : wycenaKroku(kontener, zapytanie, kontekst)
     if (id !== null && !zapisana) return
     const stan = wczytajStan(magazyn)
@@ -117,41 +145,26 @@ export const widokKreatoraUslugi = {
       zmienWyborEkranu({ uslugaId: usluga.id, wariantId: usluga.warianty?.[0]?.id ?? null }, FOKUS_USLUGI)
     }
 
-    /** @param {Usluga} usluga @returns {Node[]} opcja uslugi, a pod wybrana usluga z wariantami — chipy wariantow */
-    function opcjaUslugi(usluga) {
-      const czyWybrana = usluga.id === wybor.uslugaId
-      const opis = podpowiedz(kontekst, usluga, wybor.wojewodztwoId)
-      const opcja = h('label', { class: 'opcja-uslugi' },
-        h('input', { type: 'radio', name: NAZWA_POLA_USLUGI, value: usluga.id, class: 'opcja-uslugi__wejscie', checked: czyWybrana,
-          on: { change: () => handleWyborUslugi(usluga) } }),
-        h('span', { class: 'opcja-uslugi__tresc' },
-          h('span', { class: 'opcja-uslugi__tytul' }, usluga.nazwa),
-          opis ? h('span', { class: 'opcja-uslugi__opis liczba' }, opis) : null))
-      const warianty = usluga.warianty ?? []
-      if (!czyWybrana || warianty.length === 0) return [opcja]
-      return [opcja, h('div', { class: 'opcja-uslugi__warianty' }, chipy({
-        id: 'kreator-wariant', etykieta: 'Wariant', opcje: warianty.map((w) => ({ wartosc: w.id, etykieta: w.nazwa })), wybrana: wybor.wariantId,
-        naZmiane: (wariantId) => zmienWyborEkranu({ wariantId }, 'input[name="kreator-wariant"]:checked'),
-      }))]
-    }
-
     function trescKroku() {
       const wojewodztwo = katalog.wojewodztwo(wybor.wojewodztwoId)
-      const wierszWojewodztwa = wiersz({ tytul: 'Województwo', wartosc: `${wojewodztwo.nazwa} · ${tekstLiczby(wojewodztwo.stawka_h)} zł/h`,
+      const wierszWojewodztwa = wiersz({ tytul: 'Województwo', opis: `${wojewodztwo.nazwa} · ${tekstLiczby(wojewodztwo.stawka_h)} zł/h`,
         naKlik: () => otworzWyborWojewodztwa(kontekst, wybor.wojewodztwoId, (wojewodztwoId) => zmienWyborEkranu({ wojewodztwoId }, FOKUS_WOJEWODZTWA)) })
       wierszWojewodztwa.dataset.pole = 'wojewodztwo'
       const wybieralne = katalog.uslugi.filter((u) => !u.tylko_dodatek)
+      /** @type {OpcjeUslugi} */
+      const opcjeUslugi = { wybor, opisCeny: (u) => podpowiedz(kontekst, u, wybor.wojewodztwoId), naWybor: handleWyborUslugi,
+        naWariant: (wariantId) => zmienWyborEkranu({ wariantId }, 'input[name="kreator-wariant"]:checked') }
       const grupy = GRUPY.map(({ tryb, tytul }) => ({ tytul, uslugi: wybieralne.filter((u) => u.tryb === tryb) }))
         .filter((g) => g.uslugi.length > 0)
         .map((g) => h('fieldset', { class: 'lista-uslug' },
           h('legend', { class: 'lista-uslug__tytul' }, g.tytul),
-          h('div', { class: 'lista-uslug__opcje' }, g.uslugi.flatMap(opcjaUslugi))))
+          h('div', { class: 'lista-uslug__opcje' }, g.uslugi.flatMap((u) => opcjaUslugi(u, opcjeUslugi)))))
       return [
         karta({ klasa: 'karta--bez-odstepu' }, wierszWojewodztwa),
         ...grupy,
         zapisana ? wierszPytan({ katalog, uslugaId: zapisana.wejscie.uslugaId, odpowiedzi: zapisana.odpowiedzi,
           adres: sciezka('pytania', { id: zapisana.id }) }) : null,
-        katalog.uslugi.some((u) => u.tylko_dodatek) ? h('p', { class: 'kreator-usluga__notka' }, 'AGD, szafki i balkon dodasz w kroku „Dodatki”.') : null,
+        katalog.uslugi.some((u) => u.tylko_dodatek) ? wiecej({}, 'AGD, szafki i balkon dodasz w kroku „Dodatki”.') : null,
         komunikat,
       ].filter((element) => element !== null)
     }
@@ -162,7 +175,7 @@ export const widokKreatoraUslugi = {
      * @returns {Promise<string | null>} id wyceny albo null, gdy uzytkownik nie potwierdzil zmiany uslugi
      */
     async function zapiszWybor(doZapisu) {
-      if (id === null) return nowySzkic(kontekst, doZapisu).id
+      if (id === null) return nowySzkic(kontekst, doZapisu, klientId).id
       const obecna = znajdzWycene(wczytajStan(magazyn), id)
       if (!obecna) throw new BladWyceny('brak_wyceny', `Nie ma wyceny ${id}`)
       const { uslugaId, wariantId = null, wojewodztwoId = null } = obecna.wejscie

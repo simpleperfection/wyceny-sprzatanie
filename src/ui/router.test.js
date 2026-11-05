@@ -27,6 +27,23 @@ describe('dopasuj', () => {
     assert.equal(dopasuj('#/ustawienia/start', TRASY)?.nazwa, 'kreatorStartowy')
   })
 
+  it('odróżnia nowego klienta, kartę i edycję klienta', () => {
+    assert.deepEqual(dopasuj('#/klienci/nowy', TRASY), { nazwa: 'nowyKlient', parametry: {}, zapytanie: {} })
+    assert.deepEqual(dopasuj('#/klienci/k-1', TRASY), { nazwa: 'klient', parametry: { id: 'k-1' }, zapytanie: {} })
+    assert.deepEqual(dopasuj('#/klienci/k-1/edycja', TRASY), { nazwa: 'edycjaKlienta', parametry: { id: 'k-1' }, zapytanie: {} })
+    assert.equal(dopasuj('#/klienci', TRASY)?.nazwa, 'klienci')
+  })
+
+  it('odróżnia kalendarz, nowe zlecenie, zlecenie i wizytę', () => {
+    assert.deepEqual(dopasuj('#/zlecenia/tydzien?data=2026-11-02', TRASY),
+      { nazwa: 'zlecenia', parametry: { widok: 'tydzien' }, zapytanie: { data: '2026-11-02' } })
+    assert.deepEqual(dopasuj('#/zlecenie/nowe', TRASY), { nazwa: 'noweZlecenie', parametry: {}, zapytanie: {} })
+    assert.deepEqual(dopasuj('#/zlecenie/z1', TRASY), { nazwa: 'zlecenie', parametry: { id: 'z1' }, zapytanie: {} })
+    assert.deepEqual(dopasuj('#/zlecenie/z1/wizyta/2026-11-02', TRASY),
+      { nazwa: 'wizyta', parametry: { id: 'z1', data: '2026-11-02' }, zapytanie: {} })
+    assert.equal(dopasuj('#/zlecenia', TRASY), null)
+  })
+
   it('zwraca null dla nieznanej trasy', () => {
     assert.equal(dopasuj('#/nic', TRASY), null)
   })

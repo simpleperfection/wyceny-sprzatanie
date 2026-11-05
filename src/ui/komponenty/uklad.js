@@ -7,7 +7,10 @@ import { h, ikona } from '../h.js'
 /** @typedef {import('../ikony.js').NazwaIkony} NazwaIkony */
 /** @typedef {import('../h.js').Dzieci} Dzieci */
 /**
- * @typedef {{ tytul: string, podtytul?: string, wstecz?: string, wsteczTekst?: string, czyDuzy?: boolean }} OpcjeNaglowka
+ * @typedef {{ tytul: string, podtytul?: string, wstecz?: string, wsteczTekst?: string, czyDuzy?: boolean, krok?: string,
+ *   pasek?: Node }} OpcjeNaglowka krok: tekst obok powrotu („Krok 2 z 5”); pasek: pasek postepu nad tytulem
+ * @typedef {{ czyOtwarte: boolean, naPrzelacz: (czyOtwarte: boolean) => void }} StanWiecej stan rozwiniecia trzyma ekran, bo tresc
+ *   rysuje sie od nowa
  * @typedef {{ tekst: string, adres: string, czyAktywna: boolean }} PozycjaPrzelacznika
  * @typedef {{ tekst: string, adres?: string, naKlik?: () => void }} Akcja
  * @typedef {{ rodzaj: 'uwaga' | 'info' | 'blad' | 'sukces', tekst: string, akcja?: Akcja }} OpcjeBanera
@@ -43,10 +46,12 @@ function linkWstecz(adres, tekst) {
   return h('a', { class: 'naglowek__wstecz naglowek__wstecz--tekst', href: adres }, ikona('chevron-left'), tekst)
 }
 
-/** @param {OpcjeNaglowka} opcje @returns {HTMLElement} bialy naglowek: powrot nad tytulem (h1), pod nim podtytul */
-export function naglowek({ tytul, podtytul, wstecz, wsteczTekst, czyDuzy = false }) {
+/** @param {OpcjeNaglowka} opcje @returns {HTMLElement} bialy naglowek: powrot (i krok) nad tytulem (h1), pod nim podtytul */
+export function naglowek({ tytul, podtytul, wstecz, wsteczTekst, czyDuzy = false, krok, pasek }) {
   return h('header', { class: ['naglowek', czyDuzy && 'naglowek--duzy'] },
-    wstecz === undefined ? null : h('div', { class: 'naglowek__gora' }, linkWstecz(wstecz, wsteczTekst)),
+    wstecz === undefined ? null : h('div', { class: 'naglowek__gora' }, linkWstecz(wstecz, wsteczTekst),
+      krok === undefined ? null : h('span', { class: 'naglowek__krok' }, krok)),
+    pasek ?? null,
     h('h1', { class: 'naglowek__tytul' }, tytul),
     podtytul ? h('p', { class: 'naglowek__podtytul' }, podtytul) : null)
 }
@@ -110,8 +115,8 @@ export function wiersz({ tytul, opis, wartosc, adres, naKlik, awatar, ikona: naz
     nazwaIkony ? ikona(nazwaIkony, 'wiersz__ikona') : null,
     h('span', { class: 'wiersz__tresc' },
       h('span', { class: 'wiersz__tytul' }, tytul),
-      opis ? h('span', { class: 'wiersz__opis' }, opis) : null),
-    dodatek ?? null,
+      opis ? h('span', { class: 'wiersz__opis' }, opis) : null,
+      dodatek ?? null),
     wartosc ? h('span', { class: 'wiersz__wartosc' }, wartosc) : null,
     czyAkcja ? ikona('chevron-right', 'wiersz__strzalka') : null,
   ]
@@ -144,16 +149,27 @@ export function arkusz({ tytul }, ...dzieci) {
 }
 
 /**
+ * Rozwiniecie <details> ze stanu ekranu; kazde przelaczenie wraca do ekranu, zeby przetrwalo przerysowanie.
+ * @template {HTMLDetailsElement} T @param {T} szczegoly @param {StanWiecej} stan @returns {T}
+ */
+export function trzymajRozwiniecie(szczegoly, { czyOtwarte, naPrzelacz }) {
+  szczegoly.open = czyOtwarte
+  szczegoly.addEventListener('toggle', () => naPrzelacz(szczegoly.open))
+  return szczegoly
+}
+
+/**
  * Wyjasnienia schowane pod „Więcej” (natywne <details>, dziala z klawiatury bez skryptu).
- * @param {{ etykieta?: string }} opcje `etykieta` zamiast „Więcej”
+ * @param {{ etykieta?: string, stan?: StanWiecej }} opcje `etykieta` zamiast „Więcej”; `stan`: rozwiniecie trzymane przez ekran
  * @param {...Dzieci} tresc co najmniej jeden element albo tekst
  * @returns {HTMLDetailsElement}
  */
-export function wiecej({ etykieta = WIECEJ }, ...tresc) {
+export function wiecej({ etykieta = WIECEJ, stan }, ...tresc) {
   if (tresc.length === 0) throw new RangeError('„Więcej” bez treści')
-  return h('details', { class: 'wiecej' },
+  const szczegoly = h('details', { class: 'wiecej' },
     h('summary', null, etykieta, ikona('chevron-right', 'wiecej__znak')),
     h('div', { class: 'wiecej__tresc' }, ...tresc))
+  return stan ? trzymajRozwiniecie(szczegoly, stan) : szczegoly
 }
 
 /**

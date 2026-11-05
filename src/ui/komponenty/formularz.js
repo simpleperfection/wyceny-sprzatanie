@@ -1,14 +1,14 @@
 // Komponenty formularza z makiet wariantu B: pole z bledem pod spodem, licznik − / wartosc / +, chipy pojedynczego
-// wyboru, przelacznik i przycisk. Kazdy zwraca element DOM; zmiany wartosci zglasza przez `naZmiane`.
+// i wielokrotnego wyboru, przelacznik i przycisk. Kazdy zwraca element DOM; zmiany wartosci zglasza przez `naZmiane`.
 
 import { bladZakresu, parsujLiczbe, tekstLiczby } from '../format.js'
 import { h, ikona } from '../h.js'
 
 /** @typedef {import('../ikony.js').NazwaIkony} NazwaIkony */
 /**
- * @typedef {'tekst' | 'liczba' | 'telefon' | 'email'} RodzajPola
+ * @typedef {'tekst' | 'liczba' | 'telefon' | 'email' | 'data' | 'godzina'} RodzajPola
  * @typedef {{ id: string, etykieta: string, wartosc?: string, rodzaj?: RodzajPola, blad?: string | null, podpowiedz?: string,
- *   autocomplete?: string, naZmiane?: (wartosc: string) => void }} OpcjePola
+ *   autocomplete?: string, min?: string, naZmiane?: (wartosc: string) => void }} OpcjePola min: dolna granica pola daty
  * @typedef {{ id: string, etykieta: string, wartosc: number, min?: number, max?: number, krok?: number, jednostka?: string,
  *   tekstBledu?: string, naZmiane: (wartosc: number) => void }} OpcjeLicznika tekstBledu: komunikat zlego wpisu zamiast ogolnego „Wpisz liczbę od … do …”
  * @typedef {{ id: string, etykieta: string, opis?: string, czyWlaczony: boolean, naZmiane: (czyWlaczony: boolean) => void }} OpcjePrzelacznika
@@ -22,6 +22,8 @@ const TYPY_POLA = Object.freeze({
   liczba: { type: 'text', inputmode: 'decimal' },
   telefon: { type: 'tel', inputmode: 'tel' },
   email: { type: 'email', inputmode: 'email' },
+  data: { type: 'date' },
+  godzina: { type: 'time' },
 })
 const CYFRY_KROKU = 100
 
@@ -43,11 +45,11 @@ export function ustawBlad(elementPola, blad) {
 
 /** @param {OpcjePola} opcje @returns {HTMLDivElement} etykieta, pole i komunikat bledu pod spodem */
 export function pole(opcje) {
-  const { id, etykieta, wartosc = '', rodzaj = 'tekst', blad = null, podpowiedz, autocomplete = 'off', naZmiane } = opcje
+  const { id, etykieta, wartosc = '', rodzaj = 'tekst', blad = null, podpowiedz, autocomplete = 'off', min, naZmiane } = opcje
   const idPodpowiedzi = `${id}-podpowiedz`
   const idBledu = `${id}-blad`
   const wejscie = h('input', {
-    ...TYPY_POLA[rodzaj], id, name: id, value: wartosc, autocomplete, class: 'pole__wejscie',
+    ...TYPY_POLA[rodzaj], id, name: id, value: wartosc, autocomplete, min, class: 'pole__wejscie',
     'aria-describedby': podpowiedz ? `${idPodpowiedzi} ${idBledu}` : idBledu,
   })
   wejscie.addEventListener('input', () => naZmiane?.(wejscie.value))
@@ -128,8 +130,8 @@ export function licznik(opcje) {
     ogloszenie)
 }
 
-/** @param {'minus' | 'plus'} rodzaj @param {string} etykieta @param {() => void} naKlik */
-function przyciskLicznika(rodzaj, etykieta, naKlik) {
+/** @param {'minus' | 'plus'} rodzaj @param {string} etykieta @param {() => void} naKlik @returns {HTMLButtonElement} */
+export function przyciskLicznika(rodzaj, etykieta, naKlik) {
   const przycisk = h('button', {
     type: 'button', class: ['licznik__przycisk', rodzaj === 'plus' && 'licznik__przycisk--plus'], 'aria-label': etykieta,
   }, ikona(rodzaj))
@@ -157,6 +159,25 @@ export function chipy({ id, etykieta, opcje, wybrana, naZmiane }) {
           on: { change: () => naZmiane(opcja.wartosc) },
         }),
         h('span', { class: 'chip__tekst' }, opcja.etykieta)))))
+}
+
+/**
+ * Chipy wielokrotnego wyboru: pola checkbox w grupie z komunikatem bledu pod spodem (`ustawBlad`); `naZmiane` dostaje przelaczona opcje.
+ * @param {{ id: string, etykieta: string, opcje: readonly { wartosc: number, etykieta: string }[], wybrane: readonly number[],
+ *   klasa?: string, naZmiane: (wartosc: number) => void }} opcje klasa: dodatkowa klasa listy chipow
+ * @returns {HTMLDivElement}
+ */
+export function chipyWielokrotne({ id, etykieta, opcje, wybrane, klasa, naZmiane }) {
+  const element = h('div', { class: 'grupa-chipow' },
+    h('p', { class: 'grupa-chipow__etykieta', id: `${id}-etykieta` }, etykieta),
+    h('div', { class: ['chipy', klasa], role: 'group', 'aria-labelledby': `${id}-etykieta`, 'aria-describedby': `${id}-blad` },
+      opcje.map((opcja) => h('label', { class: 'chip' },
+        h('input', { type: 'checkbox', name: id, value: String(opcja.wartosc), class: 'chip__wejscie', checked: wybrane.includes(opcja.wartosc),
+          on: { change: () => naZmiane(opcja.wartosc) } }),
+        h('span', { class: 'chip__tekst' }, opcja.etykieta)))),
+    h('p', { class: 'pole__blad', id: `${id}-blad`, role: 'alert' }))
+  ustawBlad(element, null)
+  return element
 }
 
 /** @param {OpcjePrzelacznika} opcje @returns {HTMLLabelElement} etykieta z opisem i przelacznik `role="switch"` */

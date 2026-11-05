@@ -5,7 +5,7 @@
 
 import { BladMagazynu, wczytajStan } from '../dane/magazyn.js'
 import { BladUstawien, POLA_WYMAGANE_W_OFERCIE } from '../dane/ustawienia.js'
-import { BladWyceny, czyStatusOferty, wycena as znajdzWycene, zapiszOferte, zapiszWyslanieOferty } from '../dane/wyceny.js'
+import { BladWyceny, czyStatusOferty, przypiszKlienta, wycena as znajdzWycene, zapiszOferte, zapiszWyslanieOferty } from '../dane/wyceny.js'
 import { czyWycenaZamknieta } from '../dane/zlecenia.js'
 import { BladKodeka, linkOferty } from '../oferta/kodek.js'
 import { BladOferty, ofertaZWyceny, warunkiZrodlowe } from '../oferta/tresc.js'
@@ -16,13 +16,15 @@ import { baner, naglowek } from '../ui/komponenty/uklad.js'
 import { kopiujDoSchowka } from '../ui/schowek.js'
 import { ETYKIETY_STATUSOW } from '../ui/statusy.js'
 import { sciezka } from '../ui/trasy.js'
-import { zglosBladKreatora } from './kreator-wspolne.js'
+import { POWROT_DO_WYCEN, zglosBladKreatora } from './kreator-wspolne.js'
 import { kartaDodatkow, kartaFirmy, kartaKlienta, kartaWarunkow, kartaZakresu, poZakresach, tekstKwoty } from './oferta-edycja-sekcje.js'
 import { tekstBleduZapisu } from './teksty-bledow.js'
+import { wyborKlienta } from './wybor-klienta.js'
 
 /** @typedef {import('../ui/router.js').Widok} Widok */
 /** @typedef {import('../ui/router.js').Kontekst} Kontekst */
 /** @typedef {import('../dane/wyceny.js').Wycena} Wycena */
+/** @typedef {import('../dane/magazyn.js').Magazyn} Magazyn */
 /** @typedef {import('../dane/magazyn.js').Stan} Stan */
 /** @typedef {import('../oferta/kodek.js').LinkOferty} LinkOferty */
 /** @typedef {import('../oferta/tresc.js').Oferta} Oferta */
@@ -58,6 +60,21 @@ function tekstBleduZapisuOferty(blad) {
     return tekstBleduZapisu(blad)
   }
   return zglosBladKreatora(blad)
+}
+
+/**
+ * Wybor klienta w edycji oferty: przypiszKlienta i adres z kopii w wycenie do pola adresu karty (null, gdy wyceny juz nie ma).
+ * Odmowa albo awaria zapisu daje tekst bledu (tekstBleduZapisuOferty) i niczego nie zapisuje.
+ * @param {Magazyn} magazyn @param {string} id @param {string | null} klientId
+ * @returns {{ blad: string } | { blad: null, adres: string | null }}
+ */
+export function przypiszKlientaOferty(magazyn, id, klientId) {
+  try {
+    const w = znajdzWycene(przypiszKlienta(magazyn, id, klientId), id)
+    return { blad: null, adres: w?.klient.adres ?? null }
+  } catch (blad) {
+    return { blad: tekstBleduZapisuOferty(blad) }
+  }
 }
 
 /** @param {unknown} blad @returns {string} tekst bledu przygotowania oferty (brak ceny jest stanem oczekiwanym) */
@@ -187,6 +204,21 @@ function uruchomOferte(kontener, kontekst, id, zakresy, czyAktywny) {
   }
 
   /**
+   * Klient z listy (wyborKlienta): kopia jego nazwy i adresu w wycenie, nowy adres w polu adresu karty.
+   * @param {HTMLElement} karta karta „Klient i termin” @param {string | null} klientId @returns {string | null} tekst bledu albo null
+   */
+  function przypisz(karta, klientId) {
+    const wynik = przypiszKlientaOferty(magazyn, id, klientId)
+    if (wynik.blad !== null) return wynik.blad
+    const adres = karta.querySelector('#oferta-adres')
+    if (adres instanceof HTMLInputElement && wynik.adres !== null) adres.value = wynik.adres
+    wersja += 1
+    odswiezStan()
+    przygotujLink()
+    return null
+  }
+
+  /**
    * Oferta trafila do klienta: data waznosci zostaje taka jak w linku, status `wyslana`. Wycena ze zleceniem jest tylko
    * do odczytu, wiec jej wyslanie niczego nie zapisuje (zapiszWyslanieOferty).
    */
@@ -259,7 +291,9 @@ function uruchomOferte(kontener, kontekst, id, zakresy, czyAktywny) {
   /** @param {BiezacaOferta} poczatek stan przy otwarciu (zapasowo, gdy swiezego nie da sie odczytac) */
   function rysuj(poczatek) {
     const { w, stan, oferta } = poczatek
-    const klient = kartaKlienta(w.klient, zapisz)
+    const wybor = wyborKlienta({ magazyn, wybranyId: w.klientId, czyAktywny, id: 'oferta-klient',
+      naWybor: (klientId) => przypisz(klient, klientId) })
+    const klient = kartaKlienta(w.klient, zapisz, wybor.element)
     const zakres = kartaZakresu({ zapisz, pobierz: () => {
       const teraz = biezaca() ?? poczatek
       return { zakres: teraz.oferta.zakres, czyZmieniony: teraz.w.oferta.zakres !== null }
@@ -271,7 +305,7 @@ function uruchomOferte(kontener, kontekst, id, zakresy, czyAktywny) {
     } })
     if (czyWycenaZamknieta(stan, id)) zablokujEdycje([klient, zakres, warunki])
     kontener.replaceChildren(
-      naglowek({ tytul: 'Oferta', podtytul: `Wycena ${oferta.numer} · ${tekstKwoty(oferta.razem)}`, wstecz: sciezka('wycena', { id }) }),
+      naglowek({ tytul: 'Oferta', podtytul: `Wycena ${oferta.numer} · ${tekstKwoty(oferta.razem)}`, wstecz: sciezka('wycena', { id }), wsteczTekst: POWROT_DO_WYCEN.wsteczTekst }),
       h('div', { class: 'tresc oferta-edycja' },
         czyDaneFirmy(oferta) ? null : baner({ rodzaj: 'uwaga', tekst: BRAK_DANYCH_FIRMY, akcja: { tekst: 'Uzupełnij', adres: sciezka('ustawienia') } }),
         kartaFirmy(oferta.firma), klient, zakres, kartaDodatkow(oferta.dodatkiOpcjonalne), warunki,
@@ -299,8 +333,8 @@ function uruchomOferte(kontener, kontekst, id, zakresy, czyAktywny) {
  * @param {HTMLElement} kontener @param {string | null} id @param {string} tekst
  */
 function pokazStan(kontener, id, tekst) {
-  const powrot = id === null ? sciezka('wyceny') : sciezka('wycena', { id })
-  kontener.replaceChildren(naglowek({ tytul: 'Oferta', wstecz: powrot }),
+  const powrot = id === null ? POWROT_DO_WYCEN.wstecz : sciezka('wycena', { id })
+  kontener.replaceChildren(naglowek({ tytul: 'Oferta', wstecz: powrot, wsteczTekst: POWROT_DO_WYCEN.wsteczTekst }),
     h('div', { class: 'tresc' }, baner({ rodzaj: 'info', tekst }),
       przycisk({ tekst: id === null ? 'Wróć do listy wycen' : 'Wróć do wyceny', rodzaj: 'drugi', adres: powrot })))
 }
@@ -317,7 +351,7 @@ export const widokOferty = {
       return pokazStan(kontener, id, `Ofertę przygotujesz z wyceny do wysłania, wysłanej albo przyjętej. Ta ma status „${ETYKIETY_STATUSOW[w.status]}”.`)
     }
     const tresc = h('div', { class: 'tresc' })
-    kontener.replaceChildren(naglowek({ tytul: 'Oferta', wstecz: sciezka('wycena', { id }) }), tresc)
+    kontener.replaceChildren(naglowek({ tytul: 'Oferta', wstecz: sciezka('wycena', { id }), wsteczTekst: POWROT_DO_WYCEN.wsteczTekst }), tresc)
     void poZakresach(tresc, (zakresy) => { sprzatanie = uruchomOferte(kontener, kontekst, id, zakresy, () => czyAktywny) },
       () => czyAktywny).catch(reportError)
     return () => {

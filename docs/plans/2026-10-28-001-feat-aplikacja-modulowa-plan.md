@@ -843,7 +843,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 
 **Zależy od:** Faza 3
 
-- [ ] **IU-13: Lista, karta i formularz klienta**
+- [x] **IU-13: Lista, karta i formularz klienta**
 
 **Cel:** Moduł Klienci: lista z wyszukiwaniem, formularz dodania i edycji, karta z telefonem, mapą, notatkami i historią wycen.
 
@@ -901,7 +901,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 **Operator checklist:**
 - [ ] Na telefonie dotknięcie numeru na karcie klienta otwiera dzwonienie, a adresu — mapę
 
-- [ ] **IU-14: Wybór klienta w wycenie**
+- [x] **IU-14: Wybór klienta w wycenie**
 
 **Cel:** W wycenie klienta wybiera się z listy albo dodaje w tym samym arkuszu, a „Nowa wycena” z karty klienta zaczyna wycenę z tym klientem.
 
@@ -932,6 +932,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 
 **Podejście:**
 - `wyborKlienta({ stan, wybranyId, wymagany, naWybor })`: wiersz-przycisk z wybranym klientem albo „Wybierz klienta”; otwiera `arkusz` z polem wyszukiwania, listą pasujących (`propozycjeKlientow(stan, fraza)`, najwyżej 8), wierszem „Dodaj nowego klienta: {tekst}” (w tym samym arkuszu krótki formularz: nazwa wypełniona wpisanym tekstem, telefon, adres) i opcją „Bez klienta”, gdy wybór nie jest wymagany. Nowy klient zapisuje się (`dodajKlienta`, id z `crypto.randomUUID()` przy otwarciu formularza) dopiero przy „Zapisz klienta”; porzucony arkusz nie zostawia klienta. Arkusz sprawdza `czyAktywny`.
+- Korekta po implementacji (faza 4, 2026-11-03): sygnatura to `wyborKlienta({ magazyn, wybranyId, wymagany, naWybor, czyAktywny, id })` → `{ element, sprawdz }`. Komponent dostaje `magazyn` (potrzebny `dodajKlienta`, arkusz czyta świeży stan przy otwarciu), `naWybor(klientId)` zwraca tekst błędu albo `null` (przy błędzie arkusz zostaje otwarty z banerem), a `sprawdz()` pokazuje „Wybierz klienta.” przy wymaganym wyborze (IU-16).
 - Wycena: wybór woła `przypiszKlienta(magazyn, wycenaId, klientId)` z `src/dane/wyceny.js` (kopiuje nazwę i adres do `wycena.klient`; decyzja planu: zmiana karty nie zmienia kopii). Pole „Klient (np. imię i dzielnica)” w arkuszu „Zapisz” podsumowania i pole „Klient” w karcie „Klient i termin” edycji oferty zastępuje `wyborKlienta`; pole adresu w ofercie zostaje i zmienia tylko wycenę; termin bez zmian.
 - Klient opcjonalny w szybkiej i dokładnej wycenie (R19); wymagany przy „Zaplanuj” (IU-16). Szybka wycena dostaje opcjonalny wiersz `wyborKlienta` (bez wymogu), a wybór zapisuje się do jej rekordu tak jak inne pola szybkiej wyceny.
 - `#/kreator/usluga?klient=<id>` i `#/szybka?klient=<id>` (karta klienta → „Nowa wycena”, R18): szkic powstaje z `klientId` (`utworzSzkic` z IU-6), nieistniejący klient w parametrze jest pomijany.
@@ -958,7 +959,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 
 **Zależy od:** Faza 4
 
-- [ ] **IU-15: Kalendarz: Dzień, Tydzień i Miesiąc**
+- [x] **IU-15: Kalendarz: Dzień, Tydzień i Miesiąc**
 
 **Cel:** Moduł Zlecenia z widokami Dzień (z „Do zamknięcia” i szybkim zamykaniem wizyt), Tydzień i Miesiąc oraz trasami całego modułu.
 
@@ -1022,7 +1023,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 - `node --test src/zlecenia/kalendarz-dane.test.js src/ui/format.test.js src/ui/router.test.js` przechodzi
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-16: Nowe zlecenie: ręcznie i „Zaplanuj” z wyceny**
+- [x] **IU-16: Nowe zlecenie: ręcznie i „Zaplanuj” z wyceny**
 
 **Cel:** Formularz zlecenia jednorazowego i cyklicznego, ręcznie albo z przyjętej wyceny z ceną, planem czasu i cyklem z abonamentu.
 
@@ -1052,6 +1053,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 - `src/zlecenia/formularz.js` (czyste): `wartosciPoczatkowe(stan, katalog, { wycenaId, klientId, data }, dzis)`. Z wyceny: klient wyceny, usługa, cena = `kwotaWyceny` z `src/dane/wyceny.js` (cena ręczna wygrywa); szybka wycena w trybie „widełki” albo „od” — puste pole ceny z podpowiedzią widełek (decyzja planu), w trybie „ok” — kwota; data i godzina z terminu wyceny zgodnego z `TERMIN_ISO` (`src/dane/ksztalt.js`), inaczej dziś bez godziny; abonament (`czyAbonament`) → cykl `tydzien` z dniami według `wejscie.wariantId` (`abonament_1`: dzień tygodnia daty startu, `abonament_2`: [1, 4], `abonament_3`: [1, 3, 5], `abonament_5`: [1, 2, 3, 4, 5]), rozliczenie `miesiecznie`, kwota miesięczna = cena za wizytę × `wizytWMiesiacu` zaokrąglona do 1 zł (R26). Ręcznie: klient z `?klient=`, data z `?data=` albo dziś, `za_wizyte`. `bledyFormularza(wartosci)` → `{ pole: kod }` (klient wymagany zawsze, R19; cena ≥ 0 wymagana; data; dni przy cyklu tygodniowym i dwutygodniowym; usługa albo opis); `doZapisu(wartosci)` → dane dla `utworzZlecenie` / `zaplanujZWyceny` (`src/dane/zlecenia.js`). Cykle z `CYKLE` (`src/kalendarz/wystapienia.js`), rozliczenia z `ROZLICZENIA` (`src/dane/zlecenia-ksztalt.js`), dni z `SKROTY_DNI` (`src/ui/format.js`).
 - Ekran `#/zlecenie/nowe` (podmienia tymczasowy widok z IU-15): powrót „Zlecenia” (z wyceny: „Wycena”), tytuł „Nowe zlecenie”, podtytuł z wyceny „Z wyceny {numer}”; pola w kolejności: Klient (`wyborKlienta` z IU-14, wymagany), Usługa (wybór z katalogu albo „Inna” z polem opisu, `DLUGOSC_OPISU = 120`), Cena, Data, Godzina, Powtarzaj (chipy), Dni (chipy wielokrotnego wyboru przy cyklu tygodniowym; domyślnie dzień tygodnia daty), Płatność (tylko przy serii), planowany czas z wyceny jako tekst; jedna główna akcja „Zapisz zlecenie”. Id zlecenia nadane przy otwarciu ekranu; po zapisie `history.replaceState` na `#/zlecenia/dzien?data=<start>`. Tempo planu w chwili zapisu: `tempoDoWyceny(ustawienia, daneTempa(stan), uslugaId, domyslne)`.
 - „Zaplanuj”: główny przycisk na podsumowaniu przyjętej wyceny, gdy `doZaplanowania` (akcja `zaplanuj` w `akcjeWyceny`); pod podsumowaniem przyjętej wyceny lista „Zlecenia z tej wyceny” z wierszami → `#/zlecenie/<id>` (R22); przycisk „Zaplanuj” w wierszach sekcji „Do zaplanowania” ekranu Wycena. Z jednej wyceny można zaplanować kolejne zlecenie (przycisk drugi „Zaplanuj kolejne”, gdy wycena ma już zlecenie).
+- Korekta po implementacji (faza 5, 2026-11-04): `akcjeWyceny` ma trzeci wymagany argument `czyDoZaplanowania` i akcję `zaplanuj_kolejne`: przyjęta wycena ze zleceniem dostaje ją zamiast `zaplanuj`, a abonament z samym zleceniem jednorazowym nadal dostaje `zaplanuj`. `src/zlecenia/formularz.js` ma też `zapiszFormularz(kontekst, id, wartosci)` (wzór: `zapiszSzybka`), więc nie jest w całości czysty.
 - Seria co tydzień zakłada się w niecałą minutę: klient, cena, data, „Co tydzień” (dzień tygodnia z daty), „Zapisz zlecenie”.
 
 **Teksty (verbatim):**
@@ -1085,7 +1087,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 **Operator checklist:**
 - [ ] Właściciel zakłada na telefonie serię co tydzień u stałego klienta i mierzy, że trwa to niecałą minutę
 
-- [ ] **IU-17: Wizyta: zamknięcie, zapłata, czas pracy, przesunięcie i odwołanie**
+- [x] **IU-17: Wizyta: zamknięcie, zapłata, czas pracy, przesunięcie i odwołanie**
 
 **Cel:** Ekran wizyty z „Zrobione”, zapłatą z formą, opcjonalnym czasem pracy z planem i faktem, przesunięciem i odwołaniem.
 
@@ -1143,7 +1145,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 **Operator checklist:**
 - [ ] Właściciel zamyka na telefonie wczorajszą wizytę z zapłatą dwoma dotknięciami w widoku Dzień
 
-- [ ] **IU-18: Karta zlecenia, seria i historia klienta**
+- [x] **IU-18: Karta zlecenia, seria i historia klienta**
 
 **Cel:** Karta zlecenia z opisem serii, zmianą od wizyty, zakończeniem serii, zapłatami miesięcznymi i usunięciem oraz zlecenia i niezapłacone na karcie klienta.
 
@@ -1177,6 +1179,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 - „Usuń zlecenie”: `dialogPotwierdzenia`; gdy zlecenie ma zapłaty, treść mówi, że zapłaty też znikną.
 - Karta klienta: sekcja „Zlecenia” (nazwa, najbliższa wizyta albo „Zakończone”), sekcja „Niezapłacone” z `niezaplacone(stan, dzis, klientId)` (`src/zlecenia/zapytania.js`; wiersz „{data albo miesiąc} · {kwota}” → wizyta albo zlecenie), przycisk „Nowe zlecenie” (→ `#/zlecenie/nowe?klient=<id>`, R18); `klienci-dane.js`: `historiaZlecen`, `niezaplaconeKlienta`.
 - `karta-dane.js` (czyste): `opisRodzaju(zlecenie, katalog)` (dni przez `SKROTY_DNI` z `src/ui/format.js`), `miesiaceDoZaplaty(zlecenie, dzis)`, `okresyDoPokazania`, `domyslnyKoniec`.
+- Korekta po implementacji (faza 5, 2026-11-04): `opisRodzaju(zlecenie)` nie ma argumentu `katalog`, nazwę liczy `nazwaZlecenia(z, nazwaUslugi)` z `src/zlecenia/teksty-wizyty.js` (`nazwaUslugi` daje `nazwyUslug(katalog)`). Kwoty idą przez `kwotaJednostki`, więc seria miesięczna daje „1 560 zł miesięcznie” (twarde spacje), a nie „1560 zł”, a cena 149,5 daje „149,50 zł”, bez zaokrąglenia. `miesiaceDoZaplaty` pomija miesiące bez wizyt, a flaga niezapłaconego miesiąca to reguła `niezaplacone` z `src/zlecenia/zapytania.js` (miesiąc przed bieżącym, co najmniej jedna zrobiona wizyta, bez zapłaty).
 
 **Teksty (verbatim):**
 - Rodzaj: „Jednorazowe”, „Co tydzień: {dni} · {godzina}”, „Co 2 tygodnie: {dni} · {godzina}”, „Co miesiąc, {dzień}. dnia · {godzina}”, z kwotą „· {kwota} za wizytę” albo „· {kwota} miesięcznie”
@@ -1207,7 +1210,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 
 **Zależy od:** Faza 5
 
-- [ ] **IU-19: Kreator dokładnej wyceny w nowym wyglądzie**
+- [x] **IU-19: Kreator dokładnej wyceny w nowym wyglądzie**
 
 **Cel:** Pięć kroków kreatora w nowym wyglądzie z jedną główną akcją, wyjaśnieniami pod „Więcej” i bez zmian w cenach.
 
@@ -1234,6 +1237,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 **Podejście:**
 - Logika kreatora i silnik bez zmian (R21); zmieniają się wygląd i ilość tekstu: pasek postępu w nowym wyglądzie, jedna główna akcja „Dalej” na krok, opisy pozycji, dodatków i podpowiedzi pod `wiecej` / `podpowiedz` (IU-8), wiersz listy najwyżej w dwóch liniach, liczniki i chipy ≥ 48 px. Kreator wraca do ekranu Wycena (powrót „Wycena” na pierwszym kroku).
 - Sekcje kreatora (rama kroku, wybór usługi, pomieszczenia, pozycje i dodatki) przechodzą z `komponenty.css` do `src/style/kreator.css`.
+- Korekta po implementacji (faza 6, 2026-11-04): reguły `.postep` zostały w `komponenty.css`, bo poza `naglowekKroku` w `kreator-wspolne.js` (używa go też krok Cena w `podsumowanie.js`) pasek rysuje `kreator-startowy.js`; wygląd kreatora nadpisuje `.naglowek .postep` w `kreator.css`. Tytuł kroku to nazwa kroku z makiety („Zakres”), a powrót pokazuje poprzedni krok, z pierwszego kroku „Wycena”.
 
 **Teksty (verbatim):**
 - Powrót z pierwszego kroku: „Wycena”
@@ -1248,7 +1252,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 - `node --test src/silnik/parytet.test.js` przechodzi bez zmian w teście (ceny jak przed przebudową)
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-20: Szybka wycena i pytania do klienta w nowym wyglądzie**
+- [x] **IU-20: Szybka wycena i pytania do klienta w nowym wyglądzie**
 
 **Cel:** Szybka wycena przez telefon i pytania do klienta w nowym wyglądzie z mniejszą ilością tekstu.
 
@@ -1273,6 +1277,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 **Podejście:**
 - Działanie szybkiej wyceny i pytań bez zmian (R21: widełki, tryby „ok” i „od”, skutki odpowiedzi, kopiowanie tekstu); nowy wygląd: wynik z dużą kwotą (`--tekst-kwota`), jedna główna akcja, wyjaśnienia (skąd widełki, zastrzeżenie o stanie lokalu) pod „Więcej” albo „?”; powrót „Wycena”.
 - Sekcje „Szybka wycena” i „Pytania do klienta” przechodzą z `komponenty.css` do `src/style/szybka.css`; `szybka.js` zostaje poniżej 300 linii.
+- Korekta po implementacji (faza 6, 2026-11-04): warunek „`szybka.js` poniżej 300 linii” jest spełniony po poprawkach z review, plik ma 293 linie (przed fazą 391, tabela wyżej była nieaktualna; po samej fazie 395). Pod próg sprowadził go nowy plik `src/widoki/szybka-pola.js` poza polem Pliki (`otworzWyborUslugi`, `polaFormularza`, `licznikiPozycji`, `dodatkiAgd`) i przeniesienie `ustawOczekiwanie` do `szybka-wynik.js`. Blok `.wybor-pola` został w `komponenty.css`, bo opiera się na nim wybór klienta i `klienci.css`. Ekran pytań z zapisaną wyceną ma powrót „Szybka wycena” albo „Usługa” (nazwa celu), a „Wycena” tylko bez zapisanej wyceny.
 
 **Teksty (verbatim):**
 - Powrót: „Wycena”
@@ -1287,7 +1292,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 - `node --test src/kreator/szybka.test.js src/widoki/szybka-wynik.test.js src/widoki/pytania.test.js` przechodzi bez zmian w testach (widełki jak przed przebudową)
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-21: Podsumowanie wyceny i edycja oferty w nowym wyglądzie**
+- [x] **IU-21: Podsumowanie wyceny i edycja oferty w nowym wyglądzie**
 
 **Cel:** Podsumowanie wyceny i edycja oferty z dużą ceną, jedną główną akcją i wyjaśnieniami pod „?”.
 
@@ -1315,6 +1320,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 - Podsumowanie: cena dla klienta duża i pogrubiona w zieleni (`--tekst-kwota`, `--marka-zielen`), pasek widełek rynku zostaje, opis mediany rynku i rozbicie kosztów pod „?” albo „Więcej” (przykład z R9); jedna główna akcja zależna od statusu (zapis, wysłanie oferty, „Zaplanuj” z IU-16); powrót „Wycena”.
 - Edycja oferty: sekcje zakresu, warunków i klienta w wierszach ze strzałką albo kartach z jedną akcją; teksty pomocnicze pod „Więcej”; działanie linku i PDF bez zmian (R21).
 - Sekcje „Podsumowanie wyceny”, „Pasek widełek rynku”, „Plan a fakt” i „Edycja oferty” przechodzą z `komponenty.css` do `src/style/podsumowanie.css`.
+- Korekta po implementacji (faza 6, 2026-11-04): `edytor-listy.js` bez zmian, układ jest w `podsumowanie.css`. Rozmiary: `podsumowanie.js` 292, `podsumowanie-karty.js` 233, `oferta-edycja.js` 362, `oferta-edycja-sekcje.js` 339 linii. Krok Cena w kreatorze ma powrót „Chemia”, „Wycena” tylko zapisana wycena. Przy wycenie ze zleceniem „Zaplanuj kolejne” jest wierszem, więc ekran nie ma głównego przycisku. Od makiety różni się: pigułka statusu nad kartą, arkusz „?” bez „Rozumiem”, „?” przy wierszu „Mediana rynku”, brak wierszy „Zakres” i „Chemia”.
 
 **Teksty (verbatim):**
 - Powrót: „Wycena”
@@ -1331,7 +1337,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 - `npm test` przechodzi
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-22: Oferta dla klienta w neutralnym wyglądzie**
+- [x] **IU-22: Oferta dla klienta w neutralnym wyglądzie**
 
 **Cel:** Strona oferty dla klienta i wydruk w neutralnym, czytelnym wyglądzie bez zieleni aplikacji.
 
@@ -1355,6 +1361,7 @@ Checklista: `docs/operator/aplikacja-modulowa-przygotowanie.md` (utworzona przez
 - Decyzja właściciela (2026-10-28): oferta neutralna — białe tło, ciemny tekst, kwota duża i pogrubiona w kolorze tekstu, bez `--marka-zielen*` (oferta pokazuje firmę, nie aplikację); tekst ≥ 17 px, kontrast AA; `oferta.css` używa tokenów neutralnych (`--tekst-*`, `--tlo-*`, `--linia-*`) albo własnych zmiennych lokalnych; przyciski strony oferty (druk) ≥ 48 px.
 - `druk.css` zostaje czarno-biały (A4), z większym tekstem, jeśli makieta tak pokazuje; `oferta.html` — `theme-color` biały.
 - Treść oferty, kodek linku i strona bez localStorage i service workera bez zmian (R21).
+- Korekta po implementacji (faza 6, 2026-11-04): `e2e/stany/oferta-po-terminie.txt` nie dekodował się (`{ ok: false, powod: 'uszkodzony' }`), bo JSON seeda nie miał pól `trybCeny` i `abonament`, których wymaga `jestOferta`. Po poprawkach z review seed jest wygenerowany od nowa przez `zakodujOferte`: `odkodujOferte` daje `ok: true` z oboma polami, więc scenariusz `oferta-neutralna` ma z czego startować. Kontakt firmy i etykiety sekcji mają 17 px zamiast 15 px z makiety, a przyciski nie mają ikon, bo `oferta-klient.js` nie należał do jednostki.
 
 **Wzorce do naśladowania:**
 - `docs/operator/aplikacja-modulowa-makiety.html` — ekran oferty (jeśli jest), inaczej tokeny neutralne makiety

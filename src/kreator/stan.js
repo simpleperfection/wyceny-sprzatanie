@@ -1,6 +1,7 @@
 // Stan kreatora dokladnej wyceny (R25, R29): szkic zapisywany na biezaco, przeliczenie migawki silnikiem (R5) i reguly krokow.
 // Logika bez DOM; zapisy ida przez src/dane/wyceny.js, ceny przez src/silnik/. Widoki kreatora (src/widoki/kreator-*.js) tylko rysuja.
 
+import { klient } from '../dane/klienci.js'
 import { wczytajStan } from '../dane/magazyn.js'
 import { scalKoszty, ustawieniaDomyslne } from '../dane/ustawienia.js'
 import { BladWyceny, utworzSzkic, wycena as znajdzWycene, zapiszPolaWyceny, zapiszWejscie } from '../dane/wyceny.js'
@@ -91,12 +92,15 @@ export function brudNowegoPomieszczenia(katalog, uslugaId, typ) {
 }
 
 /**
- * Nowa dokladna wycena w statusie `szkic` z wejsciem startowym wybranej uslugi (bez wyniku: zakres jest pusty).
- * @param {DaneAplikacji} kontekst @param {WyborUslugi} wybor
+ * Nowa dokladna wycena w statusie `szkic` z wejsciem startowym wybranej uslugi (bez wyniku: zakres jest pusty). `klientId`
+ * z adresu (`?klient=<id>`, „Nowa wycena” na karcie klienta) daje szkic z tym klientem; klienta, ktorego nie ma, pomija.
+ * @param {DaneAplikacji} kontekst @param {WyborUslugi} wybor @param {string | null} [klientId]
  * @returns {Wycena}
  */
-export function nowySzkic(kontekst, wybor) {
-  return utworzSzkic(kontekst.magazyn, { rodzaj: 'dokladna', wejscie: wejscieStartowe(wybor, kontekst.katalog) })
+export function nowySzkic(kontekst, wybor, klientId = null) {
+  const wejscie = wejscieStartowe(wybor, kontekst.katalog)
+  const zapisany = klientId === null ? null : klient(wczytajStan(kontekst.magazyn), klientId)
+  return utworzSzkic(kontekst.magazyn, { rodzaj: 'dokladna', wejscie, klientId: zapisany?.id ?? null })
 }
 
 /**

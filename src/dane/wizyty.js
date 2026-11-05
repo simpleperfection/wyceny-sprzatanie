@@ -5,7 +5,7 @@
 import { jestGodzina, ostatniDzienMiesiaca, porownajDni } from '../kalendarz/daty.js'
 import { okresDnia, wystapienia } from '../kalendarz/wystapienia.js'
 import { dzienLokalny, jestDniem, jestLiczba, jestMiesiacem } from './ksztalt.js'
-import { BladZlecenia, zleceniaKlienta, zmienZlecenie } from './zlecenia.js'
+import { BladZlecenia, czyStanDomyslny, zleceniaKlienta, zmienZlecenie } from './zlecenia.js'
 import { FORMY_ZAPLATY, MAKS_MINUT_PRACY, MAKS_WIZYT_ZLECENIA, MIN_MINUT_PRACY } from './zlecenia-ksztalt.js'
 
 /**
@@ -23,9 +23,6 @@ import { FORMY_ZAPLATY, MAKS_MINUT_PRACY, MAKS_WIZYT_ZLECENIA, MIN_MINUT_PRACY }
 const STAN_DOMYSLNY = Object.freeze({ przeniesiona: null, odwolana: false, zrobiona: null, zaplata: null, minutyPracy: null })
 /** Forma zaplaty klienta bez historii zaplat. */
 const FORMA_BEZ_HISTORII = 'gotowka'
-
-/** @param {StanWizyty} w */
-const czyDomyslny = (w) => w.przeniesiona === null && !w.odwolana && w.zrobiona === null && w.zaplata === null && w.minutyPracy === null
 
 /** Wizyta istnieje: ma zapisany stan albo daje ja regula okresow. @param {Zlecenie} z @param {string} dataPierwotna */
 function sprawdzWizyte(z, dataPierwotna) {
@@ -48,7 +45,7 @@ function zmienWizyte(magazyn, id, dataPierwotna, opcje, fn) {
     const nowa = fn(obecna, z, stan, teraz)
     if (nowa === obecna) return z
     const pozostale = Object.fromEntries(Object.entries(z.wizyty).filter(([dzien]) => dzien !== dataPierwotna))
-    if (czyDomyslny(nowa)) return { ...z, wizyty: pozostale }
+    if (czyStanDomyslny(nowa)) return { ...z, wizyty: pozostale }
     if (Object.keys(pozostale).length >= MAKS_WIZYT_ZLECENIA) throw new BladZlecenia('za_duzo', `Zlecenie ma najwyżej ${MAKS_WIZYT_ZLECENIA} wizyt ze stanem`)
     return { ...z, wizyty: { ...pozostale, [dataPierwotna]: nowa } }
   })
@@ -185,17 +182,31 @@ function pierwszaZrobiona(z, miesiac) {
 }
 
 /**
- * Kwota miesiaca serii, jedna regula dla zapisu zaplaty i „Niezaplacone” (src/zlecenia/zapytania.js): cenaMiesiaca okresu
- * pierwszej wizyty z reguly w tym miesiacu, a gdy regula nie daje w nim wizyty (np. po koncu serii) — okresu pierwszej
- * zrobionej, nieodwolanej wizyty z data pierwotna w tym miesiacu. Bez takich wizyt → `brak_wizyty`, okres bez ceny za
- * miesiac → `rozliczenie`.
+ * Okres, z ktorego miesiac bierze kwote: pierwszej wizyty z reguly w tym miesiacu, a gdy regula nie daje w nim wizyty (np. po
+ * koncu serii) — pierwszej zrobionej, nieodwolanej wizyty z data pierwotna w tym miesiacu. Bez takich wizyt null.
+ * @param {Zlecenie} z @param {string} miesiac RRRR-MM @returns {Zlecenie['okresy'][number] | null}
+ */
+function okresMiesiaca(z, miesiac) {
+  const ostatni = ostatniDzienMiesiaca(Number(miesiac.slice(0, 4)), Number(miesiac.slice(5, 7)))
+  const [pierwsza] = wystapienia({ ...z, wizyty: {} }, `${miesiac}-01`, `${miesiac}-${ostatni}`)
+  if (pierwsza !== undefined) return pierwsza.okres
+  const zrobiona = pierwszaZrobiona(z, miesiac)
+  return zrobiona === null ? null : okresDnia(z.okresy, zrobiona)
+}
+
+/**
+ * Czy za miesiac mozna zaplacic: jedna regula dla kwotaMiesiaca i karty zlecenia (src/zlecenia/karta-dane.js).
+ * @param {Zlecenie} z @param {string} miesiac RRRR-MM @returns {boolean}
+ */
+export const czyMiesiacMaWizyte = (z, miesiac) => okresMiesiaca(z, miesiac) !== null
+
+/**
+ * Kwota miesiaca serii, jedna regula dla zapisu zaplaty i „Niezaplacone” (src/zlecenia/zapytania.js): cenaMiesiaca z okresMiesiaca.
+ * Miesiac bez takiego okresu → `brak_wizyty`, okres bez ceny za miesiac → `rozliczenie`.
  * @param {Zlecenie} z @param {string} miesiac RRRR-MM @returns {number}
  */
 export function kwotaMiesiaca(z, miesiac) {
-  const ostatni = ostatniDzienMiesiaca(Number(miesiac.slice(0, 4)), Number(miesiac.slice(5, 7)))
-  const [pierwsza] = wystapienia({ ...z, wizyty: {} }, `${miesiac}-01`, `${miesiac}-${ostatni}`)
-  const zrobiona = pierwsza === undefined ? pierwszaZrobiona(z, miesiac) : null
-  const okres = pierwsza?.okres ?? (zrobiona === null ? null : okresDnia(z.okresy, zrobiona))
+  const okres = okresMiesiaca(z, miesiac)
   if (okres === null) throw new BladZlecenia('brak_wizyty', `Zlecenie ${z.id} nie ma wizyty w miesiącu ${miesiac}`)
   if (okres.cenaMiesiaca === null) throw new BladZlecenia('rozliczenie', `Okres od ${okres.od} nie ma ceny za miesiąc`)
   return okres.cenaMiesiaca

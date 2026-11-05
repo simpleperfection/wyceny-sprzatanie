@@ -42,15 +42,27 @@ body {
 
 .oferta__pole {
   border: 1px solid #000;
+  padding: 14px;
 }
 
+.oferta__wiersze {
+  border-top-color: #000;
+}
+
+.oferta__firma,
 .oferta__wiersz {
   border-bottom-color: #000;
 }
 
 .oferta__razem {
-  margin-top: 0;
   border: 1.5px solid #000;
+  padding: 12px 14px;
+}
+
+/* Na ekranie te akapity przylegaja do kwoty, a na wydruku „Razem” ma ramke: bez tego dotykalyby jej. */
+.oferta__abonament,
+.oferta__vat {
+  margin-top: 0;
 }
 
 .oferta__firma,

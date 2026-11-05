@@ -3,7 +3,7 @@
 // Klienta z historia (wycena albo zlecenie) nie da sie usunac; zmiana karty nie zmienia kopii nazwy i adresu w wycenach.
 
 import { jestDataIso, jestId, jestObiektem } from './ksztalt.js'
-import { bladTelefonu } from './walidacja.js'
+import { bladTelefonu, numerTelefonu } from './walidacja.js'
 
 /** @typedef {import('./magazyn.js').Magazyn} Magazyn */
 /** @typedef {import('./magazyn.js').Stan} Stan */
@@ -171,6 +171,14 @@ export function zapiszKlienta(magazyn, id, zmiany, opcje = {}) {
 const nalezyDoKlienta = (rekord, id) => jestObiektem(rekord) && rekord.klientId === id
 
 /**
+ * Klient ma historie, gdy wskazuje go wycena albo zlecenie; takiego klienta nie da sie usunac (usunKlienta), a karta klienta
+ * nie pokazuje wtedy „Usuń klienta”. Jedyna definicja tej reguly.
+ * @param {Pick<Stan, 'wyceny' | 'zlecenia'>} stan @param {string} id @returns {boolean}
+ */
+export const czyMaHistorie = (stan, id) =>
+  stan.wyceny.some((w) => nalezyDoKlienta(w, id)) || stan.zlecenia.some((z) => nalezyDoKlienta(z, id))
+
+/**
  * Usuniecie klienta bez historii; klient z wycena albo zleceniem → BladKlienta `ma_historie`.
  * @param {Magazyn} magazyn @param {string} id
  * @returns {Stan}
@@ -178,8 +186,7 @@ const nalezyDoKlienta = (rekord, id) => jestObiektem(rekord) && rekord.klientId 
 export function usunKlienta(magazyn, id) {
   return magazyn.zmien((stan) => {
     if (klient(stan, id) === null) throw new BladKlienta('brak_klienta', null, `Nie ma klienta ${id}`)
-    const maHistorie = stan.wyceny.some((w) => nalezyDoKlienta(w, id)) || stan.zlecenia.some((z) => nalezyDoKlienta(z, id))
-    if (maHistorie) throw new BladKlienta('ma_historie', null, 'Klienta z wycenami albo zleceniami nie da się usunąć')
+    if (czyMaHistorie(stan, id)) throw new BladKlienta('ma_historie', null, 'Klienta z wycenami albo zleceniami nie da się usunąć')
     return { ...stan, klienci: stan.klienci.filter((k) => k.id !== id) }
   })
 }
@@ -193,21 +200,54 @@ export function listaKlientow(stan) {
   return [...stan.klienci].sort((a, b) => a.nazwa.localeCompare(b.nazwa, 'pl'))
 }
 
-/** @param {string} tekst */
-const bezOdstepow = (tekst) => tekst.replace(/[\s-]/gu, '')
+/**
+ * @typedef {{ klient: Klient, nazwa: string, adres: string, telefon: string }} WpisIndeksu klient z polami do wyszukiwania:
+ *   nazwa i adres po normalizujNazwe, telefon dodatkowo w zapisie zwartym (numerTelefonu); brak adresu i telefonu = pusty tekst
+ * @typedef {{ szukana: string, pasuje: (wpis: WpisIndeksu) => boolean }} Dopasowanie
+ */
 
 /**
- * Klienci, ktorych nazwa, telefon albo adres zawiera fraze (bez wielkosci liter i nadmiarowych spacji; telefon tez bez spacji
- * i myslnikow), po nazwie. Pusta fraza daje wszystkich.
+ * Indeksy liczone raz na tablice klientow stanu; stan sie nie zmienia w miejscu (kazdy zapis daje nowa tablice).
+ * @type {WeakMap<readonly Klient[], readonly WpisIndeksu[]>}
+ */
+const indeksy = new WeakMap()
+
+/**
+ * Klienci po nazwie z polami do wyszukiwania. Sortowanie i normalizacja ida raz na stan: kolejne znaki w polu wyszukiwania
+ * na tym samym stanie tylko filtruja gotowy indeks.
+ * @param {Pick<Stan, 'klienci'>} stan
+ * @returns {readonly WpisIndeksu[]}
+ */
+export function indeksKlientow(stan) {
+  const gotowy = indeksy.get(stan.klienci)
+  if (gotowy !== undefined) return gotowy
+  const indeks = listaKlientow(stan).map((k) => ({ klient: k, nazwa: normalizujNazwe(k.nazwa), adres: normalizujNazwe(k.adres ?? ''),
+    telefon: k.telefon === null ? '' : numerTelefonu(normalizujNazwe(k.telefon)) }))
+  indeksy.set(stan.klienci, indeks)
+  return indeks
+}
+
+/**
+ * Dopasowanie frazy do wpisu indeksu: nazwa albo adres zawiera fraze (bez wielkosci liter i nadmiarowych spacji), telefon
+ * zawiera ja w zapisie zwartym. Pusta fraza pasuje do kazdego.
+ * @param {string} fraza
+ * @returns {Dopasowanie}
+ */
+export function dopasowanieFrazy(fraza) {
+  const szukana = normalizujNazwe(fraza)
+  const cyfry = numerTelefonu(szukana)
+  /** @param {WpisIndeksu} wpis */
+  const pasuje = (wpis) => szukana === '' || wpis.nazwa.includes(szukana) || wpis.adres.includes(szukana) ||
+    (cyfry !== '' && wpis.telefon.includes(cyfry))
+  return { szukana, pasuje }
+}
+
+/**
+ * Klienci, ktorych nazwa, telefon albo adres zawiera fraze (dopasowanieFrazy), po nazwie. Pusta fraza daje wszystkich.
  * @param {Pick<Stan, 'klienci'>} stan @param {string} fraza
  * @returns {Klient[]}
  */
 export function szukajKlientow(stan, fraza) {
-  const szukana = normalizujNazwe(fraza)
-  if (szukana === '') return listaKlientow(stan)
-  const cyfry = bezOdstepow(szukana)
-  /** @param {Klient} k */
-  const pasuje = (k) => normalizujNazwe(k.nazwa).includes(szukana) || normalizujNazwe(k.adres ?? '').includes(szukana) ||
-    (k.telefon !== null && cyfry !== '' && bezOdstepow(normalizujNazwe(k.telefon)).includes(cyfry))
-  return listaKlientow(stan).filter(pasuje)
+  const { pasuje } = dopasowanieFrazy(fraza)
+  return indeksKlientow(stan).filter(pasuje).map((wpis) => wpis.klient)
 }

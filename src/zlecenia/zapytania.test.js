@@ -7,7 +7,7 @@ import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
 import { KLUCZ_MAGAZYNU, zaktualizujStan } from '../dane/magazyn.js'
 import { jestWycena } from '../dane/wyceny.js'
 import { dodajDni } from '../kalendarz/daty.js'
-import { doZamkniecia, liczbaDzis, najblizsza, niezaplacone, wizytyDnia, wizytyOkresu } from './zapytania.js'
+import { czyPlatnaZaWizyte, doZamkniecia, liczbaDzis, najblizsza, niezaplacone, wizytyDnia, wizytyOkresu } from './zapytania.js'
 
 /** Sroda; dzien Z1, wczoraj Z3, seria Z2 w srody od 2026-10-21. */
 const DZIS = '2026-11-04'
@@ -203,6 +203,35 @@ describe('liczbaDzis i najblizsza: przesunięcia i odwołania', () => {
 
   it('najblizsza: bez wizyt od jutra → null', () => {
     assert.equal(najblizsza(stanZ([Z1, Z3]), DZIS, nazwaUslugi), null)
+  })
+})
+
+describe('czyPlatnaZaWizyte', () => {
+  it('płatna jest wizyta za wizytę z ceną większą od zera', () => {
+    assert.equal(czyPlatnaZaWizyte({ rozliczenie: 'za_wizyte' }, { cenaWizyty: 250 }), true)
+  })
+
+  it('wizyta za 0 zł, bez ceny i seria miesięczna nie są płatne za wizytę', () => {
+    assert.equal(czyPlatnaZaWizyte({ rozliczenie: 'za_wizyte' }, { cenaWizyty: 0 }), false)
+    assert.equal(czyPlatnaZaWizyte({ rozliczenie: 'za_wizyte' }, { cenaWizyty: null }), false)
+    assert.equal(czyPlatnaZaWizyte({ rozliczenie: 'miesiecznie' }, { cenaWizyty: 250 }), false)
+  })
+
+  it('wiersz dnia niesie wynik reguły', () => {
+    const za0zl = zlecenieRek({ id: 'z-0', klientId: 'k-anna', start: DZIS, cena: 0 })
+    const platna = zlecenieRek({ id: 'z-p', klientId: 'k-jan', start: DZIS, cena: 100 })
+
+    const wiersze = wizytyDnia(stanZ([za0zl, platna]), DZIS, nazwaUslugi)
+
+    assert.deepEqual(wiersze.map((w) => [w.zlecenieId, w.czyPlatna]), [['z-0', false], ['z-p', true]])
+  })
+})
+
+describe('nazwa wiersza wizyty', () => {
+  it('zlecenie bez opisu i bez usługi ma nazwę „Zlecenie”, tak jak karta zlecenia', () => {
+    const z = { ...zlecenieRek({ id: 'z-bez', klientId: 'k-anna', start: DZIS }), uslugaId: null }
+
+    assert.equal(wizytyDnia({ klienci: KLIENCI, zlecenia: [z] }, DZIS, nazwaUslugi)[0].nazwa, 'Zlecenie')
   })
 })
 

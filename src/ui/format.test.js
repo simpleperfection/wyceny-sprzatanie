@@ -8,10 +8,13 @@ import {
   data,
   dataDnia,
   dniTemu,
+  dzienKrotko,
   FORMY,
+  godzina,
   kiedy,
   m2,
   miejscownikWojewodztwa,
+  miesiacRok,
   odmiana,
   parsujLiczbe,
   procent,
@@ -19,6 +22,7 @@ import {
   sprawdzDate,
   tekstLiczby,
   tempo,
+  zakresDni,
   zl,
   zlGr,
 } from './format.js'
@@ -112,6 +116,24 @@ describe('daty', () => {
   it('SKROTY_DNI od poniedziałku do niedzieli', () => {
     assert.deepEqual(SKROTY_DNI, ['pn', 'wt', 'śr', 'czw', 'pt', 'sb', 'nd'])
   })
+
+  it('kalendarz: dzień krótko, miesiąc z rokiem, godzina i zakres tygodnia', () => {
+    assert.equal(dzienKrotko('2026-11-03'), 'wt 3 lis')
+    assert.equal(dzienKrotko('2026-03-29'), 'nd 29 mar')
+    assert.equal(miesiacRok('2026-11-30'), 'Listopad 2026')
+    assert.equal(miesiacRok('2027-02-01'), 'Luty 2027')
+    assert.equal(godzina('09:00'), '9:00')
+    assert.equal(godzina('15:30'), '15:30')
+    assert.equal(zakresDni('2026-11-02', '2026-11-08'), '2–8 lis')
+    assert.equal(zakresDni('2026-10-26', '2026-11-01'), '26 paź – 1 lis')
+  })
+
+  it('kalendarz odrzuca zły dzień i godzinę spoza HH:MM', () => {
+    assert.throws(() => dzienKrotko('2026-02-30'), bladFormatu('zla_data'))
+    assert.throws(() => miesiacRok('2026-11'), bladFormatu('zla_data'))
+    assert.throws(() => zakresDni('2026-11-02', 'jutro'), bladFormatu('zla_data'))
+    assert.throws(() => godzina('9:00'), bladFormatu('zla_godzina'))
+  })
 })
 
 describe('odmiana', () => {
@@ -129,6 +151,7 @@ describe('odmiana', () => {
     assert.equal(odmiana(3, FORMY.zlecenie), 'zlecenia')
     assert.equal(odmiana(0, FORMY.zlecenie), 'zleceń')
     assert.equal(odmiana(7, FORMY.przyjeta), 'przyjętych')
+    assert.deepEqual([1, 2, 5].map((n) => odmiana(n, FORMY.wizyta)), ['wizyta', 'wizyty', 'wizyt'])
   })
 
   it('formy Start: niezapłacone, klient (męskoosobowy), czeka', () => {

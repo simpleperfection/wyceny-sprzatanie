@@ -92,13 +92,11 @@
   min-width: 0;
   font-size: var(--tekst-maly);
   color: var(--tekst-drugi);
-  white-space: nowrap;
 }
 
 .produkt-chemii__ph {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
 }
 
 .produkt-chemii__cena {

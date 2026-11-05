@@ -3,8 +3,8 @@ import { describe, it } from 'node:test'
 
 import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
 import {
-  BladKlienta, DLUGOSCI_KLIENTA, dodajKlienta, klient, listaKlientow, MAKS_KLIENTOW, normalizujNazwe, szukajKlientow, usunKlienta,
-  zapiszKlienta,
+  BladKlienta, czyMaHistorie, DLUGOSCI_KLIENTA, dodajKlienta, dopasowanieFrazy, indeksKlientow, klient, listaKlientow, MAKS_KLIENTOW,
+  normalizujNazwe, szukajKlientow, usunKlienta, zapiszKlienta,
 } from './klienci.js'
 import { KLUCZ_MAGAZYNU, utworzMagazyn, wczytajStan } from './magazyn.js'
 
@@ -175,5 +175,50 @@ describe('normalizujNazwe', () => {
 
     assert.equal(normalizujNazwe(nfd), normalizujNazwe('Żaneta'.normalize('NFC')))
     assert.equal(normalizujNazwe(nfd), 'żaneta')
+  })
+})
+
+describe('indeksKlientow i dopasowanieFrazy', () => {
+  const stan = {
+    klienci: [
+      klientTestowy('k1', 'Łukasz Nowak', { adres: 'Kowalska 3, Kraków' }),
+      klientTestowy('k2', 'Anna  Kowalska', { telefon: '+48 600-100-200' }),
+    ],
+  }
+
+  it('indeks ma klientów po nazwie z polami do wyszukiwania i jest liczony raz na tablicę klientów stanu', () => {
+    const indeks = indeksKlientow(stan)
+
+    assert.deepEqual(indeks.map((w) => [w.klient.id, w.nazwa, w.adres, w.telefon]), [
+      ['k2', 'anna kowalska', '', '+48600100200'],
+      ['k1', 'łukasz nowak', 'kowalska 3, kraków', ''],
+    ])
+    assert.equal(indeksKlientow({ klienci: stan.klienci }), indeks)
+    assert.notEqual(indeksKlientow({ klienci: [...stan.klienci] }), indeks)
+  })
+
+  it('fraza pasuje do nazwy, adresu i telefonu w zapisie zwartym; pusta fraza do każdego, inna do nikogo', () => {
+    const [anna, lukasz] = indeksKlientow(stan)
+    /** @param {string} fraza */
+    const pasujace = (fraza) => indeksKlientow(stan).filter(dopasowanieFrazy(fraza).pasuje).map((w) => w.klient.id)
+
+    assert.deepEqual([pasujace('KOWALSKA'), pasujace('600 100'), pasujace('kraków'), pasujace('  ')], [['k2', 'k1'], ['k2'], ['k1'], ['k2', 'k1']])
+    assert.deepEqual([dopasowanieFrazy(' Anna  K').szukana, dopasowanieFrazy('xyz').pasuje(anna), dopasowanieFrazy('xyz').pasuje(lukasz)],
+      ['anna k', false, false])
+  })
+})
+
+describe('czyMaHistorie', () => {
+  const stan = {
+    wyceny: [{ id: 'w-1', klientId: 'k-anna' }, null],
+    zlecenia: [{ id: 'z-1', klientId: 'k-biuro', wycenaId: null }],
+  }
+
+  it('wycena albo zlecenie klienta to historia', () => {
+    assert.deepEqual([czyMaHistorie(stan, 'k-anna'), czyMaHistorie(stan, 'k-biuro')], [true, true])
+  })
+
+  it('klient bez wycen i zleceń nie ma historii (wpis bez obiektu pomijany)', () => {
+    assert.equal(czyMaHistorie(stan, 'k-jan'), false)
   })
 })

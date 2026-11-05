@@ -5,7 +5,7 @@
 import { wczytajStan } from '../dane/magazyn.js'
 import { scalKoszty } from '../dane/ustawienia.js'
 import {
-  BladWyceny, czyAbonament, dozwolonePrzejscia, zapiszCeneReczna, wycena as znajdzWycene, zapiszWynik,
+  BladWyceny, czyAbonament, czyStatusOferty, dozwolonePrzejscia, zapiszCeneReczna, wycena as znajdzWycene, zapiszWynik,
 } from '../dane/wyceny.js'
 import { BladWejscia } from '../silnik/bledy.js'
 import { dojazdFirmy, kosztZlecenia } from '../silnik/koszt.js'
@@ -38,7 +38,10 @@ import { przelicz } from './stan.js'
  * @typedef {{ rodzaj: 'nowe_dane' } | { rodzaj: 'poza_szybka', od: number, do: number } | { rodzaj: 'oferta_nieaktualna' }} Ostrzezenie
  * @typedef {{ cena: CenaPodsumowania, rynek: RynekPodsumowania, zostaje: ZostajePodsumowania, koszty: WierszKosztu[],
  *   abonament: AbonamentPodsumowania | null, propozycje: { opisy: string[], kwota: number } | null, ostrzezenia: Ostrzezenie[] }} Podsumowanie
- * @typedef {'edytuj' | 'przyjeta' | 'odrzucona' | 'usun'} AkcjaWyceny
+ * @typedef {'zaplanuj' | 'zaplanuj_kolejne' | 'edytuj' | 'przyjeta' | 'odrzucona' | 'usun'} AkcjaWyceny
+ * @typedef {AkcjaWyceny | 'oferta'} AkcjaEkranu
+ * @typedef {Exclude<AkcjaEkranu, 'usun'>} AkcjaZOpisem
+ * @typedef {{ glowna: AkcjaZOpisem | null, wiersze: AkcjaZOpisem[], czyUsun: boolean }} UkladAkcji
  */
 
 /** Cena wpisana recznie: pelne zlote (jak brutto z cenaDlaKlienta) w tych granicach. */
@@ -198,13 +201,32 @@ export function przeliczWycene(kontekst, id) {
 }
 
 /**
- * Akcje zapisanej wyceny wg statusu: decyzja klienta, gdy przejscie do niej jest dozwolone (tez rezygnacja po przyjeciu), edycja
- * i usuniecie; wycena ze zleceniem (czyWycenaZamknieta) jest tylko do odczytu, wiec bez edycji.
- * @param {StatusWyceny} status @param {boolean} czyZamknieta
+ * Akcje zapisanej wyceny wg statusu: planowanie, decyzja klienta, gdy przejscie do niej jest dozwolone (tez rezygnacja po przyjeciu),
+ * edycja i usuniecie. `zaplanuj` ma wycena do zaplanowania (doZaplanowania), a `zaplanuj_kolejne` przyjeta juz zaplanowana; wycena ze
+ * zleceniem (czyWycenaZamknieta) jest tylko do odczytu, wiec bez edycji.
+ * @param {StatusWyceny} status @param {boolean} czyZamknieta @param {boolean} czyDoZaplanowania
  * @returns {AkcjaWyceny[]}
  */
-export function akcjeWyceny(status, czyZamknieta) {
+export function akcjeWyceny(status, czyZamknieta, czyDoZaplanowania) {
   const przejscia = dozwolonePrzejscia(status)
   const decyzje = DECYZJE_KLIENTA.filter((d) => przejscia.includes(d))
-  return czyZamknieta ? [...decyzje, 'usun'] : [...decyzje, 'edytuj', 'usun']
+  /** @type {AkcjaWyceny[]} */
+  const planowanie = czyDoZaplanowania ? ['zaplanuj'] : status === 'przyjeta' && czyZamknieta ? ['zaplanuj_kolejne'] : []
+  return czyZamknieta ? [...planowanie, ...decyzje, 'usun'] : [...planowanie, ...decyzje, 'edytuj', 'usun']
+}
+
+/**
+ * Hierarchia akcji ekranu (R9): jedna glowna wg stanu — „Zaplanuj” przy wycenie do zaplanowania, oferta przy wycenie do wysłania,
+ * potem decyzja klienta; reszta to wiersze, a usuniecie stoi osobno. Bez takiej akcji ekran nie ma glownej (np. wycena ze zleceniem).
+ * @param {StatusWyceny} status @param {boolean} czyZamknieta @param {boolean} czyDoZaplanowania
+ * @returns {UkladAkcji}
+ */
+export function ukladAkcjiWyceny(status, czyZamknieta, czyDoZaplanowania) {
+  const wedlugStatusu = akcjeWyceny(status, czyZamknieta, czyDoZaplanowania)
+  /** @type {AkcjaEkranu[]} */
+  const akcje = czyStatusOferty(status) ? ['oferta', ...wedlugStatusu] : wedlugStatusu
+  /** @type {readonly AkcjaZOpisem[]} */
+  const kandydaci = status === 'do_wyslania' ? ['zaplanuj', 'oferta', 'przyjeta'] : ['zaplanuj', 'przyjeta']
+  const glowna = kandydaci.find((a) => akcje.includes(a)) ?? null
+  return { glowna, wiersze: akcje.filter((a) => a !== 'usun').filter((a) => a !== glowna), czyUsun: akcje.includes('usun') }
 }

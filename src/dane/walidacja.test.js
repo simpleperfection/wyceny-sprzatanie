@@ -1,7 +1,19 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { bladEmaila, bladLiczby, bladNip, bladTelefonu, bladTempa, GRANICE_TEMPA } from './walidacja.js'
+import { bladEmaila, bladLiczby, bladNip, bladTelefonu, bladTempa, GRANICE_TEMPA, numerTelefonu } from './walidacja.js'
+
+describe('numerTelefonu', () => {
+  it('usuwa spacje, myślniki i twarde spacje, cyfry pełnej szerokości zamienia na zwykłe, zostawia +', () => {
+    assert.equal(numerTelefonu('+48 600-100-200'), '+48600100200')
+    assert.equal(numerTelefonu('\u{FF16}00 100 200'), '600100200')
+  })
+
+  it('nie poprawia tekstu, który nie jest numerem: zwarty zapis nie przechodzi bladTelefonu', () => {
+    assert.equal(numerTelefonu('600 100 200 wew. 5'), '600100200wew.5')
+    assert.equal(bladTelefonu(numerTelefonu('600 100 200 wew. 5')), 'telefon')
+  })
+})
 
 describe('bladTelefonu', () => {
   it('przepuszcza 9 cyfr ze spacjami, z myślnikami i z +48', () => {

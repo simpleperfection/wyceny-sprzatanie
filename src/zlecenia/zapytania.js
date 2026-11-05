@@ -6,6 +6,7 @@ import { dzienLokalny, jestDniem } from '../dane/ksztalt.js'
 import { kwotaMiesiaca } from '../dane/wizyty.js'
 import { BladKalendarza, dodajDni, miesiacDnia, porownajDni } from '../kalendarz/daty.js'
 import { najblizszaWizyta, okresDnia, wystapienia } from '../kalendarz/wystapienia.js'
+import { nazwaZlecenia } from './teksty-wizyty.js'
 
 /**
  * @typedef {import('../dane/magazyn.js').Stan} Stan
@@ -16,10 +17,11 @@ import { najblizszaWizyta, okresDnia, wystapienia } from '../kalendarz/wystapien
  * @typedef {import('../kalendarz/wystapienia.js').Wystapienie<Okres, StanWizyty>} WystapienieZlecenia
  * @typedef {Pick<Stan, 'klienci' | 'zlecenia'>} StanZlecen
  * @typedef {Map<string, Klient>} KlienciPoId
- * @typedef {(uslugaId: string) => string} NazwaUslugi nazwa uslugi z katalogu (podaje wolajacy)
+ * @typedef {import('./teksty-wizyty.js').NazwaUslugi} NazwaUslugi
  * @typedef {{ zlecenieId: string, klientId: string, klient: Klient | null, adres: string | null, nazwa: string,
  *   dataPierwotna: string, data: string, godzina: string | null, kwota: number | null, stan: StanWizyty | null,
- *   odwolana: boolean }} WizytaDnia adres z karty klienta; nazwa = opis albo nazwa uslugi; kwota null w serii miesiecznej
+ *   odwolana: boolean, czyPlatna: boolean }} WizytaDnia adres z karty klienta; nazwa = opis albo nazwa uslugi; kwota null w serii
+ *   miesiecznej; czyPlatna: regula czyPlatnaZaWizyte
  * @typedef {{ rodzaj: 'wizyta' | 'miesiac', zlecenieId: string, klientId: string, klucz: string, kwota: number }} Niezaplacone
  *   klucz: data pierwotna wizyty RRRR-MM-DD albo miesiac RRRR-MM
  */
@@ -29,16 +31,26 @@ function sprawdzDzien(dzien) {
   if (!jestDniem(dzien)) throw new BladKalendarza('dzien', `Dzień musi mieć postać RRRR-MM-DD, jest ${String(dzien)}`)
 }
 
-/** @param {WizytaDnia} a @param {WizytaDnia} b @returns {number} po dniu, godzinie (bez godziny na koncu dnia), zleceniu */
+/**
+ * Po dniu, godzinie (bez godziny na koncu dnia), zleceniu. Dni porownuje jako teksty: to sortowanie historii przy kazdym rysowaniu,
+ * a RRRR-MM-DD sprawdza jestZlecenie przy odczycie stanu.
+ * @param {WizytaDnia} a @param {WizytaDnia} b @returns {number}
+ */
 function porownajWizyty(a, b) {
-  if (a.data !== b.data) return porownajDni(a.data, b.data)
+  if (a.data !== b.data) return a.data < b.data ? -1 : 1
   if (a.godzina !== b.godzina) return a.godzina === null ? 1 : b.godzina === null ? -1 : a.godzina < b.godzina ? -1 : 1
   if (a.zlecenieId !== b.zlecenieId) return a.zlecenieId < b.zlecenieId ? -1 : 1
-  return porownajDni(a.dataPierwotna, b.dataPierwotna)
+  return a.dataPierwotna === b.dataPierwotna ? 0 : a.dataPierwotna < b.dataPierwotna ? -1 : 1
 }
 
 /** Klienci po id: jedno przejscie listy na zapytanie zamiast szukania w kazdym wierszu. @param {StanZlecen} stan @returns {KlienciPoId} */
 const klienciPoId = (stan) => new Map(stan.klienci.map((k) => [k.id, k]))
+
+/**
+ * Jedyna regula „wizyta jest platna za wizyte”: rozliczenie za wizyte i cena > 0 (wizyta za 0 zl nie ma zaplaty).
+ * @param {Pick<Zlecenie, 'rozliczenie'>} z @param {Pick<Okres, 'cenaWizyty'>} okres @returns {boolean}
+ */
+export const czyPlatnaZaWizyte = (z, okres) => z.rozliczenie === 'za_wizyte' && (okres.cenaWizyty ?? 0) > 0
 
 /**
  * Wiersz wizyty z klientem z karty i nazwa zlecenia.
@@ -47,9 +59,8 @@ const klienciPoId = (stan) => new Map(stan.klienci.map((k) => [k.id, k]))
  */
 function wiersz(klienci, z, w, nazwaUslugi) {
   const k = klienci.get(z.klientId) ?? null
-  const nazwa = z.opis ?? (z.uslugaId === null ? '' : nazwaUslugi(z.uslugaId))
-  return { zlecenieId: z.id, klientId: z.klientId, klient: k, adres: k?.adres ?? null, nazwa, dataPierwotna: w.dataPierwotna,
-    data: w.data, godzina: w.godzina, kwota: w.okres.cenaWizyty, stan: w.stan, odwolana: w.stan?.odwolana ?? false }
+  return { zlecenieId: z.id, klientId: z.klientId, klient: k, adres: k?.adres ?? null, nazwa: nazwaZlecenia(z, nazwaUslugi), dataPierwotna: w.dataPierwotna,
+    data: w.data, godzina: w.godzina, kwota: w.okres.cenaWizyty, stan: w.stan, odwolana: w.stan?.odwolana ?? false, czyPlatna: czyPlatnaZaWizyte(z, w.okres) }
 }
 
 /**
@@ -72,9 +83,8 @@ export const wizytyDnia = (stan, dzien, nazwaUslugi) => wizytyOkresu(stan, dzien
 /** Dzien zalozenia zlecenia w czasie lokalnym. @param {Zlecenie} z @returns {string} */
 const dzienZalozenia = (z) => dzienLokalny(new Date(z.utworzone))
 
-/** Zrobiona wizyta za wizyte bez zaplaty, z cena > 0 (wizyta za 0 zl nie czeka na zaplate). @param {Zlecenie} z @param {StanWizyty} s @param {Okres} okres */
-const czekaNaZaplate = (z, s, okres) => z.rozliczenie === 'za_wizyte' && s.zrobiona !== null && s.zaplata === null && !s.odwolana &&
-  (okres.cenaWizyty ?? 0) > 0
+/** Zrobiona wizyta platna za wizyte bez zaplaty. @param {Zlecenie} z @param {StanWizyty} s @param {Okres} okres */
+const czekaNaZaplate = (z, s, okres) => czyPlatnaZaWizyte(z, okres) && s.zrobiona !== null && s.zaplata === null && !s.odwolana
 
 /**
  * „Do zamkniecia”: wizyty z dniem przed `dzis` i nie przed dniem zalozenia zlecenia, nieodwolane, niezrobione albo zrobione

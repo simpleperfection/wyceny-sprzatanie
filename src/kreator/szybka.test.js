@@ -3,13 +3,14 @@ import { before, describe, it } from 'node:test'
 
 import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
 import { czytajJson, katalogZDysku } from '../../tests/pomocnicze.js'
+import { dodajKlienta } from '../dane/klienci.js'
 import { BladMagazynu, utworzMagazyn } from '../dane/magazyn.js'
 import { wczytajDomyslne, zapiszUstawienia } from '../dane/ustawienia.js'
 import { BladWyceny, utworzSzkic, wycena, zmienStatus } from '../dane/wyceny.js'
 import { BladKatalogu, BladWejscia } from '../silnik/bledy.js'
 import {
-  dojazdZOdpowiedzi, formularzDomyslny, kontekstSzybkiej, opcjeUslug, oznaczWyslana, polaUslugi, wejscieZWyceny, wynikFormularza,
-  zapiszSzybka, zBrudemOdpowiedzi, zMetrazem, zSzybkiej, zUsluga,
+  dojazdZOdpowiedzi, formularzDomyslny, kontekstSzybkiej, opcjeUslug, oznaczWyslana, polaUslugi, przypiszKlientaSzybkiej, wejscieZWyceny,
+  wynikFormularza, zapiszSzybka, zBrudemOdpowiedzi, zMetrazem, zSzybkiej, zUsluga,
 } from './szybka.js'
 
 /** @typedef {import('../silnik/katalog.js').Katalog} Katalog */
@@ -164,6 +165,17 @@ describe('zapis szybkiej wyceny', () => {
     assert.deepEqual(odtworzony, formularz)
     assert.equal(zapisana(kontekst, id).wejscie.pomieszczenia?.find((p) => p.typ === 'kuchnia')?.nazwa, 'Aneks kuchenny')
     assert.deepEqual([po.id, wejscieZWyceny(po, katalog).m2], [id, 70])
+  })
+
+  it('klient wybrany przed pierwszym zapisem trafia do nowego szkicu; klienta, którego nie ma, zapis pomija', () => {
+    const kontekst = kontekstFirmy()
+    dodajKlienta(kontekst.magazyn, { nazwa: 'Anna Kowalska', adres: 'ul. Lipowa 3' }, { id: 'k-anna' })
+
+    const zKlientem = zapiszSzybka(kontekst, null, mieszkanie50(), { klientId: 'k-anna' })
+    const bezKlienta = zapiszSzybka(kontekst, null, mieszkanie50(), { klientId: 'k-usuniety' })
+
+    assert.deepEqual([zKlientem.klientId, zKlientem.klient.nazwa, zKlientem.klient.adres], ['k-anna', 'Anna Kowalska', 'ul. Lipowa 3'])
+    assert.deepEqual([bezKlienta.klientId, bezKlienta.klient.nazwa], [null, ''])
   })
 
   it('zapis ze znacznikiem starszym niż rekord (zmiana w innej karcie) daje BladWyceny nieaktualna i nie nadpisuje odpowiedzi', () => {
@@ -360,5 +372,40 @@ describe('wynikFormularza: gałęzie błędów', () => {
     magazyn.wczytaj = () => ({ blad: 'uszkodzony' })
 
     assert.throws(() => wynikFormularza({ ...kontekst, magazyn }, mieszkanie50()), (b) => b instanceof BladMagazynu)
+  })
+})
+
+describe('przypiszKlientaSzybkiej', () => {
+  it('bez zmiany w innej karcie rekord dostaje klienta, a ekran nowy znacznik zmiany rekordu', () => {
+    const kontekst = kontekstFirmy()
+    dodajKlienta(kontekst.magazyn, { nazwa: 'Anna Kowalska', adres: 'ul. Lipowa 3' }, { id: 'k-anna' })
+    const w = zapiszSzybka(kontekst, null, mieszkanie50())
+
+    const znacznik = przypiszKlientaSzybkiej(kontekst, w.id, 'k-anna', w.zmieniona)
+
+    const po = zapisana(kontekst, w.id)
+    assert.deepEqual([po.klientId, po.klient.nazwa, znacznik], ['k-anna', 'Anna Kowalska', po.zmieniona])
+  })
+
+  it('po zmianie w innej karcie zostaje stary znacznik, więc następny zapis daje BladWyceny nieaktualna', () => {
+    const kontekst = kontekstFirmy()
+    dodajKlienta(kontekst.magazyn, { nazwa: 'Anna Kowalska' }, { id: 'k-anna' })
+    const naEkranie = zapiszSzybka(kontekst, null, mieszkanie50())
+    zapiszSzybka(kontekst, naEkranie.id, { ...mieszkanie50(), odpowiedzi: { termin: { wartosc: 'jutro' } } })
+    const staryZnacznik = `${naEkranie.zmieniona}-ekran`
+
+    const znacznik = przypiszKlientaSzybkiej(kontekst, naEkranie.id, 'k-anna', staryZnacznik)
+
+    assert.equal(znacznik, staryZnacznik)
+    assert.equal(zapisana(kontekst, naEkranie.id).klientId, 'k-anna')
+    assert.throws(() => zapiszSzybka(kontekst, naEkranie.id, { ...mieszkanie50(), m2: 70 }, { zmieniona: znacznik }), bladWyceny('nieaktualna'))
+  })
+
+  it('nieznany klient → BladWyceny brak_klienta, rekord bez zmian', () => {
+    const kontekst = kontekstFirmy()
+    const w = zapiszSzybka(kontekst, null, mieszkanie50())
+
+    assert.throws(() => przypiszKlientaSzybkiej(kontekst, w.id, 'k-brak', w.zmieniona), bladWyceny('brak_klienta'))
+    assert.deepEqual(zapisana(kontekst, w.id), w)
   })
 })

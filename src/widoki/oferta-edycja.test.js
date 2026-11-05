@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { czyStatusOferty, STATUSY_WYCENY } from '../dane/wyceny.js'
+import { PamiecMagazynu } from '../../tests/pamiec-magazynu.js'
+import { dodajKlienta } from '../dane/klienci.js'
+import { utworzMagazyn, wczytajStan } from '../dane/magazyn.js'
+import { czyStatusOferty, STATUSY_WYCENY, utworzSzkic, wycena } from '../dane/wyceny.js'
 import { MAKS_DLUGOSC_LINKU } from '../oferta/kodek.js'
-import { czyDaneFirmy, tekstDlugiegoLinku, zablokujEdycje } from './oferta-edycja.js'
+import { czyDaneFirmy, przypiszKlientaOferty, tekstDlugiegoLinku, zablokujEdycje } from './oferta-edycja.js'
 
 describe('czyStatusOferty', () => {
   it('ofertę przygotowuje się z wyceny do wysłania, wysłanej i przyjętej, z pozostałych nie', () => {
@@ -47,5 +50,35 @@ describe('zablokujEdycje', () => {
 
     assert.deepEqual([...klient.kontrolki, ...warunki.kontrolki].map((k) => k.disabled), [true, true, true])
     assert.deepEqual([klient.selektory, warunki.selektory], [['input, textarea, select, button'], ['input, textarea, select, button']])
+  })
+})
+
+describe('przypiszKlientaOferty', () => {
+  /** Magazyn w pamieci z szkicem wyceny i klientem k-anna. */
+  function magazynZWycena() {
+    const magazyn = utworzMagazyn(new PamiecMagazynu(), { loguj: () => {}, poprosOTrwalosc: () => true })
+    const { id } = utworzSzkic(magazyn, { rodzaj: 'dokladna', wejscie: { uslugaId: 'mieszkanie_standard', pomieszczenia: [{ typ: 'pokoj', m2: 20 }] } })
+    dodajKlienta(magazyn, { nazwa: 'Anna Kowalska', adres: 'ul. Lipowa 3' }, { id: 'k-anna' })
+    return { magazyn, id }
+  }
+
+  it('wybrany klient trafia do wyceny (klientId, kopia nazwy), a jego adres wraca do pola adresu karty', () => {
+    const { magazyn, id } = magazynZWycena()
+
+    const wynik = przypiszKlientaOferty(magazyn, id, 'k-anna')
+
+    const w = wycena(wczytajStan(magazyn), id)
+    assert.deepEqual(wynik, { blad: null, adres: 'ul. Lipowa 3' })
+    assert.deepEqual([w?.klientId, w?.klient.nazwa], ['k-anna', 'Anna Kowalska'])
+  })
+
+  it('wycena usunięta w innej karcie daje tekst błędu i niczego nie zapisuje', () => {
+    const { magazyn } = magazynZWycena()
+    const przed = wczytajStan(magazyn)
+
+    const wynik = przypiszKlientaOferty(magazyn, 'w-usunieta', 'k-anna')
+
+    assert.deepEqual(wynik, { blad: 'Nie ma już tej wyceny. Mogła zostać usunięta w innej karcie przeglądarki.' })
+    assert.deepEqual(wczytajStan(magazyn), przed)
   })
 })

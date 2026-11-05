@@ -1,4 +1,452 @@
 /*
- * Modul Zlecenia: widoki Dzień, Tydzień i Miesiąc. Arkusz wypelnia IU-15: style ekranow modulu, takze przeniesione tu z komponenty.css.
- * Dolaczony w index.html po komponenty.css; inne jednostki go nie zmieniaja.
+ * Modul Zlecenia: widoki Dzień, Tydzień i Miesiąc, formularz zlecenia, ekran wizyty i karta zlecenia; style ekranow modulu, takze przeniesione tu z komponenty.css.
+ * Dolaczony w index.html po komponenty.css; zmieniaja go tylko jednostki modulu Zlecenia.
+ * Wymiary z makiet „Dzień”, „Tydzień”, „Miesiąc”, „Nowe zlecenie” i „Wizyta” w docs/operator/aplikacja-modulowa-makiety.html (20 px naglowka
+ * sekcji i 19 px tytulu dnia: skala tekstu nie ma tych stopni, tak jak w wyceny.css i klienci.css).
  */
+
+/* Pasek daty: strzalki z obrysem, tytul na srodku, „Dziś” po prawej */
+.kalendarz-data {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kalendarz-data__strzalka {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--cel-dotyku);
+  height: var(--cel-dotyku);
+  border: 1.5px solid var(--linia-obrys);
+  border-radius: 12px;
+  background: var(--tlo-karta);
+  color: var(--tekst-glowny);
+}
+
+.kalendarz-data__strzalka:hover {
+  background: var(--tlo-miekkie);
+}
+
+.kalendarz-data__tytul {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.kalendarz-data .przycisk {
+  flex: none;
+  min-height: var(--cel-dotyku);
+  padding: 0 16px;
+}
+
+/* Widok Dzień: sekcje nad lista wizyt */
+.kalendarz-lista,
+.kalendarz-dzien,
+.kalendarz-sekcja {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kalendarz-sekcja {
+  gap: 10px;
+}
+
+.kalendarz-sekcja__naglowek {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.kalendarz-sekcja__tytul {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.kalendarz-sekcja > .kalendarz-sekcja__tytul {
+  margin-top: 14px;
+}
+
+.kalendarz-pusto {
+  margin: 0;
+  color: var(--tekst-trzeci);
+}
+
+/* Wizyta: wiersz z opisem, pod nim przyciski na cala szerokosc karty */
+.wizyta {
+  overflow: hidden;
+  border: 1px solid var(--linia-podzial);
+  border-radius: var(--promien-karta);
+  background: var(--tlo-karta);
+}
+
+/* Obrys zaleglej wizyty: odcien --uwaga-tlo z makiety, skala nie ma tego koloru */
+.wizyta--zalegla {
+  border-color: #ecd9a4;
+}
+
+.wizyta--zalegla .wiersz {
+  background: linear-gradient(90deg, var(--uwaga-tlo) 0 5px, transparent 5px);
+}
+
+.wizyta .wiersz {
+  border-bottom: 0;
+}
+
+.wizyta__akcje {
+  display: flex;
+  gap: 8px;
+  padding: 0 12px 12px 16px;
+}
+
+.wizyta__akcje .przycisk--drugi {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--cel-dotyku);
+  padding: 0 12px;
+  border-color: transparent;
+  background: var(--marka-zielen-tlo);
+  color: var(--marka-zielen-ciemna);
+}
+
+.wizyta__akcje .przycisk--drugi:hover:not(:disabled) {
+  border-color: var(--marka-zielen);
+  background: var(--marka-zielen-tlo);
+}
+
+.wizyta > .baner {
+  margin: 0 12px 12px 16px;
+}
+
+.wiersz--odwolana .wiersz__tytul,
+.wiersz--odwolana .wiersz__opis {
+  color: var(--tekst-drugi);
+  text-decoration: line-through;
+}
+
+.pigulka--zrobiona,
+.pigulka--zaplacona {
+  background: var(--sukces-tlo);
+  color: var(--sukces-tekst);
+}
+
+.pigulka--przesunieta {
+  background: var(--info-tlo);
+  color: var(--info-tekst);
+}
+
+.pigulka--odwolana {
+  color: var(--status-szkic-tekst);
+}
+
+.pigulka--zalegle,
+.pigulka--niezaplacona {
+  background: var(--uwaga-tlo);
+  color: var(--uwaga-tekst);
+}
+
+/* Widok Tydzień: dzien jako naglowek z liczba wizyt po prawej, dzisiaj w zieleni */
+.kalendarz-tydzien__dzien {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kalendarz-tydzien__naglowek {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.kalendarz-tydzien__tytul {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.kalendarz-tydzien__naglowek--dzis .kalendarz-tydzien__tytul {
+  color: var(--marka-zielen);
+}
+
+.kalendarz-tydzien__liczba {
+  color: var(--tekst-drugi);
+  font-size: var(--tekst-maly);
+}
+
+/* Widok Miesiąc: siatka 7 kolumn; ujemny margines daje komorke 48 px na ekranie 360 px */
+.kalendarz-miesiac {
+  width: calc(100% + 16px);
+  margin-inline: -8px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.kalendarz-miesiac__dzien-tygodnia {
+  padding: 6px 0;
+  color: var(--tekst-trzeci);
+  font-size: var(--tekst-drobny);
+  font-weight: 700;
+  text-align: center;
+}
+
+.kalendarz-miesiac__komorka {
+  padding: 0;
+}
+
+.kalendarz-miesiac__dzien {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: 64px;
+  padding-top: 4px;
+  border-radius: 12px;
+  color: var(--tekst-glowny);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.kalendarz-miesiac__dzien:hover {
+  background: var(--tlo-miekkie);
+}
+
+.kalendarz-miesiac__numer {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+}
+
+.kalendarz-miesiac__dzien--dzis .kalendarz-miesiac__numer {
+  background: var(--marka-zielen);
+  color: var(--tekst-na-ciemnym);
+  font-weight: 800;
+}
+
+.kalendarz-miesiac__liczba {
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: var(--promien-pigulka);
+  background: var(--marka-zielen-tlo);
+  color: var(--marka-zielen-ciemna);
+  font-size: var(--tekst-drobny);
+  font-weight: 800;
+}
+
+/* Formularz zlecenia: odstep pol 16 px, data i godzina obok siebie, siedem dni w jednym rzedzie */
+.zlecenie-formularz {
+  gap: 16px;
+}
+
+.zlecenie-formularz__dwa-pola {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.zlecenie-formularz__dwa-pola .pole {
+  min-width: 0;
+}
+
+.zlecenie-formularz__plan {
+  margin: 0;
+  color: var(--tekst-drugi);
+  font-size: var(--tekst-maly);
+}
+
+.zlecenie-formularz__komunikat:empty {
+  display: none;
+}
+
+.chipy--dni {
+  flex-wrap: nowrap;
+  gap: 4px;
+}
+
+.chipy--dni .chip {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+}
+
+/* Ekran wizyty: pigulki nad karta danych, etykieta nad wartoscia (makieta „Wizyta”) */
+.wizyta-ekran__pigulki {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.wizyta-dane .wiersz__tytul {
+  color: var(--tekst-drugi);
+  font-size: var(--tekst-maly);
+  font-weight: 400;
+}
+
+.wizyta-dane .wiersz__opis {
+  color: var(--tekst-glowny);
+  font-size: var(--tekst-podstawowy);
+  font-weight: 700;
+}
+
+.wizyta-ekran__sekcja,
+.wizyta-zaplata {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Zapisany stan w kolorach sukcesu; przy dlugim tekscie akcje schodza pod spod */
+.wizyta-stan {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  min-height: 64px;
+  padding: 8px 8px 8px 16px;
+  border-radius: var(--promien-karta);
+  background: var(--sukces-tlo);
+  color: var(--sukces-tekst);
+  font-weight: 800;
+}
+
+.wizyta-stan__tekst {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.wizyta-stan__akcje {
+  display: flex;
+  margin-left: auto;
+}
+
+.wizyta-stan .przycisk--tekstowy {
+  min-height: var(--cel-dotyku);
+  padding: 0 10px;
+  color: var(--sukces-tekst);
+}
+
+/* Trzy formy rownej szerokosci na ekranie 360 px */
+.wizyta-formy .chipy {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.wizyta-formy .chip {
+  padding: 0 8px;
+}
+
+.wizyta-czas {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wizyta-czas__wiersz {
+  margin: 0;
+  font-weight: 700;
+}
+
+.wizyta-ekran__odwolanie,
+.karta-zlecenia__usun {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.wizyta-ekran__odwolanie .przycisk--tekstowy,
+.karta-zlecenia__usun .przycisk--tekstowy {
+  color: var(--blad-tekst);
+}
+
+.wizyta-ekran__odwolanie .przycisk--tekstowy:hover:not(:disabled),
+.karta-zlecenia__usun .przycisk--tekstowy:hover:not(:disabled) {
+  background: var(--blad-tlo);
+}
+
+.wizyta-ekran__notka {
+  margin: 0;
+  color: var(--tekst-drugi);
+  font-size: var(--tekst-maly);
+}
+
+.wizyta-ekran__komunikat:empty {
+  display: none;
+}
+
+/* Licznik czasu pracy: godziny i minuty do wpisania, wieksza wartosc (makieta licznika) */
+.licznik-czasu .licznik__wartosc {
+  font-size: 26px;
+}
+
+.licznik-czasu .licznik__wejscie {
+  min-width: 1ch;
+  text-align: right;
+}
+
+/* Karta zlecenia: akcje pod wierszami, sekcja zaplat jak sekcje karty klienta (naglowek 20 px z makiety „Karta klienta”) */
+.karta-zlecenia__akcje {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.karta-zlecenia__akcje .przycisk {
+  width: 100%;
+}
+
+.karta-zlecenia__sekcja {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.karta-zlecenia__tytul-sekcji {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+/* Miesiac: kwota i pigulka u gory, pod spodem zapisana zaplata albo chipy formy z „Zapłacone” */
+.karta-zlecenia__miesiac {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.karta-zlecenia__miesiac-gora {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 8px;
+}
+
+.karta-zlecenia__miesiac-tytul {
+  margin: 0;
+  font-size: var(--tekst-podstawowy);
+  font-weight: 700;
+}
+
+/* Waska karta: ikona, tekst i „Cofnij” w jednym rzedzie, dlugi tekst lamie sie w srodku */
+.karta-zlecenia__miesiac .wizyta-stan__tekst {
+  flex-basis: 0;
+}

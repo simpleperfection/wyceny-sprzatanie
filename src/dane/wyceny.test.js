@@ -181,6 +181,19 @@ describe('przypiszKlienta i szkic z klientem z listy', () => {
       ['k-anna', { nazwa: 'Anna Kowalska', adres: 'ul. Lipowa 3, Warszawa', termin: '2026-11-14T09:00' }, false, '2026-11-12T10:00:00.000Z'])
   })
 
+  it('„Bez klienta” (null) czyści kopię nazwy i adresu poprzedniego klienta, termin zostaje', () => {
+    const magazyn = nowyMagazyn()
+    const id = wycenaWStatusie(magazyn, ['do_wyslania'])
+    zapiszWycene(magazyn, id, { klient: { termin: '2026-11-14T09:00' } })
+    dodajKlienta(magazyn, { nazwa: 'Anna Kowalska', adres: 'ul. Lipowa 3, Warszawa' }, { id: 'k-anna' })
+    przypiszKlienta(magazyn, id, 'k-anna')
+
+    przypiszKlienta(magazyn, id, null, LISTOPAD)
+
+    const w = zMagazynu(magazyn, id)
+    assert.deepEqual([w.klientId, w.klient, w.zmieniona], [null, { nazwa: '', adres: '', termin: '2026-11-14T09:00' }, '2026-11-12T10:00:00.000Z'])
+  })
+
   it('nieznany klient → brak_klienta, id liczbą → klient, wycena ze zleceniem → tylko_odczyt; nic się nie zapisuje', () => {
     const magazyn = nowyMagazyn()
     const id = wycenaWStatusie(magazyn, ['do_wyslania'])

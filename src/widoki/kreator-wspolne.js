@@ -1,5 +1,6 @@
-// Rama krokow kreatora dokladnej wyceny z makiet: naglowek „Nowa wycena” / „Wycena {numer}” ze strzalka wstecz i podtytulem
-// „Krok n z 5 · …”, pasek postepu, tresc kroku i stopka z „Razem” (kroki zakresu i dodatkow) oraz „Dalej”. Do tego wybor
+// Rama krokow kreatora dokladnej wyceny z makiety kreator-pomieszczenia: naglowek z powrotem (poprzedni krok, z pierwszego
+// „Wycena”), „Krok n z 5”, paskiem postepu i nazwa kroku w tytule, tresc kroku i stopka z „Razem” (kroki zakresu i dodatkow)
+// oraz „Dalej”. Do tego wybor
 // widoku kroku z adresu `#/kreator/:krok`, teksty bledow zapisu i narzedzia wspolne dla wszystkich krokow: wycena kroku z adresu,
 // komunikat zamiast kroku, zapis zmian kroku (z ochrona przed nadpisaniem zmian z innej karty) i odswiezenie stopki.
 
@@ -50,6 +51,11 @@ const NIEAKTUALNA = 'Wycena zmieniła się w innej karcie przeglądarki. Widzisz
 const KOD_NIEAKTUALNEJ = 'nieaktualna'
 const BLAD_ZAPISU_WYCENY = 'Nie udało się zapisać wyceny. Spróbuj jeszcze raz.'
 const BLAD_LICZENIA = 'Nie udało się policzyć ceny dla tych danych. Sprawdź wybraną usługę i wpisany zakres.'
+/**
+ * Powrot do modulu Wycena: ekran nadrzedny kreatora, szybkiej wyceny, pytan, podsumowania i oferty bez wyceny. Oferta z wycena bierze
+ * stad tylko tekst, a adres prowadzi do tej wyceny.
+ */
+export const POWROT_DO_WYCEN = Object.freeze({ wstecz: sciezka('wyceny'), wsteczTekst: 'Wycena' })
 
 /** @param {KrokKreatora} krok */
 const indeksKroku = (krok) => KROKI_KREATORA.findIndex((k) => k.id === krok)
@@ -65,13 +71,24 @@ export const adresKroku = (krok, id = null) => sciezka('kreator', { krok }, id ?
 function adresWstecz(krok, wycena) {
   const poprzedni = KROKI_KREATORA[indeksKroku(krok) - 1]
   if (poprzedni) return adresKroku(poprzedni.id, wycena?.id)
-  return wycena?.numer ? sciezka('wycena', { id: wycena.id }) : sciezka('start')
+  return wycena?.numer ? sciezka('wycena', { id: wycena.id }) : POWROT_DO_WYCEN.wstecz
 }
 
-/** @param {KrokKreatora} krok @param {Wycena | null} wycena @param {Katalog} katalog */
-function opisKroku(krok, wycena, katalog) {
-  if (krok === 'zakres' && wycena) return katalog.usluga(wycena.wejscie.uslugaId).nazwa
-  return KROKI_KREATORA[indeksKroku(krok)]?.etykieta.toLowerCase() ?? krok
+/**
+ * Naglowek kroku z makiety: nad tytulem powrot i „Krok n z 5”, miedzy nimi a tytulem pasek postepu.
+ * @param {KrokKreatora} krok @param {Wycena | null} wycena
+ * @returns {HTMLElement}
+ */
+export function naglowekKroku(krok, wycena) {
+  const indeks = indeksKroku(krok)
+  return naglowek({
+    tytul: KROKI_KREATORA[indeks]?.etykieta ?? krok,
+    podtytul: wycena?.numer ? `Wycena ${wycena.numer}` : undefined,
+    wstecz: adresWstecz(krok, wycena),
+    wsteczTekst: KROKI_KREATORA[indeks - 1]?.etykieta ?? POWROT_DO_WYCEN.wsteczTekst,
+    krok: `Krok ${indeks + 1} z ${KROKI_KREATORA.length}`,
+    pasek: pasekPostepu(KROKI_KREATORA.map((k) => k.etykieta), indeks),
+  })
 }
 
 /** @param {KrokKreatora} krok @param {Wycena | null} wycena @param {Katalog} katalog @param {string} opis @returns {HTMLElement | null} */
@@ -83,24 +100,18 @@ function razem(krok, wycena, katalog, opis) {
 }
 
 /**
- * Rama kroku: naglowek, pasek postepu, tresc i stopka. „Dalej” jest zablokowane, gdy krok ma bledy (`bledyKroku`) — poza
+ * Rama kroku: naglowek z paskiem postepu, tresc i stopka. „Dalej” jest zablokowane, gdy krok ma bledy (`bledyKroku`) — poza
  * krokiem uslugi, ktory sprawdza wybor sam (wybor nie jest jeszcze zapisany w wycenie).
  * @param {OpcjeRamy} opcje
  * @returns {RamaKroku}
  */
 export function ramaKroku({ krok, wycena, katalog, tresc, naDalej, opisKwoty = 'Razem' }) {
-  const indeks = indeksKroku(krok)
   const czyZablokowany = krok !== 'usluga' && wycena !== null && bledyKroku(krok, wycena, katalog).length > 0
   const dalej = przycisk({ tekst: 'Dalej', naKlik: naDalej, czyWylaczony: czyZablokowany })
   return {
     dalej,
     elementy: [
-      naglowek({
-        tytul: wycena?.numer ? `Wycena ${wycena.numer}` : 'Nowa wycena',
-        podtytul: `Krok ${indeks + 1} z ${KROKI_KREATORA.length} · ${opisKroku(krok, wycena, katalog)}`,
-        wstecz: adresWstecz(krok, wycena),
-      }),
-      pasekPostepu(KROKI_KREATORA.map((k) => k.etykieta), indeks),
+      naglowekKroku(krok, wycena),
       h('div', { class: 'tresc kreator__tresc' }, tresc),
       h('div', { class: 'stopka-kreatora' }, razem(krok, wycena, katalog, opisKwoty), dalej),
     ],
@@ -150,8 +161,8 @@ export function widokKreatora(widokiKrokow, nieZnaleziono) {
  */
 export function pokazKomunikat(kontener, tekst, akcja) {
   kontener.replaceChildren(
-    naglowek({ tytul: 'Nowa wycena', wstecz: sciezka('start') }),
-    h('div', { class: 'tresc' }, baner({ rodzaj: 'info', tekst }), przycisk({ tekst: akcja.tekst, rodzaj: 'drugi', adres: akcja.adres })))
+    naglowek({ tytul: 'Nowa wycena', ...POWROT_DO_WYCEN }),
+    h('div', { class: 'tresc' }, baner({ rodzaj: 'info', tekst }), przycisk({ tekst: akcja.tekst, adres: akcja.adres })))
 }
 
 /**
@@ -164,7 +175,7 @@ export function wycenaKroku(kontener, zapytanie, kontekst) {
   const stan = wczytajStan(kontekst.magazyn)
   const wycena = id === null ? null : znajdzWycene(stan, id)
   if (!wycena) {
-    pokazKomunikat(kontener, 'Nie ma tej wyceny. Mogła zostać usunięta.', { tekst: 'Wróć na start', adres: sciezka('start') })
+    pokazKomunikat(kontener, 'Nie ma tej wyceny. Mogła zostać usunięta.', { tekst: 'Wróć do wycen', adres: POWROT_DO_WYCEN.wstecz })
     return null
   }
   if (!czyWycenaZamknieta(stan, wycena.id)) return wycena

@@ -115,33 +115,8 @@
       "nazwa": "Nowy wygląd, szkielet i Start",
       "execute": "done",
       "review": "done",
-      "fix": "pending",
-      "otwarteFindingi": [
-        {
-          "severity": "P2",
-          "typ": "TEST",
-          "plik": "src/app.js:88",
-          "opis": "odswiezajPoZmianieDnia bez testu; wydzielić do src/ui/zmiana-dnia.js z wstrzykiwanymi zależnościami i przetestować gałęzie (nowy dzień, ten sam dzień, hidden, hashchange)."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/ui/format.js:39",
-          "opis": "FORMY.klient dubluje FORMY_KLIENTA z src/widoki/kopia-teksty.js:20; usunąć lokalną i użyć FORMY.klient."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/widoki/lista-wycen-dane.js:51",
-          "opis": "doZaplanowania w pętli -> O(wyceny x zlecenia) na każdy render Start i #/wyceny; zbudować Map zleceniaPoWycenie."
-        },
-        {
-          "severity": "P2",
-          "typ": "KOD",
-          "plik": "src/widoki/start-dane.js:65",
-          "opis": "Reguła sekcji wycen zapisana dwa razy (stanWycen i sekcjaWyceny); liczyć stanWycen z sekcjeWycen(stan)."
-        }
-      ],
+      "fix": "done",
+      "otwarteFindingi": [],
       "baza": "8e46a30f184d735d07475f537cea4f0b6106b9d1",
       "metryki": {
         "liczniki": {
@@ -191,32 +166,167 @@
     {
       "numer": 4,
       "nazwa": "Klienci",
-      "execute": "pending",
-      "review": "pending",
-      "fix": "none",
-      "otwarteFindingi": []
+      "execute": "done",
+      "review": "done",
+      "fix": "done",
+      "otwarteFindingi": [],
+      "baza": "0068aadab0f6548a3fef4d9c07d3b9362247064e",
+      "metryki": {
+        "liczniki": {
+          "p1": 0,
+          "p2": 8,
+          "p3": 7,
+          "operator": 0
+        },
+        "przebieg": {
+          "pominieci": [],
+          "e2eTryb": "przegladarka",
+          "znalezione": 16,
+          "poDedupJs": 16,
+          "poDedupSem": 15,
+          "weryfikowane": 9,
+          "obalone": 0,
+          "p3Odrzucone": 0,
+          "e2eCheckboxy": 2,
+          "e2eStatus": "wykonany (tryb przegladarka)",
+          "e2ePass": 2,
+          "e2eFail": 0,
+          "e2eSkip": 0,
+          "e2eManual": 0,
+          "dossier": true,
+          "sceptycy": {
+            "p1": 0,
+            "p2Grupy": 3,
+            "p2Findingi": 9
+          },
+          "sceptyk": {
+            "agree": 8,
+            "disagree_evidence": 0,
+            "disagree_concern": 1,
+            "degradacje": 1
+          },
+          "tiery": {
+            "sceptykP2": "medium",
+            "sceptykP1": "high",
+            "reviewer": "high",
+            "spec": "medium",
+            "testCoverage": "medium",
+            "scribe": "low"
+          }
+        }
+      }
     },
     {
       "numer": 5,
       "nazwa": "Zlecenia i kalendarz",
-      "execute": "pending",
-      "review": "pending",
-      "fix": "none",
-      "otwarteFindingi": []
+      "execute": "done",
+      "review": "done",
+      "fix": "done",
+      "otwarteFindingi": [],
+      "baza": "f57bbc41b348f8058100208c53052c45780ff806",
+      "metryki": {
+        "liczniki": {
+          "p1": 4,
+          "p2": 20,
+          "p3": 13,
+          "operator": 0
+        },
+        "przebieg": {
+          "pominieci": [],
+          "e2eTryb": "przegladarka",
+          "znalezione": 38,
+          "poDedupJs": 38,
+          "poDedupSem": 37,
+          "weryfikowane": 24,
+          "obalone": 0,
+          "p3Odrzucone": 0,
+          "e2eCheckboxy": 8,
+          "e2eStatus": "wykonany (tryb przegladarka)",
+          "e2ePass": 8,
+          "e2eFail": 0,
+          "e2eSkip": 0,
+          "e2eManual": 0,
+          "dossier": true,
+          "sceptycy": {
+            "p1": 12,
+            "p2Grupy": 5,
+            "p2Findingi": 20
+          },
+          "sceptyk": {
+            "agree": 32,
+            "disagree_evidence": 0,
+            "disagree_concern": 0,
+            "degradacje": 0
+          },
+          "tiery": {
+            "sceptykP2": "medium",
+            "sceptykP1": "high",
+            "reviewer": "high",
+            "spec": "medium",
+            "testCoverage": "medium",
+            "scribe": "low"
+          }
+        }
+      }
     },
     {
       "numer": 6,
       "nazwa": "Wycena w nowym wyglądzie",
-      "execute": "pending",
-      "review": "pending",
-      "fix": "none",
-      "otwarteFindingi": []
+      "execute": "done",
+      "review": "done",
+      "fix": "done",
+      "otwarteFindingi": [],
+      "baza": "b36d698cc6f9a0c1129742cad614323cde5118d8",
+      "metryki": {
+        "liczniki": {
+          "p1": 0,
+          "p2": 22,
+          "p3": 7,
+          "operator": 1
+        },
+        "przebieg": {
+          "pominieci": [],
+          "e2eTryb": "przegladarka",
+          "znalezione": 32,
+          "poDedupJs": 32,
+          "poDedupSem": 30,
+          "weryfikowane": 22,
+          "obalone": 0,
+          "p3Odrzucone": 0,
+          "e2eCheckboxy": 4,
+          "e2eStatus": "wykonany (tryb przegladarka)",
+          "e2ePass": 3,
+          "e2eFail": 0,
+          "e2eSkip": 1,
+          "e2eManual": 0,
+          "dossier": true,
+          "sceptycy": {
+            "p1": 0,
+            "p2Grupy": 6,
+            "p2Findingi": 22
+          },
+          "sceptyk": {
+            "agree": 22,
+            "disagree_evidence": 0,
+            "disagree_concern": 0,
+            "degradacje": 0
+          },
+          "tiery": {
+            "sceptykP2": "medium",
+            "sceptykP1": "high",
+            "reviewer": "high",
+            "spec": "medium",
+            "testCoverage": "medium",
+            "scribe": "low"
+          }
+        }
+      }
     }
   ],
   "zakonczenie": {
-    "walidacja": "pending",
-    "complete": "pending",
-    "compound": "pending"
+    "walidacja": "done",
+    "complete": "done",
+    "compound": "done"
   },
   "bazaZielona": {
     "sha": "634fc31",

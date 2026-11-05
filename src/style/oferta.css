@@ -1,13 +1,14 @@
 /*
- * Strona oferty dla klienta (makieta oferta-klient, wariant B): dokument na tle karty, kolumna do 560 px wysrodkowana
- * na szerszym ekranie. Uklad i rozmiary z podgladu wariantu B (docs/operator/etap-5-wariant-b.html, `.phone.doc`),
- * kolory z tokenow. Drobny tekst ma --tekst-drugi zamiast --tekst-trzeci z podgladu, bo ten na --tlo-karta nie ma 4,5:1.
+ * Strona oferty dla klienta (ekran oferta-klient w docs/operator/aplikacja-modulowa-makiety.html): neutralny dokument
+ * firmy, bez zieleni aplikacji. Biale tlo, ciemny tekst, kwota duza i pogrubiona w kolorze tekstu, przyciski w graficie.
+ * Tylko tokeny neutralne; kolumna do 560 px wysrodkowana na szerszym ekranie. Caly tekst ma co najmniej 17 px, takze
+ * kontakt firmy i etykiety sekcji, ktore makieta pokazuje w 15 px.
  */
 
 .oferta {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   min-height: 100dvh;
   max-width: var(--szerokosc-kolumny);
   margin: 0 auto;
@@ -28,7 +29,12 @@
 .oferta__dokument {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
+}
+
+/* Fokus z klawiatury w kolorze tekstu: wspolna regula z baza.css ma kolor akcji aplikacji. */
+.oferta :focus-visible {
+  outline-color: var(--tekst-glowny);
 }
 
 /* Baner po terminie i komunikaty bez oferty */
@@ -37,7 +43,6 @@
   padding: 10px 14px;
   background: var(--uwaga-tlo);
   color: var(--uwaga-tekst);
-  font-size: var(--tekst-maly);
   font-weight: 600;
   text-wrap: pretty;
 }
@@ -56,7 +61,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding-bottom: 14px;
+  padding-bottom: 16px;
   border-bottom: 1px solid var(--linia-podzial);
 }
 
@@ -65,37 +70,35 @@
   flex: none;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--marka-granat);
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--tekst-glowny);
   color: var(--tekst-na-ciemnym);
   font-weight: 800;
 }
 
 .oferta__nazwa-firmy {
-  font-size: 16.5px;
+  font-size: 19px;
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.2;
   overflow-wrap: anywhere;
 }
 
 .oferta__kontakt {
   color: var(--tekst-drugi);
-  font-size: var(--tekst-drobny);
   overflow-wrap: anywhere;
 }
 
 /* Tytul i „Dla” */
 .oferta__tytul h1 {
-  font-size: var(--tekst-tytul-powitalny);
-  font-weight: 700;
-  line-height: 1.2;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.15;
 }
 
 .oferta__drobny {
   color: var(--tekst-drugi);
-  font-size: var(--tekst-maly);
   overflow-wrap: anywhere;
 }
 
@@ -103,21 +106,14 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  border-radius: var(--promien-karta);
-  padding: 14px;
-  background: var(--tlo-strona);
 }
 
-.oferta__etykieta-dla {
+.oferta__etykieta-dla,
+.oferta__etykieta,
+.oferta__naglowek {
   color: var(--tekst-drugi);
-  font-size: var(--tekst-drobny);
-  font-weight: 600;
-}
-
-.oferta__etykieta {
-  color: var(--tekst-drugi);
-  font-size: var(--tekst-maly);
-  font-weight: 600;
+  font-size: var(--tekst-podstawowy);
+  font-weight: 700;
 }
 
 .oferta__klient {
@@ -128,61 +124,62 @@
 /* Wiersze kwot */
 .oferta__wiersze {
   margin: 0;
+  border-top: 1px solid var(--linia-podzial);
   padding: 0;
   list-style: none;
+}
+
+.oferta__wiersze--dodatki {
+  border-top: 0;
 }
 
 .oferta__wiersz {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  padding: 8px 0;
+  padding: 12px 0;
   border-bottom: 1px solid var(--linia-podzial);
   overflow-wrap: anywhere;
 }
 
 .oferta__wiersze--dodatki .oferta__wiersz {
+  padding: 6px 0;
   border-bottom: 0;
 }
 
 .oferta__kwota {
   flex: none;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
 }
 
-.oferta__kwota--dodatek {
-  color: var(--marka-zielen);
-}
-
+/* Dluga kwota (widelki) nie miesci sie obok etykiety na 360 px: schodzi do osobnej linii, nadal do prawej. */
 .oferta__razem {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
-  margin-top: -10px;
-  border-radius: var(--promien-przycisk);
-  padding: 12px 14px;
-  background: var(--marka-granat);
-  color: var(--tekst-na-ciemnym);
-  font-weight: 700;
+  gap: 0 12px;
 }
 
 .oferta__razem strong {
-  font-size: var(--tekst-tytul-powitalny);
+  margin-left: auto;
+  font-size: var(--tekst-kwota);
   font-weight: 800;
-  white-space: nowrap;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  text-align: right;
+}
+
+.oferta__abonament,
+.oferta__vat {
+  margin-top: -12px;
 }
 
 .oferta__vat,
 .oferta__warunki {
   color: var(--tekst-drugi);
-  font-size: var(--tekst-drobny);
   text-wrap: pretty;
-}
-
-.oferta__vat {
-  margin-top: -6px;
 }
 
 /* Zakres prac */
@@ -190,11 +187,6 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-}
-
-.oferta__naglowek {
-  font-size: var(--tekst-podstawowy);
-  font-weight: 700;
 }
 
 .oferta__lista {
@@ -214,15 +206,14 @@
 }
 
 .oferta__znacznik {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   margin-top: 1px;
-  color: var(--marka-zielen);
 }
 
 .oferta__poza {
+  margin-top: 10px;
   color: var(--tekst-drugi);
-  font-size: var(--tekst-maly);
   text-wrap: pretty;
 }
 
@@ -230,19 +221,20 @@
 .oferta__przyciski {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
 }
 
 .oferta__przycisk {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 48px;
-  padding: 12px 16px;
-  border: 1px solid transparent;
+  min-height: 56px;
+  padding: 12px 20px;
+  border: 1.5px solid transparent;
   border-radius: var(--promien-przycisk);
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 700;
+  line-height: 1.2;
   text-align: center;
   text-decoration: none;
   transition: background-color 0.15s, border-color 0.15s, transform 0.1s;
@@ -253,15 +245,15 @@
 }
 
 .oferta__przycisk--glowny {
-  background: var(--marka-zielen);
-  border-color: var(--marka-zielen);
+  background: var(--tekst-glowny);
+  border-color: var(--tekst-glowny);
   color: var(--tekst-na-ciemnym);
 }
 
 .oferta__przycisk--glowny:hover,
 .oferta__przycisk--glowny:active {
-  background: var(--marka-zielen-ciemna);
-  border-color: var(--marka-zielen-ciemna);
+  background: var(--tekst-drugi);
+  border-color: var(--tekst-drugi);
 }
 
 .oferta__przycisk--drugi {
@@ -271,5 +263,5 @@
 }
 
 .oferta__przycisk--drugi:hover {
-  background: var(--tlo-strona);
+  background: var(--tlo-miekkie);
 }
