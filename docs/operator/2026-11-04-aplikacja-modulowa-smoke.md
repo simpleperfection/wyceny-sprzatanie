@@ -44,7 +44,8 @@ Wejście: Start → kafel „Zlecenia” → widok Dzień, sekcja „Do zamknię
 
 ## 5. Wycena: próg tekstu (faza 6, R8)
 Wejście: Wycena → „Dokładna wycena”, potem „Szybka wycena”; rozmiary w `src/style/tokeny.css`.
-- [ ] Decyzja właściciela: obejrzyj „Krok 2 z 5”, tytuł grupy dodatków „Mycie okien”, ceny pozycji w dodatkach i „Widełki dla klienta”. Tekst podstawowy ma 17 px, ale etykiety i opisy mają 15 px (`--tekst-maly`), a pigułki statusu i pasek postępu 14 px (`--tekst-drobny`), tak samo jak w makiecie. Scenariusze `kreator-wyglad-cena`, `szybka-pytania-wyglad` i `podsumowanie-wyglad` przeszły przy założeniu, że „tekst ≥ 17 px” dotyczy tekstu podstawowego → potwierdź to założenie albo zamów podniesienie tekstu drugorzędnego do 17 px; decyzję wpisz pod tym punktem
+- [x] Decyzja właściciela: obejrzyj „Krok 2 z 5”, tytuł grupy dodatków „Mycie okien”, ceny pozycji w dodatkach i „Widełki dla klienta”. Tekst podstawowy ma 17 px, ale etykiety i opisy mają 15 px (`--tekst-maly`), a pigułki statusu i pasek postępu 14 px (`--tekst-drobny`), tak samo jak w makiecie. Scenariusze `kreator-wyglad-cena`, `szybka-pytania-wyglad` i `podsumowanie-wyglad` przeszły przy założeniu, że „tekst ≥ 17 px” dotyczy tekstu podstawowego → potwierdź to założenie albo zamów podniesienie tekstu drugorzędnego do 17 px; decyzję wpisz pod tym punktem
+  - Decyzja 2026-11-05: właściciel po porównaniu zrzutów zamówił 17 px dla całego tekstu. `--tekst-maly` i `--tekst-drobny` mają teraz 17 px, wbrew wartościom w makiecie.
 
 ## 6. Oferta u klienta: link i PDF (IU-22)
 Wejście: zapisana wycena → oferta → „Kopiuj link” i „PDF”.

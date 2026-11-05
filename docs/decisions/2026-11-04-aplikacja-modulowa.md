@@ -28,3 +28,4 @@ claude_md: do-uzgodnienia
 
 ## Po smoke'u
 - Wiersze list zawijają tekst zamiast go ucinać wielokropkiem, a pigułka stanu jest pod tekstem, nie obok nazwy — właściciel na telefonie nie widział pełnych nazw klientów i adresów; to zastępuje „wiersz ma najwyżej dwie linie” z R9 (2026-11-05, `src/ui/komponenty/uklad.js`, `src/style/komponenty.css`).
+- Cały tekst aplikacji ma co najmniej 17 px: `--tekst-maly` i `--tekst-drobny` są podniesione z 15 i 14 px, wbrew `:root` makiety — właściciel wybrał to po porównaniu zrzutów, godząc się na więcej zawinięć w wierszach (2026-11-05, `src/style/tokeny.css`).
