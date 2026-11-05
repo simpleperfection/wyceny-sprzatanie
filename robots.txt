@@ -1,0 +1,8 @@
+# Czysty Zarobek w testach (etap 6a): strona nie ma trafiac do wyszukiwarek.
+# Strony HTML zostaja dostepne dla robotow, bo tylko tak zobacza w nich noindex.
+# Reszta repo (PLAN.md, research/, docs/) nie ma naglowka noindex, wiec jest zablokowana.
+User-agent: *
+Allow: /$
+Allow: /index.html
+Allow: /oferta.html
+Disallow: /
