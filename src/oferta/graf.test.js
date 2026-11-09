@@ -6,19 +6,19 @@ import { readFile } from 'node:fs/promises'
 import { describe, it } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
+import { celeOdwolan } from '../../scripts/publikacja/pliki.mjs'
+
 const KATALOG_REPO = new URL('../../', import.meta.url)
 const START_OFERTY = 'src/oferta-start.js'
 
-/** Statyczne `import ... from`, `export ... from` i `import '...'` na poczatku linii; typedefy JSDoc `import(...)` sa w komentarzach. */
+// Importy liczy ten sam parser co publikacja (celeOdwolan w scripts/publikacja/pliki.mjs): statyczne `import ... from`,
+// `export ... from` i `import '...'` na poczatku linii, bez typedefow JSDoc `import(...)` z komentarzy.
 // Sprawdzone: import z '../silnik/szybka.js' dopisany do tresc.js wywraca test grafu (dochodzi caly silnik).
-const IMPORT_STATYCZNY = /^\s*(?:import|export)\b[^'"`;=()]*?\bfrom\s*['"]([^'"]+)['"]|^\s*import\s*['"]([^'"]+)['"]/gm
 
 /** @param {string} sciezka sciezka wzgledem katalogu repo @returns {Promise<string[]>} */
 async function importyPliku(sciezka) {
-  const adres = new URL(sciezka, KATALOG_REPO)
-  const kod = await readFile(fileURLToPath(adres), 'utf8')
-  return [...kod.matchAll(IMPORT_STATYCZNY)]
-    .map(([, zFrom, bezFrom]) => new URL(zFrom ?? bezFrom, adres).href.slice(KATALOG_REPO.href.length))
+  const kod = await readFile(fileURLToPath(new URL(sciezka, KATALOG_REPO)), 'utf8')
+  return celeOdwolan(sciezka, kod)
 }
 
 /** @param {string} start @returns {Promise<string[]>} posortowane sciezki wszystkich modulow osiagalnych ze startu */

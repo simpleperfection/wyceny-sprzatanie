@@ -30,7 +30,7 @@ const KATALOGI_APLIKACJI = [
 export const ZAKAZANE_ROZSZERZENIA = ['.md', '.csv', '.ps1', '.pl', '.mjs', '.test.js']
 export const ZAKAZANE_KATALOGI = ['docs', 'research', 'scripts', 'e2e', 'tests', '.claude', 'node_modules']
 
-/** Wzorzec z src/oferta/graf.test.js: statyczne importy na poczatku linii, bez typedefow JSDoc `import(...)`. */
+/** Statyczne importy na poczatku linii, bez typedefow JSDoc `import(...)`; ten sam parser liczy graf w src/oferta/graf.test.js. */
 const IMPORT_STATYCZNY = /^\s*(?:import|export)\b[^'"`;=()]*?\bfrom\s*['"]([^'"]+)['"]|^\s*import\s*['"]([^'"]+)['"]/gm
 /** Grupy: 1 poczatek atrybutu, 2 cudzyslow, 3 wartosc w cudzyslowie, 4 wartosc bez cudzyslowu. */
 export const ATRYBUT_ADRESU = /(\s(?:href|src)\s*=\s*)(?:(["'])(.*?)\2|([^\s"'=<>`]+))/gis
@@ -38,8 +38,11 @@ const ADRES_W_CSS = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^)"'\s]+))\s*\)|@import\s+
 const WZORCE_ODWOLAN = /** @type {Record<string, RegExp>} */ ({ '.html': ATRYBUT_ADRESU, '.js': IMPORT_STATYCZNY, '.css': ADRES_W_CSS })
 const BAZA_ADRESOW = 'https://publikacja.invalid/'
 
+/** Kod naruszenia zasad publikacji (lista dozwolonych, graf oferty); awaria dysku ma w CLI inny kod. */
+export const KOD_BLEDU_PUBLIKACJI = 'BLAD_PUBLIKACJI'
+
 export class BladPublikacji extends Error {
-  kod = 'BLAD_PUBLIKACJI'
+  kod = KOD_BLEDU_PUBLIKACJI
   /** @param {string} przyczyna @param {string} plik */
   constructor(przyczyna, plik) {
     super(`${przyczyna}: ${plik}`)
@@ -68,7 +71,7 @@ export async function plikiAplikacji(korzen) {
   }
   for (const { katalog, czyDozwolony } of KATALOGI_APLIKACJI) {
     const wKatalogu = await plikiWKatalogu(join(korzen, katalog)).catch((/** @type {NodeJS.ErrnoException} */ blad) => {
-      if (blad.code === 'ENOENT') return []
+      if (blad.code === 'ENOENT') throw new BladPublikacji('brak katalogu aplikacji', katalog)
       throw blad
     })
     const dozwolone = wKatalogu.filter((plik) => !plik.split('/').some((segment) => segment.startsWith('.')) && czyDozwolony(plik))

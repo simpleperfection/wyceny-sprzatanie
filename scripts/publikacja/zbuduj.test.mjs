@@ -6,8 +6,8 @@ import { dirname, join } from 'node:path'
 import { after, before, describe, it } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
-import { celeOdwolan, grafOferty, plikiWKatalogu } from './pliki.mjs'
-import { zbuduj } from './zbuduj.mjs'
+import { celeOdwolan, grafOferty, KOD_BLEDU_PUBLIKACJI, plikiWKatalogu } from './pliki.mjs'
+import { KOD_BLEDU_IO, zbuduj } from './zbuduj.mjs'
 
 const KORZEN_REPO = fileURLToPath(new URL('../../', import.meta.url))
 const SKRYPT = fileURLToPath(new URL('./zbuduj.mjs', import.meta.url))
@@ -74,6 +74,9 @@ const MALE_REPO = {
   'src/narzedzie.mjs': 'export {}',
   'src/style/a.css': 'body {}',
   'src/style/o.css': "@font-face { src: url('../../fonty/f.woff2') format('woff2') }",
+  // Pliki ukryte (z kropka) nie trafiaja do publikacji, choc pasuja do rozszerzen katalogu.
+  'ikony/.ukryty.svg': '<svg/>',
+  'src/.lokalne.js': 'export const lokalne = 1',
   'notatki.md': '# tajne notatki',
   'tajne/x.js': 'export const haslo = 1',
 }
@@ -160,6 +163,28 @@ describe('publikacja: male repo w mkdtemp', () => {
     await assert.rejects(stat(wyjscie), { code: 'ENOENT' })
   })
 
+  it('plik z dist/publiczne/ odwolujacy sie od korzenia (/src/l.js) wychodzi poza publiczne/ i konczy build bledem', async () => {
+    const { korzen, wyjscie } = await przygotuj({ ...MALE_REPO, 'src/o.js': "import { l } from '/src/l.js'\nexport const o = l" })
+
+    await assert.rejects(zbuduj(korzen, wyjscie), { kod: 'BLAD_PUBLIKACJI', message: /publiczne\/src\/o\.js -> src\/l\.js/ })
+    await assert.rejects(stat(wyjscie), { code: 'ENOENT' })
+  })
+
+  it('plik w zakazanym katalogu (src/docs/x.js) przechodzi liste dozwolonych, ale sprawdzenie wyniku przerywa publikacje', async () => {
+    const { korzen, wyjscie } = await przygotuj({ ...MALE_REPO, 'src/docs/x.js': 'export {}' })
+
+    await assert.rejects(zbuduj(korzen, wyjscie), { kod: 'BLAD_PUBLIKACJI', message: /zakazany katalog.*src\/docs\/x\.js/ })
+    await assert.rejects(stat(wyjscie), { code: 'ENOENT' })
+  })
+
+  it('brak katalogu aplikacji (fonty/) konczy build bledem i nie zostawia katalogu', async () => {
+    const bezFontow = Object.fromEntries(Object.entries(MALE_REPO).filter(([sciezka]) => !sciezka.startsWith('fonty/')))
+    const { korzen, wyjscie } = await przygotuj({ ...bezFontow, 'src/style/o.css': 'body {}' })
+
+    await assert.rejects(zbuduj(korzen, wyjscie), { kod: 'BLAD_PUBLIKACJI', message: /brak katalogu aplikacji: fonty$/ })
+    await assert.rejects(stat(wyjscie), { code: 'ENOENT' })
+  })
+
   it('brak pliku z korzenia listy (robots.txt) konczy build bledem', async () => {
     const { korzen, wyjscie } = await przygotuj({ ...MALE_REPO, 'robots.txt': '' })
     await rm(join(korzen, 'robots.txt'))
@@ -184,6 +209,19 @@ describe('publikacja: male repo w mkdtemp', () => {
     const blad = JSON.parse(wynik.stderr.trim())
     assert.equal(blad.kod, 'BLAD_PUBLIKACJI')
     assert.match(blad.przyczyna, /src\/brak\.js/)
+  })
+
+  it('z wiersza polecen: awaria odczytu (data jest plikiem, nie katalogiem) ma kod BLAD_PUBLIKACJI_IO, a nie BLAD_PUBLIKACJI', async () => {
+    const bezDanych = Object.fromEntries(Object.entries(MALE_REPO).filter(([sciezka]) => !sciezka.startsWith('data/')))
+    const { korzen, wyjscie } = await przygotuj({ ...bezDanych, data: '{}' })
+
+    const wynik = spawnSync(process.execPath, [SKRYPT, '--korzen', korzen, '--wyjscie', wyjscie], { encoding: 'utf8' })
+
+    assert.equal(wynik.status, 1)
+    const blad = JSON.parse(wynik.stderr.trim())
+    assert.equal(blad.kod, KOD_BLEDU_IO)
+    assert.equal(blad.kod, 'BLAD_PUBLIKACJI_IO')
+    assert.match(blad.przyczyna, /ENOTDIR/)
   })
 
   it('z wiersza polecen: udany build konczy sie kodem 0 i tworzy index.html', async () => {
@@ -309,6 +347,13 @@ describe('publikacja: odwolania w plikach', () => {
     assert.deepEqual(celeOdwolan('src/x/m.js', js), ['src/x/a.js', 'src/b.js', 'src/x/c.js'])
     assert.deepEqual(celeOdwolan('src/style/s.css', css), ['src/f.woff2'])
     assert.deepEqual(celeOdwolan('ikony/i.svg', '<svg href="x.js"/>'), [])
+  })
+
+  it('celeOdwolan: zle zakodowany adres (%E0%A4%A) konczy sie bledem BLAD_PUBLIKACJI z plikiem i adresem, a nie URIError', () => {
+    assert.throws(() => celeOdwolan('src/m.js', "import './%E0%A4%A.js'"), {
+      kod: KOD_BLEDU_PUBLIKACJI,
+      message: /zle zakodowany adres: src\/m\.js -> \.\/%E0%A4%A\.js/,
+    })
   })
 
   it('plikiWKatalogu: nieistniejacy katalog daje blad ENOENT', async () => {

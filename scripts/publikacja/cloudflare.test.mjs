@@ -115,6 +115,17 @@ describe('cloudflare: katalog publikacji z prawdziwego repo', () => {
     }
   })
 
+  it('_headers: /* zakazuje ramek, zgadywania typu i Referer i wymusza HTTPS (HSTS na rok)', async () => {
+    const reguly = regulyNaglowkow(await readFile(join(wyjscie, '_headers'), 'utf8'))
+    const wszystkie = reguly.find((regula) => regula.sciezka === '/*')
+
+    assert.deepEqual(wszystkie?.naglowki.get('content-security-policy'), ["frame-ancestors 'none'"])
+    assert.deepEqual(wszystkie?.naglowki.get('x-frame-options'), ['DENY'])
+    assert.deepEqual(wszystkie?.naglowki.get('x-content-type-options'), ['nosniff'])
+    assert.deepEqual(wszystkie?.naglowki.get('referrer-policy'), ['no-referrer'])
+    assert.deepEqual(wszystkie?.naglowki.get('strict-transport-security'), ['max-age=31536000'])
+  })
+
   it('kazda sciezka bez logowania istnieje w katalogu, a sciezka z * obejmuje niepusty katalog', async () => {
     for (const sciezka of SCIEZKI_BEZ_LOGOWANIA) {
       assert.match(sciezka, /^\/[^*]+$|^\/[^*]+\/\*$/, `gwiazdka tylko jako /* na koncu: ${sciezka}`)

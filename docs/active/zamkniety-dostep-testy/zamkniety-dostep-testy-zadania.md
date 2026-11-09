@@ -60,9 +60,9 @@ Zależy od: Faza 1
 - [x] Test: [Unit] w `dist/publiczne/` nie ma `src/silnik/cena.js`, `src/silnik/szybka.js`, `src/dane/wyceny.js` ani `src/dane/magazyn.js`
 - [x] Test: [Unit] `dist/index.html` jest identyczny z `index.html`, a `dist/oferta.html` ma `noindex`, tę samą politykę CSP i `<script type="module" src="publiczne/src/oferta-start.js">`
 - [x] Test: [Unit] żaden plik `dist/src/` nie zawiera `sendBeacon`, a oba pliki HTML mają `connect-src 'self'` (R3)
-- [ ] Weryfikacja: `node --test scripts/publikacja/zbuduj.test.mjs` przechodzi
-- [ ] Weryfikacja: `npm run publikacja` kończy się kodem 0 i tworzy `dist/index.html`
-- [ ] Weryfikacja: `git check-ignore dist/index.html` zwraca ścieżkę pliku
+- [x] Weryfikacja: `node --test scripts/publikacja/zbuduj.test.mjs` przechodzi
+- [x] Weryfikacja: `npm run publikacja` kończy się kodem 0 i tworzy `dist/index.html`
+- [x] Weryfikacja: `git check-ignore dist/index.html` zwraca ścieżkę pliku
 
 ### IU-4: Pełna pamięć offline po każdej publikacji (feature-builder-data)
 
@@ -75,8 +75,8 @@ Zależy od: Faza 1
 - [x] Test: [Unit] przy `ZAPIS_W_BIEGU = false` plik z cache wraca bez żądania do sieci, a nawigacja z sieci nic nie zapisuje; w `sw.js` z repo odświeżanie w tle działa jak dotąd
 - [x] Test: [Unit] dwa zbudowania tego samego repo dają identyczny `dist/sw.js`, a zmiana jednego bajtu w pliku aplikacji zmienia wersję
 - [x] Test: [Unit] tekst bez `WERSJA_CACHE`, bez `ZAPIS_W_BIEGU` albo z dwiema tablicami `PLIKI_STARTOWE` kończy się błędem `BLAD_PUBLIKACJI`
-- [ ] Weryfikacja: `node --test scripts/publikacja/sw-publikacji.test.mjs` przechodzi
-- [ ] Weryfikacja: `npm test` przechodzi
+- [x] Weryfikacja: `node --test scripts/publikacja/sw-publikacji.test.mjs` przechodzi
+- [x] Weryfikacja: `npm test` przechodzi
 
 ### IU-5: Konfiguracja Cloudflare i próba katalogu w przeglądarce (feature-builder-data)
 
@@ -94,12 +94,12 @@ Zależy od: Faza 1
 - [x] Test: [Unit] każda ścieżka z `SCIEZKI_BEZ_LOGOWANIA` istnieje w `dist/`, a dla ścieżek z `*` katalog nie jest pusty
 - [x] Test: [Unit] `docs/operator/zamkniety-dostep-testy-przygotowanie.md` zawiera każdą ścieżkę z `SCIEZKI_BEZ_LOGOWANIA`, nazwę z `wrangler.json` i polecenie `node scripts/publikacja/zbuduj.mjs`
 - [x] Test: [Unit] serwer na adres `/podkatalog/` zwraca `podkatalog/index.html`, a na `/podkatalog` dalej 404
-- [ ] Test: [E2E] `publikacja-oferta-bez-logowania` — uruchom `node scripts/publikacja/zbuduj.mjs`, otwórz `<E2E_URL>/dist/oferta.html#<kod z e2e/stany/oferta-po-terminie.txt>`, odczytaj `performance.getEntriesByType('resource')` i konsolę, zrób screenshot → oferta się rysuje, wszystkie pobrane pliki leżą pod `/dist/publiczne/`, konsola nie ma błędów
-- [ ] Test: [E2E] `publikacja-aplikacja-offline` — usuń rejestrację workera i cache z poprzednich przebiegów, uruchom `node scripts/publikacja/zbuduj.mjs`, otwórz `<E2E_URL>/dist/index.html`, poczekaj na `navigator.serviceWorker.ready`, sprawdź w `caches`, czy jest `src/app.js` i `publiczne/src/oferta-start.js`, włącz `agent-browser set offline on`, przeładuj stronę, przejdź na `#/start`, zrób screenshot, wyłącz tryb offline → ekran Start rysuje się bez sieci, bez ekranu błędu
-- [ ] Weryfikacja: `node --test scripts/publikacja/cloudflare.test.mjs` przechodzi
-- [ ] Weryfikacja: `node --test scripts/serwer-dev.test.mjs` przechodzi
-- [ ] Weryfikacja: `npm test` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Test: [E2E] `publikacja-oferta-bez-logowania` — uruchom `node scripts/publikacja/zbuduj.mjs`, otwórz `<E2E_URL>/dist/oferta.html#<kod z e2e/stany/oferta-po-terminie.txt>`, odczytaj `performance.getEntriesByType('resource')` i konsolę, zrób screenshot → oferta się rysuje, wszystkie pobrane pliki leżą pod `/dist/publiczne/`, konsola nie ma błędów
+- [x] Test: [E2E] `publikacja-aplikacja-offline` — usuń rejestrację workera i cache z poprzednich przebiegów, uruchom `node scripts/publikacja/zbuduj.mjs`, otwórz `<E2E_URL>/dist/index.html`, poczekaj na `navigator.serviceWorker.ready`, sprawdź w `caches`, czy jest `src/app.js` i `publiczne/src/oferta-start.js`, włącz `agent-browser set offline on`, przeładuj stronę, przejdź na `#/start`, zrób screenshot, wyłącz tryb offline → ekran Start rysuje się bez sieci, bez ekranu błędu
+- [x] Weryfikacja: `node --test scripts/publikacja/cloudflare.test.mjs` przechodzi
+- [x] Weryfikacja: `node --test scripts/serwer-dev.test.mjs` przechodzi
+- [x] Weryfikacja: `npm test` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 
 ### IU-6: Zastrzeżenie praw i dokumentacja publikacji (feature-builder-data)
 
@@ -107,9 +107,13 @@ Zależy od: Faza 1
 - [x] Modyfikuj: `CLAUDE.md`
 - [x] Test (unit): `scripts/publikacja/zbuduj.test.mjs`
 - [x] Test: [Unit] `LICENSE` istnieje w repo, a nie ma go w `dist/`
-- [ ] Weryfikacja: `grep -c "Wszelkie prawa zastrzeżone" LICENSE` zwraca 1
-- [ ] Weryfikacja: `grep -c "npm run publikacja" CLAUDE.md` zwraca co najmniej 1
-- [ ] Weryfikacja: `npm test` przechodzi
+- [x] Weryfikacja: `grep -c "Wszelkie prawa zastrzeżone" LICENSE` zwraca 1
+- [x] Weryfikacja: `grep -c "npm run publikacja" CLAUDE.md` zwraca co najmniej 1
+- [x] Weryfikacja: `npm test` przechodzi
+
+## Do poprawy po review fazy 2
+
+Zamkniete cyklem fix: 8 pozycji — pelna tresc findingow i uzasadnienia w `review-faza-2.md`.
 
 ## Operator checklist faza 2
 
@@ -117,3 +121,4 @@ Zależy od: Faza 1
 - [ ] Operator: Próba na `proba.czystyzarobek.pl`: osoba spoza listy nie wchodzi, logowanie kodem działa, link oferty otwiera się bez logowania, aplikacja działa offline i po wygaśnięciu sesji pokazuje logowanie (IU-6)
 - [ ] Operator: Po przełączeniu dane z telefonu właściciela są na miejscu, `czystyzarobek.pl/PLAN.md` nie działa, repo jest prywatne, a push na `main` publikuje nową wersję (IU-6)
 - [ ] Operator: Pierwsza firma z iPhone'em sprawdza logowanie w zainstalowanej aplikacji (IU-6)
+- [ ] Operator: Próba obejścia wyjątków Access na `proba.czystyzarobek.pl` (R30, R1) — Operator action: `curl --path-as-is -s -o /dev/null -w "%{http_code} $p\n"` po `/publiczne/../src/app.js`, `/publiczne/%2e%2e/data/ceny.json`, `/ikony/..%2fdata/ceny.json`, `/publiczne/..%2F..%2Fdata/ceny.json`, `/oferta.html/../index.html`, `//publiczne/../data/ceny.json`; każdy ma dać 302 do logowania Access albo 404, nigdy 200; w Cloudflare zostaw „Normalize incoming URLs” (dopisać do `docs/operator/zamkniety-dostep-testy-przygotowanie.md:111`)

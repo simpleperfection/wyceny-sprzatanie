@@ -12,7 +12,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { parseArgs } from 'node:util'
 
 import {
-  ATRYBUT_ADRESU, BladPublikacji, celeOdwolan, grafOferty, KATALOG_PUBLIKACJI, PLIKI_CLOUDFLARE, plikiAplikacji, plikiWKatalogu,
+  ATRYBUT_ADRESU, BladPublikacji, celeOdwolan, grafOferty, KATALOG_PUBLIKACJI, KOD_BLEDU_PUBLIKACJI, PLIKI_CLOUDFLARE, plikiAplikacji, plikiWKatalogu,
   PREFIKS_OFERTY, STRONA_APLIKACJI, STRONA_OFERTY, STRONA_STARTOWA, ZAKAZANE_KATALOGI, ZAKAZANE_ROZSZERZENIA,
 } from './pliki.mjs'
 import { PLIK_WORKERA, plikiPamieci, swPublikacji, wersjaCache } from './sw-publikacji.mjs'
@@ -20,7 +20,9 @@ import { PLIK_WORKERA, plikiPamieci, swPublikacji, wersjaCache } from './sw-publ
 const KORZEN_REPO = fileURLToPath(new URL('../..', import.meta.url))
 /** _headers i _redirects leza obok skryptu: to konfiguracja publikacji, a nie plik repo z --korzen. */
 const KATALOG_KONFIGURACJI = fileURLToPath(new URL('.', import.meta.url))
-const KOD_BLEDU_PUBLIKACJI = 1
+const KOD_WYJSCIA_BLEDU = 1
+/** Kod w CLI dla awarii odczytu i zapisu (EACCES, EBUSY, ENOSPC), odrebny od naruszenia zasad publikacji. */
+export const KOD_BLEDU_IO = 'BLAD_PUBLIKACJI_IO'
 
 /** @param {string} korzen @param {string} wyjscie */
 function sprawdzKatalogWyjsciowy(korzen, wyjscie) {
@@ -122,7 +124,8 @@ async function uruchom() {
 if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
   uruchom().catch((/** @type {unknown} */ blad) => {
     const przyczyna = blad instanceof Error ? blad.message : String(blad)
-    process.stderr.write(`${JSON.stringify({ kod: 'BLAD_PUBLIKACJI', przyczyna })}\n`)
-    process.exitCode = KOD_BLEDU_PUBLIKACJI
+    const kod = blad instanceof BladPublikacji ? KOD_BLEDU_PUBLIKACJI : KOD_BLEDU_IO
+    process.stderr.write(`${JSON.stringify({ kod, przyczyna })}\n`)
+    process.exitCode = KOD_WYJSCIA_BLEDU
   })
 }

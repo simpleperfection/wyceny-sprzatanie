@@ -36,13 +36,13 @@ function uruchomSw(kod) {
   const fetch = mock.fn(async () => odpowiedz(200, 'z sieci'))
   const self = {
     location: new URL(`${KATALOG}sw.js`), addEventListener: (/** @type {string} */ typ, /** @type {(z: unknown) => void} */ obsluga) => { obslugi[typ] = obsluga },
-    reportError: mock.fn(), skipWaiting: async () => {}, clients: { claim: async () => {} },
+    reportError: mock.fn(), skipWaiting: mock.fn(async () => {}), clients: { claim: mock.fn(async () => {}) },
   }
   class Zadanie { constructor(/** @type {string} */ sciezka, /** @type {{ cache?: string }} */ opcje = {}) { this.url = adres(sciezka); this.cache = opcje.cache } }
   const kontekst = vm.createContext({ self, caches, fetch, URL, Request: Zadanie, AbortSignal, AbortController, setTimeout, clearTimeout, Promise, Error, TypeError, JSON, String })
   vm.runInContext(kod, kontekst)
   const stale = JSON.parse(vm.runInContext('JSON.stringify({ WERSJA_CACHE, PLIKI_STARTOWE, ZAPIS_W_BIEGU })', kontekst))
-  return { obslugi, cache, fetch, nazwyCache, stale }
+  return { obslugi, cache, fetch, nazwyCache, self, stale }
 }
 
 /** Zdarzenie install, activate albo fetch z zebranymi obietnicami; wynik respondWith, gdy byl. @param {(z: unknown) => void} obsluga @param {object} [zadanie] */
@@ -159,12 +159,37 @@ describe('sw-publikacji: dist/sw.js z prawdziwego repo', () => {
     assert.notEqual(stale.WERSJA_CACHE, 'czysty-zarobek-v1')
     assert.deepEqual([...nazwyCache], [stale.WERSJA_CACHE])
   })
+
+  it('dwie wersje cache: nowy worker nie przejmuje otwartej strony, a stary cache zostaje do aktywacji nowego', async () => {
+    const { obslugi, nazwyCache, self, stale } = uruchomSw(kodDist)
+    for (const nazwa of ['czysty-zarobek-v1', stale.WERSJA_CACHE]) nazwyCache.add(nazwa)
+
+    await wyslij(obslugi.install)
+    assert.equal(self.skipWaiting.mock.callCount(), 0)
+    assert.deepEqual([...nazwyCache], ['czysty-zarobek-v1', stale.WERSJA_CACHE])
+
+    await wyslij(obslugi.activate)
+    assert.equal(self.clients.claim.mock.callCount(), 0)
+    assert.deepEqual([...nazwyCache], [stale.WERSJA_CACHE])
+  })
+
+  it('sw.js z repo (ZAPIS_W_BIEGU = true) dalej przejmuje strone: skipWaiting po install i clients.claim po activate', async () => {
+    const { obslugi, self } = uruchomSw(KOD_SW_REPO)
+
+    await wyslij(obslugi.install)
+    await wyslij(obslugi.activate)
+
+    assert.equal(self.skipWaiting.mock.callCount(), 1)
+    assert.equal(self.clients.claim.mock.callCount(), 1)
+  })
 })
 
 describe('sw-publikacji: wersja z zawartosci plikow', () => {
   const MALE_REPO = {
     'index.html': '<!doctype html>', 'oferta.html': '<!doctype html>', 'sw.js': KOD_SW_REPO,
     'manifest.webmanifest': '{}', 'robots.txt': 'User-agent: *', 'src/a.js': 'export const a = 1',
+    // Kazdy katalog aplikacji musi istniec, inaczej publikacja przerywa sie bledem.
+    'data/ceny.json': '{}', 'fonty/OFL.txt': 'licencja', 'ikony/i.svg': '<svg/>',
   }
 
   /** @param {Record<string, string>} pliki @returns {Promise<string>} tekst dist/sw.js */

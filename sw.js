@@ -7,6 +7,8 @@
 // Klasyczny skrypt (bez importow modulow), poza typecheck. Zakres = katalog aplikacji.
 // Publikacja (scripts/publikacja/sw-publikacji.mjs) podmienia w dist/sw.js trzy stale: wersje cache z hasza plikow,
 // pelna liste plikow do pamieci i ZAPIS_W_BIEGU = false (cache zmienia tylko install, wiec nie miesza wersji).
+// Przy ZAPIS_W_BIEGU = false nowy worker nie przejmuje otwartych stron (bez skipWaiting i clients.claim): czeka, az
+// zamkna sie wszystkie, wiec stary kod nie dostaje nowych data/*.json, a stary cache znika dopiero ze stara wersja (R34).
 // Kazda z nich ma tu jedna deklaracje w jednej postaci, inaczej publikacja przerywa sie bledem.
 
 const WERSJA_CACHE = 'czysty-zarobek-v1'
@@ -127,13 +129,13 @@ async function zapiszZasoby(adresy) {
 self.addEventListener('install', (zdarzenie) => {
   zdarzenie.waitUntil(caches.open(WERSJA_CACHE)
     .then((cache) => cache.addAll(PLIKI_STARTOWE.map((plik) => new Request(plik, { cache: 'reload' }))))
-    .then(() => self.skipWaiting()))
+    .then(() => (ZAPIS_W_BIEGU ? self.skipWaiting() : undefined)))
 })
 
 self.addEventListener('activate', (zdarzenie) => {
   zdarzenie.waitUntil(caches.keys()
     .then((nazwy) => Promise.all(nazwy.filter((nazwa) => nazwa !== WERSJA_CACHE).map((nazwa) => caches.delete(nazwa))))
-    .then(() => self.clients.claim()))
+    .then(() => (ZAPIS_W_BIEGU ? self.clients.claim() : undefined)))
 })
 
 self.addEventListener('fetch', (zdarzenie) => {
