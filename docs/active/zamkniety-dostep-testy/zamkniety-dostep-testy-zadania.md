@@ -48,52 +48,52 @@ Zależy od: Faza 1
 
 ### IU-3: Katalog publikacji z listy dozwolonych plików (feature-builder-data)
 
-- [ ] Stwórz: `scripts/publikacja/pliki.mjs`
-- [ ] Stwórz: `scripts/publikacja/zbuduj.mjs`
-- [ ] Test (unit): `scripts/publikacja/zbuduj.test.mjs`
-- [ ] Modyfikuj: `.gitignore`
-- [ ] Modyfikuj: `package.json`
-- [ ] Test: [Unit] na prawdziwym repo `dist/` nie ma `PLAN.md`, `CLAUDE.md`, `research/`, `docs/`, `scripts/`, `.claude/`, `e2e/`, `tests/` ani żadnego `*.test.js`
-- [ ] Test: [Unit] plik dodany do `mkdtemp` poza listą (np. `notatki.md` i `tajne/x.js`) nie trafia do katalogu wyjściowego
-- [ ] Test: [Unit] graf oferty jest równy zapisanej liście 13 modułów, 4 arkuszy, 2 czcionek i ikony; test pada z nazwą pliku, gdy dojdzie nowy, żeby publiczny plik był świadomą decyzją
-- [ ] Test: [Unit] każde odwołanie w `dist/oferta.html` i w plikach `dist/publiczne/` istnieje w `dist/publiczne/`; brakujący import w `mkdtemp` kończy build błędem `BLAD_PUBLIKACJI`
-- [ ] Test: [Unit] w `dist/publiczne/` nie ma `src/silnik/cena.js`, `src/silnik/szybka.js`, `src/dane/wyceny.js` ani `src/dane/magazyn.js`
-- [ ] Test: [Unit] `dist/index.html` jest identyczny z `index.html`, a `dist/oferta.html` ma `noindex`, tę samą politykę CSP i `<script type="module" src="publiczne/src/oferta-start.js">`
-- [ ] Test: [Unit] żaden plik `dist/src/` nie zawiera `sendBeacon`, a oba pliki HTML mają `connect-src 'self'` (R3)
+- [x] Stwórz: `scripts/publikacja/pliki.mjs`
+- [x] Stwórz: `scripts/publikacja/zbuduj.mjs`
+- [x] Test (unit): `scripts/publikacja/zbuduj.test.mjs`
+- [x] Modyfikuj: `.gitignore`
+- [x] Modyfikuj: `package.json`
+- [x] Test: [Unit] na prawdziwym repo `dist/` nie ma `PLAN.md`, `CLAUDE.md`, `research/`, `docs/`, `scripts/`, `.claude/`, `e2e/`, `tests/` ani żadnego `*.test.js`
+- [x] Test: [Unit] plik dodany do `mkdtemp` poza listą (np. `notatki.md` i `tajne/x.js`) nie trafia do katalogu wyjściowego
+- [x] Test: [Unit] graf oferty jest równy zapisanej liście 13 modułów, 4 arkuszy, 2 czcionek i ikony; test pada z nazwą pliku, gdy dojdzie nowy, żeby publiczny plik był świadomą decyzją
+- [x] Test: [Unit] każde odwołanie w `dist/oferta.html` i w plikach `dist/publiczne/` istnieje w `dist/publiczne/`; brakujący import w `mkdtemp` kończy build błędem `BLAD_PUBLIKACJI`
+- [x] Test: [Unit] w `dist/publiczne/` nie ma `src/silnik/cena.js`, `src/silnik/szybka.js`, `src/dane/wyceny.js` ani `src/dane/magazyn.js`
+- [x] Test: [Unit] `dist/index.html` jest identyczny z `index.html`, a `dist/oferta.html` ma `noindex`, tę samą politykę CSP i `<script type="module" src="publiczne/src/oferta-start.js">`
+- [x] Test: [Unit] żaden plik `dist/src/` nie zawiera `sendBeacon`, a oba pliki HTML mają `connect-src 'self'` (R3)
 - [ ] Weryfikacja: `node --test scripts/publikacja/zbuduj.test.mjs` przechodzi
 - [ ] Weryfikacja: `npm run publikacja` kończy się kodem 0 i tworzy `dist/index.html`
 - [ ] Weryfikacja: `git check-ignore dist/index.html` zwraca ścieżkę pliku
 
 ### IU-4: Pełna pamięć offline po każdej publikacji (feature-builder-data)
 
-- [ ] Stwórz: `scripts/publikacja/sw-publikacji.mjs`
-- [ ] Modyfikuj: `scripts/publikacja/zbuduj.mjs`
-- [ ] Modyfikuj: `sw.js`
-- [ ] Test (unit): `scripts/publikacja/sw-publikacji.test.mjs`
-- [ ] Test: [Unit] wynik uruchomiony w `node:vm` wywołuje przy `install` `addAll` z każdym plikiem `dist/`, także `src/app.js` i `publiczne/src/oferta-start.js`
-- [ ] Test: [Unit] lista nie zawiera `sw.js`, `robots.txt`, `_headers` ani `_redirects`
-- [ ] Test: [Unit] przy `ZAPIS_W_BIEGU = false` plik z cache wraca bez żądania do sieci, a nawigacja z sieci nic nie zapisuje; w `sw.js` z repo odświeżanie w tle działa jak dotąd
-- [ ] Test: [Unit] dwa zbudowania tego samego repo dają identyczny `dist/sw.js`, a zmiana jednego bajtu w pliku aplikacji zmienia wersję
-- [ ] Test: [Unit] tekst bez `WERSJA_CACHE`, bez `ZAPIS_W_BIEGU` albo z dwiema tablicami `PLIKI_STARTOWE` kończy się błędem `BLAD_PUBLIKACJI`
+- [x] Stwórz: `scripts/publikacja/sw-publikacji.mjs`
+- [x] Modyfikuj: `scripts/publikacja/zbuduj.mjs`
+- [x] Modyfikuj: `sw.js`
+- [x] Test (unit): `scripts/publikacja/sw-publikacji.test.mjs`
+- [x] Test: [Unit] wynik uruchomiony w `node:vm` wywołuje przy `install` `addAll` z każdym plikiem `dist/`, także `src/app.js` i `publiczne/src/oferta-start.js`
+- [x] Test: [Unit] lista nie zawiera `sw.js`, `robots.txt`, `_headers` ani `_redirects`
+- [x] Test: [Unit] przy `ZAPIS_W_BIEGU = false` plik z cache wraca bez żądania do sieci, a nawigacja z sieci nic nie zapisuje; w `sw.js` z repo odświeżanie w tle działa jak dotąd
+- [x] Test: [Unit] dwa zbudowania tego samego repo dają identyczny `dist/sw.js`, a zmiana jednego bajtu w pliku aplikacji zmienia wersję
+- [x] Test: [Unit] tekst bez `WERSJA_CACHE`, bez `ZAPIS_W_BIEGU` albo z dwiema tablicami `PLIKI_STARTOWE` kończy się błędem `BLAD_PUBLIKACJI`
 - [ ] Weryfikacja: `node --test scripts/publikacja/sw-publikacji.test.mjs` przechodzi
 - [ ] Weryfikacja: `npm test` przechodzi
 
 ### IU-5: Konfiguracja Cloudflare i próba katalogu w przeglądarce (feature-builder-data)
 
-- [ ] Stwórz: `wrangler.json`
-- [ ] Stwórz: `scripts/publikacja/_headers`
-- [ ] Stwórz: `scripts/publikacja/_redirects`
-- [ ] Modyfikuj: `scripts/publikacja/pliki.mjs`
-- [ ] Modyfikuj: `scripts/publikacja/zbuduj.mjs`
-- [ ] Modyfikuj: `scripts/serwer-dev.mjs`
-- [ ] Test (unit): `scripts/publikacja/cloudflare.test.mjs`
-- [ ] Test (unit): `scripts/serwer-dev.test.mjs`
-- [ ] Test: [Unit] `wrangler.json` ma `workers_dev: false`, `preview_urls: false`, `assets.directory: ./dist`, `html_handling: none`, a nie ma `main`, `route`, `routes` ani `observability`
-- [ ] Test: [Unit] `dist/_redirects` ma dokładnie jedną regułę, a `dist/start.html` jest bajtowo równy `dist/index.html`
-- [ ] Test: [Unit] `dist/_headers` ma `noindex` na `/*`, `no-transform` na trzech adresach HTML i nie ma `Cache-Control` w `/*`
-- [ ] Test: [Unit] każda ścieżka z `SCIEZKI_BEZ_LOGOWANIA` istnieje w `dist/`, a dla ścieżek z `*` katalog nie jest pusty
-- [ ] Test: [Unit] `docs/operator/zamkniety-dostep-testy-przygotowanie.md` zawiera każdą ścieżkę z `SCIEZKI_BEZ_LOGOWANIA`, nazwę z `wrangler.json` i polecenie `node scripts/publikacja/zbuduj.mjs`
-- [ ] Test: [Unit] serwer na adres `/podkatalog/` zwraca `podkatalog/index.html`, a na `/podkatalog` dalej 404
+- [x] Stwórz: `wrangler.json`
+- [x] Stwórz: `scripts/publikacja/_headers`
+- [x] Stwórz: `scripts/publikacja/_redirects`
+- [x] Modyfikuj: `scripts/publikacja/pliki.mjs`
+- [x] Modyfikuj: `scripts/publikacja/zbuduj.mjs`
+- [x] Modyfikuj: `scripts/serwer-dev.mjs`
+- [x] Test (unit): `scripts/publikacja/cloudflare.test.mjs`
+- [x] Test (unit): `scripts/serwer-dev.test.mjs`
+- [x] Test: [Unit] `wrangler.json` ma `workers_dev: false`, `preview_urls: false`, `assets.directory: ./dist`, `html_handling: none`, a nie ma `main`, `route`, `routes` ani `observability`
+- [x] Test: [Unit] `dist/_redirects` ma dokładnie jedną regułę, a `dist/start.html` jest bajtowo równy `dist/index.html`
+- [x] Test: [Unit] `dist/_headers` ma `noindex` na `/*`, `no-transform` na trzech adresach HTML i nie ma `Cache-Control` w `/*`
+- [x] Test: [Unit] każda ścieżka z `SCIEZKI_BEZ_LOGOWANIA` istnieje w `dist/`, a dla ścieżek z `*` katalog nie jest pusty
+- [x] Test: [Unit] `docs/operator/zamkniety-dostep-testy-przygotowanie.md` zawiera każdą ścieżkę z `SCIEZKI_BEZ_LOGOWANIA`, nazwę z `wrangler.json` i polecenie `node scripts/publikacja/zbuduj.mjs`
+- [x] Test: [Unit] serwer na adres `/podkatalog/` zwraca `podkatalog/index.html`, a na `/podkatalog` dalej 404
 - [ ] Test: [E2E] `publikacja-oferta-bez-logowania` — uruchom `node scripts/publikacja/zbuduj.mjs`, otwórz `<E2E_URL>/dist/oferta.html#<kod z e2e/stany/oferta-po-terminie.txt>`, odczytaj `performance.getEntriesByType('resource')` i konsolę, zrób screenshot → oferta się rysuje, wszystkie pobrane pliki leżą pod `/dist/publiczne/`, konsola nie ma błędów
 - [ ] Test: [E2E] `publikacja-aplikacja-offline` — usuń rejestrację workera i cache z poprzednich przebiegów, uruchom `node scripts/publikacja/zbuduj.mjs`, otwórz `<E2E_URL>/dist/index.html`, poczekaj na `navigator.serviceWorker.ready`, sprawdź w `caches`, czy jest `src/app.js` i `publiczne/src/oferta-start.js`, włącz `agent-browser set offline on`, przeładuj stronę, przejdź na `#/start`, zrób screenshot, wyłącz tryb offline → ekran Start rysuje się bez sieci, bez ekranu błędu
 - [ ] Weryfikacja: `node --test scripts/publikacja/cloudflare.test.mjs` przechodzi
@@ -103,10 +103,10 @@ Zależy od: Faza 1
 
 ### IU-6: Zastrzeżenie praw i dokumentacja publikacji (feature-builder-data)
 
-- [ ] Stwórz: `LICENSE`
-- [ ] Modyfikuj: `CLAUDE.md`
-- [ ] Test (unit): `scripts/publikacja/zbuduj.test.mjs`
-- [ ] Test: [Unit] `LICENSE` istnieje w repo, a nie ma go w `dist/`
+- [x] Stwórz: `LICENSE`
+- [x] Modyfikuj: `CLAUDE.md`
+- [x] Test (unit): `scripts/publikacja/zbuduj.test.mjs`
+- [x] Test: [Unit] `LICENSE` istnieje w repo, a nie ma go w `dist/`
 - [ ] Weryfikacja: `grep -c "Wszelkie prawa zastrzeżone" LICENSE` zwraca 1
 - [ ] Weryfikacja: `grep -c "npm run publikacja" CLAUDE.md` zwraca co najmniej 1
 - [ ] Weryfikacja: `npm test` przechodzi

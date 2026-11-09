@@ -10,7 +10,8 @@
   "scripts": {
     "test": "node --test \"src/**/*.test.js\" \"scripts/**/*.test.mjs\"",
     "typecheck": "tsc -p tsconfig.json",
-    "start": "node scripts/serwer-dev.mjs"
+    "start": "node scripts/serwer-dev.mjs",
+    "publikacja": "node scripts/publikacja/zbuduj.mjs"
   },
   "devDependencies": {
     "typescript": "7.0.2"

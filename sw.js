@@ -5,8 +5,13 @@
 // Zmiana WERSJA_CACHE (np. po zmianie PLIKI_STARTOWE) instaluje nowego workera, ktory kasuje stary cache.
 // Po pierwszym uruchomieniu online aplikacja dziala offline.
 // Klasyczny skrypt (bez importow modulow), poza typecheck. Zakres = katalog aplikacji.
+// Publikacja (scripts/publikacja/sw-publikacji.mjs) podmienia w dist/sw.js trzy stale: wersje cache z hasza plikow,
+// pelna liste plikow do pamieci i ZAPIS_W_BIEGU = false (cache zmienia tylko install, wiec nie miesza wersji).
+// Kazda z nich ma tu jedna deklaracje w jednej postaci, inaczej publikacja przerywa sie bledem.
 
 const WERSJA_CACHE = 'czysty-zarobek-v1'
+/** Zapis odpowiedzi sieci do cache przy pobieraniu i odswiezanie w tle; przy false pliki z cache wracaja bez sieci. */
+const ZAPIS_W_BIEGU = true
 const LIMIT_SIECI_MS = 4000
 /** Zapis w tle (pliki od strony) nie blokuje uzytkownika, wiec ma dluzszy limit na wolnym laczu. */
 const LIMIT_ZAPISU_W_TLE_MS = 30000
@@ -36,7 +41,7 @@ class PrzekroczenieCzasu extends Error {}
 const zglos = (kod, przyczyna) => self.reportError(new Error(JSON.stringify({ kod, przyczyna: String(przyczyna) })))
 
 /** @param {Response} odpowiedz */
-const czyDoZapisu = (odpowiedz) => odpowiedz.status === 200 && odpowiedz.type === 'basic'
+const czyDoZapisu = (odpowiedz) => ZAPIS_W_BIEGU && odpowiedz.status === 200 && odpowiedz.type === 'basic'
 
 /** @param {string} adres @returns {boolean} */
 function czyTenSamOrigin(adres) {
@@ -77,6 +82,7 @@ function zSieci(zdarzenie, cache) {
 /** Plik aplikacji albo danych: od razu z cache i odswiezenie w tle; bez wpisu w cache czeka na siec. @param {FetchEvent} zdarzenie @param {Cache} cache */
 async function cachePotemSiec(zdarzenie, cache) {
   const zCache = await cache.match(zdarzenie.request)
+  if (zCache && !ZAPIS_W_BIEGU) return zCache
   const siec = zSieci(zdarzenie, cache)
   if (!zCache) return siec
   zdarzenie.waitUntil(siec.catch((blad) => zglos('sw_odswiezenie', blad)))

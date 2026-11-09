@@ -1,0 +1,14 @@
+# Strona ukryta przed wyszukiwarkami (R2).
+/*
+  X-Robots-Tag: noindex, nofollow
+
+# no-transform blokuje doklejanie skryptow Cloudflare do HTML. Cache-Control nie idzie do /*,
+# bo pasujace reguly lacza sie przecinkiem, a no-transform na reszcie plikow wylaczylby kompresje.
+/
+  Cache-Control: public, max-age=0, must-revalidate, no-transform
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate, no-transform
+
+/oferta.html
+  Cache-Control: public, max-age=0, must-revalidate, no-transform

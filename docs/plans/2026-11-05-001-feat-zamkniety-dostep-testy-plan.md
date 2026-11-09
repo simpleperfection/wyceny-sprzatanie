@@ -209,7 +209,7 @@ Autopilot nie potrzebuje niczego od operatora. Przenosiny robi właściciel po s
 
 **Zależy od:** Faza 1
 
-- [ ] **IU-3: Katalog publikacji z listy dozwolonych plików**
+- [x] **IU-3: Katalog publikacji z listy dozwolonych plików**
 
 **Cel:** Skrypt tworzy `dist/` wyłącznie z plików aplikacji i osobny katalog `dist/publiczne/` z tym, czego potrzebuje strona oferty.
 
@@ -258,7 +258,7 @@ Autopilot nie potrzebuje niczego od operatora. Przenosiny robi właściciel po s
 - `npm run publikacja` kończy się kodem 0 i tworzy `dist/index.html`
 - `git check-ignore dist/index.html` zwraca ścieżkę pliku
 
-- [ ] **IU-4: Pełna pamięć offline po każdej publikacji**
+- [x] **IU-4: Pełna pamięć offline po każdej publikacji**
 
 **Cel:** `dist/sw.js` ma pełną listę plików i wersję z hasza zawartości, więc po publikacji aplikacja startuje offline w całości nowa albo w całości stara.
 
@@ -301,7 +301,7 @@ Autopilot nie potrzebuje niczego od operatora. Przenosiny robi właściciel po s
 - `node --test scripts/publikacja/sw-publikacji.test.mjs` przechodzi
 - `npm test` przechodzi
 
-- [ ] **IU-5: Konfiguracja Cloudflare i próba katalogu w przeglądarce**
+- [x] **IU-5: Konfiguracja Cloudflare i próba katalogu w przeglądarce**
 
 **Cel:** Repo zawiera konfigurację publikacji, a katalog `dist/` jest sprawdzony w prawdziwej przeglądarce.
 
@@ -354,7 +354,7 @@ Autopilot nie potrzebuje niczego od operatora. Przenosiny robi właściciel po s
 - `npm test` przechodzi
 - `npm run typecheck` przechodzi bez błędów
 
-- [ ] **IU-6: Zastrzeżenie praw i dokumentacja publikacji**
+- [x] **IU-6: Zastrzeżenie praw i dokumentacja publikacji**
 
 **Cel:** Repo ma zastrzeżenie praw, a `CLAUDE.md` opisuje nowy sposób publikacji i to, co zostaje do przenosin.
 
