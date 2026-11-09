@@ -74,8 +74,11 @@ function uruchomSw(implementacjaFetch, zamiennikiPrzegladarki = {}) {
     keys: async () => [...nazwyCache],
     delete: mock.fn(async (/** @type {string} */ nazwa) => nazwyCache.delete(nazwa)),
   }
-  vm.runInNewContext(KOD_SW, { self, caches, fetch, URL, Request: AtrapaZadania, AbortSignal, AbortController, setTimeout, clearTimeout, Promise, Error, TypeError, JSON, String, ...zamiennikiPrzegladarki })
-  return { obslugi, cache, fetch, reportError, self, nazwyCache, caches }
+  const kontekst = vm.createContext({ self, caches, fetch, URL, Request: AtrapaZadania, AbortSignal, AbortController, setTimeout, clearTimeout, Promise, Error, TypeError, JSON, String, ...zamiennikiPrzegladarki })
+  vm.runInContext(KOD_SW, kontekst)
+  /** Stale z sw.js, zeby podbicie WERSJA_CACHE albo zmiana listy plikow nie wywracala testow. */
+  const stale = vm.runInContext('({ WERSJA_CACHE, PLIKI_STARTOWE, STRONA_ZAPASOWA })', kontekst)
+  return { obslugi, cache, fetch, reportError, self, nazwyCache, caches, stale }
 }
 
 /** Zdarzenie install albo activate: obietnica przekazana do waitUntil. @param {(zdarzenie: unknown) => void} obsluga */
@@ -247,17 +250,15 @@ describe('sw.js: pliki aplikacji i danych od razu z cache (stale-while-revalidat
 
 describe('sw.js: install i activate', () => {
   it('install zapisuje wszystkie PLIKI_STARTOWE z pominięciem cache HTTP, potem skipWaiting', async () => {
-    const { obslugi, cache, self } = uruchomSw(async () => odpowiedz(200, 'x'))
+    const { obslugi, cache, self, stale } = uruchomSw(async () => odpowiedz(200, 'x'))
 
     await zdarzenieCyklu(obslugi.install)
 
     assert.equal(cache.addAll.mock.callCount(), 1)
     const zadania = [...cache.addAll.mock.calls[0].arguments[0]].map(({ url, cache: tryb }) => ({ url, tryb }))
-    assert.deepEqual(zadania, [
-      './', 'index.html', 'oferta.html', 'manifest.webmanifest',
-      'data/ceny.json', 'data/normy.json', 'data/rynek.json', 'data/chemia.json',
-      'data/domyslne.json', 'data/pytania.json', 'data/zakresy.json',
-    ].map((plik) => ({ url: new URL(plik, KATALOG).href, tryb: 'reload' })))
+    assert.deepEqual(zadania, Array.from(stale.PLIKI_STARTOWE, (plik) => ({ url: new URL(plik, KATALOG).href, tryb: 'reload' })))
+    // Strona zapasowa nawigacji bez sieci musi trafic do cache przy instalacji.
+    assert.ok(zadania.some(({ url }) => url === new URL(stale.STRONA_ZAPASOWA, KATALOG).href))
     assert.equal(self.skipWaiting.mock.callCount(), 1)
   })
 
@@ -272,12 +273,12 @@ describe('sw.js: install i activate', () => {
   })
 
   it('activate usuwa cache o innej nazwie, zostawia bieżący i przejmuje strony', async () => {
-    const { obslugi, nazwyCache, caches, self } = uruchomSw(async () => odpowiedz(200, 'x'))
-    for (const nazwa of ['czysty-zarobek-v0', 'czysty-zarobek-v1', 'obcy-cache']) nazwyCache.add(nazwa)
+    const { obslugi, nazwyCache, caches, self, stale } = uruchomSw(async () => odpowiedz(200, 'x'))
+    for (const nazwa of ['czysty-zarobek-v0', stale.WERSJA_CACHE, 'obcy-cache']) nazwyCache.add(nazwa)
 
     await zdarzenieCyklu(obslugi.activate)
 
-    assert.deepEqual([...nazwyCache], ['czysty-zarobek-v1'])
+    assert.deepEqual([...nazwyCache], [stale.WERSJA_CACHE])
     assert.deepEqual(caches.delete.mock.calls.map((wywolanie) => wywolanie.arguments[0]), ['czysty-zarobek-v0', 'obcy-cache'])
     assert.equal(self.clients.claim.mock.callCount(), 1)
   })

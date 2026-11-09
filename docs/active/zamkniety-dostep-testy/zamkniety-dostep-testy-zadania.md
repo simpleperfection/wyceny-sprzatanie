@@ -21,9 +21,9 @@ Zależy od: Brak
 - [x] Test (unit): `src/silnik/vat.test.js`
 - [x] Test: [Unit] `jestStatusemVat` z `src/silnik/vat.js` daje `true` dla `czynny` i `zwolniony`, a `false` dla innego tekstu, liczby i `undefined`
 - [x] Test: [Unit] istniejące testy `src/oferta/tresc.test.js`, `src/oferta/kodek.test.js` i `src/silnik/szybka.test.js` przechodzą bez zmian
-- [ ] Weryfikacja: `npm test` przechodzi
-- [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
-- [ ] Weryfikacja: `grep -E "dane/wyceny|dane/magazyn|silnik/szybka" src/oferta/tresc.js src/oferta/kodek.js` nic nie znajduje
+- [x] Weryfikacja: `npm test` przechodzi
+- [x] Weryfikacja: `npm run typecheck` przechodzi bez błędów
+- [x] Weryfikacja: `grep -E "^import .*(dane/wyceny|dane/magazyn|silnik/szybka)" src/oferta/tresc.js src/oferta/kodek.js` nic nie znajduje (typedefy JSDoc pomija; graf pilnuje `src/oferta/graf.test.js`)
 
 ### IU-2: Service worker i manifest przy logowaniu (feature-builder-data)
 
@@ -35,8 +35,12 @@ Zależy od: Brak
 - [x] Test: [Unit] plik z cache przy odrzuconym odświeżeniu (przekierowanie modułu kończy się `TypeError`) zwraca kopię z cache i zgłasza `sw_odswiezenie`
 - [x] Test: [Unit] `install` przekazuje `addAll` wszystkie `PLIKI_STARTOWE` z `cache: 'reload'`, a odrzucone `addAll` odrzuca obietnicę z `waitUntil`
 - [x] Test: [Unit] `activate` usuwa cache o innej nazwie i zostawia bieżący
-- [ ] Weryfikacja: `node --test src/pwa/sw.test.js` przechodzi
-- [ ] Weryfikacja: `grep -c 'rel="manifest" href="manifest.webmanifest" crossorigin="use-credentials"' index.html` zwraca 1
+- [x] Weryfikacja: `node --test src/pwa/sw.test.js` przechodzi
+- [x] Weryfikacja: `grep -c 'rel="manifest" href="manifest.webmanifest" crossorigin="use-credentials"' index.html` zwraca 1
+
+## Do poprawy po review fazy 1
+
+Zamkniete cyklem fix: 3 pozycji — pelna tresc findingow i uzasadnienia w `review-faza-1.md`.
 
 ## Faza 2 — Katalog publikacji
 
