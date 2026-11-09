@@ -6,6 +6,7 @@ import { BladWejscia } from './bledy.js'
 import { wycenUsluge } from './cena.js'
 import { ZESTAW_BIURA, zBrudem, zPoziomemBrudu } from './czas.js'
 import { kosztZlecenia } from './koszt.js'
+import { TRYBY_SZYBKIEJ } from './tryby-szybkiej.js'
 import { ukladBiura, ukladMieszkania } from './uklad.js'
 import { cenaDlaKlienta, zCenyRecznej } from './vat.js'
 import { widelkiRynku } from './widelki.js'
@@ -49,8 +50,8 @@ export const STANY_SZYBKIEJ = Object.freeze(/** @type {const} */ ([
 ]))
 /** Stan lokalu, gdy formularz go nie podal (ogledziny i pozycje go nie uzywaja); domyslny na ekranie szybkiej wyceny. */
 export const STAN_DOMYSLNY_SZYBKIEJ = 'typowy'
-/** Postac kwoty szybkiej wyceny: widelki od–do, „ok. X zł” albo „orientacyjnie od”; zrodlo stalej dla zapisu widelek. */
-export const TRYBY_SZYBKIEJ = Object.freeze(/** @type {const} */ (['widelki', 'ok', 'od']))
+/** Postac kwoty szybkiej wyceny; zrodlem stalej jest src/silnik/tryby-szybkiej.js, a reeksport zostaje dla zapisu widelek. */
+export { TRYBY_SZYBKIEJ }
 
 /** Poziomy reguly `kurz` na `*` dla granic widelek: lekki = jedna kwota, typowy 1–2, mocny 2–3. */
 const POZIOMY_STANU = Object.freeze({ lekki: [1], typowy: [1, 2], mocny: [2, 3] })

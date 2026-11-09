@@ -2,9 +2,19 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
 import { BladWejscia } from './bledy.js'
-import { cenaDlaKlienta, zCenyRecznej } from './vat.js'
+import { cenaDlaKlienta, jestStatusemVat, zCenyRecznej } from './vat.js'
 
 const STAWKA_VAT = 23
+
+describe('jestStatusemVat', () => {
+  it('przyjmuje oba statusy VAT firmy: czynny i zwolniony', () => {
+    assert.deepEqual(['czynny', 'zwolniony'].map(jestStatusemVat), [true, true])
+  })
+
+  it('odrzuca inny tekst, liczbę i undefined', () => {
+    assert.deepEqual(['ryczalt', 'Czynny', 'zwolniony ', '', 1, undefined].map(jestStatusemVat), [false, false, false, false, false, false])
+  })
+})
 
 describe('cenaDlaKlienta', () => {
   it('mieszkanie 250 zł, firma zwolniona: brutto = netto = 250, vat 0', () => {

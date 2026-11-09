@@ -39,6 +39,18 @@ class PamiecCache {
   async put(zadanie, wartosc) {
     this.wpisy.set(PamiecCache.adres(zadanie), wartosc)
   }
+
+  /** Przy `install`; test podmienia implementacje, zeby odrzucic zapis. */
+  addAll = mock.fn(async (/** @type {unknown[]} */ _zadania) => {})
+}
+
+/** Request z Node nie przyjmuje adresow wzglednych; jak przegladarka rozwiazuje je wzgledem katalogu workera. */
+class AtrapaZadania {
+  /** @param {string} adres @param {{ cache?: string }} [opcje] */
+  constructor(adres, opcje = {}) {
+    this.url = new URL(adres, KATALOG).href
+    this.cache = opcje.cache
+  }
 }
 
 /** @param {(zadanie: unknown) => Promise<unknown>} implementacjaFetch @param {object} [zamiennikiPrzegladarki] np. starsze AbortSignal */
@@ -52,12 +64,26 @@ function uruchomSw(implementacjaFetch, zamiennikiPrzegladarki = {}) {
     location: new URL(`${KATALOG}sw.js`),
     addEventListener: (typ, obsluga) => { obslugi[typ] = obsluga },
     reportError,
-    skipWaiting: async () => {},
-    clients: { claim: async () => {} },
+    skipWaiting: mock.fn(async () => {}),
+    clients: { claim: mock.fn(async () => {}) },
   }
-  const caches = { open: async () => cache, keys: async () => [], delete: async () => true }
-  vm.runInNewContext(KOD_SW, { self, caches, fetch, URL, Request, AbortSignal, AbortController, setTimeout, clearTimeout, Promise, Error, TypeError, JSON, String, ...zamiennikiPrzegladarki })
-  return { obslugi, cache, fetch, reportError }
+  /** Nazwy cache w przegladarce; test wpisuje je przed `activate`. */
+  const nazwyCache = new Set()
+  const caches = {
+    open: async () => cache,
+    keys: async () => [...nazwyCache],
+    delete: mock.fn(async (/** @type {string} */ nazwa) => nazwyCache.delete(nazwa)),
+  }
+  vm.runInNewContext(KOD_SW, { self, caches, fetch, URL, Request: AtrapaZadania, AbortSignal, AbortController, setTimeout, clearTimeout, Promise, Error, TypeError, JSON, String, ...zamiennikiPrzegladarki })
+  return { obslugi, cache, fetch, reportError, self, nazwyCache, caches }
+}
+
+/** Zdarzenie install albo activate: obietnica przekazana do waitUntil. @param {(zdarzenie: unknown) => void} obsluga */
+function zdarzenieCyklu(obsluga) {
+  /** @type {Promise<unknown> | undefined} */
+  let obietnica
+  obsluga({ waitUntil: (/** @type {Promise<unknown>} */ p) => { obietnica = p } })
+  return obietnica
 }
 
 /**
@@ -97,6 +123,16 @@ describe('sw.js: najpierw sieć (nawigacja)', () => {
 
     assert.equal(wynik?.tresc, 'nowa strona')
     assert.equal((await cache.match(`${KATALOG}index.html`))?.tresc, 'nowa strona')
+  })
+
+  it('przekierowanie na logowanie (opaqueredirect, status 0) idzie do przeglądarki i nie trafia do cache', async () => {
+    const { obslugi, cache } = uruchomSw(async () => odpowiedz(0, '', 'opaqueredirect'))
+
+    const wynik = await pobierz(obslugi.fetch, { url: `${KATALOG}index.html`, mode: 'navigate' })
+
+    assert.equal(wynik?.type, 'opaqueredirect')
+    assert.equal(wynik?.status, 0)
+    assert.equal(cache.wpisy.size, 0)
   })
 })
 
@@ -169,6 +205,21 @@ describe('sw.js: pliki aplikacji i danych od razu z cache (stale-while-revalidat
     assert.match(String(reportError.mock.calls[0].arguments[0].message), /"kod":"sw_odswiezenie"/)
   })
 
+  it('moduł z cache, którego odświeżenie przekierowano na logowanie (TypeError): wraca kopia z cache i zgłoszenie sw_odswiezenie', async () => {
+    const { obslugi, cache, reportError } = uruchomSw(async () => { throw new TypeError('Failed to fetch') })
+    await cache.put('src/app.js', odpowiedz(200, 'modul z cache'))
+
+    const wynik = await pobierz(obslugi.fetch, { url: `${KATALOG}src/app.js` })
+
+    assert.equal(wynik?.tresc, 'modul z cache')
+    assert.equal((await cache.match(`${KATALOG}src/app.js`))?.tresc, 'modul z cache')
+    assert.equal(reportError.mock.callCount(), 1)
+    assert.deepEqual(
+      JSON.parse(String(reportError.mock.calls[0].arguments[0].message)),
+      { kod: 'sw_odswiezenie', przyczyna: 'TypeError: Failed to fetch' },
+    )
+  })
+
   it('żądania spoza originu i inne niż GET przechodzą bez service workera', () => {
     const { obslugi } = uruchomSw(async () => odpowiedz(200, 'x'))
     const respondWith = mock.fn()
@@ -177,6 +228,58 @@ describe('sw.js: pliki aplikacji i danych od razu z cache (stale-while-revalidat
     obslugi.fetch({ request: { method: 'POST', mode: 'cors', url: `${KATALOG}src/app.js` }, respondWith, waitUntil: () => {} })
 
     assert.equal(respondWith.mock.callCount(), 0)
+  })
+
+  it('powrót z logowania i zasoby spod /cdn-cgi/ przechodzą bez service workera; podobna ścieżka w katalogu aplikacji nie', () => {
+    const { obslugi } = uruchomSw(async () => odpowiedz(200, 'x'))
+    const respondWith = mock.fn()
+    const zKatalogu = mock.fn()
+
+    obslugi.fetch({ request: { method: 'GET', mode: 'navigate', url: `${ORIGIN}/cdn-cgi/access/authorized?kod=1` }, respondWith, waitUntil: () => {} })
+    obslugi.fetch({ request: { method: 'GET', mode: 'cors', url: `${ORIGIN}/cdn-cgi/scripts/skrypt.js` }, respondWith, waitUntil: () => {} })
+    obslugi.fetch({ request: { method: 'GET', mode: 'cors', url: `${ORIGIN}/CDN-CGI/access/logout` }, respondWith, waitUntil: () => {} })
+    obslugi.fetch({ request: { method: 'GET', mode: 'cors', url: `${KATALOG}cdn-cgi/notatka.json` }, respondWith: zKatalogu, waitUntil: () => {} })
+
+    assert.equal(respondWith.mock.callCount(), 0)
+    assert.equal(zKatalogu.mock.callCount(), 1)
+  })
+})
+
+describe('sw.js: install i activate', () => {
+  it('install zapisuje wszystkie PLIKI_STARTOWE z pominięciem cache HTTP, potem skipWaiting', async () => {
+    const { obslugi, cache, self } = uruchomSw(async () => odpowiedz(200, 'x'))
+
+    await zdarzenieCyklu(obslugi.install)
+
+    assert.equal(cache.addAll.mock.callCount(), 1)
+    const zadania = [...cache.addAll.mock.calls[0].arguments[0]].map(({ url, cache: tryb }) => ({ url, tryb }))
+    assert.deepEqual(zadania, [
+      './', 'index.html', 'oferta.html', 'manifest.webmanifest',
+      'data/ceny.json', 'data/normy.json', 'data/rynek.json', 'data/chemia.json',
+      'data/domyslne.json', 'data/pytania.json', 'data/zakresy.json',
+    ].map((plik) => ({ url: new URL(plik, KATALOG).href, tryb: 'reload' })))
+    assert.equal(self.skipWaiting.mock.callCount(), 1)
+  })
+
+  it('odrzucone addAll (np. przekierowanie na logowanie) odrzuca obietnicę z waitUntil i nie przejmuje strony', async () => {
+    const { obslugi, cache, self } = uruchomSw(async () => odpowiedz(200, 'x'))
+    const blad = new TypeError('Failed to fetch')
+    cache.addAll.mock.mockImplementation(async () => { throw blad })
+
+    await assert.rejects(zdarzenieCyklu(obslugi.install), (odrzucenie) => odrzucenie === blad)
+
+    assert.equal(self.skipWaiting.mock.callCount(), 0)
+  })
+
+  it('activate usuwa cache o innej nazwie, zostawia bieżący i przejmuje strony', async () => {
+    const { obslugi, nazwyCache, caches, self } = uruchomSw(async () => odpowiedz(200, 'x'))
+    for (const nazwa of ['czysty-zarobek-v0', 'czysty-zarobek-v1', 'obcy-cache']) nazwyCache.add(nazwa)
+
+    await zdarzenieCyklu(obslugi.activate)
+
+    assert.deepEqual([...nazwyCache], ['czysty-zarobek-v1'])
+    assert.deepEqual(caches.delete.mock.calls.map((wywolanie) => wywolanie.arguments[0]), ['czysty-zarobek-v0', 'obcy-cache'])
+    assert.equal(self.clients.claim.mock.callCount(), 1)
   })
 })
 

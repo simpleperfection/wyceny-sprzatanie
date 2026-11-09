@@ -12,29 +12,29 @@ Zależy od: Brak
 
 ### IU-1: Strona oferty bez silnika wyceny (feature-builder-data)
 
-- [ ] Stwórz: `src/silnik/tryby-szybkiej.js`
-- [ ] Modyfikuj: `src/silnik/szybka.js`
-- [ ] Modyfikuj: `src/silnik/vat.js`
-- [ ] Modyfikuj: `src/dane/magazyn.js`
-- [ ] Modyfikuj: `src/oferta/tresc.js`
-- [ ] Modyfikuj: `src/oferta/kodek.js`
-- [ ] Test (unit): `src/silnik/vat.test.js`
-- [ ] Test: [Unit] `jestStatusemVat` z `src/silnik/vat.js` daje `true` dla `czynny` i `zwolniony`, a `false` dla innego tekstu, liczby i `undefined`
-- [ ] Test: [Unit] istniejące testy `src/oferta/tresc.test.js`, `src/oferta/kodek.test.js` i `src/silnik/szybka.test.js` przechodzą bez zmian
+- [x] Stwórz: `src/silnik/tryby-szybkiej.js`
+- [x] Modyfikuj: `src/silnik/szybka.js`
+- [x] Modyfikuj: `src/silnik/vat.js`
+- [x] Modyfikuj: `src/dane/magazyn.js`
+- [x] Modyfikuj: `src/oferta/tresc.js`
+- [x] Modyfikuj: `src/oferta/kodek.js`
+- [x] Test (unit): `src/silnik/vat.test.js`
+- [x] Test: [Unit] `jestStatusemVat` z `src/silnik/vat.js` daje `true` dla `czynny` i `zwolniony`, a `false` dla innego tekstu, liczby i `undefined`
+- [x] Test: [Unit] istniejące testy `src/oferta/tresc.test.js`, `src/oferta/kodek.test.js` i `src/silnik/szybka.test.js` przechodzą bez zmian
 - [ ] Weryfikacja: `npm test` przechodzi
 - [ ] Weryfikacja: `npm run typecheck` przechodzi bez błędów
 - [ ] Weryfikacja: `grep -E "dane/wyceny|dane/magazyn|silnik/szybka" src/oferta/tresc.js src/oferta/kodek.js` nic nie znajduje
 
 ### IU-2: Service worker i manifest przy logowaniu (feature-builder-data)
 
-- [ ] Modyfikuj: `sw.js`
-- [ ] Modyfikuj: `index.html`
-- [ ] Test (unit): `src/pwa/sw.test.js`
-- [ ] Test: [Unit] nawigacja na `/cdn-cgi/access/authorized?kod=1` i zasób spod `/cdn-cgi/` nie wywołują `respondWith`
-- [ ] Test: [Unit] nawigacja, na którą sieć odpowiada `opaqueredirect` ze statusem 0, zwraca tę odpowiedź, a cache zostaje pusty
-- [ ] Test: [Unit] plik z cache przy odrzuconym odświeżeniu (przekierowanie modułu kończy się `TypeError`) zwraca kopię z cache i zgłasza `sw_odswiezenie`
-- [ ] Test: [Unit] `install` przekazuje `addAll` wszystkie `PLIKI_STARTOWE` z `cache: 'reload'`, a odrzucone `addAll` odrzuca obietnicę z `waitUntil`
-- [ ] Test: [Unit] `activate` usuwa cache o innej nazwie i zostawia bieżący
+- [x] Modyfikuj: `sw.js`
+- [x] Modyfikuj: `index.html`
+- [x] Test (unit): `src/pwa/sw.test.js`
+- [x] Test: [Unit] nawigacja na `/cdn-cgi/access/authorized?kod=1` i zasób spod `/cdn-cgi/` nie wywołują `respondWith`
+- [x] Test: [Unit] nawigacja, na którą sieć odpowiada `opaqueredirect` ze statusem 0, zwraca tę odpowiedź, a cache zostaje pusty
+- [x] Test: [Unit] plik z cache przy odrzuconym odświeżeniu (przekierowanie modułu kończy się `TypeError`) zwraca kopię z cache i zgłasza `sw_odswiezenie`
+- [x] Test: [Unit] `install` przekazuje `addAll` wszystkie `PLIKI_STARTOWE` z `cache: 'reload'`, a odrzucone `addAll` odrzuca obietnicę z `waitUntil`
+- [x] Test: [Unit] `activate` usuwa cache o innej nazwie i zostawia bieżący
 - [ ] Weryfikacja: `node --test src/pwa/sw.test.js` przechodzi
 - [ ] Weryfikacja: `grep -c 'rel="manifest" href="manifest.webmanifest" crossorigin="use-credentials"' index.html` zwraca 1
 

@@ -120,7 +120,7 @@ Autopilot nie potrzebuje niczego od operatora. Przenosiny robi właściciel po s
 
 **Zależy od:** Brak
 
-- [ ] **IU-1: Strona oferty bez silnika wyceny**
+- [x] **IU-1: Strona oferty bez silnika wyceny**
 
 **Cel:** Graf modułów `oferta.html` przestaje obejmować `src/dane/wyceny.js`, `src/dane/magazyn.js` i `src/silnik/szybka.js`, bez zmiany zachowania.
 
@@ -161,8 +161,9 @@ Autopilot nie potrzebuje niczego od operatora. Przenosiny robi właściciel po s
 - `npm test` przechodzi
 - `npm run typecheck` przechodzi bez błędów
 - `grep -E "dane/wyceny|dane/magazyn|silnik/szybka" src/oferta/tresc.js src/oferta/kodek.js` nic nie znajduje
+  - Korekta po fazie 1 (2026-11-09): ten grep trafia w typy JSDoc `@typedef {import(...)}` w `src/oferta/tresc.js` (linie 13–17), których przeglądarka nie ładuje. Sprawdzian grafu modułów to `grep -nE "^(import|export) .*(dane/wyceny|dane/magazyn|silnik/szybka)" src/oferta/tresc.js src/oferta/kodek.js`, który nic nie znajduje.
 
-- [ ] **IU-2: Service worker i manifest przy logowaniu**
+- [x] **IU-2: Service worker i manifest przy logowaniu**
 
 **Cel:** Powrót z logowania omija service workera, przekierowanie na logowanie przechodzi do przeglądarki, a manifest nie zależy od wyjątku w Access.
 

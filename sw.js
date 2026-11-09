@@ -13,6 +13,8 @@ const LIMIT_ZAPISU_W_TLE_MS = 30000
 const MAKS_ZASOBOW = 300
 const KOMUNIKAT_ZASOBOW = 'zapisz-zasoby'
 const STRONA_ZAPASOWA = 'index.html'
+/** Sciezki Cloudflare (powrot z logowania Access) ida prosto do sieci: z cache dostalyby index.html pod obcym adresem. */
+const PREFIKS_CLOUDFLARE = '/cdn-cgi/'
 // Tylko pliki, ktore istnieja. oferta.html jest tu dla aplikacji wlasciciela; strona oferty sama workera nie rejestruje.
 const PLIKI_STARTOWE = [
   './',
@@ -45,6 +47,9 @@ function czyTenSamOrigin(adres) {
     throw blad
   }
 }
+
+/** @param {string} adres adres z tego samego originu @returns {boolean} */
+const czySciezkaCloudflare = (adres) => new URL(adres, self.location.href).pathname.toLowerCase().startsWith(PREFIKS_CLOUDFLARE)
 
 /** @template T @param {Promise<T>} obietnica @param {number} ms @returns {Promise<T>} odrzuca PrzekroczenieCzasu po `ms` */
 function zLimitem(obietnica, ms) {
@@ -127,7 +132,7 @@ self.addEventListener('activate', (zdarzenie) => {
 
 self.addEventListener('fetch', (zdarzenie) => {
   const { request } = zdarzenie
-  if (request.method !== 'GET' || !czyTenSamOrigin(request.url)) return
+  if (request.method !== 'GET' || !czyTenSamOrigin(request.url) || czySciezkaCloudflare(request.url)) return
   zdarzenie.respondWith(caches.open(WERSJA_CACHE)
     .then((cache) => (request.mode === 'navigate' ? siecPotemCache(zdarzenie, cache) : cachePotemSiec(zdarzenie, cache))))
 })
