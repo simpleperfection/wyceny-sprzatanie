@@ -1,7 +1,7 @@
 ---
 zadanie: zamkniety-dostep-testy
 data: 2026-11-11
-claude_md: do-uzgodnienia
+claude_md: uzgodniono
 ---
 
 # Decyzje — zamkniety-dostep-testy
