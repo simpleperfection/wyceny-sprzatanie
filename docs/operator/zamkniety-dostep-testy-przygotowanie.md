@@ -119,12 +119,21 @@ curl -s https://proba.czystyzarobek.pl/oferta.html | grep -c -E 'cdn-cgi|cloudfl
 
   Oczekiwany wynik: `0` (Cloudflare niczego nie dokleił).
 
+- [ ] **Spróbuj obejść wyjątki od logowania** (uwaga z review fazy 2). Wyjątki działają po początku ścieżki, więc adres z `..` nie może wyprowadzić poza publiczny katalog:
+
+```bash
+H=proba.czystyzarobek.pl
+for p in '/publiczne/../src/app.js' '/publiczne/%2e%2e/data/ceny.json' '/ikony/..%2fdata/ceny.json' '/publiczne/..%2F..%2Fdata/ceny.json' '/oferta.html/../index.html' '//publiczne/../data/ceny.json'; do curl --path-as-is -s -o /dev/null -w "%{http_code} $p\n" "https://$H$p"; done
+```
+
+  Oczekiwany wynik: wszędzie `302` (logowanie) albo `404`, nigdzie `200`. Przy `200` zatrzymaj się i nie przełączaj głównego adresu. W Cloudflare zostaw włączone „Normalize incoming URLs” (Rules → Settings).
+
 - [ ] **Zaloguj się kodem z maila na telefonie** na `https://proba.czystyzarobek.pl`, zainstaluj aplikację i zobacz ekran Start.
   - Sprawdź ikonę na ekranie telefonu, a potem na komputerze po zalogowaniu `/PLAN.md` i `/research/cenniki_firm.csv`: mają dawać 404.
 - [ ] **Włącz tryb samolotowy, zamknij aplikację i otwórz ją ponownie.** Ma działać bez internetu.
 - [ ] **Wyłącz tryb samolotowy, uruchom telefon ponownie i otwórz aplikację.** Nie powinna prosić o logowanie. Inaczej sesja nie przeżywa restartu, a wiadomość do firm obiecuje logowanie raz w miesiącu.
 - [ ] **Sprawdź wygaśnięcie sesji:** z internetem wejdź na `https://proba.czystyzarobek.pl/cdn-cgi/access/logout`, zamknij i otwórz aplikację. Masz zobaczyć logowanie, a po wpisaniu kodu wrócić do aplikacji.
-- [ ] **Sprawdź aktualizację za logowaniem na komputerze.** Zaloguj się w Chrome na `proba`, wyloguj się przez `/cdn-cgi/access/logout`, wypchnij drobną zmianę na `main` i poczekaj na build. Zaloguj się ponownie i otwórz stronę dwa razy. W F12 → Application → Cache storage nazwa cache ma być taka sama jak wartość z `curl -s https://proba.czystyzarobek.pl/sw.js | grep WERSJA_CACHE`.
+- [ ] **Sprawdź aktualizację za logowaniem na komputerze.** Zaloguj się w Chrome na `proba`, wyloguj się przez `/cdn-cgi/access/logout`, wypchnij drobną zmianę na `main` i poczekaj na build. Zaloguj się ponownie, otwórz stronę, zamknij wszystkie jej karty i otwórz ją jeszcze raz. Samo odświeżenie nie wystarczy: nowa wersja wchodzi dopiero po zamknięciu strony, żeby stary kod nie dostał nowych danych. W F12 → Application → Cache storage ma zostać jeden cache o nazwie takiej samej jak wartość z `curl -s https://proba.czystyzarobek.pl/sw.js | grep WERSJA_CACHE`.
 - [ ] **Otwórz link oferty na telefonie bez logowania.** Wyślij sobie link z aplikacji na `proba`, otwórz go w oknie prywatnym albo na innym telefonie. Oferta ma się pokazać w całości, z właściwą czcionką.
 - [ ] **Sprawdź, czy `workers.dev` nie odpowiada.** Adres Workera znajdziesz w panelu. Jeśli strona się otwiera, zatrzymaj się i dodaj w Access aplikację z miejscem docelowym `worker`.
 

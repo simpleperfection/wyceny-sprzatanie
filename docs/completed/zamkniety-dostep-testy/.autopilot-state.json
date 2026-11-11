@@ -1,0 +1,144 @@
+{
+  "wersja": 1,
+  "zadanie": "zamkniety-dostep-testy",
+  "fazy": [
+    {
+      "numer": 1,
+      "nazwa": "Aplikacja gotowa na logowanie",
+      "execute": "done",
+      "review": "done",
+      "fix": "done",
+      "otwarteFindingi": [],
+      "baza": "302d8ff78be403f31b1f26ab80424e9bb1d9fc3a",
+      "metryki": {
+        "liczniki": {
+          "p1": 0,
+          "p2": 3,
+          "p3": 2,
+          "operator": 0
+        },
+        "przebieg": {
+          "pominieci": [
+            "e2e"
+          ],
+          "e2eTryb": "pominiety",
+          "znalezione": 4,
+          "poDedupJs": 4,
+          "poDedupSem": 4,
+          "weryfikowane": 2,
+          "obalone": 0,
+          "p3Odrzucone": 0,
+          "e2eCheckboxy": 0,
+          "e2eStatus": "pominiety przez routing",
+          "e2ePass": 0,
+          "e2eFail": 0,
+          "e2eSkip": 0,
+          "e2eManual": 0,
+          "dossier": true,
+          "sceptycy": {
+            "p1": 0,
+            "p2Grupy": 1,
+            "p2Findingi": 2
+          },
+          "sceptyk": {
+            "agree": 2,
+            "disagree_evidence": 0,
+            "disagree_concern": 0,
+            "degradacje": 0
+          },
+          "tiery": {
+            "sceptykP2": "medium",
+            "sceptykP1": "high",
+            "reviewer": "high",
+            "spec": "medium",
+            "testCoverage": "medium",
+            "scribe": "low"
+          }
+        }
+      }
+    },
+    {
+      "numer": 2,
+      "nazwa": "Katalog publikacji",
+      "execute": "done",
+      "review": "done",
+      "fix": "done",
+      "otwarteFindingi": [],
+      "baza": "9d71eeda96f89129425013e26902a4ffee1c4580",
+      "metryki": {
+        "liczniki": {
+          "p1": 0,
+          "p2": 8,
+          "p3": 6,
+          "operator": 1
+        },
+        "przebieg": {
+          "pominieci": [],
+          "e2eTryb": "przegladarka",
+          "znalezione": 16,
+          "poDedupJs": 16,
+          "poDedupSem": 15,
+          "weryfikowane": 9,
+          "obalone": 0,
+          "p3Odrzucone": 0,
+          "e2eCheckboxy": 2,
+          "e2eStatus": "wykonany (tryb przegladarka)",
+          "e2ePass": 2,
+          "e2eFail": 0,
+          "e2eSkip": 0,
+          "e2eManual": 0,
+          "dossier": true,
+          "sceptycy": {
+            "p1": 0,
+            "p2Grupy": 3,
+            "p2Findingi": 9
+          },
+          "sceptyk": {
+            "agree": 8,
+            "disagree_evidence": 0,
+            "disagree_concern": 1,
+            "degradacje": 1
+          },
+          "tiery": {
+            "sceptykP2": "medium",
+            "sceptykP1": "high",
+            "reviewer": "high",
+            "spec": "medium",
+            "testCoverage": "medium",
+            "scribe": "low"
+          }
+        }
+      }
+    }
+  ],
+  "zakonczenie": {
+    "walidacja": "done",
+    "complete": "done",
+    "compound": "done"
+  },
+  "bazaZielona": {
+    "sha": "302d8ff",
+    "wynik": "PASS"
+  },
+  "walidacjaWynik": {
+    "wykryteKomendy": [
+      "npm run typecheck",
+      "npm test",
+      "npm run publikacja"
+    ],
+    "typecheck": "PASS",
+    "lint": "SKIPPED",
+    "testy": "PASS 1518/1518",
+    "build": "PASS",
+    "testyZmodyfikowane": [
+      "src/pwa/sw.test.js (9d71eed: lista PLIKI_STARTOWE i nazwa cache brane ze stalych sw.js, zgodnie z uwaga P2 review fazy 1)"
+    ],
+    "e2eNieuruchomione": [],
+    "e2eFail": [],
+    "e2eFazy": [],
+    "knownIssuesZamkniete": 0,
+    "wynik": "PASS",
+    "bledy": [],
+    "uwaga": "Domkniecie reczne w sesji 2026-11-11 po przerwanym runie autopilota (2026-11-09): kontrola poprawek fazy 2, walidacja, compound i archiwum bez workflowu."
+  }
+}
