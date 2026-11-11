@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { request } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -39,6 +39,8 @@ describe('serwer-dev: katalog z plikami aplikacji', () => {
     await writeFile(join(katalog, 'font.woff2'), 'wOF2')
     await writeFile(join(katalog, 'app.js'), 'export const a = 1')
     await writeFile(join(katalog, '.env.e2e'), 'E2E_URL=x')
+    await mkdir(join(katalog, 'podkatalog'))
+    await writeFile(join(katalog, 'podkatalog', 'index.html'), '<!doctype html><title>Podkatalog</title>')
     serwer = await uruchomSerwer(katalog)
   })
   after(async () => {
@@ -51,6 +53,22 @@ describe('serwer-dev: katalog z plikami aplikacji', () => {
     assert.deepEqual(odpowiedz, {
       status: 200, typ: 'text/html; charset=utf-8', cache: 'no-store', tresc: '<!doctype html><title>Wyceny</title>',
     })
+  })
+
+  it('dla /podkatalog/ zwraca podkatalog/index.html, a /podkatalog bez ukosnika daje 404', async () => {
+    const zUkosnikiem = await serwer.pobierz('/podkatalog/?v=1')
+    const bezUkosnika = await serwer.pobierz('/podkatalog')
+
+    assert.deepEqual(zUkosnikiem, {
+      status: 200, typ: 'text/html; charset=utf-8', cache: 'no-store', tresc: '<!doctype html><title>Podkatalog</title>',
+    })
+    assert.equal(bezUkosnika.status, 404)
+    assert.doesNotMatch(bezUkosnika.tresc, /Podkatalog/)
+  })
+
+  it('adres katalogu nie omija odmowy: /%2e%2e/ i /.ukryty/ daja 403', async () => {
+    assert.equal((await serwer.pobierz('/%2e%2e/')).status, 403)
+    assert.equal((await serwer.pobierz('/.ukryty/')).status, 403)
   })
 
   it('nadaje typy MIME: .webmanifest, .woff2 i .js', async () => {

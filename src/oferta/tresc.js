@@ -4,9 +4,9 @@
 // Czyste funkcje bez DOM i magazynu: ustawienia podaje wywolujacy (stan magazynu), dane referencyjne z data/*.json.
 
 import { dzienLokalny, GRANICE_OFERTY, jestData, jestDniem, jestListaPunktow, jestObiektem, maWartosci } from '../dane/ksztalt.js'
-import { czyAbonament } from '../dane/wyceny.js'
+import { czyAbonament } from '../dane/kwota-wyceny.js'
 import { BladKatalogu } from '../silnik/bledy.js'
-import { TRYBY_SZYBKIEJ } from '../silnik/szybka.js'
+import { TRYBY_SZYBKIEJ } from '../silnik/tryby-szybkiej.js'
 import { cenaDlaKlienta, zCenyRecznej } from '../silnik/vat.js'
 import { tekstIlosci, terminKlienta } from '../ui/format.js'
 
@@ -36,7 +36,7 @@ import { tekstIlosci, terminKlienta } from '../ui/format.js'
  * @typedef {{ id: string, tekst: string }} PunktWarunku warunek z edytora listy (kolejnosc i tresc)
  */
 
-/** Tryby kwoty „Razem” w ofercie: sztywna kwota i tryby szybkiej wyceny (src/silnik/szybka.js); zrodlo listy dla dekodera linku. */
+/** Tryby kwoty „Razem” w ofercie: sztywna kwota i tryby szybkiej wyceny (src/silnik/tryby-szybkiej.js); zrodlo listy dla dekodera linku. */
 export const TRYBY_CENY = Object.freeze(/** @type {const} */ (['stala', ...TRYBY_SZYBKIEJ]))
 const PLIK_ZAKRESOW = 'data/zakresy.json'
 const WERSJA_OFERTY = 1

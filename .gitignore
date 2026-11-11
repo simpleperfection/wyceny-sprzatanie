@@ -15,6 +15,7 @@ desktop.ini
 .env.*
 !.env*.example
 node_modules/
+dist/
 
 # Ustawienia lokalne Claude Code
 .claude/settings.local.json

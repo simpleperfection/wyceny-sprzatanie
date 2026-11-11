@@ -19,11 +19,20 @@ function doGroszy(kwota) {
 }
 
 /**
+ * Straznik statusu VAT; jedno zrodlo listy statusow dla silnika, magazynu i dekodera linku oferty (src/oferta/kodek.js).
+ * @param {unknown} x
+ * @returns {x is StatusVat}
+ */
+export function jestStatusemVat(x) {
+  return typeof x === 'string' && STATUSY_VAT.includes(x)
+}
+
+/**
  * @param {unknown} status
  * @returns {asserts status is StatusVat}
  */
 export function sprawdzStatusVat(status) {
-  if (typeof status !== 'string' || !STATUSY_VAT.includes(status)) throw new BladWejscia('status_vat', `Nieznany status VAT ${String(status)}`)
+  if (!jestStatusemVat(status)) throw new BladWejscia('status_vat', `Nieznany status VAT ${String(status)}`)
 }
 
 /** @param {number} stawkaVatProc */

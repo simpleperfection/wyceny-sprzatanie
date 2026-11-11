@@ -1,0 +1,20 @@
+# Strona ukryta przed wyszukiwarkami (R2). Bez osadzania w ramce obcej strony (clickjacking oferty i aplikacji;
+# frame-ancestors nie dziala w meta CSP), bez zgadywania typu pliku, bez adresu w Referer i tylko po HTTPS.
+/*
+  X-Robots-Tag: noindex, nofollow
+  Content-Security-Policy: frame-ancestors 'none'
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Strict-Transport-Security: max-age=31536000
+
+# no-transform blokuje doklejanie skryptow Cloudflare do HTML. Cache-Control nie idzie do /*,
+# bo pasujace reguly lacza sie przecinkiem, a no-transform na reszcie plikow wylaczylby kompresje.
+/
+  Cache-Control: public, max-age=0, must-revalidate, no-transform
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate, no-transform
+
+/oferta.html
+  Cache-Control: public, max-age=0, must-revalidate, no-transform

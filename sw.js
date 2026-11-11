@@ -5,14 +5,23 @@
 // Zmiana WERSJA_CACHE (np. po zmianie PLIKI_STARTOWE) instaluje nowego workera, ktory kasuje stary cache.
 // Po pierwszym uruchomieniu online aplikacja dziala offline.
 // Klasyczny skrypt (bez importow modulow), poza typecheck. Zakres = katalog aplikacji.
+// Publikacja (scripts/publikacja/sw-publikacji.mjs) podmienia w dist/sw.js trzy stale: wersje cache z hasza plikow,
+// pelna liste plikow do pamieci i ZAPIS_W_BIEGU = false (cache zmienia tylko install, wiec nie miesza wersji).
+// Przy ZAPIS_W_BIEGU = false nowy worker nie przejmuje otwartych stron (bez skipWaiting i clients.claim): czeka, az
+// zamkna sie wszystkie, wiec stary kod nie dostaje nowych data/*.json, a stary cache znika dopiero ze stara wersja (R34).
+// Kazda z nich ma tu jedna deklaracje w jednej postaci, inaczej publikacja przerywa sie bledem.
 
 const WERSJA_CACHE = 'czysty-zarobek-v1'
+/** Zapis odpowiedzi sieci do cache przy pobieraniu i odswiezanie w tle; przy false pliki z cache wracaja bez sieci. */
+const ZAPIS_W_BIEGU = true
 const LIMIT_SIECI_MS = 4000
 /** Zapis w tle (pliki od strony) nie blokuje uzytkownika, wiec ma dluzszy limit na wolnym laczu. */
 const LIMIT_ZAPISU_W_TLE_MS = 30000
 const MAKS_ZASOBOW = 300
 const KOMUNIKAT_ZASOBOW = 'zapisz-zasoby'
 const STRONA_ZAPASOWA = 'index.html'
+/** Sciezki Cloudflare (powrot z logowania Access) ida prosto do sieci: z cache dostalyby index.html pod obcym adresem. */
+const PREFIKS_CLOUDFLARE = '/cdn-cgi/'
 // Tylko pliki, ktore istnieja. oferta.html jest tu dla aplikacji wlasciciela; strona oferty sama workera nie rejestruje.
 const PLIKI_STARTOWE = [
   './',
@@ -34,7 +43,7 @@ class PrzekroczenieCzasu extends Error {}
 const zglos = (kod, przyczyna) => self.reportError(new Error(JSON.stringify({ kod, przyczyna: String(przyczyna) })))
 
 /** @param {Response} odpowiedz */
-const czyDoZapisu = (odpowiedz) => odpowiedz.status === 200 && odpowiedz.type === 'basic'
+const czyDoZapisu = (odpowiedz) => ZAPIS_W_BIEGU && odpowiedz.status === 200 && odpowiedz.type === 'basic'
 
 /** @param {string} adres @returns {boolean} */
 function czyTenSamOrigin(adres) {
@@ -45,6 +54,9 @@ function czyTenSamOrigin(adres) {
     throw blad
   }
 }
+
+/** @param {string} adres adres z tego samego originu @returns {boolean} */
+const czySciezkaCloudflare = (adres) => new URL(adres, self.location.href).pathname.toLowerCase().startsWith(PREFIKS_CLOUDFLARE)
 
 /** @template T @param {Promise<T>} obietnica @param {number} ms @returns {Promise<T>} odrzuca PrzekroczenieCzasu po `ms` */
 function zLimitem(obietnica, ms) {
@@ -72,6 +84,7 @@ function zSieci(zdarzenie, cache) {
 /** Plik aplikacji albo danych: od razu z cache i odswiezenie w tle; bez wpisu w cache czeka na siec. @param {FetchEvent} zdarzenie @param {Cache} cache */
 async function cachePotemSiec(zdarzenie, cache) {
   const zCache = await cache.match(zdarzenie.request)
+  if (zCache && !ZAPIS_W_BIEGU) return zCache
   const siec = zSieci(zdarzenie, cache)
   if (!zCache) return siec
   zdarzenie.waitUntil(siec.catch((blad) => zglos('sw_odswiezenie', blad)))
@@ -116,18 +129,18 @@ async function zapiszZasoby(adresy) {
 self.addEventListener('install', (zdarzenie) => {
   zdarzenie.waitUntil(caches.open(WERSJA_CACHE)
     .then((cache) => cache.addAll(PLIKI_STARTOWE.map((plik) => new Request(plik, { cache: 'reload' }))))
-    .then(() => self.skipWaiting()))
+    .then(() => (ZAPIS_W_BIEGU ? self.skipWaiting() : undefined)))
 })
 
 self.addEventListener('activate', (zdarzenie) => {
   zdarzenie.waitUntil(caches.keys()
     .then((nazwy) => Promise.all(nazwy.filter((nazwa) => nazwa !== WERSJA_CACHE).map((nazwa) => caches.delete(nazwa))))
-    .then(() => self.clients.claim()))
+    .then(() => (ZAPIS_W_BIEGU ? self.clients.claim() : undefined)))
 })
 
 self.addEventListener('fetch', (zdarzenie) => {
   const { request } = zdarzenie
-  if (request.method !== 'GET' || !czyTenSamOrigin(request.url)) return
+  if (request.method !== 'GET' || !czyTenSamOrigin(request.url) || czySciezkaCloudflare(request.url)) return
   zdarzenie.respondWith(caches.open(WERSJA_CACHE)
     .then((cache) => (request.mode === 'navigate' ? siecPotemCache(zdarzenie, cache) : cachePotemSiec(zdarzenie, cache))))
 })

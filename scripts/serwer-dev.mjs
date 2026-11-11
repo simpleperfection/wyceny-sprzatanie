@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 // Serwer plikow statycznych do pracy lokalnej i testow E2E (aplikacja nie ma kroku budowania).
-// Korzen = katalog glowny repo, nasluch tylko na 127.0.0.1, bez listowania katalogow i bez pamieci podrecznej.
+// Korzen = katalog glowny repo, nasluch tylko na 127.0.0.1, bez listowania katalogow (adres z `/` na koncu daje
+// index.html katalogu) i bez pamieci podrecznej.
 //
 // Uzycie: node scripts/serwer-dev.mjs [--port 5174]
 
 import { createReadStream } from 'node:fs'
 import { stat } from 'node:fs/promises'
 import { createServer } from 'node:http'
-import { extname, join, resolve, sep } from 'node:path'
+import { extname, resolve, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { parseArgs } from 'node:util'
 
@@ -53,7 +54,8 @@ function plikDlaAdresu(korzen, adres) {
   if (zdekodowana.includes('\0')) return { status: 400 }
   const segmenty = zdekodowana.split(/[\\/]/).filter((segment) => segment !== '')
   if (segmenty.some((segment) => segment.startsWith('.'))) return { status: 403 }
-  const plik = segmenty.length === 0 ? join(korzen, 'index.html') : resolve(korzen, ...segmenty)
+  // Adres katalogu (`/`, `/dist/`) daje jego index.html: worker z dist/ zapisuje w pamieci `./`.
+  const plik = /[\\/]$/.test(zdekodowana) ? resolve(korzen, ...segmenty, 'index.html') : resolve(korzen, ...segmenty)
   if (!plik.startsWith(korzen.endsWith(sep) ? korzen : korzen + sep)) return { status: 403 }
   return { plik }
 }

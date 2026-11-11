@@ -1,12 +1,14 @@
 // Magazyn stanu aplikacji: jeden klucz localStorage z wersja schematu, aktualizacja starszych wersji stanu,
 // zapis calosci przy kazdej zmianie i powiadomienie o zmianie z innej karty (zdarzenie `storage`).
 
-import { BladWejscia } from '../silnik/bledy.js'
-import { sprawdzStatusVat } from '../silnik/vat.js'
+import { jestStatusemVat } from '../silnik/vat.js'
 import { jestKlient } from './klienci.js'
 import { jestDataIso, jestListaTekstow, jestLiczba, jestMiesiacem, jestObiektem, jestTekstemLubNull, jestWarunkiem, maWartosci, POLA_FIRMY } from './ksztalt.js'
 import { zV1DoV2 } from './migracja-v2.js'
 import { jestZlecenie } from './zlecenia-ksztalt.js'
+
+// Straznik statusu VAT mieszka w silniku (src/silnik/vat.js), zeby strona oferty nie ladowala magazynu; tu tylko reeksport.
+export { jestStatusemVat }
 
 /** @typedef {import('../silnik/vat.js').StatusVat} StatusVat */
 /** @typedef {import('./wyceny.js').Wycena} Wycena */
@@ -59,21 +61,6 @@ export class BladMagazynu extends Error {
 
 /** @param {unknown} x */
 const jestDataIsoLubNull = (x) => x === null || jestDataIso(x)
-
-/**
- * Status VAT sprawdza silnik (jedno zrodlo listy statusow); odmowa silnika znaczy „nie status”.
- * @param {unknown} x
- * @returns {x is StatusVat}
- */
-export function jestStatusemVat(x) {
-  try {
-    sprawdzStatusVat(x)
-    return true
-  } catch (blad) {
-    if (blad instanceof BladWejscia) return false
-    throw blad
-  }
-}
 
 /** @param {unknown} x */
 function jestKosztamiUstawien(x) {
