@@ -20,7 +20,7 @@ const LIMIT_ZAPISU_W_TLE_MS = 30000
 const MAKS_ZASOBOW = 300
 const KOMUNIKAT_ZASOBOW = 'zapisz-zasoby'
 const STRONA_ZAPASOWA = 'index.html'
-/** Sciezki Cloudflare (powrot z logowania Access) ida prosto do sieci: z cache dostalyby index.html pod obcym adresem. */
+/** Sciezki Cloudflare (powrot z logowania Access, wylogowanie /cdn-cgi/access/logout) ida prosto do sieci: z cache dostalyby index.html pod obcym adresem. */
 const PREFIKS_CLOUDFLARE = '/cdn-cgi/'
 // Tylko pliki, ktore istnieja. oferta.html jest tu dla aplikacji wlasciciela; strona oferty sama workera nie rejestruje.
 const PLIKI_STARTOWE = [

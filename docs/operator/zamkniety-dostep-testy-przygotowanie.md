@@ -28,18 +28,18 @@ Fakty o domenie sprawdzono 2026-11-05, a dokumentację Cloudflare tego samego dn
 
 ## 1. Przed przenosinami
 
-- [ ] **Scal kod do `main`** i sprawdź, czy https://czystyzarobek.pl działa jak dotąd.
+- [x] **Scal kod do `main`** i sprawdź, czy https://czystyzarobek.pl działa jak dotąd. (2026-11-11: PR #5, `fc5c6e2`; strona wstaje bez błędów w przeglądarce na komputerze i serwuje nowy `sw.js`)
   - Po co: GitHub Pages opublikuje poprawiony `sw.js`, zanim domena pójdzie na Cloudflare.
-- [ ] **Na telefonie otwórz aplikację dwa razy z internetem, z przerwą między otwarciami.**
+- [x] **Na telefonie otwórz aplikację dwa razy z internetem, z przerwą między otwarciami.** (2026-11-11, wg właściciela)
   - Po co: telefon dostaje nowy `sw.js` przed logowaniem. Stary mógłby pokazać złą stronę przy powrocie z logowania.
-- [ ] **Zrób kopię danych do pliku** w aplikacji na telefonie i zachowaj plik poza telefonem.
+- [x] **Zrób kopię danych do pliku** w aplikacji na telefonie i zachowaj plik poza telefonem. (2026-11-11, wg właściciela)
   - Po co: adres się nie zmienia, więc dane powinny zostać. Kopia jest na wypadek błędu.
 
 ## 2. Domena w Cloudflare
 
 - [ ] **Załóż konto Cloudflare** na swój adres. Nie zakładaj kont w imieniu firm, bo zakazuje tego regulamin Cloudflare.
-- [ ] **Pobierz eksport strefy z panelu Hostido.** To on jest źródłem prawdy, a tabela niżej to tylko to, co widać z zewnątrz.
-- [ ] **Dodaj domenę `czystyzarobek.pl` w Cloudflare na planie Free i sprawdź rekordy.** Wszystkie mają mieć wyłączone proxy (szara chmurka).
+- [x] **Zapisz listę rekordów strefy z panelu Hostido** (zrzut ekranu albo skopiowana tabela; baza wiedzy Hostido nie opisuje przycisku eksportu). (2026-11-11: 19 rekordów, w tym 3 NS Hostido, których nie przenosimy; pozostałe 16 zgadza się z publicznym DNS i tabelą niżej, TTL 3600) Wejście: https://klient.hostido.pl/ → „Twoje usługi” → „Twoje domeny” → „Opcje” → „Zarządzaj” → „Zarządzanie DNS” → „Zarządzaj strefą DNS” → „Zarządzaj”, a po przekierowaniu „Domeny” → „Zarządzanie DNS”. Ta lista jest źródłem prawdy, a tabela niżej to tylko to, co widać z zewnątrz.
+- [x] **Dodaj domenę `czystyzarobek.pl` w Cloudflare na planie Free i sprawdź rekordy.** Wszystkie mają mieć wyłączone proxy (szara chmurka). (2026-11-11: skan zgubił TXT `_github-pages-challenge-simpleperfection`, dodany ręcznie; wszystkie 16 rekordów na `ulla.ns.cloudflare.com` i `vicky.ns.cloudflare.com` jest identycznych z `ns1.hostido.net.pl`, razem z kluczem DKIM)
   - Dowód: w Cloudflare są co najmniej rekordy z tabeli, z tymi samymi wartościami.
 
 | Typ | Nazwa | Wartość |
@@ -50,54 +50,55 @@ Fakty o domenie sprawdzono 2026-11-05, a dokumentację Cloudflare tego samego dn
 | MX | `czystyzarobek.pl` | `10 mail.czystyzarobek.pl` |
 | A | `mail` | `185.110.48.31` |
 | TXT | `czystyzarobek.pl` | `v=spf1 a mx include:spf.hostido.pl -all` |
+| TXT | `czystyzarobek.pl` | `google-site-verification=…` (weryfikacja Google, wartość z eksportu Hostido; rekord widoczny w DNS 2026-11-11, nie było go w tabeli) |
 | TXT | `_dmarc` | `v=DMARC1; p=quarantine; adkim=s; aspf=s;` |
 | TXT | `x._domainkey` | wartość z eksportu Hostido |
 | TXT | `_github-pages-challenge-simpleperfection` | wartość z eksportu Hostido |
 
-- [ ] **Wyłącz w strefie wszystko, co dokleja skrypty albo zbiera dane o ruchu** (R3): Web Analytics (RUM), Bot Fight Mode, Email Obfuscation, Rocket Loader, Speed Brain.
+- [x] (2026-11-11, przed aktywacją strefy: Bot fight mode, Email Address Obfuscation, AI Labyrinth, Continuous script monitoring, Speed Brain i Rocket Loader wyłączone; RUM „Disabled”, a po aktywacji domeny o 17:21 nadal „Disabled”) **Wyłącz w strefie wszystko, co dokleja skrypty albo zbiera dane o ruchu** (R3): Web Analytics (RUM), Bot Fight Mode, Email Obfuscation, Rocket Loader, Speed Brain. Już przy dodawaniu domeny wyłącz „Enable Bot Preference Sync” (dopisuje treść na początku `robots.txt`), a zasady „Search”, „Training” i „Agents” zostaw na „Allow (do not block)”: `robots.txt` celowo wpuszcza roboty na strony HTML, żeby zobaczyły `noindex`.
   - Po co: `script-src 'self'` w aplikacji nie zatrzyma skryptów podawanych spod `/cdn-cgi/` tej samej domeny.
-- [ ] **Włącz Always Use HTTPS** (SSL/TLS → Edge Certificates).
-- [ ] **U Hostido zmień nameservery na dwa podane przez Cloudflare.** DNSSEC jest wyłączony, więc ten krok odpada.
+- [x] **Włącz Always Use HTTPS** (SSL/TLS → Edge Certificates). (potwierdzone z zewnątrz 2026-11-12: `http://proba.czystyzarobek.pl/` odpowiada 301 na `https://`)
+- [x] **U Hostido zmień nameservery na dwa podane przez Cloudflare.** DNSSEC jest wyłączony, więc ten krok odpada. (2026-11-11 17:07: Hostido pozwala wpisać własne nameservery dopiero po przełączeniu „Ustawienia domeny” na „Przekierowanie na serwery DNS” → „Wyłącz bez przenoszenia”, a to od razu usuwa strefę u Hostido. Domena nie odpowiadała ok. 9 minut, do 17:16, gdy rejestr `.pl` pokazał `ulla.ns.cloudflare.com` i `vicky.ns.cloudflare.com`; potem Google, Cloudflare i Quad9 zwracały nowe nameservery, a strona 200)
   - Strony dalej serwuje GitHub, bo rekordy są bez proxy. Nikt nie powinien niczego zauważyć.
-- [ ] **Poczekaj, aż strefa będzie miała status Active** (zwykle kilka godzin, do 24 h), a certyfikat Universal SSL będzie aktywny (15 min do 24 h).
+- [x] **Poczekaj, aż strefa będzie miała status Active** (zwykle kilka godzin, do 24 h), a certyfikat Universal SSL będzie aktywny (15 min do 24 h). (2026-11-11: strefa aktywna o 17:19, certyfikat „Active” o 17:21 wg właściciela)
   - Dowód: `nslookup -type=NS czystyzarobek.pl 8.8.8.8` pokazuje nameservery Cloudflare.
-- [ ] **Nie zmieniaj strefy u Hostido przez 48 h.** Część sieci może jeszcze pytać stare nameservery.
+- [x] **Nie zmieniaj strefy u Hostido przez 48 h.** Część sieci może jeszcze pytać stare nameservery. (2026-11-11: nie dotyczy, strefa u Hostido została usunięta przy zmianie nameserverów; nie włączaj z powrotem „Zarządzania strefą DNS”)
 
 Poczty w tej domenie nie używasz (ustalone 2026-11-05), więc nie trzeba jej testować. Rekordy poczty i tak przenosimy bez zmian. Gdyby skrzynka była kiedyś potrzebna, sprawdź najpierw certyfikat `*.czystyzarobek.pl` u Hostido: jego odnowienie po zmianie nameserverów może się nie udać.
 
 ## 3. Logowanie: Cloudflare Access
 
-- [ ] **Załóż organizację Zero Trust na planie Free** i wybierz nazwę zespołu, np. `czysty-zarobek`.
+- [x] **Załóż organizację Zero Trust na planie Free** i wybierz nazwę zespołu, np. `czysty-zarobek`. (2026-11-11: plan Free wybrany; kreator nie zapytał o nazwę zespołu, więc właściciel zmienił ją w Zero Trust → Settings; 2026-11-12 logowanie przekierowuje na `czysty-zarobek.cloudflareaccess.com`)
   - Uwaga: Cloudflare wymaga danych płatniczych także przy planie Free. Koszt zostaje 0 zł przy 5 firmach, bo limit to 50 osób.
-- [ ] **Dodaj logowanie kodem** (Integrations → Identity providers → One-time PIN). Nowe organizacje nie mają go od razu.
-- [ ] **Ustaw globalny czas sesji na 1 miesiąc** (Access controls → Access settings). Domyślnie to 24 godziny.
-- [ ] **Ustaw stronę logowania po polsku:** nazwa „Czysty Zarobek” i krótki opis „Wpisz adres e-mail. Wyślemy na niego kod do logowania”.
-- [ ] **Utwórz aplikację „Czysty Zarobek”** (self-hosted):
+- [x] **Dodaj logowanie kodem** (Integrations → Identity providers → One-time PIN). Nowe organizacje nie mają go od razu. (2026-11-11: „One-time PIN” dodany; obok jest domyślny dostawca „Cloudflare”, którego aplikacja Access ma nie używać)
+- [x] **Ustaw globalny czas sesji na 1 miesiąc** (Access controls → Access settings). Domyślnie to 24 godziny. (2026-11-12: ustawione według właściciela; potwierdzi to data ważności ciasteczka po logowaniu w kroku 5)
+- [x] **Ustaw stronę logowania po polsku:** nazwa „Czysty Zarobek” i krótki opis „Wpisz adres e-mail. Wyślemy na niego kod do logowania”. Zapisane 2026-11-12 (Zero Trust → Reusable components → Custom pages → Access login page → Manage; opis to pole „Header text”). Potwierdzone tego samego dnia na stronie logowania `proba`: jest „Log in to Czysty Zarobek” i to zdanie, a adresu e-mail właściciela w kodzie strony nie ma.
+- [x] **Utwórz aplikację „Czysty Zarobek”** (self-hosted): (2026-11-12: utworzona przez Access controls → Applications → Create new application → Self-hosted and private; lista osób to osobna reguła „Firmy z listy” z Access controls → Policies, typ Allow, i to do niej dopisuje się adresy firm. „Accept all available identity providers” wyłączone, wybrany tylko „One-time PIN”. Na zrzucie przed zapisem „Apply instant authentication” było włączone i nie ma potwierdzenia, że zostało wyłączone; strona logowania na `proba` pokazuje mimo to polski nagłówek i pole na adres. Po utworzeniu `https://czystyzarobek.pl/` nadal odpowiada 200 z GitHub Pages, bo rekordy są „DNS only”)
   - adresy: `czystyzarobek.pl` i `proba.czystyzarobek.pl`, bez ścieżki;
   - czas sesji: 1 miesiąc;
   - logowanie: tylko One-time PIN;
   - reguła: Allow, Include → Emails: **Twój adres** i adresy firm (na razie tylko Twój);
   - ustawienia ciasteczek zostaw domyślne, nie ustawiaj SameSite na Strict.
-- [ ] **Utwórz aplikację „Czysty Zarobek: bez logowania”** (self-hosted):
+- [x] **Utwórz aplikację „Czysty Zarobek: bez logowania”** (self-hosted): (2026-11-12: formularz sprawdzony na zrzutach przed zapisem: 12 adresów, w polu „Path” bez ukośnika na początku, osobna reguła „Bez logowania” typu Bypass z Include → Everyone; zapis potwierdził właściciel, a działanie pokazały polecenia `curl` z kroku 5: sześć ścieżek odpowiada 200 bez logowania)
   - adresy: każda ścieżka z tabeli „Wartości do wpisania”, osobno dla `czystyzarobek.pl` i dla `proba.czystyzarobek.pl` (12 adresów);
   - reguła: Bypass, Include → Everyone.
   - Po co: bardziej szczegółowa ścieżka wygrywa z główną aplikacją, więc linki ofert działają bez logowania. Aplikacja zainstalowana dostaje `sw.js`, manifest i ikony także bez ciasteczka.
 
 ## 4. Publikacja z Cloudflare
 
-- [ ] **Utwórz Workera z repozytorium** (Workers & Pages → Create application → GitHub). Aplikacji „Cloudflare Workers and Pages” daj dostęp tylko do `wyceny-sprzatanie`.
+- [x] **Utwórz Workera z repozytorium** (Workers & Pages → Create application → GitHub). Aplikacji „Cloudflare Workers and Pages” daj dostęp tylko do `wyceny-sprzatanie`. (2026-11-12 12:13: Worker `czysty-zarobek` utworzony przez Compute → Workers & Pages; w formularzu „Enable Preview builds” i „Protect with Cloudflare Access” wyłączone, „Path” `/`, zmienna wpisana w „Advanced settings”. Pierwszy build przeszedł: 145 plików wgranych, krok „Installing” trwał 275 ms, „Success! Build completed.”)
   - Wpisz wartości z tabeli na początku: nazwę, Build command, Deploy command, zmienną i gałąź `main`.
-- [ ] **Wyłącz Preview Builds** (Settings → Build → Branch control).
+- [x] **Wyłącz Preview Builds** (Settings → Build → Branch control). (2026-11-12: wyłączone już w formularzu tworzenia; w Settings → Builds → zakładka „Previews Base” przełącznik „Builds for Preview branches” jest wyłączony, a w zakładce „Production” gałąź to `main` i jest zmienna `SKIP_DEPENDENCY_INSTALL` = `1`. Przy „API token” panel pokazuje „Configured API token unavailable”, choć pierwszy build przeszedł na tym tokenie; sprawdzić przy następnym buildzie i dopiero po błędzie użyć „Create new token”)
   - Po co: adresy podglądów są domyślnie publiczne i nie chroni ich Access.
-- [ ] **Sprawdź, czy pierwszy build przeszedł** i czy w Settings → Domains & Routes nie ma włączonego `workers.dev` ani Preview URLs.
+- [x] **Sprawdź, czy pierwszy build przeszedł** i czy w Settings → Domains & Routes nie ma włączonego `workers.dev` ani Preview URLs. (2026-11-12: build przeszedł; te ustawienia są teraz w zakładce „Domains” Workera, a oba przełączniki „Worker URL”, Production i Preview, są wyłączone i nie ma żadnej domeny własnej. Z zewnątrz `https://czysty-zarobek.<konto>.workers.dev/`, `/index.html`, `/data/ceny.json` i adres podglądu odpowiadają 404 „error code: 1042”)
   - Domeny nie dodajemy w repo, tylko w panelu. Dzięki temu build sam nie przejmie głównego adresu.
 
 ## 5. Próba na adresie próbnym
 
 Główny adres dalej działa na GitHubie, więc tu nic nie może się popsuć.
 
-- [ ] **Dodaj Workerowi Custom Domain `proba.czystyzarobek.pl`** (Settings → Domains & Routes).
-- [ ] **Sprawdź adresy z komputera** w Git Bash:
+- [x] **Dodaj Workerowi Custom Domain `proba.czystyzarobek.pl`** (Settings → Domains & Routes). (2026-11-12 12:29: zakładka „Domains” Workera → „Add Domain”; w okienku najpierw wybiera się domenę `czystyzarobek.pl`, a dopiero potem wpisuje subdomenę `proba`. Wpisanie całego adresu daje „No zones match” i przycisk „Onboard domain”, którego nie klikamy)
+- [x] **Sprawdź adresy z komputera** w Git Bash: (2026-11-12, sprawdzone przez Claude z zewnątrz: pięć ścieżek aplikacji daje 302 na `czysty-zarobek.cloudflareaccess.com`, sześć ścieżek publicznych 200, doklejonych znaczników 0, `robots.txt` taki sam jak w repo, nagłówki z `_headers` są na `/oferta.html`)
 
 ```bash
 H=proba.czystyzarobek.pl
@@ -119,7 +120,7 @@ curl -s https://proba.czystyzarobek.pl/oferta.html | grep -c -E 'cdn-cgi|cloudfl
 
   Oczekiwany wynik: `0` (Cloudflare niczego nie dokleił).
 
-- [ ] **Spróbuj obejść wyjątki od logowania** (uwaga z review fazy 2). Wyjątki działają po początku ścieżki, więc adres z `..` nie może wyprowadzić poza publiczny katalog:
+- [x] **Spróbuj obejść wyjątki od logowania** (uwaga z review fazy 2). Wyjątki działają po początku ścieżki, więc adres z `..` nie może wyprowadzić poza publiczny katalog: (2026-11-12, sprawdzone przez Claude: sześć adresów z listy i 17 dodatkowych, m.in. `/publiczne/..;/data/ceny.json`, `/PUBLICZNE/../data/ceny.json`, `/sw.js/../data/ceny.json`, `/publiczne/data/ceny.json`, `/sw.jsx`, `/robots.txt.bak`; wyniki to 302, 404 i raz 400, nigdzie 200)
 
 ```bash
 H=proba.czystyzarobek.pl
@@ -129,15 +130,18 @@ for p in '/publiczne/../src/app.js' '/publiczne/%2e%2e/data/ceny.json' '/ikony/.
   Oczekiwany wynik: wszędzie `302` (logowanie) albo `404`, nigdzie `200`. Przy `200` zatrzymaj się i nie przełączaj głównego adresu. W Cloudflare zostaw włączone „Normalize incoming URLs” (Rules → Settings).
 
 - [ ] **Zaloguj się kodem z maila na telefonie** na `https://proba.czystyzarobek.pl`, zainstaluj aplikację i zobacz ekran Start.
+  - 2026-11-12: dwie próby skończyły się komunikatem „That account does not have access”. Dziennik (Zero Trust → Insights & Logs → Logs → Access authentication logs → „View” przy wpisie) pokazał „Invalid One Time Pin entered by user” przy zaliczonej regule „Firmy z listy”. Kody na skrzynkę firmową właściciela przychodzą po ponad 10 minutach, czyli po wygaśnięciu, a każda nowa prośba unieważnia poprzedni kod. To samo może spotkać firmy testowe ze skrzynkami na hostingu współdzielonym: w wiadomości do firm (krok 8) trzeba napisać, żeby prosić o kod raz, i mieć w zapasie drugi adres albo dodanie nadawcy `noreply@notify.cloudflare.com` do zaufanych.
+  - 2026-11-12: po dopisaniu do reguły drugiego adresu właściciela kod przyszedł od razu i logowanie przeszło, ale telefon wylądował na `czystyzarobek.pl/cdn-cgi/…` z błędem 404 z GitHub Pages. Przyczyna: aplikacja Access z kilkoma adresami po logowaniu ustawia ciasteczko na wszystkich swoich adresach łańcuchem przekierowań (ustawienie „Eager redirect”, domyślnie włączone w nowych aplikacjach), a `czystyzarobek.pl` nie jest jeszcze za Cloudflare. Dopóki główny adres jest na GitHubie, to ustawienie trzeba wyłączyć w aplikacji „Czysty Zarobek” (Additional settings → Cookie settings) albo trzymać `proba` w osobnej aplikacji. Po poprawce w ustawieniach aplikacji logowanie na telefonie działa (wg właściciela; nie widziałem zrzutu ustawienia, więc do potwierdzenia w panelu przed krokiem 6).
   - Sprawdź ikonę na ekranie telefonu, a potem na komputerze po zalogowaniu `/PLAN.md` i `/research/cenniki_firm.csv`: mają dawać 404.
-- [ ] **Włącz tryb samolotowy, zamknij aplikację i otwórz ją ponownie.** Ma działać bez internetu.
-- [ ] **Wyłącz tryb samolotowy, uruchom telefon ponownie i otwórz aplikację.** Nie powinna prosić o logowanie. Inaczej sesja nie przeżywa restartu, a wiadomość do firm obiecuje logowanie raz w miesiącu.
-- [ ] **Sprawdź wygaśnięcie sesji:** z internetem wejdź na `https://proba.czystyzarobek.pl/cdn-cgi/access/logout`, zamknij i otwórz aplikację. Masz zobaczyć logowanie, a po wpisaniu kodu wrócić do aplikacji.
+  - 2026-11-12: aplikacja zainstalowana z `proba` i otwarta z ikony (wg właściciela). Z tego punktu zostaje kontrola na komputerze po zalogowaniu: `/PLAN.md` i `/research/cenniki_firm.csv` mają dawać 404.
+- [x] **Włącz tryb samolotowy, zamknij aplikację i otwórz ją ponownie.** Ma działać bez internetu. (2026-11-12, wg właściciela)
+- [x] **Wyłącz tryb samolotowy, uruchom telefon ponownie i otwórz aplikację.** (2026-11-12, wg właściciela: po restarcie ekran Start bez pytania o kod) Nie powinna prosić o logowanie. Inaczej sesja nie przeżywa restartu, a wiadomość do firm obiecuje logowanie raz w miesiącu.
+- [x] **Sprawdź wygaśnięcie sesji:** (2026-11-12, wg właściciela: po wylogowaniu aplikacja z ikony pokazała logowanie, a po kodzie wróciła do ekranu Start) z internetem wejdź na `https://proba.czystyzarobek.pl/cdn-cgi/access/logout`, zamknij i otwórz aplikację. Masz zobaczyć logowanie, a po wpisaniu kodu wrócić do aplikacji.
 - [ ] **Sprawdź aktualizację za logowaniem na komputerze.** Zaloguj się w Chrome na `proba`, wyloguj się przez `/cdn-cgi/access/logout`, wypchnij drobną zmianę na `main` i poczekaj na build. Zaloguj się ponownie, otwórz stronę, zamknij wszystkie jej karty i otwórz ją jeszcze raz. Samo odświeżenie nie wystarczy: nowa wersja wchodzi dopiero po zamknięciu strony, żeby stary kod nie dostał nowych danych. W F12 → Application → Cache storage ma zostać jeden cache o nazwie takiej samej jak wartość z `curl -s https://proba.czystyzarobek.pl/sw.js | grep WERSJA_CACHE`.
-- [ ] **Otwórz link oferty na telefonie bez logowania.** Wyślij sobie link z aplikacji na `proba`, otwórz go w oknie prywatnym albo na innym telefonie. Oferta ma się pokazać w całości, z właściwą czcionką.
-- [ ] **Sprawdź, czy `workers.dev` nie odpowiada.** Adres Workera znajdziesz w panelu. Jeśli strona się otwiera, zatrzymaj się i dodaj w Access aplikację z miejscem docelowym `worker`.
+- [x] **Otwórz link oferty na telefonie bez logowania.** (2026-11-12, zrzut właściciela: oferta pod `proba.czystyzarobek.pl/oferta.html` otwiera się w całości bez logowania, czcionką Source Sans 3. Właściciel zauważył, że oferta dla klienta jest czarno-biała, a podgląd w aplikacji kolorowy: tak jest zaprojektowana, `tokeny.css`, `baza.css` i `oferta.css` są bajt w bajt takie same jak na głównym adresie) Wyślij sobie link z aplikacji na `proba`, otwórz go w oknie prywatnym albo na innym telefonie. Oferta ma się pokazać w całości, z właściwą czcionką.
+- [x] **Sprawdź, czy `workers.dev` nie odpowiada.** (2026-11-12, po dodaniu domeny `proba`: `https://czysty-zarobek.<konto>.workers.dev/` i `/data/ceny.json` dają 404 „error code: 1042”) Adres Workera znajdziesz w panelu. Jeśli strona się otwiera, zatrzymaj się i dodaj w Access aplikację z miejscem docelowym `worker`.
 
-- [ ] **Zrób świeżą kopię danych na telefonie i wczytaj ją w aplikacji na `proba`.** Porównaj liczbę klientów, wycen i zleceń. To sprawdza, czy kopia naprawdę się wczytuje, zanim ruszysz główny adres.
+- [x] **Zrób świeżą kopię danych na telefonie i wczytaj ją w aplikacji na `proba`.** (2026-11-12, wg właściciela: kopia wczytana, liczby się zgadzają) Porównaj liczbę klientów, wycen i zleceń. To sprawdza, czy kopia naprawdę się wczytuje, zanim ruszysz główny adres.
 - [ ] **Usuń z telefonu ikonę aplikacji z `proba`.** Inaczej zostaną dwie takie same ikony, a ta z `proba` przestanie działać po usunięciu adresu.
 
 Jeśli build odrzuci `_redirects` albo `/` nie otwiera aplikacji, nie idź dalej. Popraw to w repo i powtórz próbę.
